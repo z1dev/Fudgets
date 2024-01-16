@@ -4,11 +4,11 @@
 #include "Engine/Core/Math/Color.h"
 
 API_CLASS(NoSpawn)
-class FUDGETS_API FcBox : public FcControl
+class FUDGETS_API FcFilledBox : public FcControl
 {
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FcBox);
+	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FcFilledBox);
 public:
-	FcBox();
+	FcFilledBox();
 
 	Color GetColor() const { return _color; }
 	void SetColor(Color value) { _color = value; }

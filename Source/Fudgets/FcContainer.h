@@ -3,6 +3,8 @@
 #include "FcControl.h"
 #include "Engine/Core/Collections/Array.h"
 
+class FcLayout;
+
 API_CLASS(NoSpawn)
 class FUDGETS_API FcContainer : public FcControl
 {
@@ -25,4 +27,5 @@ public:
     void Draw() override;
 private:
     Array<FcControl*> _children;
+    FcLayout *layout;
 };

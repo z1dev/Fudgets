@@ -1,6 +1,8 @@
 #include "FcContainer.h"
+#include "Layouts/FcLayout.h"
 
-FcContainer::FcContainer() : FcControl()
+
+FcContainer::FcContainer() : FcControl(), layout(nullptr)
 {
 
 }
