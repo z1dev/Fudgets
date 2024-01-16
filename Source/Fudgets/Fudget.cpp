@@ -727,7 +727,7 @@ bool Fudget::IsVisible(LayersMask layersMask) const
 }
 
 #if USE_EDITOR
-void Fudget::EditorOverride(SceneRenderTask *task, UIXContainerControl *root)
+void Fudget::EditorOverride(SceneRenderTask *task, FcContainer *root)
 {
     if (_editorTask == task && _editorRoot == root)
         return;

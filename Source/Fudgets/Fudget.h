@@ -15,9 +15,8 @@
 //#include "Engine/Scripting/Scripting.h"
 
 
-class FudgetRootControl;
 class Fudget;
-class UIXContainerControl;
+class FcContainer;
 
 
 /// <summary>
@@ -415,9 +414,9 @@ private:
 
 #if USE_EDITOR
     SceneRenderTask *_editorTask = nullptr;
-    UIXContainerControl *_editorRoot = nullptr;
+    FcContainer *_editorRoot = nullptr;
 
-    /*internal*/ void EditorOverride(SceneRenderTask *task, UIXContainerControl *root);
+    /*internal*/ void EditorOverride(SceneRenderTask *task, FcContainer *root);
 
     API_PROPERTY()
     bool Editor_IsWorldSpace()
