@@ -1,6 +1,6 @@
 ﻿#include "Fudget.h"
-#include "FudgetRootControl.h"
-#include "FudgetContainer.h"
+//#include "FudgetRootControl.h"
+#include "FcContainer.h"
 
 #include "Engine/Level/Scene/Scene.h"
 #include "Engine/Profiler/Profiler.h"
@@ -180,11 +180,11 @@ void UIXRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext& re
 Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetRootControl>(this))
 {
     _guiRoot->SetIsLayoutLocked(false);
-    NavigateUp = New<UIXInputEvent>(TEXT("NavigateUp"));
-    NavigateDown = New<UIXInputEvent>(TEXT("NavigateDown"));
-    NavigateLeft = New<UIXInputEvent>(TEXT("NavigateLeft"));
-    NavigateRight = New<UIXInputEvent>(TEXT("NavigateRight"));
-    NavigateSubmit = New<UIXInputEvent>(TEXT("NavigateSubmit"));
+    NavigateUp = New<FcInputEvent>(TEXT("NavigateUp"));
+    NavigateDown = New<FcInputEvent>(TEXT("NavigateDown"));
+    NavigateLeft = New<FcInputEvent>(TEXT("NavigateLeft"));
+    NavigateRight = New<FcInputEvent>(TEXT("NavigateRight"));
+    NavigateSubmit = New<FcInputEvent>(TEXT("NavigateSubmit"));
 }
 
 Fudget::~Fudget()
