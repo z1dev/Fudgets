@@ -79,13 +79,13 @@ public:
 /// </summary>
 /// <seealso cref="FlaxEngine.PostProcessEffect" />
 API_CLASS(Sealed, NoSpawn, Attributes = "HideInEditor")
-class UIXRenderer2D : public PostProcessEffect
+class FudgetRenderer2D : public PostProcessEffect
 {
     DECLARE_SCENE_OBJECT_NO_SPAWN(UIXRenderer2D);
 
 public:
     /// <inheritdoc />
-    UIXRenderer2D() : PostProcessEffect(SpawnParams(Guid::New(), TypeInitializer)), Canvas(nullptr)
+    FudgetRenderer2D() : PostProcessEffect(SpawnParams(Guid::New(), TypeInitializer)), Canvas(nullptr)
     {
         UseSingleTarget = true;
     }
@@ -190,20 +190,20 @@ public:
         _renderLocation = value;
     }
 
-    /// <summary>
-    /// Gets or sets the canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.
-    /// </summary>
-    API_PROPERTY(Attributes = "EditorOrder(14), EditorDisplay(\"Canvas\"), Tooltip(\"The canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.\")")
-    FORCE_INLINE int GetOrder()
-    {
-        return _order;
-    }
+    ///// <summary>
+    ///// Gets or sets the canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.
+    ///// </summary>
+    //API_PROPERTY(Attributes = "EditorOrder(14), EditorDisplay(\"Canvas\"), Tooltip(\"The canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.\")")
+    //FORCE_INLINE int GetOrder()
+    //{
+    //    return _order;
+    //}
 
-    /// <summary>
-    /// Gets or sets the canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.
-    /// </summary>
-    API_PROPERTY()
-    void SetOrder(int value);
+    ///// <summary>
+    ///// Gets or sets the canvas rendering and input events gather order. Created GUI canvas objects are sorted before rendering (from the lowest order to the highest order). Canvas with the highest order can handle input event first.
+    ///// </summary>
+    //API_PROPERTY()
+    //void SetOrder(int value);
 
     /// <summary>
     /// Gets or sets a value indicating whether canvas can receive the input events.
@@ -293,7 +293,7 @@ public:
     /// Gets the canvas GUI root control.
     /// </summary>
     API_PROPERTY()
-    FORCE_INLINE FudgetRootControl* GetGUI() const
+    FORCE_INLINE FcContainer* GetGUI() const
     {
         return _guiRoot;
     }
@@ -445,11 +445,12 @@ private:
 #endif
 
 
-    int _order = 0;
+    //int _order = 0;
+
     FudgetRenderMode _renderMode = FudgetRenderMode::ScreenSpace;
-    /* readonly */ FudgetRootControl* _guiRoot = nullptr;
+    /* readonly */ FcContainer* _guiRoot = nullptr;
     FudgetRenderer* _renderer = nullptr;
-    UIXRenderer2D* _renderer2d = nullptr;
+    FudgetRenderer2D* _renderer2d = nullptr;
     bool _isLoading = false;
     bool _isRegisteredForTick = false;
     PostProcessEffectLocation _renderLocation = PostProcessEffectLocation::Default;
@@ -463,9 +464,9 @@ private:
 
 
 
-    friend class FudgetRootControl;
+    //friend class FcContainer;
     friend class FudgetRenderer;
-    friend class UIXRenderer2D;
+    friend class FudgetRenderer2D;
 
     /*
 

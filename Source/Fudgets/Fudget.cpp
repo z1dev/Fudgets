@@ -29,7 +29,7 @@ bool FudgetRenderer::CanRender() const
 
     FudgetRenderer *obj = const_cast<FudgetRenderer*>(this);
     obj->Location = Canvas->GetRenderLocation();
-    obj->Order = Canvas->GetOrder();
+    //obj->Order = Canvas->GetOrder();
 
     return PostProcessEffect::CanRender();
 }
@@ -86,7 +86,7 @@ void FudgetRenderer::Render(GPUContext* context, API_PARAM(Ref) RenderContext& r
     ProfilerGPU::EndEvent(profilerEvent);
 }
 
-bool UIXRenderer2D::CanRender() const
+bool FudgetRenderer2D::CanRender() const
 {
     // This is a const in the base class, but C# files can somehow declare it non-const.
     // We can cheat with const_cast<> which will either blow up or it will just not work.
@@ -95,14 +95,14 @@ bool UIXRenderer2D::CanRender() const
     //Location = Canvas->GetRenderLocation();
     //Order = Canvas->GetOrder();
 
-    UIXRenderer2D *obj = const_cast<UIXRenderer2D*>(this);
+    FudgetRenderer2D *obj = const_cast<FudgetRenderer2D*>(this);
     obj->Location = Canvas->GetRenderLocation();
-    obj->Order = Canvas->GetOrder();
+    //obj->Order = Canvas->GetOrder();
 
     return PostProcessEffect::CanRender();
 }
 
-void UIXRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext& renderContext, GPUTexture* input, GPUTexture* output)
+void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext& renderContext, GPUTexture* input, GPUTexture* output)
 {
     if (!Canvas->IsVisible(renderContext.View.RenderLayersMask))
         return;
@@ -177,9 +177,9 @@ void UIXRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext& re
 
 
 
-Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetRootControl>(this))
+Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FcContainer>(/*this*/))
 {
-    _guiRoot->SetIsLayoutLocked(false);
+    //_guiRoot->SetIsLayoutLocked(false);
     NavigateUp = New<FcInputEvent>(TEXT("NavigateUp"));
     NavigateDown = New<FcInputEvent>(TEXT("NavigateDown"));
     NavigateLeft = New<FcInputEvent>(TEXT("NavigateLeft"));
@@ -229,14 +229,14 @@ void Fudget::SetRenderMode(FudgetRenderMode value)
     }
 }
 
-void Fudget::SetOrder(int value)
-{
-    if (_order != value)
-    {
-        _order = value;
-        UIXRootControl::GetCanvasRoot()->SortCanvases();
-    }
-}
+//void Fudget::SetOrder(int value)
+//{
+//    if (_order != value)
+//    {
+//        _order = value;
+//        UIXRootControl::GetCanvasRoot()->SortCanvases();
+//    }
+//}
 
 Float2 Fudget::GetSize() const
 {
@@ -459,12 +459,12 @@ void Fudget::Setup()
     {
         case FudgetRenderMode::ScreenSpace:
         {
-            // Fill the screen area
-            if (_guiRoot != nullptr)
-            {
-                _guiRoot->SetAnchorPreset(UIXAnchorPresets::StretchAll);
-                _guiRoot->SetOffsets(UIXMargin(0.0f));
-            }
+            //// Fill the screen area
+            //if (_guiRoot != nullptr)
+            //{
+            //    _guiRoot->SetAnchorPreset(UIXAnchorPresets::StretchAll);
+            //    _guiRoot->SetOffsets(UIXMargin(0.0f));
+            //}
             if (_renderer)
             {
 #if USE_EDITOR
@@ -480,7 +480,7 @@ void Fudget::Setup()
             }
             if (_renderer2d == nullptr)
             {
-                _renderer2d = New<UIXRenderer2D>();
+                _renderer2d = New<FudgetRenderer2D>();
                 _renderer2d->Canvas = this;
                 if (IsActiveInHierarchy() && GetScene() != nullptr)
                 {
@@ -501,13 +501,13 @@ void Fudget::Setup()
 #endif
             }
 
-#if USE_EDITOR
-            if (_guiRoot != nullptr && _editorRoot != nullptr && IsActiveInHierarchy())
-            {
-                _guiRoot->SetParent(_editorRoot);
-                _guiRoot->SetIndexInParent(0);
-            }
-#endif
+//#if USE_EDITOR
+//            if (_guiRoot != nullptr && _editorRoot != nullptr && IsActiveInHierarchy())
+//            {
+//                _guiRoot->SetParent(_editorRoot);
+//                _guiRoot->SetIndexInParent(0);
+//            }
+//#endif
             if (_isRegisteredForTick)
             {
                 _isRegisteredForTick = false;
@@ -521,12 +521,12 @@ void Fudget::Setup()
         case FudgetRenderMode::WorldSpace:
         case FudgetRenderMode::WorldSpaceFaceCamera:
         {
-            // Render canvas manually
-            _guiRoot->SetAnchorPreset(UIXAnchorPresets::TopLeft);
-#if USE_EDITOR
-            if (_editorRoot != nullptr && _guiRoot != nullptr)
-                _guiRoot->SetParent(nullptr);
-#endif
+            //// Render canvas manually
+            //_guiRoot->SetAnchorPreset(UIXAnchorPresets::TopLeft);
+//#if USE_EDITOR
+//            if (_editorRoot != nullptr && _guiRoot != nullptr)
+//                _guiRoot->SetParent(nullptr);
+//#endif
 
             if (_renderer2d)
             {
@@ -600,35 +600,36 @@ void Fudget::OnUpdate()
 
 void Fudget::ParentChanged()
 {
-#if USE_EDITOR
-//#if 0
-    if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr)
-    {
-        _guiRoot->SetParent(IsActiveInHierarchy() ? _editorRoot : nullptr);
-        _guiRoot->SetIndexInParent(0);
-    }
-#endif
+//#if USE_EDITOR
+////#if 0
+//    if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr)
+//    {
+//        _guiRoot->SetParent(IsActiveInHierarchy() ? _editorRoot : nullptr);
+//        _guiRoot->SetIndexInParent(0);
+//    }
+//#endif
 }
 
 void Fudget::Enable()
 {
-    if (_guiRoot != nullptr)
-    {
-#if USE_EDITOR
-        //#if 0
-        if (_editorRoot != nullptr)
-        {
-            _guiRoot->SetParent(_editorRoot);
-            _guiRoot->SetIndexInParent(0);
-        }
-        else
-        {
-            _guiRoot->SetParent(UIXRootControl::GetCanvasRoot());
-        }
-#else
-        _guiRoot->SetParent(UIXRootControl::GetCanvasRoot());
-#endif
-    }
+
+//    if (_guiRoot != nullptr)
+//    {
+//#if USE_EDITOR
+//        //#if 0
+//        if (_editorRoot != nullptr)
+//        {
+//            _guiRoot->SetParent(_editorRoot);
+//            _guiRoot->SetIndexInParent(0);
+//        }
+//        else
+//        {
+//            _guiRoot->SetParent(UIXRootControl::GetCanvasRoot());
+//        }
+//#else
+//        _guiRoot->SetParent(UIXRootControl::GetCanvasRoot());
+//#endif
+//    }
 
     if (_renderer)
     {
@@ -657,8 +658,8 @@ void Fudget::Enable()
 
 void Fudget::Disable()
 {
-    if (_guiRoot != nullptr)
-        _guiRoot->SetParent(nullptr);
+    //if (_guiRoot != nullptr)
+    //    _guiRoot->SetParent(nullptr);
 
     if (_renderer)
     {
@@ -733,27 +734,27 @@ void Fudget::EditorOverride(SceneRenderTask *task, FcContainer *root)
         return;
     if (_editorTask != nullptr && _renderer != nullptr)
         _editorTask->RemoveCustomPostFx(_renderer);
-    if (_editorRoot != nullptr && _guiRoot != nullptr)
-        _guiRoot->SetParent(nullptr);
+    //if (_editorRoot != nullptr && _guiRoot != nullptr)
+    //    _guiRoot->SetParent(nullptr);
 
     _editorTask = task;
     _editorRoot = root;
     Setup();
 
-    if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr && IsActiveInHierarchy())
-    {
-        _guiRoot->SetParent(_editorRoot);
-        _guiRoot->SetIndexInParent(0);
-    }
+    //if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr && IsActiveInHierarchy())
+    //{
+    //    _guiRoot->SetParent(_editorRoot);
+    //    _guiRoot->SetIndexInParent(0);
+    //}
 }
 
 void Fudget::OnActiveInTreeChanged()
 {
-    if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr)
-    {
-        _guiRoot->SetParent(IsActiveInHierarchy() ? _editorRoot : nullptr);
-        _guiRoot->SetIndexInParent(0);
-    }
+    //if (_renderMode == FudgetRenderMode::ScreenSpace && _editorRoot != nullptr && _guiRoot != nullptr)
+    //{
+    //    _guiRoot->SetParent(IsActiveInHierarchy() ? _editorRoot : nullptr);
+    //    _guiRoot->SetIndexInParent(0);
+    //}
 }
 #endif
 
