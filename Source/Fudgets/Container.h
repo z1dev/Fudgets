@@ -31,11 +31,13 @@ public:
         return layout;
     }
 
-    int AddChild(FudgetControl *control);
+    int AddChild(FudgetControl *control, int order = -1);
     int RemoveChild(FudgetControl *control);
     FudgetControl* RemoveChild(int at);
     FudgetControl* ChildAt(int at) const;
     int GetChildCount() const;
+    int ChildIndex(FudgetControl *control) const;
+    void RemoveAll();
 
     Float2 GetPreferredSize() const override;
     Float2 GetMinSize() const override;

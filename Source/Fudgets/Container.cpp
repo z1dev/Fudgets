@@ -10,23 +10,26 @@ FudgetContainer::FudgetContainer() : Base(), _layout(nullptr)
 
 FudgetContainer::~FudgetContainer()
 {
-	for (FudgetControl *c : _children)
-	{
-		c->SetParent(nullptr);
-		Delete(c);
-	}
+	RemoveAll();
+	if (_layout != nullptr)
+		Delete(_layout);
 }
 
-int FudgetContainer::AddChild(FudgetControl *control)
+int FudgetContainer::AddChild(FudgetControl *control, int order)
 {
 	if (control == nullptr)
 		return -1;
 
 	if (control->GetParent() == this)
-		return control->GetOrder();
+	{
+		int result = control->GetOrder();
+		if (result == -1)
+			result = ChildIndex(control);
+		return result;
+	}
 
 	_children.Add(control);
-	control->SetParent(this);
+	control->SetParent(this, _children.Count() - 1);
 
 	if (_layout != nullptr)
 	{
@@ -80,6 +83,32 @@ int FudgetContainer::GetChildCount() const
 	return _children.Count();
 }
 
+int FudgetContainer::ChildIndex(FudgetControl *control) const
+{
+	if (control->GetParent() != this)
+		return -1;
+	int o = control->GetOrder();
+	if (o >= 0 && o < _children.Count() && _children[o] == control)
+		return o;
+
+	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
+	{
+		if (_children[ix] == control)
+			return ix;
+	}
+	return -1;
+}
+
+void FudgetContainer::RemoveAll()
+{
+	for (int ix = _children.Count() - 1; ix > -1; --ix)
+	{
+		FudgetControl *c = _children[ix];
+		c->SetParent(nullptr);
+		Delete(c);
+	}
+
+}
 
 Float2 FudgetContainer::GetPreferredSize() const
 {

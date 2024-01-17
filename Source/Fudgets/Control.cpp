@@ -10,8 +10,14 @@ FudgetControl::FudgetControl() : ScriptingObject(SpawnParams(Guid::New(), TypeIn
 
 void FudgetControl::SetParent(FudgetContainer *value)
 {
+	SetParent(value, -1);
+}
+
+void FudgetControl::SetParent(FudgetContainer *value, int order)
+{
 	if (_parent == value)
 		return;
+
 	if (_parent != nullptr)
 	{
 		_parent->RemoveChild(_order);
@@ -20,16 +26,42 @@ void FudgetControl::SetParent(FudgetContainer *value)
 	_order = -1;
 	if (_parent != nullptr)
 	{
-		_order = _parent->AddChild(this);
+		if (order >= _parent->GetChildCount())
+			order = -1;
+
+		_order = _parent->AddChild(this, order);
 	}
 }
 
-void FudgetControl::SetPreferredSize(Float2 value)
+void FudgetControl::SetOrder(int value)
+{
+	if (value < 0 || value >= _parent->GetChildCount() || value == _order)
+		return;
+
+
+}
+
+//void FudgetControl::SetPreferredSize(Float2 value)
+//{
+//	if (Float2::NearEqual(_pref_size, value))
+//		return;
+//	_pref_size = value;
+//	MakeLayoutDirty();
+//}
+
+void FudgetControl::SetSize(Float2 value)
 {
 	if (Float2::NearEqual(_pref_size, value))
 		return;
 	_pref_size = value;
 	MakeLayoutDirty();
+
+	//if (Float2::NearEqual(_size, value))
+	//	return;
+
+	//_size = value;
+	//if (_parent != nullptr)
+	//	_parent->MakeLayoutDirty();
 }
 
 void FudgetControl::SetMinSize(Float2 value)
@@ -60,16 +92,6 @@ Float2 FudgetControl::GetPosition() const
 	if (_parent != nullptr)
 		_parent->RequestLayout();
 	return _pos;
-}
-
-void FudgetControl::SetSize(Float2 value)
-{
-	if (Float2::NearEqual(_size, value))
-		return;
-
-	_size = value;
-	if (_parent != nullptr)
-		_parent->MakeLayoutDirty();
 }
 
 Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const

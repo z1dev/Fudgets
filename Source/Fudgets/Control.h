@@ -27,11 +27,14 @@ public:
 
 	FudgetContainer* GetParent() const { return _parent; }
 	void SetParent(FudgetContainer *value);
+	void SetParent(FudgetContainer *value, int order);
 
-	int GetOrder() { return _order; }
+	int GetOrder() const { return _order; }
+	void SetOrder(int value);
 
 	virtual Float2 GetPreferredSize() const { return _pref_size; }
-	virtual void SetPreferredSize(Float2 value);
+	//virtual void SetPreferredSize(Float2 value);
+	virtual void SetSize(Float2 value);
 
 	virtual Float2 GetMinSize() const { return _min_size; }
 	void SetMinSize(Float2 value);
@@ -40,7 +43,6 @@ public:
 	void SetMaxSize(Float2 value);
 
 	virtual Float2 GetSize() const;
-	virtual void SetSize(Float2 value);
 
 	Float2 GetRequestedSize(FudgetSizeType type) const;
 
