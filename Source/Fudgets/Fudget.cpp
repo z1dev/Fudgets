@@ -1,6 +1,6 @@
 ﻿#include "Fudget.h"
-//#include "FudgetRootControl.h"
-#include "FcContainer.h"
+//#include "RootControl.h"
+#include "Container.h"
 
 #include "Engine/Level/Scene/Scene.h"
 #include "Engine/Profiler/Profiler.h"
@@ -14,7 +14,7 @@
 #include "Engine/Engine/Time.h"
 
 
-//FudgetRenderer::FudgetRenderer(const SpawnParams &params) : PostProcessEffect(params)
+//Renderer::FudgetRenderer(const SpawnParams &params) : PostProcessEffect(params)
 //{
 //}
 
@@ -177,14 +177,14 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
 
 
 
-Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FcContainer>(/*this*/))
+Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetContainer>(/*this*/))
 {
     //_guiRoot->SetIsLayoutLocked(false);
-    NavigateUp = New<FcInputEvent>(TEXT("NavigateUp"));
-    NavigateDown = New<FcInputEvent>(TEXT("NavigateDown"));
-    NavigateLeft = New<FcInputEvent>(TEXT("NavigateLeft"));
-    NavigateRight = New<FcInputEvent>(TEXT("NavigateRight"));
-    NavigateSubmit = New<FcInputEvent>(TEXT("NavigateSubmit"));
+    NavigateUp = New<FudgetInputEvent>(TEXT("NavigateUp"));
+    NavigateDown = New<FudgetInputEvent>(TEXT("NavigateDown"));
+    NavigateLeft = New<FudgetInputEvent>(TEXT("NavigateLeft"));
+    NavigateRight = New<FudgetInputEvent>(TEXT("NavigateRight"));
+    NavigateSubmit = New<FudgetInputEvent>(TEXT("NavigateSubmit"));
 }
 
 Fudget::~Fudget()
@@ -728,7 +728,7 @@ bool Fudget::IsVisible(LayersMask layersMask) const
 }
 
 #if USE_EDITOR
-void Fudget::EditorOverride(SceneRenderTask *task, FcContainer *root)
+void Fudget::EditorOverride(SceneRenderTask *task, FudgetContainer *root)
 {
     if (_editorTask == task && _editorRoot == root)
         return;

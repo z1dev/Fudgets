@@ -1,17 +1,18 @@
 #pragma once
 
-#include "FcControl.h"
+#include "Control.h"
 #include "Engine/Core/Collections/Array.h"
 
-class FcLayout;
+class FudgetLayout;
 
 API_CLASS(NoSpawn)
-class FUDGETS_API FcContainer : public FcControl
+class FUDGETS_API FudgetContainer : public FudgetControl
 {
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FcContainer);
+    using Base = FudgetControl;
+	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetContainer);
 public:
-	FcContainer();
-    ~FcContainer();
+	FudgetContainer();
+    ~FudgetContainer();
 
     template<typename T>
     FORCE_INLINE T* CreateChild()
@@ -21,11 +22,31 @@ public:
         return child;
     }
 
-    bool AddChild(FcControl *control);
-    bool RemoveChild(FcControl *control);
+    template<typename T>
+    FORCE_INLINE T* CreateLayout()
+    {
+        T* layout = New<T>();
+        _layout = layout;
+        layout->SetOwner(this);
+        return layout;
+    }
+
+    int AddChild(FudgetControl *control);
+    int RemoveChild(FudgetControl *control);
+    FudgetControl* RemoveChild(int at);
+    FudgetControl* ChildAt(int at) const;
+    int GetChildCount() const;
+
+    Float2 GetPreferredSize() const override;
+    Float2 GetMinSize() const override;
+    Float2 GetMaxSize() const override;
+
+    void MakeLayoutDirty();
+    void RequestLayout();
 
     void Draw() override;
+
 private:
-    Array<FcControl*> _children;
-    FcLayout *layout;
+    Array<FudgetControl*> _children;
+    FudgetLayout *_layout;
 };

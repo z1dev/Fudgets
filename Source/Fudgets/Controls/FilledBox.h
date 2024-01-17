@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../FcControl.h"
+#include "../Control.h"
 #include "Engine/Core/Math/Color.h"
 
 API_CLASS(NoSpawn)
-class FUDGETS_API FcFilledBox : public FcControl
+class FUDGETS_API FudgetFilledBox : public FudgetControl
 {
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FcFilledBox);
+	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetFilledBox);
 public:
-	FcFilledBox();
+	FudgetFilledBox();
 
 	Color GetColor() const { return _color; }
 	void SetColor(Color value) { _color = value; }

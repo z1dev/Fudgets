@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "FcInputEvent.h"
+#include "InputEvent.h"
 #include "Engine/Graphics/PostProcessEffect.h"
 #include "Engine/Core/Math/OrientedBoundingBox.h"
 #include "Engine/Level/Actor.h"
@@ -16,7 +16,7 @@
 
 
 class Fudget;
-class FcContainer;
+class FudgetContainer;
 
 
 /// <summary>
@@ -114,7 +114,7 @@ public:
     ///// <summary>
     ///// Initializes a new instance of the <see cref="Fudget"/> class.
     ///// </summary>
-    //Fudget(const SpawnParams& params);
+    //(const SpawnParams& params);
 
     /// <summary>
     /// Finalizes an instance of the <see cref="UICanvas"/> class.
@@ -293,7 +293,7 @@ public:
     /// Gets the canvas GUI root control.
     /// </summary>
     API_PROPERTY()
-    FORCE_INLINE FcContainer* GetGUI() const
+    FORCE_INLINE FudgetContainer* GetGUI() const
     {
         return _guiRoot;
     }
@@ -326,27 +326,27 @@ public:
     /// The input action for performing UI navigation Up (from Input Settings).
     /// </summary>
     API_FIELD(Attributes = "EditorOrder(510), EditorDisplay(\"Navigation\", \"Navigate Up\"), Tooltip(\"The input action for performing UI navigation Up (from Input Settings).\")")
-    FcInputEvent *NavigateUp;
+    FudgetInputEvent *NavigateUp;
     /// <summary>
     /// The input action for performing UI navigation Down (from Input Settings).
     /// </summary>
     API_FIELD(Attributes = "EditorOrder(520), EditorDisplay(\"Navigation\", \"Navigate Down\"), Tooltip(\"The input action for performing UI navigation Down (from Input Settings).\")")
-    FcInputEvent *NavigateDown;
+    FudgetInputEvent *NavigateDown;
     /// <summary>
     /// The input action for performing UI navigation Left (from Input Settings).
     /// </summary>
     API_FIELD(Attributes = "EditorOrder(530), EditorDisplay(\"Navigation\", \"Navigate Left\"), Tooltip(\"The input action for performing UI navigation Left (from Input Settings).\")")
-    FcInputEvent *NavigateLeft;
+    FudgetInputEvent *NavigateLeft;
     /// <summary>
     /// The input action for performing UI navigation Right (from Input Settings).
     /// </summary>
     API_FIELD(Attributes = "EditorOrder(540), EditorDisplay(\"Navigation\", \"Navigate Right\"), Tooltip(\"The input action for performing UI navigation Right (from Input Settings).\")")
-    FcInputEvent *NavigateRight;
+    FudgetInputEvent *NavigateRight;
     /// <summary>
     /// The input action for performing UI navigation Submit (from Input Settings).
     /// </summary>
     API_FIELD(Attributes = "EditorOrder(550), EditorDisplay(\"Navigation\", \"Navigate Submit\"), Tooltip(\"The input action for performing UI navigation Submit (from Input Settings).\")")
-    FcInputEvent *NavigateSubmit;
+    FudgetInputEvent *NavigateSubmit;
 
     /// <summary>
     /// Gets the world-space oriented bounding box that contains a 3D canvas.
@@ -414,9 +414,9 @@ private:
 
 #if USE_EDITOR
     SceneRenderTask *_editorTask = nullptr;
-    FcContainer *_editorRoot = nullptr;
+    FudgetContainer *_editorRoot = nullptr;
 
-    /*internal*/ void EditorOverride(SceneRenderTask *task, FcContainer *root);
+    /*internal*/ void EditorOverride(SceneRenderTask *task, FudgetContainer *root);
 
     API_PROPERTY()
     bool Editor_IsWorldSpace()
@@ -448,7 +448,7 @@ private:
     //int _order = 0;
 
     FudgetRenderMode _renderMode = FudgetRenderMode::ScreenSpace;
-    /* readonly */ FcContainer* _guiRoot = nullptr;
+    /* readonly */ FudgetContainer* _guiRoot = nullptr;
     FudgetRenderer* _renderer = nullptr;
     FudgetRenderer2D* _renderer2d = nullptr;
     bool _isLoading = false;
@@ -464,7 +464,7 @@ private:
 
 
 
-    //friend class FcContainer;
+    //friend class FudgetContainer;
     friend class FudgetRenderer;
     friend class FudgetRenderer2D;
 

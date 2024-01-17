@@ -1,2 +1,115 @@
-#include "FcListLayout.h"
+#include "ListLayout.h"
+#include "../Container.h"
+
+FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(control), _horz_align(FudgetAlignHorizontal::Left), _vert_align(FudgetAlignVertical::Top)
+{
+}
+
+
+FudgetListLayout::FudgetListLayout() : Base(), _ori(FudgetOrientation::Horizontal)
+{
+
+}
+
+FudgetListLayout::FudgetListLayout(FudgetOrientation orientation) : Base(), _ori(orientation)
+{
+
+}
+
+void FudgetListLayout::SetOrientation(FudgetOrientation value)
+{
+	_ori = value;
+	MakeDirty();
+}
+
+void FudgetListLayout::LayoutChildren()
+{
+	auto owner = GetOwner();
+	if (owner == nullptr)
+		return;
+
+	Float2 space = owner->GetSize();
+	int count = owner->GetChildCount();
+
+	Float2 _wanted = GetPreferredSize();
+
+	float pos = 0.0f;
+	for (int ix = 0; ix < count; ++ix)
+	{
+		auto slot = GetSlot(ix);
+
+		if (_ori == FudgetOrientation::Horizontal)
+		{
+			SetControlDimensions(ix, Float2(pos + slot->_padding.left, slot->_padding.top), Float2(slot->_pref_size.X, slot->_pref_size.Y));
+			pos += slot->_padding.left + slot->_padding.right + slot->_pref_size.X;
+		}
+		else
+		{
+			SetControlDimensions(ix, Float2(slot->_padding.left, pos + slot->_padding.top), Float2(slot->_pref_size.X, slot->_pref_size.Y));
+			pos += slot->_padding.top + slot->_padding.bottom + slot->_pref_size.Y;
+		}
+	}
+
+	ClearedDirt();
+}
+
+FudgetLayoutSlot* FudgetListLayout::CreateSlot(FudgetControl *control)
+{
+	return New<FudgetListLayoutSlot>(control);
+}
+
+FudgetListLayoutSlot* FudgetListLayout::GetSlot(int at) const
+{
+	return (FudgetListLayoutSlot*)Base::GetSlot(at);
+}
+
+Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
+{
+	auto owner = GetOwner();
+	if (owner == nullptr)
+		return Float2(0.0f);
+
+	Float2 result(0.0f);
+	float max_size = 0.0f;
+
+	for (int ix = 0, siz = GetOwner()->GetChildCount(); ix < siz; ++ix)
+	{
+		auto slot = GetSlot(ix);
+		auto &pad = slot->_padding;
+		result.X += pad.left + pad.right;
+		result.Y += pad.top + pad.bottom;
+		Float2 size;
+		if (_ori == FudgetOrientation::Horizontal)
+		{
+			size = slot->_control->GetRequestedSize(type);
+			result.X += size.X;
+			max_size = Math::Max(max_size, size.Y);
+		}
+		else
+		{
+			size = slot->_control->GetRequestedSize(type);
+			result.Y += size.Y;
+			max_size = Math::Max(max_size, size.X);
+		}
+
+		switch (type)
+		{
+			case FudgetSizeType::Preferred:
+				slot->_pref_size = size;
+				break;
+			case FudgetSizeType::Min:
+				slot->_min_size = size;
+				break;
+			case FudgetSizeType::Max:
+				slot->_max_size = size;
+				break;
+		}
+	}
+
+	if (_ori == FudgetOrientation::Horizontal)
+		result.Y += max_size;
+	else
+		result.X += max_size;
+	return result;
+}
 

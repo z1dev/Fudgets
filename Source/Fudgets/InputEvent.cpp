@@ -1,48 +1,48 @@
-#include "FcInputEvent.h"
+#include "InputEvent.h"
 #include "Engine/Input/Input.h"
 
 
-FcInputEvent::FcInputEvent() : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), bound(false)
+FudgetInputEvent::FudgetInputEvent() : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), bound(false)
 {
-    Input::ActionTriggered.Bind<FcInputEvent, &FcInputEvent::Handler>(this);
+    Input::ActionTriggered.Bind<FudgetInputEvent, &FudgetInputEvent::Handler>(this);
     bound = true;
 }
 
 
-FcInputEvent::FcInputEvent(String name) : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), Name(name), bound(false)
+FudgetInputEvent::FudgetInputEvent(String name) : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), Name(name), bound(false)
 {
-    Input::ActionTriggered.Bind<FcInputEvent, &FcInputEvent::Handler>(this);
+    Input::ActionTriggered.Bind<FudgetInputEvent, &FudgetInputEvent::Handler>(this);
     bound = true;
 }
 
-FcInputEvent::~FcInputEvent()
+FudgetInputEvent::~FudgetInputEvent()
 {
     if (bound)
-        Input::ActionTriggered.Unbind<FcInputEvent, &FcInputEvent::Handler>(this);
+        Input::ActionTriggered.Unbind<FudgetInputEvent, &FudgetInputEvent::Handler>(this);
     bound = false;
 }
 
 
-bool FcInputEvent::Active()
+bool FudgetInputEvent::Active()
 {
     return Input::GetAction(Name);
 }
 
-InputActionState FcInputEvent::GetState() const
+InputActionState FudgetInputEvent::GetState() const
 {
     return Input::GetActionState(Name);
 }
 
-void FcInputEvent::Dispose()
+void FudgetInputEvent::Dispose()
 {
     if (bound)
-        Input::ActionTriggered.Unbind<FcInputEvent, &FcInputEvent::Handler>(this);
+        Input::ActionTriggered.Unbind<FudgetInputEvent, &FudgetInputEvent::Handler>(this);
     bound = false;
     DeleteObject();
     //GC.SuppressFinalize(this);
 }
 
-void FcInputEvent::Handler(StringView name, InputActionState state)
+void FudgetInputEvent::Handler(StringView name, InputActionState state)
 {
     if (!StringUtils::CompareIgnoreCase(*name, *Name))
         return;

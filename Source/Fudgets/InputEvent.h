@@ -8,25 +8,25 @@
 /// Virtual input action binding. Helps with listening for a selected input event.
 /// </summary>
 API_CLASS(NoSpawn)
-class FUDGETS_API FcInputEvent : public ScriptingObject
+class FUDGETS_API FudgetInputEvent : public ScriptingObject
 {
-    DECLARE_SCRIPTING_TYPE_NO_SPAWN(FcInputEvent);
+    DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetInputEvent);
 public:
     /// <summary>
     /// Initializes a new instance of the <see cref="InputEvent"/> class.
     /// </summary>
-    FcInputEvent();
+    FudgetInputEvent();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InputEvent"/> class.
     /// </summary>
     /// <param name="name">The action name.</param>
-    FcInputEvent(String name);
+    FudgetInputEvent(String name);
 
     /// <summary>
     /// Finalizes an instance of the <see cref="InputEvent"/> class.
     /// </summary>
-    ~FcInputEvent();
+    ~FudgetInputEvent();
 
     /// <summary>
     /// The name of the action to use. See <see cref="Input.ActionMappings"/>.
