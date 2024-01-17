@@ -31,19 +31,21 @@ public:
         return layout;
     }
 
-    int AddChild(FudgetControl *control, int order = -1);
+    int AddChild(FudgetControl *control, int index = -1);
     int RemoveChild(FudgetControl *control);
-    FudgetControl* RemoveChild(int at);
-    FudgetControl* ChildAt(int at) const;
+    FudgetControl* RemoveChild(int index);
+    bool MoveChildToIndex(int from, int to);
+
+    FudgetControl* ChildAt(int index) const;
     int GetChildCount() const;
     int ChildIndex(FudgetControl *control) const;
-    void RemoveAll();
+    void DeleteAll();
 
-    Float2 GetPreferredSize() const override;
+    Float2 GetHintSize() const override;
     Float2 GetMinSize() const override;
     Float2 GetMaxSize() const override;
 
-    void MakeLayoutDirty();
+    void MakeLayoutDirty(FudgetSizeType sizeType);
     void RequestLayout();
 
     void Draw() override;
@@ -51,4 +53,7 @@ public:
 private:
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;
+
+    // Used locally to avoid double calling functions from child controls.
+    bool _changing;
 };

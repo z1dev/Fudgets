@@ -1,15 +1,16 @@
 #include "Layout.h"
 #include "../Container.h"
+#include "../Utils/Utils.h"
 
 
-FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer)), _control(control), _pref_size(0.f), _min_size(0.f), _max_size(0.f)
+FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer)), _control(control), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
 {
 
 }
 
 
 FudgetLayout::FudgetLayout() : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), _dirty(false), _owner(nullptr),
-	_preferred_dirty(true), _min_dirty(true), _max_dirty(true), _cached_preferred(0.f), _cached_min(0.f), _cached_max(0.f)
+	_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
 { 
 
 }
@@ -32,34 +33,50 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 		FillSlots();
 }
 
-void FudgetLayout::MakeDirty()
+void FudgetLayout::MakeDirty(FudgetSizeType sizeType)
 {
 	_dirty = true;
-	_preferred_dirty = true;
-	_min_dirty = true;
-	_max_dirty = true;
+	if (sizeType == FudgetSizeType::Hint || sizeType == FudgetSizeType::All)
+		_hint_dirty = true;
+	if (sizeType == FudgetSizeType::Min || sizeType == FudgetSizeType::All)
+		_min_dirty = true;
+	if (sizeType == FudgetSizeType::Max || sizeType == FudgetSizeType::All)
+		_max_dirty = true;
 }
 
-void FudgetLayout::ChildAdded(FudgetControl *control)
+void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 {
 	_dirty = true;
-	_slots.Add(CreateSlot(control));
+	auto slot = CreateSlot(control);
+	if (index == -1)
+		_slots.Add(slot);
+	else
+		_slots.Insert(index, slot);
 }
 
-void FudgetLayout::ChildRemoved(int at)
+void FudgetLayout::ChildRemoved(int index)
 {
 	_dirty = true;
-	Delete(_slots[at]);
-	_slots.RemoveAt(at);
+	Delete(_slots[index]);
+	_slots.RemoveAtKeepOrder(index);
 }
 
-Float2 FudgetLayout::GetPreferredSize() const
+void FudgetLayout::ChildMoved(int from, int to)
 {
-	if (!_preferred_dirty && !Float2::NearEqual(_cached_preferred, Float2(-1.0f)))
-		return _cached_preferred;
-	_preferred_dirty = false;
-	_cached_preferred = GetRequestedSize(FudgetSizeType::Preferred);
-	return _cached_preferred;
+	if (from == to || from < 0 || to < 0 || from >= _slots.Count() || to >= _slots.Count())
+		return;
+
+	_dirty = true;
+	MoveInArray(_slots, from, to);
+}
+
+Float2 FudgetLayout::GetHintSize() const
+{
+	if (!_hint_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
+		return _cached_hint;
+	_hint_dirty = false;
+	_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
+	return _cached_hint;
 }
 
 Float2 FudgetLayout::GetMinSize() const
@@ -80,18 +97,26 @@ Float2 FudgetLayout::GetMaxSize() const
 	return _cached_max;
 }
 
-void FudgetLayout::SetControlDimensions(int at, Float2 pos, Float2 size)
+void FudgetLayout::OnDeleteObject()
+{
+	if (IsRegistered())
+		UnregisterObject();
+
+	Base::OnDeleteObject();
+}
+
+void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
 {
 	if (_owner == nullptr)
 		return;
-	_owner->ChildAt(at)->LayoutUpdate(pos, size);
+	_owner->ChildAt(index)->LayoutUpdate(pos, size);
 }
 
-FudgetLayoutSlot* FudgetLayout::GetSlot(int at) const
+FudgetLayoutSlot* FudgetLayout::GetSlot(int index) const
 {
-	if (at < 0 || at >= _slots.Count())
+	if (index < 0 || index >= _slots.Count())
 		return nullptr;
-	return _slots[at];
+	return _slots[index];
 }
 
 void FudgetLayout::CleanUp()

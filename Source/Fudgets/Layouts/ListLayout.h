@@ -4,6 +4,7 @@
 #include "../MarginStructs.h"
 
 
+API_ENUM()
 enum class FudgetAlignHorizontal
 {
 	Left,
@@ -15,6 +16,7 @@ enum class FudgetAlignHorizontal
 	FillRight,
 };
 
+API_ENUM()
 enum class FudgetAlignVertical
 {
 	Top,
@@ -26,6 +28,7 @@ enum class FudgetAlignVertical
 	FillBottom,
 };
 
+API_ENUM()
 enum class FudgetOrientation
 {
 	Horizontal,
@@ -67,12 +70,5 @@ protected:
 	FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
 	FudgetListLayoutSlot* GetSlot(int at) const;
 private:
-	enum class SizeTypes
-	{
-		Preferred,
-		Min,
-		Max
-	};
-
 	FudgetOrientation _ori;
 };

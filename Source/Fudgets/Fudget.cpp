@@ -122,7 +122,7 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
             //{
                 //size_set = true;
                 const Viewport &v = Render2D::GetViewport();
-                Canvas->_guiRoot->SetSize(v.Size);
+                Canvas->_guiRoot->SetHintSize(v.Size);
             //}
 
             Canvas->GetGUI()->Draw();
@@ -247,7 +247,7 @@ void Fudget::SetSize(Float2 value)
 {
     if (_renderMode == FudgetRenderMode::WorldSpace || _renderMode == FudgetRenderMode::WorldSpaceFaceCamera || _isLoading)
     {
-        _guiRoot->SetSize(value);
+        _guiRoot->SetHintSize(value);
     }
 }
 
@@ -302,9 +302,9 @@ void Fudget::GetWorldMatrix(Vector3 viewOrigin, API_PARAM(Out) Matrix& world) co
             auto view = _editorTask->View;
             auto frustum = view.Frustum;
             if (!frustum.IsOrthographic())
-                _guiRoot->SetSize(Float2(frustum.GetWidthAtDepth(GetDistance()), frustum.GetHeightAtDepth(GetDistance())));
+                _guiRoot->SetHintSize(Float2(frustum.GetWidthAtDepth(GetDistance()), frustum.GetHeightAtDepth(GetDistance())));
             else
-                _guiRoot->SetSize(_editorTask->GetViewport().Size);
+                _guiRoot->SetHintSize(_editorTask->GetViewport().Size);
             Matrix::Translation(_guiRoot->GetWidth() / -2.0f, _guiRoot->GetHeight() / -2.0f, 0, world);
             Matrix tmp1;
             Matrix tmp2;
@@ -363,11 +363,11 @@ void Fudget::GetWorldMatrix(Vector3 viewOrigin, API_PARAM(Out) Matrix& world) co
             camera->GetMatrices(tmp1, tmp3, viewport);
             Matrix::Multiply(tmp1, tmp3, tmp2);
             auto frustum = BoundingFrustum(tmp2);
-            _guiRoot->SetSize(Float2(frustum.GetWidthAtDepth(GetDistance()), frustum.GetHeightAtDepth(GetDistance())));
+            _guiRoot->SetHintSize(Float2(frustum.GetWidthAtDepth(GetDistance()), frustum.GetHeightAtDepth(GetDistance())));
         }
         else
         {
-            _guiRoot->SetSize(viewport.Size * camera->GetOrthographicScale());
+            _guiRoot->SetHintSize(viewport.Size * camera->GetOrthographicScale());
         }
 
         // Center viewport (and flip)

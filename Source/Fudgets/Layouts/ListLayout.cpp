@@ -19,7 +19,7 @@ FudgetListLayout::FudgetListLayout(FudgetOrientation orientation) : Base(), _ori
 void FudgetListLayout::SetOrientation(FudgetOrientation value)
 {
 	_ori = value;
-	MakeDirty();
+	MakeDirty(FudgetSizeType::None);
 }
 
 void FudgetListLayout::LayoutChildren()
@@ -31,7 +31,7 @@ void FudgetListLayout::LayoutChildren()
 	Float2 space = owner->GetSize();
 	int count = owner->GetChildCount();
 
-	Float2 _wanted = GetPreferredSize();
+	Float2 _wanted = GetHintSize();
 
 	float pos = 0.0f;
 	for (int ix = 0; ix < count; ++ix)
@@ -40,13 +40,13 @@ void FudgetListLayout::LayoutChildren()
 
 		if (_ori == FudgetOrientation::Horizontal)
 		{
-			SetControlDimensions(ix, Float2(pos + slot->_padding.left, slot->_padding.top), Float2(slot->_pref_size.X, slot->_pref_size.Y));
-			pos += slot->_padding.left + slot->_padding.right + slot->_pref_size.X;
+			SetControlDimensions(ix, Float2(pos + slot->_padding.left, slot->_padding.top), Float2(slot->_hint_size.X, slot->_hint_size.Y));
+			pos += slot->_padding.left + slot->_padding.right + slot->_hint_size.X;
 		}
 		else
 		{
-			SetControlDimensions(ix, Float2(slot->_padding.left, pos + slot->_padding.top), Float2(slot->_pref_size.X, slot->_pref_size.Y));
-			pos += slot->_padding.top + slot->_padding.bottom + slot->_pref_size.Y;
+			SetControlDimensions(ix, Float2(slot->_padding.left, pos + slot->_padding.top), Float2(slot->_hint_size.X, slot->_hint_size.Y));
+			pos += slot->_padding.top + slot->_padding.bottom + slot->_hint_size.Y;
 		}
 	}
 
@@ -65,6 +65,9 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int at) const
 
 Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
 {
+	if (type != FudgetSizeType::Hint && type != FudgetSizeType::Min && type != FudgetSizeType::Max)
+		return Float2(0.f);
+
 	auto owner = GetOwner();
 	if (owner == nullptr)
 		return Float2(0.0f);
@@ -94,8 +97,8 @@ Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
 
 		switch (type)
 		{
-			case FudgetSizeType::Preferred:
-				slot->_pref_size = size;
+			case FudgetSizeType::Hint:
+				slot->_hint_size = size;
 				break;
 			case FudgetSizeType::Min:
 				slot->_min_size = size;

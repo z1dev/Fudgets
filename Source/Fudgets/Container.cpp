@@ -1,81 +1,123 @@
 #include "Container.h"
 #include "Layouts/Layout.h"
 #include "Engine/Core/Math/Rectangle.h"
+#include "Utils/Utils.h"
 
 
-FudgetContainer::FudgetContainer() : Base(), _layout(nullptr)
+FudgetContainer::FudgetContainer() : Base(), _layout(nullptr), _changing(false)
 {
 
 }
 
 FudgetContainer::~FudgetContainer()
 {
-	RemoveAll();
+	DeleteAll();
 	if (_layout != nullptr)
 		Delete(_layout);
 }
 
-int FudgetContainer::AddChild(FudgetControl *control, int order)
+int FudgetContainer::AddChild(FudgetControl *control, int index)
 {
 	if (control == nullptr)
 		return -1;
 
-	if (control->GetParent() == this)
+	if (_changing)
 	{
-		int result = control->GetOrder();
-		if (result == -1)
-			result = ChildIndex(control);
-		return result;
+		if (control->GetParent() == this)
+			return ChildIndex(control);
+		return -1;
 	}
 
-	_children.Add(control);
-	control->SetParent(this, _children.Count() - 1);
+	if (control->GetParent() == this)
+	{
+		int result = control->GetIndexInParent();
+		if (result == -1)
+			result = ChildIndex(control);
+		if (result != -1)
+			return result;
+	}
+
+	_changing = true;
+
+	if (index >= 0 && index < _children.Count())
+	{
+		_children.Insert(index, control);
+	}
+	else
+	{
+		index = _children.Count();
+		_children.Add(control);
+	}
+
+	control->SetParent(this, index);
 
 	if (_layout != nullptr)
 	{
-		_layout->ChildAdded(control);
+		_layout->ChildAdded(control, index);
 	}
 
-	return _children.Count() - 1;
+	_changing = false;
+
+	return index;
 }
 
 int FudgetContainer::RemoveChild(FudgetControl *control)
 {
-	if (control == nullptr)
+	if (control == nullptr || control->GetParent() != this || _changing)
 		return -1;
 
-	int order = control->GetOrder();
+	_changing = true;
 
-	// Checking the parent is not enough if called indirectly from control->SetParent()
-	if (control->GetParent() != this || _children.Count() <= order || _children[order] != control)
-		return -1;
-
-
-	_children.RemoveAt(control->GetOrder());
+	int index = control->GetIndexInParent();
+	_children.RemoveAtKeepOrder(index);
 	control->SetParent(nullptr);
 
 	if (_layout != nullptr)
 	{
-		_layout->ChildRemoved(order);
+		_layout->ChildRemoved(index);
 	}
 
-	return order;
+	_changing = false;
+
+	return index;
 }
 
-FudgetControl* FudgetContainer::RemoveChild(int at)
+FudgetControl* FudgetContainer::RemoveChild(int index)
 {
-	if (at < 0 || _children.Count() <= at)
+	if (index < 0 || _children.Count() <= index || _changing)
 		return nullptr;
-	FudgetControl *control = _children[at];
+	FudgetControl *control = _children[index];
 	RemoveChild(control);
 	return control;
 }
 
-FudgetControl* FudgetContainer::ChildAt(int at) const
+bool FudgetContainer::MoveChildToIndex(int from, int to)
 {
-	if (at < 0 || _children.Count() <= at)
+	if (_changing)
+		return true;
+	if (from < 0 || to < 0 || from == to || from >= _children.Count() || to >= _children.Count())
+		return false;
+
+	_changing = true;
+	FudgetControl *control = _children[from];
+	MoveInArray(_children, from, to);
+	control->SetIndexInParent(to);
+
+	if (_layout != nullptr)
+	{
+		_layout->ChildMoved(from, to);
+	}
+
+	_changing = false;
+
+	return true;
+}
+
+FudgetControl* FudgetContainer::ChildAt(int index) const
+{
+	if (index < 0 || _children.Count() <= index)
 		return nullptr;
-	return _children[at];
+	return _children[index];
 }
 
 int FudgetContainer::GetChildCount() const
@@ -87,7 +129,7 @@ int FudgetContainer::ChildIndex(FudgetControl *control) const
 {
 	if (control->GetParent() != this)
 		return -1;
-	int o = control->GetOrder();
+	int o = control->GetIndexInParent();
 	if (o >= 0 && o < _children.Count() && _children[o] == control)
 		return o;
 
@@ -99,7 +141,7 @@ int FudgetContainer::ChildIndex(FudgetControl *control) const
 	return -1;
 }
 
-void FudgetContainer::RemoveAll()
+void FudgetContainer::DeleteAll()
 {
 	for (int ix = _children.Count() - 1; ix > -1; --ix)
 	{
@@ -110,11 +152,11 @@ void FudgetContainer::RemoveAll()
 
 }
 
-Float2 FudgetContainer::GetPreferredSize() const
+Float2 FudgetContainer::GetHintSize() const
 {
 	if (_layout != nullptr)
-		return _layout->GetPreferredSize();
-	return Base::GetPreferredSize();
+		return _layout->GetHintSize();
+	return Base::GetHintSize();
 }
 
 Float2 FudgetContainer::GetMinSize() const
@@ -131,10 +173,10 @@ Float2 FudgetContainer::GetMaxSize() const
 	return Base::GetMaxSize();
 }
 
-void FudgetContainer::MakeLayoutDirty()
+void FudgetContainer::MakeLayoutDirty(FudgetSizeType sizeType)
 {
 	if (_layout != nullptr)
-		_layout->MakeDirty();
+		_layout->MakeDirty(sizeType);
 }
 
 void FudgetContainer::RequestLayout()

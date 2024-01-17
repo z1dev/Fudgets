@@ -19,7 +19,7 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 
 	// Hide in editor
 	FudgetControl *_control;
-	Float2 _pref_size;
+	Float2 _hint_size;
 	Float2 _max_size;
 	Float2 _min_size;
 };
@@ -38,18 +38,21 @@ public:
 	void SetOwner(FudgetContainer *value);
 
 	bool IsDirty() const { return _dirty; }
-	virtual void MakeDirty();
+	virtual void MakeDirty(FudgetSizeType sizeType);
 
-	virtual void ChildAdded(FudgetControl *control);
-	virtual void ChildRemoved(int at);
+	virtual void ChildAdded(FudgetControl *control, int index = -1);
+	virtual void ChildRemoved(int index);
+	virtual void ChildMoved(int from, int to);
 
-	Float2 GetPreferredSize() const;
+	Float2 GetHintSize() const;
 	Float2 GetMinSize() const;
 	Float2 GetMaxSize() const;
 
+	void OnDeleteObject() override;
+
 	virtual void LayoutChildren() = 0;
 protected:
-	virtual void SetControlDimensions(int at, Float2 pos, Float2 size);
+	virtual void SetControlDimensions(int index, Float2 pos, Float2 size);
 	FudgetLayoutSlot* GetSlot(int at) const;
 	virtual void CleanUp();
 	virtual void FillSlots();
@@ -64,10 +67,10 @@ private:
 	FudgetContainer *_owner;
 	Array<FudgetLayoutSlot*> _slots;
 
-	mutable bool _preferred_dirty;
+	mutable bool _hint_dirty;
 	mutable bool _min_dirty;
 	mutable bool _max_dirty;
-	mutable Float2 _cached_preferred;
+	mutable Float2 _cached_hint;
 	mutable Float2 _cached_min;
 	mutable Float2 _cached_max;
 };
