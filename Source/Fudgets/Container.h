@@ -29,8 +29,7 @@ public:
     FORCE_INLINE T* CreateLayout()
     {
         T* layout = New<T>();
-        _layout = layout;
-        layout->SetOwner(this);
+        AddLayoutInternal(layout);
         return layout;
     }
 
@@ -130,6 +129,7 @@ public:
     /// <returns></returns>
     void Draw() override;
 
+    API_FUNCTION(Internal) void AddLayoutInternal(FudgetLayout *layout);
 private:
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;

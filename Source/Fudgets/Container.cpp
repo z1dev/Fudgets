@@ -200,3 +200,9 @@ void FudgetContainer::Draw()
 	for (FudgetControl *c : _children)
 		c->Draw();
 }
+
+void FudgetContainer::AddLayoutInternal(FudgetLayout *layout)
+{
+	_layout = layout;
+	layout->SetOwner(this);
+}
