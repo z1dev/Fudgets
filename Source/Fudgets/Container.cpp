@@ -42,6 +42,8 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
 	if (index >= 0 && index < _children.Count())
 	{
 		_children.Insert(index, control);
+		for (int ix = index + 1, siz = _children.Count(); ix < siz; ++ix)
+			_children[ix]->SetIndexInParent(ix);
 	}
 	else
 	{
@@ -72,6 +74,9 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
 	_children.RemoveAtKeepOrder(index);
 	control->SetParent(nullptr);
 
+	for (int ix = index, siz = _children.Count(); ix < siz; ++ix)
+		_children[ix]->SetIndexInParent(ix);
+
 	if (_layout != nullptr)
 	{
 		_layout->ChildRemoved(index);
@@ -95,13 +100,17 @@ bool FudgetContainer::MoveChildToIndex(int from, int to)
 {
 	if (_changing)
 		return true;
-	if (from < 0 || to < 0 || from == to || from >= _children.Count() || to >= _children.Count())
+	if (from < 0 || to < 0 || from >= _children.Count() || to >= _children.Count())
 		return false;
+	if (from == to)
+		return true;
 
 	_changing = true;
 	FudgetControl *control = _children[from];
 	MoveInArray(_children, from, to);
-	control->SetIndexInParent(to);
+
+	for (int ix = Math::Min(from, to), siz = Math::Max(from, to) + 1; ix < siz; ++ix)
+		control->SetIndexInParent(ix);
 
 	if (_layout != nullptr)
 	{

@@ -38,7 +38,7 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 
 void FudgetControl::SetIndexInParent(int value)
 {
-	if (_changing || _parent == nullptr || value < 0 || value >= _parent->GetChildCount() || value == _index)
+	if (_changing || _parent == nullptr || value == _index || value < 0 || value >= _parent->GetChildCount())
 		return;
 	_changing = true;
 	if (_parent->MoveChildToIndex(_index, value))
