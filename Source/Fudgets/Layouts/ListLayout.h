@@ -5,7 +5,7 @@
 
 
 /// <summary>
-/// Derived slot holding attributes necessary for layouting for the list layout.
+/// Derived slot holding attributes necessary for layouting for the list layout
 /// </summary>
 API_CLASS(NoSpawn)
 class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
@@ -15,14 +15,15 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 	
 	FudgetListLayoutSlot(FudgetControl *control);
 
-	FudgetAlignHorizontal _horz_align;
-	FudgetAlignVertical _vert_align;
+	FudgetHorzAlign _horz_align;
+	FudgetVertAlign _vert_align;
 
+	bool _enforce_limits;
 	FudgetSlotPadding _padding;
 };
 
 /// <summary>
-/// A layout that aligns the owner container's children horizontally or vertically
+/// A layout that aligns the owner container's children horizontally or vertically like a list of items
 /// </summary>
 API_CLASS()
 class FUDGETS_API FudgetListLayout : public FudgetLayout
@@ -31,6 +32,7 @@ class FUDGETS_API FudgetListLayout : public FudgetLayout
 	DECLARE_SCRIPTING_TYPE(FudgetListLayout);
 public:
 	//FudgetListLayout(const SpawnParams &params);
+
 	FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation);
 
 	/// <summary>
@@ -46,6 +48,19 @@ public:
 	/// <param name="value">The layout direction for positioning child controls</param>
 	API_PROPERTY() void SetOrientation(FudgetOrientation value);
 
+	/// <summary>
+	/// Whether the layout tries to size its controls to fill up the available space
+	/// in the orientation of the layout.
+	/// </summary>
+	/// <returns>Whether the layout fills the available space</returns>
+	API_PROPERTY() bool IsStretched() const { return _stretched; }
+	/// <summary>
+	/// Sets whether the layout tries to size its controls to fill up the available space
+	/// in the orientation of the layout.
+	/// </summary>
+	/// <param name="value">Whether the layout fills the available space</param>
+	API_PROPERTY() void SetStretched(bool value);
+
 	void LayoutChildren(bool forced) override;
 protected:
 	Float2 GetRequestedSize(FudgetSizeType type) const override;
@@ -59,5 +74,43 @@ protected:
 	/// <returns>The slot for layouting attributes or null if the index is invalid</returns>
 	API_FUNCTION(New) FudgetListLayoutSlot* GetSlot(int index) const;
 private:
+	FORCE_INLINE float Relevant(Float2 value) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return value.X;
+		return value.Y;
+	}
+	FORCE_INLINE float& RelevantRef(Float2 &value) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return value.X;
+		return value.Y;
+	}
+	FORCE_INLINE float Opposite(Float2 value) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return value.Y;
+		return value.X;
+	}
+	FORCE_INLINE float& OppositeRef(Float2 &value) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return value.Y;
+		return value.X;
+	}
+	FORCE_INLINE float RelevantPad(const FudgetSlotPadding &padding) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return padding.left + padding.top;
+		return padding.top + padding.bottom;
+	}
+	FORCE_INLINE float OppositePad(const FudgetSlotPadding &padding) const
+	{
+		if (_ori == FudgetOrientation::Horizontal)
+			return padding.top + padding.bottom;
+		return padding.left + padding.top;
+	}
+
 	FudgetOrientation _ori;
+	bool _stretched;
 };

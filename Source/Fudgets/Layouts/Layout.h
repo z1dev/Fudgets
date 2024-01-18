@@ -14,7 +14,7 @@ enum class FudgetSizeType : uint8;
 /// Horizontal alignment of a control in the slots or cells of layouts that can align controls horizontally in different ways.
 /// </summary>
 API_ENUM()
-enum class FudgetAlignHorizontal
+enum class FudgetHorzAlign
 {
 	Left,
 	Center,
@@ -29,7 +29,7 @@ enum class FudgetAlignHorizontal
 /// Vertical alignment of a control in the slots or cells of layouts that can align controls vertically in different ways.
 /// </summary>
 API_ENUM()
-enum class FudgetAlignVertical
+enum class FudgetVertAlign
 {
 	Top,
 	Center,
@@ -66,8 +66,8 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 	// Hide in editor
 	FudgetControl *_control;
 	Float2 _hint_size;
-	Float2 _max_size;
 	Float2 _min_size;
+	Float2 _max_size;
 };
 
 
@@ -130,11 +130,6 @@ public:
 	/// </summary>
 	/// <returns>The layout's maximum size</returns>
 	API_PROPERTY() Float2 GetMaxSize() const;
-
-	/// <summary>
-	/// TODO
-	/// </summary>
-	void OnDeleteObject() override;
 
 	/// <summary>
 	/// Calculates the child controls position and size on the owner container if necessary or requested.

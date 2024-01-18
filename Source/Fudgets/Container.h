@@ -5,6 +5,42 @@
 
 class FudgetLayout;
 
+
+// TODO: use these
+
+/// <summary>
+/// Vertical alignment of a layout inside a container if the container's size is independent of the layout
+/// </summary>
+API_ENUM()
+enum class FudgetLayoutVertAlign
+{
+    /// <summary>
+    /// The layout is attached to the top of the container.
+    /// </summary>
+    Top,
+    /// <summary>
+    /// The layout is attached to the bottom of the container.
+    /// </summary>
+    Bottom,
+};
+
+/// <summary>
+/// Horizontal alignment of a layout inside a container if the container's size is independent of the layout
+/// </summary>
+API_ENUM()
+enum class FudgetLayoutHorzAlign
+{
+    /// <summary>
+    /// The layout is attached to the left of the container.
+    /// </summary>
+    Left,
+    /// <summary>
+    /// The layout is attached to the right of the container.
+    /// </summary>
+    Right,
+};
+
+
 /// <summary>
 /// Container class that can have child controls and a layout to position the controls
 /// </summary>
@@ -110,6 +146,31 @@ public:
     /// <returns>The container's maximum size with the current layout</returns>
     Float2 GetMaxSize() const override;
 
+
+    /// <summary>
+    /// Determines if the height of the container is calculated based on the layout or not.
+    /// </summary>
+    /// <returns>Whether the container has the height of the layout.</returns>
+    API_PROPERTY() bool IsUsingLayoutHeight() const { return _height_from_layout; }
+
+    /// <summary>
+    /// Determines if the height of the container is calculated based on the layout or not.
+    /// </summary>
+    /// <returns>Whether the container has the height of the layout.</returns>
+    API_PROPERTY() void SetUsingLayoutHeight(bool value);
+
+    /// <summary>
+    /// Determines if the width of the container is calculated based on the layout or not.
+    /// </summary>
+    /// <returns>Whether the container has the width of the layout.</returns>
+    API_PROPERTY() bool IsUsingLayoutWidth() const { return _width_from_layout; }
+
+    /// <summary>
+    /// Determines if the width of the container is calculated based on the layout or not.
+    /// </summary>
+    /// <returns>Whether the container has the width of the layout.</returns>
+    API_PROPERTY() void SetUsingLayoutWidth(bool value);
+
     /// <summary>
     /// Notifies the layout that one or more of the stored sizes and control positions need to be recalculated. Hint, Min or Max
     /// sizes can be specified. Use All to make every size type dirty and None to only require control re-alignment.
@@ -133,6 +194,9 @@ public:
 private:
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;
+
+    bool _height_from_layout;
+    bool _width_from_layout;
 
     // Used locally to avoid double calling functions from child controls.
     bool _changing;

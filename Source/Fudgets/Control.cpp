@@ -71,8 +71,9 @@ void FudgetControl::SetMaxSize(Float2 value)
 
 Float2 FudgetControl::GetSize() const
 {
-	if (_parent != nullptr)
-		_parent->RequestLayout();
+	if (_parent == nullptr)
+		return _hint_size;
+	_parent->RequestLayout();
 	return _size;
 }
 

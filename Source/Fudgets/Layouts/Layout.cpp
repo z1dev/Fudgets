@@ -16,7 +16,7 @@ FudgetLayout::FudgetLayout() : ScriptingObject(SpawnParams(Guid::New(), TypeInit
 }
 
 FudgetLayout::FudgetLayout(const SpawnParams &params) : ScriptingObject(params), _dirty(false), _owner(nullptr),
-_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
+	_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
 {
 
 }
@@ -48,6 +48,9 @@ void FudgetLayout::MakeDirty(FudgetSizeType sizeType)
 		_min_dirty = true;
 	if (sizeType == FudgetSizeType::Max || sizeType == FudgetSizeType::All)
 		_max_dirty = true;
+
+	if (_owner != nullptr)
+		_owner->MakeParentLayoutDirty(sizeType);
 }
 
 void FudgetLayout::ChildAdded(FudgetControl *control, int index)
@@ -101,14 +104,6 @@ Float2 FudgetLayout::GetMaxSize() const
 	_max_dirty = false;
 	_cached_max = GetRequestedSize(FudgetSizeType::Max);
 	return _cached_max;
-}
-
-void FudgetLayout::OnDeleteObject()
-{
-	if (IsRegistered())
-		UnregisterObject();
-
-	Base::OnDeleteObject();
 }
 
 void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)

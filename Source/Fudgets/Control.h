@@ -4,6 +4,9 @@
 #include "Engine/Core/Math/Vector2.h"
 
 
+class FudgetContainer;
+
+
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
 /// </summary>
@@ -19,7 +22,6 @@ enum class FudgetSizeType : uint8
 	All
 };
 
-class FudgetContainer;
 
 /// <summary>
 /// Base class for controls, including containers and panels.
