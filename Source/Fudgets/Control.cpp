@@ -2,11 +2,10 @@
 
 #include "Container.h"
 
-FudgetControl::FudgetControl() : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)),
+FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
 	_max_size(-1.f, -1.f), _changing(false)
 {
-
 }
 
 void FudgetControl::SetParent(FudgetContainer *value)
@@ -108,14 +107,6 @@ void FudgetControl::SetPosition(Float2 value)
 
 	_pos = value;
 	MakeParentLayoutDirty(FudgetSizeType::None);
-}
-
-void FudgetControl::OnDeleteObject()
-{
-	if (IsRegistered())
-		UnregisterObject();
-
-	Base::OnDeleteObject();
 }
 
 void FudgetControl::MakeParentLayoutDirty(FudgetSizeType sizeType)

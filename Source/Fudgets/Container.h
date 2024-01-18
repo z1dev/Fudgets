@@ -8,19 +8,19 @@ class FudgetLayout;
 /// <summary>
 /// Container class that can have child controls and a layout to position the controls
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetContainer : public FudgetControl
 {
     using Base = FudgetControl;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetContainer);
+	DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
-	FudgetContainer();
+	//FudgetContainer();
     ~FudgetContainer();
 
     template<typename T>
     FORCE_INLINE T* CreateChild()
     {
-        T* child = New<T>();
+        T* child = New<T>(SpawnParams(Guid::New(), TypeInitializer));
         AddChild(child);
         return child;
     }
@@ -28,7 +28,7 @@ public:
     template<typename T>
     FORCE_INLINE T* CreateLayout()
     {
-        T* layout = New<T>();
+        T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
         AddLayoutInternal(layout);
         return layout;
     }

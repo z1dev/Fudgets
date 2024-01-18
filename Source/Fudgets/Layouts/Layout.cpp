@@ -15,6 +15,12 @@ FudgetLayout::FudgetLayout() : ScriptingObject(SpawnParams(Guid::New(), TypeInit
 
 }
 
+FudgetLayout::FudgetLayout(const SpawnParams &params) : ScriptingObject(params), _dirty(false), _owner(nullptr),
+_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
+{
+
+}
+
 FudgetLayout::~FudgetLayout()
 {
 	if (_owner != nullptr)

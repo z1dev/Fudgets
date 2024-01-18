@@ -4,7 +4,7 @@
 #include "Utils/Utils.h"
 
 
-FudgetContainer::FudgetContainer() : Base(), _layout(nullptr), _changing(false)
+FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params), _layout(nullptr), _changing(false)
 {
 
 }

@@ -24,14 +24,14 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 /// <summary>
 /// A layout that aligns the owner container's children horizontally or vertically
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetListLayout : public FudgetLayout
 {
 	using Base = FudgetLayout;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetListLayout);
+	DECLARE_SCRIPTING_TYPE(FudgetListLayout);
 public:
-	FudgetListLayout();
-	FudgetListLayout(FudgetOrientation orientation);
+	//FudgetListLayout(const SpawnParams &params);
+	FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation);
 
 	/// <summary>
 	/// Gets the layout orientation of controls on the owner. Depending on the value, they are either

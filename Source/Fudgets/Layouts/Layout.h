@@ -203,6 +203,9 @@ protected:
 	/// <param name="from">The old index of the control</param>
 	/// <param name="to">The new index of the control</param>
 	API_FUNCTION() virtual void ChildMoved(int from, int to);
+
+	FudgetLayout(const SpawnParams &params);
+
 private:
 	bool _dirty;
 

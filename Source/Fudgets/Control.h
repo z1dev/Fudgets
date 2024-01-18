@@ -24,13 +24,13 @@ class FudgetContainer;
 /// <summary>
 /// Base class for controls, including containers and panels.
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetControl : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetControl);
+	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
-	FudgetControl();
+	//FudgetControl();
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -185,10 +185,6 @@ public:
 	/// <param name="delta_time">The time passed since the last update</param>
 	API_FUNCTION() virtual void Update(float delta_time) {}
 
-	/// <summary>
-	/// TODO
-	/// </summary>
-	void OnDeleteObject() override;
 protected:
 	/// <summary>
 	/// Notifies the parent to mark its layout as dirty, causing a calculation of child control sizes and positions

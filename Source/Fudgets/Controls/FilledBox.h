@@ -6,12 +6,14 @@
 /// <summary>
 /// Test control that fills its background with color
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetFilledBox : public FudgetControl
 {
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetFilledBox);
+	using Base = FudgetControl;
+	DECLARE_SCRIPTING_TYPE(FudgetFilledBox);
 public:
-	FudgetFilledBox();
+	//FudgetFilledBox();
+	~FudgetFilledBox();
 
 	/// <summary>
 	/// Gets the background color used for filling the control.

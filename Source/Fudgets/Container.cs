@@ -17,8 +17,10 @@ namespace Fudgets
         /// <returns>The newly created and added control</returns>
         public T CreateChild<T>() where T : FudgetControl
         {
+            if (typeof(T).IsAbstract)
+                return null;
 
-            FudgetControl child = Activator.CreateInstance<T>();
+            var child = New<T>();
             AddChild(child);
             return (T)child;
         }
@@ -30,8 +32,10 @@ namespace Fudgets
         /// <returns>The newly created and added layout</returns>
         public T CreateLayout<T>() where T : FudgetLayout
         {
+            if (typeof(T).IsAbstract)
+                return null;
 
-            FudgetLayout child = Activator.CreateInstance<T>();
+            var child = New<T>(); //Activator.CreateInstance<T>();
             AddLayoutInternal(child);
             return (T)child;
         }

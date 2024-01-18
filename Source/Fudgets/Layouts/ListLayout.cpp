@@ -6,12 +6,12 @@ FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(contro
 }
 
 
-FudgetListLayout::FudgetListLayout() : Base(), _ori(FudgetOrientation::Horizontal)
+FudgetListLayout::FudgetListLayout(const SpawnParams &params) : Base(params), _ori(FudgetOrientation::Horizontal)
 {
 
 }
 
-FudgetListLayout::FudgetListLayout(FudgetOrientation orientation) : Base(), _ori(orientation)
+FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation) : Base(params), _ori(orientation)
 {
 
 }
