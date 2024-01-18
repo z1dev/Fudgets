@@ -4,7 +4,7 @@
 #include "Engine/Core/Collections/Array.h"
 
 class FudgetLayout;
-
+class Fudget;
 
 // TODO: use these
 
@@ -50,7 +50,8 @@ class FUDGETS_API FudgetContainer : public FudgetControl
     using Base = FudgetControl;
 	DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
-	//FudgetContainer();
+    FudgetContainer(Fudget *_ui_owner);
+
     ~FudgetContainer();
 
     template<typename T>
@@ -200,4 +201,7 @@ private:
 
     // Used locally to avoid double calling functions from child controls.
     bool _changing;
+
+    // True only for the container covering the screen as the root of the hierarchy
+    bool _root;
 };

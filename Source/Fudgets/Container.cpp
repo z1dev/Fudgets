@@ -5,9 +5,14 @@
 
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
-	_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true)
+_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(false)
 {
 
+}
+
+FudgetContainer::FudgetContainer(Fudget *_ui_owner) : Base(SpawnParams(Guid::New(), TypeInitializer)),
+	_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(_ui_owner != nullptr)
+{
 }
 
 FudgetContainer::~FudgetContainer()
@@ -168,7 +173,7 @@ void FudgetContainer::DeleteAll()
 
 Float2 FudgetContainer::GetHintSize() const
 {
-	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
+	if (!_root && _layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
 		Float2 value = _layout->GetHintSize();
 		if (_height_from_layout && _width_from_layout)
@@ -185,6 +190,9 @@ Float2 FudgetContainer::GetHintSize() const
 
 Float2 FudgetContainer::GetMinSize() const
 {
+	if (_root)
+		return Base::GetHintSize();
+
 	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
 		Float2 value = _layout->GetMinSize();
@@ -200,6 +208,9 @@ Float2 FudgetContainer::GetMinSize() const
 
 Float2 FudgetContainer::GetMaxSize() const
 {
+	if (_root)
+		return Base::GetHintSize();
+
 	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
 		Float2 value = _layout->GetMaxSize();

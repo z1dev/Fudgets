@@ -42,29 +42,33 @@ void FudgetListLayout::LayoutChildren(bool forced)
 	if (owner == nullptr)
 		return;
 
-	Float2 space = owner->GetSize();
 	int count = owner->GetChildCount();
 
 	if (count == 0)
 		return;
 
+	Float2 space = owner->GetSize();
 	Float2 _wanted = GetHintSize();
 
+	if (_ori == FudgetOrientation::Horizontal)
+		space.Y = Math::Min(space.Y, _wanted.Y);
+	else
+		space.X = Math::Min(space.X, _wanted.X);
 	if (!_stretched)
 	{
 		// The controls are placed one after the other, hanging off the edge if they take up
 		// more space than what's available
 
-		float pos = 0.0f;
+		Float2 pos(0.0f);
 		for (int ix = 0; ix < count; ++ix)
 		{
 			auto slot = GetSlot(ix);
 
+			SetControlDimensions(ix, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), slot->_hint_size);
 			if (_ori == FudgetOrientation::Horizontal)
-				SetControlDimensions(ix, Float2(pos + slot->_padding.left, slot->_padding.top), slot->_hint_size);
+				pos.X += RelevantPad(slot->_padding) + Relevant(slot->_hint_size);
 			else
-				SetControlDimensions(ix, Float2(slot->_padding.left, pos + slot->_padding.top), slot->_hint_size);
-			pos += RelevantPad(slot->_padding) + Relevant(slot->_hint_size);
+				pos.Y += RelevantPad(slot->_padding) + Relevant(slot->_hint_size);
 		}
 	}
 	else
@@ -124,7 +128,7 @@ void FudgetListLayout::LayoutChildren(bool forced)
 		while (dirty && maxed_count != count)
 		{
 			dirty = false;
-			float hint_count = count - maxed_count;
+			int hint_count = count - maxed_count;
 			maxed_count = count;
 			float used_space = 0.f;
 			float used_sum = 0.f;

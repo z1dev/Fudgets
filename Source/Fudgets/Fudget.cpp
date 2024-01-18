@@ -177,7 +177,7 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
 
 
 
-Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetContainer>(/*this*/))
+Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetContainer>(this))
 {
     //_guiRoot->SetIsLayoutLocked(false);
     NavigateUp = New<FudgetInputEvent>(TEXT("NavigateUp"));
