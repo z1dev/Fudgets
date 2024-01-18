@@ -5,6 +5,9 @@
 
 class FudgetLayout;
 
+/// <summary>
+/// Container class that can have child controls and a layout to position the controls
+/// </summary>
 API_CLASS(NoSpawn)
 class FUDGETS_API FudgetContainer : public FudgetControl
 {
@@ -94,19 +97,19 @@ public:
     /// doesn't have a preferred size, this is the preferred size of the container itself.
     /// </summary>
     /// <returns>The container's preferred size with the current layout</returns>
-    API_PROPERTY() Float2 GetHintSize() const override;
+    Float2 GetHintSize() const override;
     /// <summary>
     /// Gets the minimum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred minimum size, this is the minimum size set to the container itself.
     /// </summary>
     /// <returns>The container's minimum size with the current layout</returns>
-    API_PROPERTY() Float2 GetMinSize() const override;
+    Float2 GetMinSize() const override;
     /// <summary>
     /// Gets the maximum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred maximum size, this is the maximum size set to the container itself.
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
-    API_PROPERTY() Float2 GetMaxSize() const override;
+    Float2 GetMaxSize() const override;
 
     /// <summary>
     /// Notifies the layout that one or more of the stored sizes and control positions need to be recalculated. Hint, Min or Max
@@ -125,7 +128,7 @@ public:
     /// Called by the parent containers for all controls in the tree of controls to draw the control when rendering.
     /// </summary>
     /// <returns></returns>
-    API_FUNCTION() void Draw() override;
+    void Draw() override;
 
 private:
     Array<FudgetControl*> _children;

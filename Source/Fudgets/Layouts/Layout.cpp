@@ -46,7 +46,7 @@ void FudgetLayout::MakeDirty(FudgetSizeType sizeType)
 
 void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 {
-	_dirty = true;
+	MakeDirty(FudgetSizeType::All);
 	auto slot = CreateSlot(control);
 	if (index == -1)
 		_slots.Add(slot);
@@ -56,7 +56,7 @@ void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 
 void FudgetLayout::ChildRemoved(int index)
 {
-	_dirty = true;
+	MakeDirty(FudgetSizeType::All);
 	Delete(_slots[index]);
 	_slots.RemoveAtKeepOrder(index);
 }
@@ -66,7 +66,7 @@ void FudgetLayout::ChildMoved(int from, int to)
 	if (from == to || from < 0 || to < 0 || from >= _slots.Count() || to >= _slots.Count())
 		return;
 
-	_dirty = true;
+	MakeDirty(FudgetSizeType::All);
 	MoveInArray(_slots, from, to);
 }
 
@@ -135,7 +135,7 @@ void FudgetLayout::FillSlots()
 
 	for (int ix = 0, siz = _owner->GetChildCount(); ix < siz; ++ix)
 	{
-		ChildAdded(_owner->ChildAt(ix));
+		ChildAdded(_owner->ChildAt(ix), ix);
 	}
 }
 

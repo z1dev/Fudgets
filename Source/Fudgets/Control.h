@@ -4,6 +4,9 @@
 #include "Engine/Core/Math/Vector2.h"
 
 
+/// <summary>
+/// Used for any function call in controls and layouts that need one specific size of controls.
+/// </summary>
 API_ENUM()
 enum class FudgetSizeType : uint8
 {

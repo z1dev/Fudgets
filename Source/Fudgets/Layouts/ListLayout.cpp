@@ -22,8 +22,11 @@ void FudgetListLayout::SetOrientation(FudgetOrientation value)
 	MakeDirty(FudgetSizeType::None);
 }
 
-void FudgetListLayout::LayoutChildren()
+void FudgetListLayout::LayoutChildren(bool forced)
 {
+	if (!IsDirty() && !forced)
+		return;
+
 	auto owner = GetOwner();
 	if (owner == nullptr)
 		return;
@@ -58,9 +61,9 @@ FudgetLayoutSlot* FudgetListLayout::CreateSlot(FudgetControl *control)
 	return New<FudgetListLayoutSlot>(control);
 }
 
-FudgetListLayoutSlot* FudgetListLayout::GetSlot(int at) const
+FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 {
-	return (FudgetListLayoutSlot*)Base::GetSlot(at);
+	return (FudgetListLayoutSlot*)Base::GetSlot(index);
 }
 
 Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const

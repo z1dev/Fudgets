@@ -191,7 +191,7 @@ void FudgetContainer::MakeLayoutDirty(FudgetSizeType sizeType)
 void FudgetContainer::RequestLayout()
 {
 	if (_layout != nullptr)
-		_layout->LayoutChildren();
+		_layout->LayoutChildren(false);
 }
 
 void FudgetContainer::Draw()
