@@ -63,7 +63,13 @@ public:
 
 	void LayoutChildren(bool forced) override;
 protected:
-	Float2 GetRequestedSize(FudgetSizeType type) const override;
+	/// <summary>
+	/// Calculates one of the sizes of the layout that was requested. Call GetRequestedSize() to avoid recalculating
+	/// the sizes when not necessary.
+	/// </summary>
+	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
+	/// <returns>The calculated size of the layout</returns>
+	Float2 RequestSize(FudgetSizeType type) const override;
 
 	FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
 
@@ -74,6 +80,8 @@ protected:
 	/// <returns>The slot for layouting attributes or null if the index is invalid</returns>
 	API_FUNCTION(New) FudgetListLayoutSlot* GetSlot(int index) const;
 private:
+	void PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size);
+
 	FORCE_INLINE float Relevant(Float2 value) const
 	{
 		if (_ori == FudgetOrientation::Horizontal)

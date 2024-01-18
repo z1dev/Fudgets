@@ -64,7 +64,10 @@ void FudgetListLayout::LayoutChildren(bool forced)
 		{
 			auto slot = GetSlot(ix);
 
-			SetControlDimensions(ix, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), slot->_hint_size);
+			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), Float2(
+				_ori == FudgetOrientation::Horizontal ? Math::Max(0.0f, slot->_hint_size.X) : _wanted.X - OppositePad(slot->_padding),
+				_ori == FudgetOrientation::Vertical ? Math::Max(0.0f, slot->_hint_size.Y) : _wanted.Y - OppositePad(slot->_padding)));
+
 			if (_ori == FudgetOrientation::Horizontal)
 				pos.X += RelevantPad(slot->_padding) + Relevant(slot->_hint_size);
 			else
@@ -209,8 +212,8 @@ void FudgetListLayout::LayoutChildren(bool forced)
 
 			float size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0.0f);
 			float size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0.0f);
-			SetControlDimensions(ix, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top),
-				Float2(size_x, size_y));
+
+			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), Float2(size_x, size_y));
 
 			if (_ori == FudgetOrientation::Horizontal)
 				pos.X += RelevantPad(slot->_padding) + size_x;
@@ -232,7 +235,7 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 	return (FudgetListLayoutSlot*)Base::GetSlot(index);
 }
 
-Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
+Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 {
 	if (type != FudgetSizeType::Hint && type != FudgetSizeType::Min && type != FudgetSizeType::Max)
 		return Float2(0.f);
@@ -255,34 +258,35 @@ Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
 		result.X += pad.left + pad.right;
 		result.Y += pad.top + pad.bottom;
 		Float2 size = slot->_control->GetRequestedSize(type);
+		Float2 fixed_size = size;
 
-		if (Relevant(size) < 0)
-			RelevantRef(size) = 0;
-		if (Opposite(size) < 0)
-			OppositeRef(size) = 0;
-		RelevantRef(result) += Relevant(size);
+		if (Relevant(fixed_size) < 0)
+			RelevantRef(fixed_size) = 0;
+		if (Opposite(fixed_size) < 0)
+			OppositeRef(fixed_size) = 0;
+		RelevantRef(result) += Relevant(fixed_size);
 		// Overflow
-		if (Relevant(result) < Relevant(size))
+		if (Relevant(result) < Relevant(fixed_size))
 			RelevantRef(result) = IMAGINARY_LIMIT;
 
-		extent = Math::Max(extent, Opposite(size));
+		extent = Math::Max(extent, Opposite(fixed_size));
 
 		switch (type)
 		{
 			case FudgetSizeType::Hint:
-				slot->_hint_size = Float2::Max(size, slot->_min_size);
+				slot->_hint_size = fixed_size;
 				extent = Math::Max(extent, Opposite(slot->_hint_size));
 				break;
 			case FudgetSizeType::Min:
-				slot->_min_size = size;
+				slot->_min_size = fixed_size;
 				break;
 			case FudgetSizeType::Max:
-				if (Relevant(slot->_max_size) < 0)
+				if (Relevant(size) < 0)
 				{
 					RelevantRef(size) = IMAGINARY_LIMIT;
 					RelevantRef(result) = IMAGINARY_LIMIT;
 				}
-				if (Opposite(slot->_max_size) < 0)
+				if (Opposite(size) < 0)
 				{
 					OppositeRef(size) = IMAGINARY_LIMIT;
 					extent = IMAGINARY_LIMIT;
@@ -298,5 +302,95 @@ Float2 FudgetListLayout::GetRequestedSize(FudgetSizeType type) const
 		OppositeRef(result) = IMAGINARY_LIMIT;
 
 	return result;
+}
+
+void FudgetListLayout::PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size)
+{
+	Float2 control_pos(0.f);
+	Float2 control_size(0.f);
+
+	control_pos.X = pos.X;
+	control_pos.Y = pos.Y;
+	control_size.X = size.X;
+	control_size.Y = size.Y;
+
+	// Making sure it's calculated.
+	GetHintSize();
+
+	if (!Math::NearEqual(size.X, slot->_hint_size.X))
+	{
+		if (size.X > slot->_hint_size.X)
+		{
+			if (slot->_horz_align != FudgetHorzAlign::Fill || slot->_enforce_limits)
+			{
+				float size_X = slot->_hint_size.X;
+
+				// Making sure it's calculated.
+				if (slot->_horz_align == FudgetHorzAlign::Fill)
+				{
+					GetMaxSize();
+					size_X = slot->_max_size.X;
+				}
+
+				if (size_X < size.X)
+				{
+					control_size.X = size_X;
+					if (slot->_horz_align == FudgetHorzAlign::Right || slot->_horz_align == FudgetHorzAlign::ClipRight)
+						control_pos.X += size.X - size_X;
+					else if (slot->_horz_align == FudgetHorzAlign::Center || slot->_horz_align == FudgetHorzAlign::ClipCenter)
+						control_pos.X += (size.X - size_X) * 0.5f;
+				}
+			}
+		}
+		else if (slot->_horz_align == FudgetHorzAlign::ClipLeft)
+		{
+			control_size.X = slot->_hint_size.X;
+		}
+		else if (slot->_horz_align == FudgetHorzAlign::ClipRight)
+		{
+			control_size.X = slot->_hint_size.X;
+			control_pos.X -= slot->_hint_size.X - size.X;
+		}
+	}
+
+	if (!Math::NearEqual(size.Y, slot->_hint_size.Y))
+	{
+		if (size.Y > slot->_hint_size.Y)
+		{
+			if (slot->_vert_align != FudgetVertAlign::Fill || slot->_enforce_limits)
+			{
+				float size_Y = slot->_hint_size.Y;
+
+				// Making sure it's calculated.
+				if (slot->_horz_align == FudgetHorzAlign::Fill)
+				{
+					GetMaxSize();
+					size_Y = slot->_max_size.Y;
+				}
+
+				if (size_Y < size.Y)
+				{
+					control_size.Y = size_Y;
+					if (slot->_vert_align == FudgetVertAlign::Bottom || slot->_vert_align == FudgetVertAlign::ClipBottom)
+						control_pos.Y += size.Y - size_Y;
+					else if (slot->_vert_align == FudgetVertAlign::Center || slot->_vert_align == FudgetVertAlign::ClipCenter)
+						control_pos.Y += (size.Y - size_Y) * 0.5f;
+				}
+			}
+		}
+		else if (slot->_vert_align == FudgetVertAlign::ClipTop)
+		{
+			control_size.Y = slot->_hint_size.Y;
+		}
+		else if (slot->_vert_align == FudgetVertAlign::ClipBottom)
+		{
+			control_size.Y = slot->_hint_size.Y;
+			control_pos.Y -= slot->_hint_size.Y - size.Y;
+		}
+	}
+
+
+	SetControlDimensions(index, control_pos, control_size);
+
 }
 

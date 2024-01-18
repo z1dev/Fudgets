@@ -20,9 +20,9 @@ enum class FudgetHorzAlign
 	Center,
 	Right,
 	Fill,
-	FillLeft,
-	FillCenter,
-	FillRight,
+	ClipLeft,
+	ClipCenter,
+	ClipRight
 };
 
 /// <summary>
@@ -35,9 +35,9 @@ enum class FudgetVertAlign
 	Center,
 	Bottom,
 	Fill,
-	FillTop,
-	FillCenter,
-	FillBottom,
+	ClipTop,
+	ClipCenter,
+	ClipBottom
 };
 
 /// <summary>
@@ -168,11 +168,21 @@ protected:
 	API_FUNCTION() void ClearedDirt();
 
 	/// <summary>
-	/// Calculates size of the layout that was requested or their cached value if recalculation isn't necessary.
+	/// Calls RequestSize to calculate one of the sizes of the layout, or their cached value if
+	/// recalculation isn't necessary.
 	/// </summary>
 	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
-	/// <returns></returns>
-	API_FUNCTION() virtual Float2 GetRequestedSize(FudgetSizeType type) const = 0;
+	/// <returns>The size for the layout with the controls</returns>
+	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType type) const;
+
+	/// <summary>
+	/// Calculates one of the sizes of the layout that was requested. Call GetRequestedSize() to avoid recalculating
+	/// the sizes when not necessary.
+	/// </summary>
+	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
+	/// <returns>The calculated size of the layout</returns>
+	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const = 0;
+
 	/// <summary>
 	/// Creates a slot which represents properties of a single child control on the owner container. The function
 	/// in derived classes should return an object of the proper type fitting that layout.

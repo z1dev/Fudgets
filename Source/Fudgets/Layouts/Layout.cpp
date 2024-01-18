@@ -83,7 +83,6 @@ Float2 FudgetLayout::GetHintSize() const
 {
 	if (!_hint_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
 		return _cached_hint;
-	_hint_dirty = false;
 	_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
 	return _cached_hint;
 }
@@ -92,7 +91,6 @@ Float2 FudgetLayout::GetMinSize() const
 {
 	if (!_min_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
 		return _cached_min;
-	_min_dirty = false;
 	_cached_min = GetRequestedSize(FudgetSizeType::Min);
 	return _cached_min;
 }
@@ -101,7 +99,6 @@ Float2 FudgetLayout::GetMaxSize() const
 {
 	if (!_max_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
 		return _cached_max;
-	_max_dirty = false;
 	_cached_max = GetRequestedSize(FudgetSizeType::Max);
 	return _cached_max;
 }
@@ -143,4 +140,34 @@ void FudgetLayout::FillSlots()
 void FudgetLayout::ClearedDirt()
 {
 	_dirty = false;
+}
+
+Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type) const
+{
+	switch (type)
+	{
+		case FudgetSizeType::Hint:
+			if (_hint_dirty)
+			{
+				_cached_hint = RequestSize(type);
+				_hint_dirty = false;
+			}
+			return _cached_hint;
+		case FudgetSizeType::Min:
+			if (_min_dirty)
+			{
+				_cached_min = RequestSize(type);
+				_min_dirty = false;
+			}
+			return _cached_min;
+		case FudgetSizeType::Max:
+			if (_max_dirty)
+			{
+				_cached_max = RequestSize(type);
+				_max_dirty = false;
+			}
+			return _cached_max;
+		default:
+			return Float2(0.f);
+	}
 }
