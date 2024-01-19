@@ -10,12 +10,14 @@ FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(contro
 }
 
 
-FudgetListLayout::FudgetListLayout(const SpawnParams &params) : Base(params), _ori(FudgetOrientation::Horizontal), _stretched(true)
+FudgetListLayout::FudgetListLayout(const SpawnParams &params) : FudgetListLayout(params, FudgetOrientation::Horizontal)
 {
 
 }
 
-FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation) : Base(params), _ori(orientation), _stretched(true)
+FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation) : Base(params,
+	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange
+	), _ori(orientation), _stretched(true)
 {
 
 }
@@ -23,13 +25,13 @@ FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation 
 void FudgetListLayout::SetOrientation(FudgetOrientation value)
 {
 	_ori = value;
-	MakeDirty(FudgetDirtType::All);
+	MarkDirty(FudgetDirtType::All, true);
 }
 
 void FudgetListLayout::SetStretched(bool value)
 {
 	_stretched = value;
-	MakeDirty(FudgetDirtType::All);
+	MarkDirty(FudgetDirtType::All, true);
 }
 
 bool FudgetListLayout::LayoutChildren()
@@ -247,10 +249,6 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 
 Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 {
-	// This check might be unnecessary, because it is only called from FudgetLayout, but keeping here for now.
-	if (type != FudgetSizeType::Hint && type != FudgetSizeType::Min && type != FudgetSizeType::Max)
-		return Float2(0.f);
-
 	auto owner = GetOwner();
 	if (owner == nullptr)
 		return Float2(0.0f);

@@ -3,7 +3,8 @@
 #include "../Utils/Utils.h"
 
 
-FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params)
+FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params,
+	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize)
 {
 
 }

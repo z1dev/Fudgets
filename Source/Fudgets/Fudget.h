@@ -462,7 +462,7 @@ private:
     float _navigationInputRepeatDelay = 0.5f;
     float _NavigationInputRepeatRate = 0.5f;
 
-    Float2 _saved_size = Float2(500.f);
+    mutable Float2 _saved_size = Float2(500.f);
 
 
     //friend class FudgetContainer;

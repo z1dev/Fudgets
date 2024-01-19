@@ -26,14 +26,23 @@ FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Gu
 }
 
 
-FudgetLayout::FudgetLayout() : ScriptingObject(SpawnParams(Guid::New(), TypeInitializer)), _dirty(false), _owner(nullptr),
-	_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
+FudgetLayout::FudgetLayout() : FudgetLayout(SpawnParams(Guid::New(), TypeInitializer), FudgetLayoutFlag::None)
 { 
 
 }
 
-FudgetLayout::FudgetLayout(const SpawnParams &params) : ScriptingObject(params), _dirty(false), _owner(nullptr),
-	_hint_dirty(true), _min_dirty(true), _max_dirty(true), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f)
+FudgetLayout::FudgetLayout(FudgetLayoutFlag flags) : FudgetLayout(SpawnParams(Guid::New(), TypeInitializer), _flags)
+{
+
+}
+
+FudgetLayout::FudgetLayout(const SpawnParams &params) : FudgetLayout(params, FudgetLayoutFlag::None)
+{
+
+}
+
+FudgetLayout::FudgetLayout(const SpawnParams &params, FudgetLayoutFlag flags) : ScriptingObject(params), _owner(nullptr),
+		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(flags)
 {
 
 }
@@ -50,41 +59,62 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 		return;
 
 	_owner = value;
-	_dirty = true;
+	_layout_dirty = true;
+	_size_dirty = true;
 
 	if (value != nullptr)
 		FillSlots();
 }
 
-void FudgetLayout::MakeDirty(FudgetDirtType dirt_flags)
+void FudgetLayout::MarkDirty(FudgetDirtType dirt_flags, bool content_changed)
 {
-	_dirty = true;
-	if ((int)dirt_flags & (int)FudgetSizeType::Hint)
-		_hint_dirty = true;
-	if ((int)dirt_flags & (int)FudgetSizeType::Min)
-		_min_dirty = true;
-	if ((int)dirt_flags & (int)FudgetSizeType::Max)
-		_max_dirty = true;
+	if ((int)dirt_flags & (int)FudgetDirtType::Size)
+	{
+		_layout_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContainerResize)) || (content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContentResize));
+		_size_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContainerResize)) || (content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContentResize));
+	}
+	if ((int)dirt_flags & (int)FudgetDirtType::Position)
+	{
+		_layout_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContainerReposition)) || (content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContentReposition));
+		_size_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContainerReposition)) || (content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContentReposition));
+	}
+}
 
-	if (_owner != nullptr)
-		_owner->MakeParentLayoutDirty(dirt_flags);
+void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags)
+{
+	if ((int)dirt_flags & (int)FudgetDirtType::Size)
+	{
+		_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContainerResize);
+		_size_dirty |= HasFlags(FudgetLayoutFlag::ResizeOnContainerResize);
+	}
+	if ((int)dirt_flags & (int)FudgetDirtType::Position)
+	{
+		_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContainerReposition);
+		_size_dirty |= HasFlags(FudgetLayoutFlag::ResizeOnContainerReposition);
+	}
 }
 
 void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 {
-	MakeDirty(FudgetDirtType::All);
 	auto slot = CreateSlot(control);
 	if (index == -1)
 		_slots.Add(slot);
 	else
 		_slots.Insert(index, slot);
+	
+	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
 void FudgetLayout::ChildRemoved(int index)
 {
-	MakeDirty(FudgetDirtType::All);
 	Delete(_slots[index]);
 	_slots.RemoveAtKeepOrder(index);
+
+	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
 void FudgetLayout::ChildMoved(int from, int to)
@@ -92,20 +122,51 @@ void FudgetLayout::ChildMoved(int from, int to)
 	if (from == to || from < 0 || to < 0 || from >= _slots.Count() || to >= _slots.Count())
 		return;
 
-	MakeDirty(FudgetDirtType::All);
 	MoveInArray(_slots, from, to);
+
+	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentIndexChange))
+		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentIndexChange);
 }
 
 void FudgetLayout::AllDeleted()
 {
 	if (_slots.Count() == 0)
 		return;
+
+	for (int ix = _slots.Count() - 1; ix >= 0; --ix)
+		Delete(_slots[ix]);
+	_slots.Clear();
 	
+	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+	_layout_dirty = false;
+	_size_dirty = true;
+}
+
+bool FudgetLayout::IsControlPositioningPermitted(const FudgetControl *control) const
+{
+	return false;
+}
+
+FudgetLayoutFlag FudgetLayout::GetLayoutFlags() const
+{
+	return _flags;
+}
+
+void FudgetLayout::SetLayoutFlags(FudgetLayoutFlag flags)
+{
+	_flags = flags;
+}
+
+bool FudgetLayout::HasFlags(FudgetLayoutFlag flags)
+{
+	return ((int)flags & (int)_flags) == (int)flags;
 }
 
 Float2 FudgetLayout::GetHintSize() const
 {
-	if (!_hint_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
+	if (!_size_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
 		return _cached_hint;
 	_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
 	return _cached_hint;
@@ -113,7 +174,7 @@ Float2 FudgetLayout::GetHintSize() const
 
 Float2 FudgetLayout::GetMinSize() const
 {
-	if (!_min_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
+	if (!_size_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
 		return _cached_min;
 	_cached_min = GetRequestedSize(FudgetSizeType::Min);
 	return _cached_min;
@@ -121,7 +182,7 @@ Float2 FudgetLayout::GetMinSize() const
 
 Float2 FudgetLayout::GetMaxSize() const
 {
-	if (!_max_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
+	if (!_size_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
 		return _cached_max;
 	_cached_max = GetRequestedSize(FudgetSizeType::Max);
 	return _cached_max;
@@ -129,17 +190,18 @@ Float2 FudgetLayout::GetMaxSize() const
 
 void FudgetLayout::RequestLayoutChildren(bool forced)
 {
-	if (!_dirty && !forced)
+	if (!_layout_dirty && !forced)
 		return;
 	if (LayoutChildren())
-		_dirty = false;
+		_layout_dirty = false;
 }
 
 void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
 {
 	if (_owner == nullptr)
 		return;
-	_owner->ChildAt(index)->LayoutUpdate(pos, size);
+	FudgetControl *control = _owner->ChildAt(index);
+	control->LayoutUpdate(pos, size);
 }
 
 FudgetLayoutSlot* FudgetLayout::GetSlot(int index) const
@@ -169,35 +231,22 @@ void FudgetLayout::FillSlots()
 	}
 }
 
-void FudgetLayout::UnmarkLayoutDirty()
-{
-	_dirty = false;
-}
-
 Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type) const
 {
+	if (_size_dirty)
+	{
+		_cached_hint = RequestSize(type);
+		_cached_min = RequestSize(type);
+		_cached_max = RequestSize(type);
+		_size_dirty = false;
+	}
 	switch (type)
 	{
 		case FudgetSizeType::Hint:
-			if (_hint_dirty)
-			{
-				_cached_hint = RequestSize(type);
-				_hint_dirty = false;
-			}
 			return _cached_hint;
 		case FudgetSizeType::Min:
-			if (_min_dirty)
-			{
-				_cached_min = RequestSize(type);
-				_min_dirty = false;
-			}
 			return _cached_min;
 		case FudgetSizeType::Max:
-			if (_max_dirty)
-			{
-				_cached_max = RequestSize(type);
-				_max_dirty = false;
-			}
 			return _cached_max;
 		default:
 			return Float2(0.f);

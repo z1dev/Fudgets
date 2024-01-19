@@ -26,12 +26,10 @@ enum class FudgetSizeType : uint8
 API_ENUM(Attributes = "Flags")
 enum class FudgetDirtType : uint8
 {
-	Hint = 1,
-	Min = 2,
-	Max = 4,
-	Position = 8,
+	Size = 1,
+	Position = 2,
 
-	All = Hint | Min | Max | Position
+	All = Size | Position
 };
 
 DECLARE_ENUM_OPERATORS(FudgetDirtType);
@@ -123,7 +121,7 @@ public:
 	/// Sets the minimum size for the control which is a hint for the layout when it has to compress its controls.
 	/// </summary>
 	/// <param name="value">The new minimum size.</param>
-	API_PROPERTY() void SetMinSize(Float2 value);
+	API_PROPERTY() virtual void SetMinSize(Float2 value);
 
 	/// <summary>
 	/// Gets the size that determines how big a control can grow at most. The control might become larger
@@ -136,7 +134,7 @@ public:
 	/// than this size if the layout it is in doesn't respect the property.
 	/// </summary>
 	/// <returns>The maximum size the control is allowed to have</returns>
-	API_PROPERTY() void SetMaxSize(Float2 value);
+	API_PROPERTY() virtual void SetMaxSize(Float2 value);
 
 	/// <summary>
 	/// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
@@ -217,13 +215,24 @@ public:
 	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
 
 	/// <summary>
-	/// Notifies the parent to mark its layout as dirty, possibly causing a calculation of child control
-	/// sizes and positions.
+	/// Called by inner size or position changing functions to deal with changes. This implementation
+	/// notifies a parent to mark itself dirty.
 	/// </summary>
 	/// <param name="dirt_flags">Flags of what changed</param>
-	API_FUNCTION() virtual void MakeParentLayoutDirty(FudgetDirtType dirt_flags);
+	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
 private:
-	void LayoutUpdate(Float2 pos, Float2 size);
+	/// <summary>
+	/// Controls in a layout usually can't be moved freely. This function determines if that's the case or not.
+	/// </summary>
+	/// <returns>True if the control is allowed to directly change its position</returns>
+	bool IsPositionChangePermitted() const;
+
+	/// <summary>
+	/// Directly changes the position and size of the control. Only to be called by FudgetLayout.
+	/// </summary>
+	/// <param name="pos">The new position</param>
+	/// <param name="size">The new size</param>
+	virtual void LayoutUpdate(Float2 pos, Float2 size);
 
 	FudgetContainer *_parent;
 	int _index;

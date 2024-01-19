@@ -50,6 +50,59 @@ enum class FudgetOrientation
 	Vertical
 };
 
+/// <summary>
+/// Flags that indicate what change will result in dirty layouts and sizes.
+/// </summary>
+API_ENUM(Attributes = "Flags")
+enum class FudgetLayoutFlag : uint16
+{
+	/// <summary>
+	/// The empty flag with no effect
+	/// </summary>
+	None = 0,
+	/// <summary>
+	/// Layout calculation is necessary if the owner container was resized.
+	/// </summary>
+	LayoutOnContainerResize = 1 << 0,
+	/// <summary>
+	/// Layout calculation is necessary if the owner container's position changed.
+	/// </summary>
+	LayoutOnContainerReposition = 1 << 1,
+	/// <summary>
+	/// Layout calculation is necessary if a child control was resized.
+	/// </summary>
+	LayoutOnContentResize = 1 << 2,
+	/// <summary>
+	/// Layout calculation is necessary if a child control's position changed.
+	/// </summary>
+	LayoutOnContentReposition = 1 << 3,
+	/// <summary>
+	/// Size calculation is necessary if the owner container ws resized.
+	/// </summary>
+	ResizeOnContainerResize = 1 << 4,
+	/// <summary>
+	/// Size calculation is necessary if the owner container's position changed.
+	/// </summary>
+	ResizeOnContainerReposition = 1 << 5,
+	/// <summary>
+	/// Size calculation is necessary if a child control was resized.
+	/// </summary>
+	ResizeOnContentResize = 1 << 6,
+	/// <summary>
+	/// Size calculation is necessary if a child control's position changed.
+	/// </summary>
+	ResizeOnContentReposition = 1 << 7,
+
+	/// <summary>
+	/// Layout calculation is necessary if a child control's index changed.
+	/// </summary>
+	LayoutOnContentIndexChange = 1 << 8,
+	/// <summary>
+	/// Size calculation is necessary if a child control's index changed.
+	/// </summary>
+	ResizeOnContentIndexChange = 1 << 9,
+};
+DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
 
 /// <summary>
@@ -81,8 +134,8 @@ class FUDGETS_API FudgetLayout : public ScriptingObject
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayout);
 public:
-
 	FudgetLayout();
+	FudgetLayout(FudgetLayoutFlag flags);
 	~FudgetLayout();
 
 	/// <summary>
@@ -98,18 +151,35 @@ public:
 	API_PROPERTY() void SetOwner(FudgetContainer *value);
 
 	/// <summary>
-	/// Gets the dirty state of the stored values in the layout and child control slots. If this is true,
-	/// the controls layout will be recalculated on the next frame.
+	/// Dirty layout means that due to changes of the owner container or its children, the layout of
+	/// the child controls need to be recalculated. This is done on the next frame.
 	/// </summary>
-	/// <returns>Whether the children controls of the container need recalculation.</returns>
-	API_PROPERTY() bool IsLayoutDirty() const { return _dirty; }
+	/// <returns>Whether layout recalculation is necessary</returns>
+	API_PROPERTY() bool IsLayoutDirty() const { return _layout_dirty; }
+
 	/// <summary>
-	/// Marks the layout's stored values of child control slot sizes and positions as dirty, making a recalculation
-	/// necessary for next frame. Call if some value changed in a control that might require changes in the layout.
-	/// Any change requires new layout calculation, but not necessarily size calculations.
+	/// Dirty size means that due to changes of the owner container or its children, the stored size
+	/// values are out of date and need to be recalculated. This is done on the next frame.
 	/// </summary>
-	/// <param name="sizeType">Which sizes need recalculation. This can be Hint, Min, Max or All.</param>
-	API_FUNCTION() virtual void MakeDirty(FudgetDirtType dirt_flags);
+	/// <returns>Whether size recalculation is necessary</returns>
+	API_PROPERTY() bool IsSizeDirty() const { return _size_dirty; }
+
+	/// <summary>
+	/// Notifies the layout that its owner container could have changed since the last layout or measurement
+	/// calculations. This can mean that the layout itself needs to update the child controls inside the
+	/// container. Layouts that don't depend on the specific change are free to ignore this call.
+	/// </summary>
+	/// <param name="dirt_flags">What changed in the container from the size, the position or both</param>
+	/// <param name="content_changed">True if the changed was caused by a child control or layout</param>
+	API_FUNCTION() virtual void MarkDirty(FudgetDirtType dirt_flags, bool content_changed);
+
+	/// <summary>
+	/// Sets the dirty flag for any change that happened during layout recalculation in a parent's layout. The
+	/// layout is calculated from the top, so when this function is called, this layout will be calculated on the
+	/// same frame.
+	/// </summary>
+	/// <param name="dirt_flags"></param>
+	API_FUNCTION() virtual void MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags);
 
 	/// <summary>
 	/// Returns the calculated preferred size of the layout with all the managed controls laid out at the ideal size.
@@ -145,6 +215,7 @@ protected:
 	/// <param name="pos">The calculated position of the control</param>
 	/// <param name="size">The calculated size of the control</param>
 	API_FUNCTION() virtual void SetControlDimensions(int index, Float2 pos, Float2 size);
+
 	/// <summary>
 	/// Returns the slot, which represents the attributes of a control depending on what values a layout needs.
 	/// The returned value is a derived class with a type that depends on the layout.
@@ -152,36 +223,32 @@ protected:
 	/// <param name="index">The index of the control to make the slot for</param>
 	/// <returns>The slot for layouting attributes or null if the index is invalid</returns>
 	API_FUNCTION() FudgetLayoutSlot* GetSlot(int index) const;
+
 	/// <summary>
 	/// Called during destruction or when the layout is removed from the owner container to delete the allocated
 	/// slots.
 	/// </summary>
 	API_FUNCTION() virtual void CleanUp();
+
 	/// <summary>
 	/// Adds or recreates the slots for the controls of the owner container. Called when the owner container changed.
 	/// </summary>
 	API_FUNCTION() virtual void FillSlots();
 
 	/// <summary>
-	/// Updates the dirty flag to show that the layout doesn't need recalculation. Doesn't influence the recalculation
-	/// of sizes that were not needed during the last layout.
+	/// Returns one of the sizes of the layout. If the size data is dirty, it first calls RequestSize to recalculate
+	/// them, otherwise no calculation takes place.
 	/// </summary>
-	API_FUNCTION() void UnmarkLayoutDirty();
-
-	/// <summary>
-	/// Calls RequestSize to calculate one of the sizes of the layout, or their cached value if
-	/// recalculation isn't necessary.
-	/// </summary>
-	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
-	/// <returns>The size for the layout with the controls</returns>
+	/// <param name="type">Which size to return</param>
+	/// <returns>The calculated size</returns>
 	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType type) const;
 
 	/// <summary>
-	/// Calculates one of the sizes of the layout that was requested. Call GetRequestedSize() to avoid recalculating
-	/// the sizes when not necessary. Don't call the Get***Size() functions to avoid recursive calls.
+	/// Calculates one of the size data, and then returns it. Always call GetRequestedSize() which first checks if
+	/// previously calculated values are still valid, to avoid recalculation when unnecessary.
 	/// </summary>
-	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
-	/// <returns>The calculated size of the layout</returns>
+	/// <param name="type">Which size to calculate and return</param>
+	/// <returns>The calculated size</returns>
 	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const = 0;
 
 	/// <summary>
@@ -196,7 +263,7 @@ protected:
 	/// </summary>
 	/// <param name="control">The control that will be inserted into the slot</param>
 	/// <returns>The created object holding layouting properties of the control</returns>
-	virtual FudgetLayoutSlot* CreateSlot(FudgetControl *control) = 0;
+	API_FUNCTION() virtual FudgetLayoutSlot* CreateSlot(FudgetControl *control) = 0;
 
 	/// <summary>
 	/// Called by the owner container when a child control was added to it. Checks which recalculations
@@ -226,20 +293,51 @@ protected:
 	/// </summary>
 	API_FUNCTION() virtual void AllDeleted();
 
+	/// <summary>
+	/// Determines if the control is allowed to update its position directly, instead of being positioned
+	/// by its container or this layout. The call is invalid if the control doesn't belong to the container.
+	/// The default implementation always returns false.
+	/// </summary>
+	/// <param name="control">The control requesting position change</param>
+	/// <returns>Whether the control can change its position or not</returns>
+	API_FUNCTION() bool IsControlPositioningPermitted(const FudgetControl *control) const;
+
+	/// <summary>
+	/// Describes what changes will cause a layout to mark itself dirty.
+	/// </summary>
+	/// <returns>The new flags</returns>
+	API_PROPERTY() FudgetLayoutFlag GetLayoutFlags() const;
+
+	/// <summary>
+	/// Describes what changes will cause a layout to mark itself dirty.
+	/// Override in derived classes if the flags can change during runtime
+	/// </summary>
+	/// <param name="flags">The new flags</param>
+	API_PROPERTY() void SetLayoutFlags(FudgetLayoutFlag flags);
+
+	/// <summary>
+	/// Matches the given flags with those of the layout, returning true only if all the flags were found.
+	/// </summary>
+	/// <param name="flags">The flags to look for</param>
+	/// <returns>Whether the values were all matching the layout flags</returns>
+	API_FUNCTION() bool HasFlags(FudgetLayoutFlag flags);
+
+
 	FudgetLayout(const SpawnParams &params);
+	FudgetLayout(const SpawnParams &params, FudgetLayoutFlag _flags);
 
 private:
-	bool _dirty;
-
 	FudgetContainer *_owner;
 	Array<FudgetLayoutSlot*> _slots;
 
-	mutable bool _hint_dirty;
-	mutable bool _min_dirty;
-	mutable bool _max_dirty;
+	bool _layout_dirty;
+	mutable bool _size_dirty;
+
 	mutable Float2 _cached_hint;
 	mutable Float2 _cached_min;
 	mutable Float2 _cached_max;
+
+	FudgetLayoutFlag _flags;
 
 	friend class FudgetContainer;
 };

@@ -6,14 +6,16 @@
 
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
-_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(nullptr)
+	_layout(nullptr), _changing(false), _width_from_layout(true), _height_from_layout(true),
+	_min_width_from_layout(true), _max_width_from_layout(true), _min_height_from_layout(true), _max_height_from_layout(true), _root(nullptr)
 {
 
 }
 
 FudgetContainer::FudgetContainer(Fudget *_ui_owner) : Base(SpawnParams(Guid::New(), TypeInitializer)),
 	_layout(nullptr), _changing(false), _height_from_layout(_ui_owner == nullptr), _width_from_layout(_ui_owner == nullptr),
-	_root(_ui_owner)
+	_min_width_from_layout(_ui_owner == nullptr), _max_width_from_layout(_ui_owner == nullptr),
+	_min_height_from_layout(_ui_owner == nullptr), _max_height_from_layout(_ui_owner == nullptr), _root(_ui_owner)
 {
 }
 
@@ -166,9 +168,43 @@ void FudgetContainer::DeleteAll()
 		_layout->AllDeleted();
 }
 
+void FudgetContainer::SetHintSize(Float2 value)
+{
+	if (Float2::NearEqual(_hint_size, value))
+		return;
+	Base::SetHintSize(value);
+
+	if ((_width_from_layout && _height_from_layout) || _layout == nullptr)
+		return;
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetMinSize(Float2 value)
+{
+	if (Float2::NearEqual(_min_size, value))
+		return;
+	Base::SetMinSize(value);
+
+	if ((_min_width_from_layout && _min_height_from_layout) || _layout == nullptr)
+		return;
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetMaxSize(Float2 value)
+{
+	if (Float2::NearEqual(_max_size, value))
+		return;
+	Base::SetMaxSize(value);
+
+	if ((_max_width_from_layout && _max_height_from_layout) || _layout == nullptr)
+		return;
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
 Float2 FudgetContainer::GetSize() const
 {
 	// TODO: make a separate class just for root stuff.
+
 	if (_root != nullptr)
 		return _root->GetSize();
 
@@ -178,37 +214,41 @@ Float2 FudgetContainer::GetSize() const
 Float2 FudgetContainer::GetHintSize() const
 {
 	if (_root != nullptr)
-		return _root->GetSize();;
+		return _root->GetSize();
 
-	if (_root == nullptr && _layout != nullptr && (_height_from_layout || _width_from_layout))
+	if (_layout != nullptr && (_width_from_layout || _height_from_layout))
 	{
 		Float2 value = _layout->GetHintSize();
-		if (_height_from_layout && _width_from_layout)
-			return value;
+		if (_width_from_layout && _height_from_layout)
+			return Float2::Max(GetMinSize(), value);
 
 		Float2 base = Base::GetHintSize();
-		if (!_height_from_layout)
-			value.Y = base.Y;
 		if (!_width_from_layout)
 			value.X = base.X;
+		if (!_height_from_layout)
+			value.Y = base.Y;
+		return Float2::Max(GetMinSize(), value);
 	}
-	return Base::GetHintSize();
+	return Float2::Max(GetMinSize(), Base::GetHintSize());
 }
 
 Float2 FudgetContainer::GetMinSize() const
 {
 	if (_root != nullptr)
-		return _root->GetSize();;
+		return _root->GetSize();
 
-	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
+	if (_layout != nullptr && (_min_width_from_layout || _max_height_from_layout))
 	{
 		Float2 value = _layout->GetMinSize();
+		if (_min_width_from_layout || _max_height_from_layout)
+			return Float2::Max(Float2::Zero, value);
 
 		Float2 base = Base::GetMinSize();
-		if (!_height_from_layout)
-			value.Y = base.Y;
-		if (!_width_from_layout)
+		if (!_min_width_from_layout)
 			value.X = base.X;
+		if (!_max_height_from_layout)
+			value.Y = base.Y;
+		return Float2::Max(Float2::Zero, value);
 	}
 	return Base::GetMinSize();
 }
@@ -216,45 +256,122 @@ Float2 FudgetContainer::GetMinSize() const
 Float2 FudgetContainer::GetMaxSize() const
 {
 	if (_root != nullptr)
-		return _root->GetSize();;
+		return _root->GetSize();
 
-	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
+	Float2 hint_size = GetHintSize();
+
+	if (_layout != nullptr && (_max_width_from_layout || _max_height_from_layout))
 	{
 		Float2 value = _layout->GetMaxSize();
+		if (_max_width_from_layout && _max_height_from_layout)
+			return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
 
 		Float2 base = Base::GetMaxSize();
-		if (!_height_from_layout)
-			value.Y = base.Y;
-		if (!_width_from_layout)
+		if (!_max_width_from_layout)
 			value.X = base.X;
+		if (!_max_height_from_layout)
+			value.Y = base.Y;
+		return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
 	}
-	return Base::GetMaxSize();
-}
 
-void FudgetContainer::SetUsingLayoutHeight(bool value)
-{
-	if (_height_from_layout == value)
-		return;
-	_height_from_layout = value;
-	if (_layout == nullptr)
-		return;
-	MakeParentLayoutDirty(FudgetDirtType::All);
+	Float2 value = Base::GetMaxSize();
+	return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
+
 }
 
 void FudgetContainer::SetUsingLayoutWidth(bool value)
 {
 	if (_width_from_layout == value)
 		return;
+
 	_width_from_layout = value;
+
 	if (_layout == nullptr)
 		return;
-	MakeParentLayoutDirty(FudgetDirtType::All);
+
+	MarkLayoutDirty(FudgetDirtType::Size);
 }
 
-void FudgetContainer::MakeLayoutDirty(FudgetDirtType dirt_flags)
+void FudgetContainer::SetUsingLayoutHeight(bool value)
 {
-	if (_layout != nullptr)
-		_layout->MakeDirty(dirt_flags);
+	if (_height_from_layout == value)
+		return;
+
+	_height_from_layout = value;
+
+	if (_layout == nullptr)
+		return;
+
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetUsingLayoutMinWidth(bool value)
+{
+	if (_min_width_from_layout == value)
+		return;
+
+	_min_width_from_layout = value;
+
+	if (_layout == nullptr)
+		return;
+
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetUsingLayoutMaxWidth(bool value)
+{
+	if (_max_width_from_layout == value)
+		return;
+
+	_max_width_from_layout = value;
+
+	if (_layout == nullptr)
+		return;
+
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetUsingLayoutMinHeight(bool value)
+{
+	if (_min_height_from_layout == value)
+		return;
+
+	_min_height_from_layout = value;
+
+	if (_layout == nullptr)
+		return;
+
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::SetUsingLayoutMaxHeight(bool value)
+{
+	if (_max_height_from_layout == value)
+		return;
+
+	_max_height_from_layout = value;
+
+	if (_layout == nullptr)
+		return;
+
+	MarkLayoutDirty(FudgetDirtType::Size);
+}
+
+void FudgetContainer::MarkLayoutDirty(FudgetDirtType dirt_flags, bool content_changed)
+{
+	if (_layout == nullptr)
+		return;
+
+	_layout->MarkDirty(dirt_flags, content_changed);
+
+	if (_parent != nullptr && _layout->IsSizeDirty())
+	{
+		// Notify the parent only, if the change in the layout influences the container's size as well
+		if (IsUsingLayoutWidth() || IsUsingLayoutHeight() ||
+			IsUsingLayoutMinWidth() || IsUsingLayoutMaxWidth() ||
+			IsUsingLayoutMinHeight() || IsUsingLayoutMaxHeight())
+			_parent->MarkLayoutDirty(dirt_flags, true);
+	}
 }
 
 void FudgetContainer::RequestLayout()
@@ -287,11 +404,31 @@ void FudgetContainer::AddLayoutInternal(FudgetLayout *layout)
 	layout->SetOwner(this);
 }
 
-void FudgetContainer::MakeParentLayoutDirty(FudgetDirtType dirt_flags)
+void FudgetContainer::SizeOrPosModified(FudgetDirtType dirt_flags)
 {
-	if (_layout != nullptr && dirt_flags != FudgetDirtType::Position)
-		_layout->MakeDirty(dirt_flags);
-	else
-		Base::MakeParentLayoutDirty(dirt_flags);
+	; // NO-OP
+}
 
+bool FudgetContainer::IsControlPositioningPermitted(const FudgetControl *control) const
+{
+	if (_layout == nullptr)
+		return true;
+	if (control->GetParent() != this)
+		return false;
+	return _layout->IsControlPositioningPermitted(control);
+}
+
+void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
+{
+	bool pos_changed = !Float2::NearEqual(_pos, pos);
+	bool size_changed = !Float2::NearEqual(_size, size);
+
+	Base::LayoutUpdate(pos, size);
+
+	if (_layout != nullptr && pos_changed || size_changed)
+	{
+		FudgetDirtType type = (FudgetDirtType)((pos_changed ? (int)FudgetDirtType::Position : 0) & (size_changed ? (int)FudgetDirtType::Size : 0));
+
+		_layout->MarkDirtyOnLayoutUpdate(type);
+	}
 }

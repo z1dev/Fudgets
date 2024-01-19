@@ -226,7 +226,10 @@ void Fudget::SetRenderMode(FudgetRenderMode value)
 
         // Reset size
         if (previous == FudgetRenderMode::ScreenSpace || (_renderMode == FudgetRenderMode::WorldSpace || _renderMode == FudgetRenderMode::WorldSpaceFaceCamera))
-            SetSize(Float2(500, 500));
+        {
+            _saved_size = Float2(500, 500);
+            SetSize(_saved_size);
+        }
     }
 }
 
@@ -243,7 +246,7 @@ Float2 Fudget::GetSize() const
 {
     if (_renderMode == FudgetRenderMode::ScreenSpace)
     {
-        return Screen::GetSize();
+        _saved_size = Screen::GetSize();
     }
 
     return _saved_size;
@@ -466,6 +469,7 @@ void Fudget::Setup()
     {
         case FudgetRenderMode::ScreenSpace:
         {
+            _saved_size = Screen::GetSize();
             //// Fill the screen area
             //if (_guiRoot != nullptr)
             //{

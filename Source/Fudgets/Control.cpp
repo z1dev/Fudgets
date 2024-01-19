@@ -52,7 +52,7 @@ void FudgetControl::SetHintSize(Float2 value)
 	if (Float2::NearEqual(_hint_size, value))
 		return;
 	_hint_size = value;
-	MakeParentLayoutDirty(FudgetDirtType::Hint);
+	SizeOrPosModified(FudgetDirtType::Size);
 }
 
 void FudgetControl::SetMinSize(Float2 value)
@@ -60,7 +60,7 @@ void FudgetControl::SetMinSize(Float2 value)
 	if (Float2::NearEqual(_min_size, value))
 		return;
 	_min_size = value;
-	MakeParentLayoutDirty(FudgetDirtType::Min);
+	SizeOrPosModified(FudgetDirtType::Size);
 }
 
 void FudgetControl::SetMaxSize(Float2 value)
@@ -68,7 +68,7 @@ void FudgetControl::SetMaxSize(Float2 value)
 	if (Float2::NearEqual(_max_size, value))
 		return;
 	_max_size = value;
-	MakeParentLayoutDirty(FudgetDirtType::Max);
+	SizeOrPosModified(FudgetDirtType::Size);
 }
 
 Float2 FudgetControl::GetSize() const
@@ -103,11 +103,11 @@ Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const
 
 void FudgetControl::SetPosition(Float2 value)
 {
-	if (Float2::NearEqual(_pos, value))
+	if (Float2::NearEqual(_pos, value) || !IsPositionChangePermitted())
 		return;
 
 	_pos = value;
-	MakeParentLayoutDirty(FudgetDirtType::Position);
+	SizeOrPosModified(FudgetDirtType::Position);
 }
 
 
@@ -150,11 +150,17 @@ void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
 }
 
 
-
-void FudgetControl::MakeParentLayoutDirty(FudgetDirtType dirt_flags)
+void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
 {
 	if (_parent != nullptr)
-		_parent->MakeLayoutDirty(dirt_flags);
+		_parent->MarkLayoutDirty(dirt_flags, true);
+}
+
+bool FudgetControl::IsPositionChangePermitted() const
+{
+	if (!_parent)
+		return true;
+	return _parent->IsControlPositioningPermitted(this);
 }
 
 void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
