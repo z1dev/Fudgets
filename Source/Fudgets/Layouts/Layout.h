@@ -331,7 +331,14 @@ protected:
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
 	/// <returns>Whether the values were all matching the layout flags</returns>
-	API_FUNCTION() bool HasFlags(FudgetLayoutFlag flags);
+	API_FUNCTION() bool HasAllFlags(FudgetLayoutFlag flags) const;
+
+	/// <summary>
+	/// Matches the given flags with those of the layout, returning true if any of the flags was found.
+	/// </summary>
+	/// <param name="flags">The flags to look for</param>
+	/// <returns>Whether at least one value was matching the layout flags</returns>
+	API_FUNCTION() bool HasAnyFlag(FudgetLayoutFlag flags) const;
 
 
 	FudgetLayout(const SpawnParams &params);

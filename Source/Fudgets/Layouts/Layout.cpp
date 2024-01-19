@@ -70,13 +70,13 @@ void FudgetLayout::MarkDirty(FudgetDirtType dirt_flags, bool content_changed)
 {
 	if ((int)dirt_flags & (int)FudgetDirtType::Size)
 	{
-		_layout_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContainerResize)) || (content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContentResize));
-		_size_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContainerResize)) || (content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContentResize));
+		_layout_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize));
+		_size_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize));
 	}
 	if ((int)dirt_flags & (int)FudgetDirtType::Position)
 	{
-		_layout_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContainerReposition)) || (content_changed && HasFlags(FudgetLayoutFlag::LayoutOnContentReposition));
-		_size_dirty |= (!content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContainerReposition)) || (content_changed && HasFlags(FudgetLayoutFlag::ResizeOnContentReposition));
+		_layout_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentReposition));
+		_size_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentReposition));
 	}
 }
 
@@ -84,13 +84,13 @@ void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags)
 {
 	if ((int)dirt_flags & (int)FudgetDirtType::Size)
 	{
-		_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContainerResize);
-		_size_dirty |= HasFlags(FudgetLayoutFlag::ResizeOnContainerResize);
+		_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize);
+		_size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize);
 	}
 	if ((int)dirt_flags & (int)FudgetDirtType::Position)
 	{
-		_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContainerReposition);
-		_size_dirty |= HasFlags(FudgetLayoutFlag::ResizeOnContainerReposition);
+		_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition);
+		_size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition);
 	}
 }
 
@@ -102,9 +102,9 @@ void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 	else
 		_slots.Insert(index, slot);
 	
-	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
 		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
-	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
+	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
 void FudgetLayout::ChildRemoved(int index)
@@ -112,9 +112,9 @@ void FudgetLayout::ChildRemoved(int index)
 	Delete(_slots[index]);
 	_slots.RemoveAtKeepOrder(index);
 
-	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
 		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
-	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
+	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
 void FudgetLayout::ChildMoved(int from, int to)
@@ -124,9 +124,9 @@ void FudgetLayout::ChildMoved(int from, int to)
 
 	MoveInArray(_slots, from, to);
 
-	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentIndexChange))
+	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentIndexChange))
 		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
-	_layout_dirty |= HasFlags(FudgetLayoutFlag::LayoutOnContentIndexChange);
+	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentIndexChange);
 }
 
 void FudgetLayout::AllDeleted()
@@ -138,7 +138,7 @@ void FudgetLayout::AllDeleted()
 		Delete(_slots[ix]);
 	_slots.Clear();
 	
-	if (_owner != nullptr && HasFlags(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
+	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
 		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
 	_layout_dirty = false;
 	_size_dirty = true;
@@ -159,9 +159,14 @@ void FudgetLayout::SetLayoutFlags(FudgetLayoutFlag flags)
 	_flags = flags;
 }
 
-bool FudgetLayout::HasFlags(FudgetLayoutFlag flags)
+bool FudgetLayout::HasAllFlags(FudgetLayoutFlag flags) const
 {
 	return ((int)flags & (int)_flags) == (int)flags;
+}
+
+bool FudgetLayout::HasAnyFlag(FudgetLayoutFlag flags) const
+{
+	return ((int)flags & (int)_flags) != 0;
 }
 
 Float2 FudgetLayout::GetHintSize() const
