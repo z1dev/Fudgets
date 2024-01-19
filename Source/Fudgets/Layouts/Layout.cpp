@@ -103,7 +103,7 @@ void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 		_slots.Insert(index, slot);
 	
 	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
-		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+		_owner->MarkLayoutDirty(FudgetDirtType::Size, true);
 	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
@@ -113,7 +113,7 @@ void FudgetLayout::ChildRemoved(int index)
 	_slots.RemoveAtKeepOrder(index);
 
 	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
-		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+		_owner->MarkLayoutDirty(FudgetDirtType::Size, true);
 	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition);
 }
 
@@ -125,7 +125,7 @@ void FudgetLayout::ChildMoved(int from, int to)
 	MoveInArray(_slots, from, to);
 
 	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentIndexChange))
-		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+		_owner->MarkLayoutDirty(FudgetDirtType::Size, true);
 	_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContentIndexChange);
 }
 
@@ -139,7 +139,7 @@ void FudgetLayout::AllDeleted()
 	_slots.Clear();
 	
 	if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::ResizeOnContentReposition))
-		_owner->MarkLayoutDirty(FudgetDirtType::All, true);
+		_owner->MarkLayoutDirty(FudgetDirtType::Size, true);
 	_layout_dirty = false;
 	_size_dirty = true;
 }

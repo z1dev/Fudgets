@@ -433,7 +433,7 @@ void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
 
 	if (_layout != nullptr && (pos_changed || size_changed))
 	{
-		FudgetDirtType type = (FudgetDirtType)((pos_changed ? (int)FudgetDirtType::Position : 0) & (size_changed ? (int)FudgetDirtType::Size : 0));
+		FudgetDirtType type = (FudgetDirtType)((pos_changed ? (int)FudgetDirtType::Position : 0) | (size_changed ? (int)FudgetDirtType::Size : 0));
 
 		_layout->MarkDirtyOnLayoutUpdate(type);
 	}

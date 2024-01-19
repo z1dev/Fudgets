@@ -5,7 +5,7 @@
 
 
 FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(control),
-	_horz_align(FudgetHorzAlign::Left), _vert_align(FudgetVertAlign::Top), _enforce_limits(false)
+	_horz_align(FudgetHorzAlign::Left), _vert_align(FudgetVertAlign::Top), _enforce_limits(true)
 {
 }
 
@@ -107,11 +107,12 @@ bool FudgetListLayout::LayoutChildren()
 		// not when calculating the ratios.
 
 		bool big_space = Relevant(_wanted) <= Relevant(space);
-		// Make sure it's not dirty and calculated for every slot
-		Float2 tmp = big_space ? GetMaxSize() : GetMinSize();
+
+		//// Make sure it's not dirty and calculated for every slot
+		//Float2 tmp = big_space ? GetMaxSize() : GetMinSize();
 
 		Array<float> hint_sizes(count);
-		// This will hold the space without any cell padding.
+		// This will hold the space with cell padding subtracted.
 		float no_padding_space = Relevant(space);
 		// The size of all cells added together.
 		float sum = 0.f;
