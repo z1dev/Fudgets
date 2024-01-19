@@ -1,6 +1,8 @@
 #include "Control.h"
-
 #include "Container.h"
+
+#include "Engine/Render2D/Render2D.h"
+#include "Engine/Core/Math/Rectangle.h"
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
@@ -50,7 +52,7 @@ void FudgetControl::SetHintSize(Float2 value)
 	if (Float2::NearEqual(_hint_size, value))
 		return;
 	_hint_size = value;
-	MakeParentLayoutDirty(FudgetSizeType::Hint);
+	MakeParentLayoutDirty(FudgetDirtType::Hint);
 }
 
 void FudgetControl::SetMinSize(Float2 value)
@@ -58,7 +60,7 @@ void FudgetControl::SetMinSize(Float2 value)
 	if (Float2::NearEqual(_min_size, value))
 		return;
 	_min_size = value;
-	MakeParentLayoutDirty(FudgetSizeType::Min);
+	MakeParentLayoutDirty(FudgetDirtType::Min);
 }
 
 void FudgetControl::SetMaxSize(Float2 value)
@@ -66,7 +68,7 @@ void FudgetControl::SetMaxSize(Float2 value)
 	if (Float2::NearEqual(_max_size, value))
 		return;
 	_max_size = value;
-	MakeParentLayoutDirty(FudgetSizeType::Max);
+	MakeParentLayoutDirty(FudgetDirtType::Max);
 }
 
 Float2 FudgetControl::GetSize() const
@@ -94,8 +96,6 @@ Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const
 			return GetMinSize();
 		case FudgetSizeType::Max:
 			return GetMaxSize();
-		case FudgetSizeType::Current:
-			return GetSize();
 		default:
 			return Float2(0.f);
 	}
@@ -107,13 +107,54 @@ void FudgetControl::SetPosition(Float2 value)
 		return;
 
 	_pos = value;
-	MakeParentLayoutDirty(FudgetSizeType::None);
+	MakeParentLayoutDirty(FudgetDirtType::Position);
 }
 
-void FudgetControl::MakeParentLayoutDirty(FudgetSizeType sizeType)
+
+Float2 FudgetControl::LocalToGlobal(Float2 value) const
+{
+	FudgetContainer *parent = _parent;
+	value += _pos;
+
+	while (parent != nullptr)
+	{
+		value += parent->_pos;
+		parent = parent->_parent;
+	}
+
+	return value;
+}
+
+
+Float2 FudgetControl::GlobalTolocal(Float2 value) const
+{
+	FudgetContainer *parent = _parent;
+	value -= _pos;
+
+	while (parent != nullptr)
+	{
+		value -= parent->_pos;
+		parent = parent->_parent;
+	}
+
+	return value;
+}
+
+
+void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
+{
+
+	pos = LocalToGlobal(pos);
+
+	Render2D::FillRectangle(Rectangle(pos, size), color);
+}
+
+
+
+void FudgetControl::MakeParentLayoutDirty(FudgetDirtType dirt_flags)
 {
 	if (_parent != nullptr)
-		_parent->MakeLayoutDirty(sizeType);
+		_parent->MakeLayoutDirty(dirt_flags);
 }
 
 void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)

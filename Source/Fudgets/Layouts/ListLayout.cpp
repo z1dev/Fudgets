@@ -1,9 +1,8 @@
 #include "ListLayout.h"
 #include "../Container.h"
+#include "../Utils/Utils.h"
 
 
-
-#define IMAGINARY_LIMIT     (std::numeric_limits<float>::max() - 1.0f);
 
 FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(control),
 	_horz_align(FudgetHorzAlign::Left), _vert_align(FudgetVertAlign::Top), _enforce_limits(false)
@@ -24,28 +23,31 @@ FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation 
 void FudgetListLayout::SetOrientation(FudgetOrientation value)
 {
 	_ori = value;
-	MakeDirty(FudgetSizeType::None);
+	MakeDirty(FudgetDirtType::All);
 }
 
 void FudgetListLayout::SetStretched(bool value)
 {
 	_stretched = value;
-	MakeDirty(FudgetSizeType::All);
+	MakeDirty(FudgetDirtType::All);
 }
 
-void FudgetListLayout::LayoutChildren(bool forced)
+bool FudgetListLayout::LayoutChildren()
 {
-	if (!IsDirty() && !forced)
-		return;
+	// See FudgetStackLayout for a simpler implementation and better explanation. This function
+	// calculates the position and size of controls so they can be placed next to each other.
+	// When the layout is "stretched", it tries to occupy the full width or height of the parent
+	// (depends on orientation) and makes the controls fill the area.
+
 
 	auto owner = GetOwner();
 	if (owner == nullptr)
-		return;
+		return false;
 
 	int count = owner->GetChildCount();
 
 	if (count == 0)
-		return;
+		return true;
 
 	Float2 space = owner->GetSize();
 	Float2 _wanted = GetHintSize();
@@ -222,21 +224,30 @@ void FudgetListLayout::LayoutChildren(bool forced)
 		}
 	}
 
-	ClearedDirt();
+	return true;
 }
 
 FudgetLayoutSlot* FudgetListLayout::CreateSlot(FudgetControl *control)
 {
+	// This function is supposed to return a FudgetlayoutSlot object, but layouts can
+	// provide their own derived value. To make use easier, you can define a new GetSlot()
+	// function that will hide the original call. See below.
+
 	return New<FudgetListLayoutSlot>(control);
 }
 
 FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 {
+	// Since every slot that GetSlot(...) returns was created by its layout, it's safe to
+	// cast without checking. This function hides the original, so to play nice with C#, it
+	// was declared with API_FUNCTION(new).
+
 	return (FudgetListLayoutSlot*)Base::GetSlot(index);
 }
 
 Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 {
+	// This check might be unnecessary, because it is only called from FudgetLayout, but keeping here for now.
 	if (type != FudgetSizeType::Hint && type != FudgetSizeType::Min && type != FudgetSizeType::Max)
 		return Float2(0.f);
 
@@ -264,10 +275,9 @@ Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 			RelevantRef(fixed_size) = 0;
 		if (Opposite(fixed_size) < 0)
 			OppositeRef(fixed_size) = 0;
-		RelevantRef(result) += Relevant(fixed_size);
-		// Overflow
-		if (Relevant(result) < Relevant(fixed_size))
-			RelevantRef(result) = IMAGINARY_LIMIT;
+
+		// Overflow checking replacement of RelevantRef(result) += Relevant(fixed_size)
+		RelevantRef(result) = AddBigFloats(Relevant(result), Relevant(fixed_size));
 
 		extent = Math::Max(extent, Opposite(fixed_size));
 
@@ -283,13 +293,13 @@ Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 			case FudgetSizeType::Max:
 				if (Relevant(size) < 0)
 				{
-					RelevantRef(size) = IMAGINARY_LIMIT;
-					RelevantRef(result) = IMAGINARY_LIMIT;
+					RelevantRef(size) = MaximumFloatLimit;
+					RelevantRef(result) = MaximumFloatLimit;
 				}
 				if (Opposite(size) < 0)
 				{
-					OppositeRef(size) = IMAGINARY_LIMIT;
-					extent = IMAGINARY_LIMIT;
+					OppositeRef(size) = MaximumFloatLimit;
+					extent = MaximumFloatLimit;
 				}
 
 				slot->_max_size = size;
@@ -297,9 +307,7 @@ Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 		}
 	}
 
-	OppositeRef(result) += extent;
-	if (Opposite(result) < extent)
-		OppositeRef(result) = IMAGINARY_LIMIT;
+	OppositeRef(result) = AddBigFloats(Opposite(result), extent);
 
 	return result;
 }

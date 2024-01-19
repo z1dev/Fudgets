@@ -1,17 +1,19 @@
 #include "Container.h"
+#include "Fudget.h"
 #include "Layouts/Layout.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Utils/Utils.h"
 
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
-_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(false)
+_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(nullptr)
 {
 
 }
 
 FudgetContainer::FudgetContainer(Fudget *_ui_owner) : Base(SpawnParams(Guid::New(), TypeInitializer)),
-	_layout(nullptr), _changing(false), _height_from_layout(true), _width_from_layout(true), _root(_ui_owner != nullptr)
+	_layout(nullptr), _changing(false), _height_from_layout(_ui_owner == nullptr), _width_from_layout(_ui_owner == nullptr),
+	_root(_ui_owner)
 {
 }
 
@@ -60,11 +62,7 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
 	control->SetParent(this, index);
 
 	if (_layout != nullptr)
-	{
 		_layout->ChildAdded(control, index);
-		// TODO: remove these where the layout calls it
-		MakeLayoutDirty(FudgetSizeType::All);
-	}
 
 	_changing = false;
 
@@ -86,10 +84,7 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
 		_children[ix]->SetIndexInParent(ix);
 
 	if (_layout != nullptr)
-	{
 		_layout->ChildRemoved(index);
-		MakeLayoutDirty(FudgetSizeType::All);
-	}
 
 	_changing = false;
 
@@ -122,10 +117,7 @@ bool FudgetContainer::MoveChildToIndex(int from, int to)
 		control->SetIndexInParent(ix);
 
 	if (_layout != nullptr)
-	{
 		_layout->ChildMoved(from, to);
-		MakeLayoutDirty(FudgetSizeType::All);
-	}
 
 	_changing = false;
 
@@ -164,16 +156,31 @@ void FudgetContainer::DeleteAll()
 {
 	for (int ix = _children.Count() - 1; ix > -1; --ix)
 	{
+		// TODO: lock the layout to not change until this loop is over, if it's noticable on performance
+
 		FudgetControl *c = _children[ix];
 		c->SetParent(nullptr);
 		Delete(c);
 	}
-	MakeLayoutDirty(FudgetSizeType::All);
+	if (_layout != nullptr)
+		_layout->AllDeleted();
+}
+
+Float2 FudgetContainer::GetSize() const
+{
+	// TODO: make a separate class just for root stuff.
+	if (_root != nullptr)
+		return _root->GetSize();
+
+	return Base::GetSize();
 }
 
 Float2 FudgetContainer::GetHintSize() const
 {
-	if (!_root && _layout != nullptr && (_height_from_layout || _width_from_layout))
+	if (_root != nullptr)
+		return _root->GetSize();;
+
+	if (_root == nullptr && _layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
 		Float2 value = _layout->GetHintSize();
 		if (_height_from_layout && _width_from_layout)
@@ -190,8 +197,8 @@ Float2 FudgetContainer::GetHintSize() const
 
 Float2 FudgetContainer::GetMinSize() const
 {
-	if (_root)
-		return Base::GetHintSize();
+	if (_root != nullptr)
+		return _root->GetSize();;
 
 	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
@@ -208,8 +215,8 @@ Float2 FudgetContainer::GetMinSize() const
 
 Float2 FudgetContainer::GetMaxSize() const
 {
-	if (_root)
-		return Base::GetHintSize();
+	if (_root != nullptr)
+		return _root->GetSize();;
 
 	if (_layout != nullptr && (_height_from_layout || _width_from_layout))
 	{
@@ -231,7 +238,7 @@ void FudgetContainer::SetUsingLayoutHeight(bool value)
 	_height_from_layout = value;
 	if (_layout == nullptr)
 		return;
-	MakeLayoutDirty(FudgetSizeType::All);
+	MakeParentLayoutDirty(FudgetDirtType::All);
 }
 
 void FudgetContainer::SetUsingLayoutWidth(bool value)
@@ -241,21 +248,29 @@ void FudgetContainer::SetUsingLayoutWidth(bool value)
 	_width_from_layout = value;
 	if (_layout == nullptr)
 		return;
-	MakeLayoutDirty(FudgetSizeType::All);
+	MakeParentLayoutDirty(FudgetDirtType::All);
 }
 
-void FudgetContainer::MakeLayoutDirty(FudgetSizeType sizeType)
+void FudgetContainer::MakeLayoutDirty(FudgetDirtType dirt_flags)
 {
 	if (_layout != nullptr)
-		_layout->MakeDirty(sizeType);
-	else if (GetParent() != nullptr)
-		MakeParentLayoutDirty(sizeType);
+		_layout->MakeDirty(dirt_flags);
 }
 
 void FudgetContainer::RequestLayout()
 {
 	if (_layout != nullptr)
-		_layout->LayoutChildren(false);
+	{
+		_layout->RequestLayoutChildren(false);
+		return;
+	}
+
+	// With no layout, every control is positioned wherever they want to be.
+	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
+	{
+		FudgetControl *control = _children[ix];
+		control->_size = control->_hint_size;
+	}
 }
 
 void FudgetContainer::Draw()
@@ -268,5 +283,15 @@ void FudgetContainer::Draw()
 void FudgetContainer::AddLayoutInternal(FudgetLayout *layout)
 {
 	_layout = layout;
+	// TODO: check that this dirties the parent layouts
 	layout->SetOwner(this);
+}
+
+void FudgetContainer::MakeParentLayoutDirty(FudgetDirtType dirt_flags)
+{
+	if (_layout != nullptr && dirt_flags != FudgetDirtType::Position)
+		_layout->MakeDirty(dirt_flags);
+	else
+		Base::MakeParentLayoutDirty(dirt_flags);
+
 }

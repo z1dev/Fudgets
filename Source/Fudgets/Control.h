@@ -2,6 +2,7 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
+#include "Engine/Core/Math/Color.h"
 
 
 class FudgetContainer;
@@ -16,11 +17,24 @@ enum class FudgetSizeType : uint8
 	Hint,
 	Min,
 	Max,
-	Current,
-
-	None,
-	All
 };
+
+
+/// <summary>
+/// Used for any function call in controls and layouts that need one specific size of controls.
+/// </summary>
+API_ENUM(Attributes = "Flags")
+enum class FudgetDirtType : uint8
+{
+	Hint = 1,
+	Min = 2,
+	Max = 4,
+	Position = 8,
+
+	All = Hint | Min | Max | Position
+};
+
+DECLARE_ENUM_OPERATORS(FudgetDirtType);
 
 
 /// <summary>
@@ -187,12 +201,27 @@ public:
 	/// <param name="delta_time">The time passed since the last update</param>
 	API_FUNCTION() virtual void Update(float delta_time) {}
 
-protected:
+
+	API_FUNCTION() virtual Float2 LocalToGlobal(Float2 local) const;
+	API_FUNCTION() virtual Float2 GlobalTolocal(Float2 global) const;
+
+
+	// Render2D wrapper:
+
 	/// <summary>
-	/// Notifies the parent to mark its layout as dirty, causing a calculation of child control sizes and positions
+	/// Wrapper to Render2D's FillRectangle.
 	/// </summary>
-	/// <returns></returns>
-	API_FUNCTION() void MakeParentLayoutDirty(FudgetSizeType sizeType);
+	/// <param name="pos">Position relative to the control</param>
+	/// <param name="size">Size of control</param>
+	/// <param name="color">Color to use for filling</param>
+	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
+
+	/// <summary>
+	/// Notifies the parent to mark its layout as dirty, possibly causing a calculation of child control
+	/// sizes and positions.
+	/// </summary>
+	/// <param name="dirt_flags">Flags of what changed</param>
+	API_FUNCTION() virtual void MakeParentLayoutDirty(FudgetDirtType dirt_flags);
 private:
 	void LayoutUpdate(Float2 pos, Float2 size);
 
@@ -210,4 +239,5 @@ private:
 	bool _changing;
 
 	friend class FudgetLayout;
+	friend class FudgetContainer;
 };

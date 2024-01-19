@@ -12,6 +12,7 @@
 #include "Engine/Profiler/ProfilerGPU.h"
 #include "Engine/Profiler/ProfilerCPU.h"
 #include "Engine/Engine/Time.h"
+#include "Engine/Engine/Screen.h"
 
 
 //Renderer::FudgetRenderer(const SpawnParams &params) : PostProcessEffect(params)
@@ -121,8 +122,8 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
             //if (!size_set)
             //{
                 //size_set = true;
-                const Viewport &v = Render2D::GetViewport();
-                Canvas->_guiRoot->SetHintSize(v.Size);
+                //const Viewport &v = Render2D::GetViewport();
+                //Canvas->_guiRoot->SetHintSize(v.Size);
             //}
 
             Canvas->GetGUI()->Draw();
@@ -240,13 +241,19 @@ void Fudget::SetRenderMode(FudgetRenderMode value)
 
 Float2 Fudget::GetSize() const
 {
-    return _guiRoot->GetSize();
+    if (_renderMode == FudgetRenderMode::ScreenSpace)
+    {
+        return Screen::GetSize();
+    }
+
+    return _saved_size;
 }
 
 void Fudget::SetSize(Float2 value)
 {
     if (_renderMode == FudgetRenderMode::WorldSpace || _renderMode == FudgetRenderMode::WorldSpaceFaceCamera || _isLoading)
     {
+        _saved_size = value;
         _guiRoot->SetHintSize(value);
     }
 }

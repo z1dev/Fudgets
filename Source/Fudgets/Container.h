@@ -6,6 +6,9 @@
 class FudgetLayout;
 class Fudget;
 
+
+enum class FudgetDirtType : uint8;
+
 // TODO: use these
 
 /// <summary>
@@ -128,6 +131,15 @@ public:
     /// </summary>
     API_FUNCTION() void DeleteAll();
 
+
+    /// <summary>
+    /// Gets the size that the container currently occupies in its parent's layout. This value can't be directly
+    /// changed. Use SetHintSize to change it for normal containers. The root container inherits its size from
+    /// the screen.
+    /// </summary>
+    /// <returns>The current size of the container.</returns>
+    Float2 GetSize() const override;
+
     /// <summary>
     /// Gets the preferred size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred size, this is the preferred size of the container itself.
@@ -176,9 +188,9 @@ public:
     /// Notifies the layout that one or more of the stored sizes and control positions need to be recalculated. Hint, Min or Max
     /// sizes can be specified. Use All to make every size type dirty and None to only require control re-alignment.
     /// </summary>
-    /// <param name="sizeType">The size that needs recalculation.</param>
+    /// <param name="dirt_flags">The size that needs recalculation.</param>
     /// <returns></returns>
-    API_PROPERTY() void MakeLayoutDirty(FudgetSizeType sizeType);
+    API_PROPERTY() void MakeLayoutDirty(FudgetDirtType dirt_flags);
     /// <summary>
     /// Requests the immediate recalculation of the controls and their sizes inside the container's layout. Only those sizes are
     /// recalculated that are made dirty by calling MakeLayoutDirty directly or that have changed.
@@ -192,6 +204,15 @@ public:
     void Draw() override;
 
     API_FUNCTION(Internal) void AddLayoutInternal(FudgetLayout *layout);
+
+    /// <summary>
+    /// Notifies the parent to mark its layout as dirty, causing a calculation of child control sizes and
+    /// positions. Depending on the size type, the local layout might need to recalculate as well. Any
+    /// value other than Position will force a recalculation later.
+    /// </summary>
+    /// <param name="dirt_flags">Flags of what changed</param>
+    void MakeParentLayoutDirty(FudgetDirtType dirt_flags) override;
+
 private:
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;
@@ -203,5 +224,5 @@ private:
     bool _changing;
 
     // True only for the container covering the screen as the root of the hierarchy
-    bool _root;
+    Fudget *_root;
 };

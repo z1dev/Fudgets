@@ -49,28 +49,28 @@ public:
 	API_PROPERTY() void SetOrientation(FudgetOrientation value);
 
 	/// <summary>
-	/// Whether the layout tries to size its controls to fill up the available space
-	/// in the orientation of the layout.
+	/// Whether the layout tries to size its controls to fill up the available space in the orientation
+	/// of the layout. When this is false, the controls are placed one after the other with their preferred
+	/// size.
 	/// </summary>
 	/// <returns>Whether the layout fills the available space</returns>
 	API_PROPERTY() bool IsStretched() const { return _stretched; }
 	/// <summary>
-	/// Sets whether the layout tries to size its controls to fill up the available space
-	/// in the orientation of the layout.
+	/// Sets whether the layout tries to size its controls to fill up the available space in the orientation
+	/// of the layout. When this is false, the controls are placed one after the other with their preferred
+	/// size.
 	/// </summary>
 	/// <param name="value">Whether the layout fills the available space</param>
 	API_PROPERTY() void SetStretched(bool value);
 
-	void LayoutChildren(bool forced) override;
 protected:
-	/// <summary>
-	/// Calculates one of the sizes of the layout that was requested. Call GetRequestedSize() to avoid recalculating
-	/// the sizes when not necessary.
-	/// </summary>
-	/// <param name="type">The size to return which can be Hint, Min, or Max</param>
-	/// <returns>The calculated size of the layout</returns>
+	/// <inheritdoc />
 	Float2 RequestSize(FudgetSizeType type) const override;
 
+	/// <inheritdoc />
+	bool LayoutChildren() override;
+
+	/// <inheritdoc />
 	FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
 
 	/// <summary>
@@ -78,7 +78,7 @@ protected:
 	/// </summary>
 	/// <param name="index">The index of the control to make the slot for</param>
 	/// <returns>The slot for layouting attributes or null if the index is invalid</returns>
-	API_FUNCTION(New) FudgetListLayoutSlot* GetSlot(int index) const;
+	API_FUNCTION(new) FudgetListLayoutSlot* GetSlot(int index) const;
 private:
 	void PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size);
 

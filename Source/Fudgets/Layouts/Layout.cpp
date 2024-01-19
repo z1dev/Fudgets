@@ -2,6 +2,23 @@
 #include "../Container.h"
 #include "../Utils/Utils.h"
 
+// These could be in any cpp file but it's most likely to be used in layouts so whatever. Declared as extern in Utils.h
+const float MaximumFloatLimit = (std::numeric_limits<float>::max() - 1.0f);
+
+float AddBigFloats(float a, float b)
+{
+	// Should be safe:
+	if ((a > 0) != (b > 0))
+		return a + b;
+	if (a < 0 && b < 0)
+		return -AddBigFloats(-a, -b);
+
+	if (MaximumFloatLimit - a < b)
+		return MaximumFloatLimit;
+
+	return a + b;
+}
+
 
 FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer)), _control(control), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
 {
@@ -39,23 +56,23 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 		FillSlots();
 }
 
-void FudgetLayout::MakeDirty(FudgetSizeType sizeType)
+void FudgetLayout::MakeDirty(FudgetDirtType dirt_flags)
 {
 	_dirty = true;
-	if (sizeType == FudgetSizeType::Hint || sizeType == FudgetSizeType::All)
+	if ((int)dirt_flags & (int)FudgetSizeType::Hint)
 		_hint_dirty = true;
-	if (sizeType == FudgetSizeType::Min || sizeType == FudgetSizeType::All)
+	if ((int)dirt_flags & (int)FudgetSizeType::Min)
 		_min_dirty = true;
-	if (sizeType == FudgetSizeType::Max || sizeType == FudgetSizeType::All)
+	if ((int)dirt_flags & (int)FudgetSizeType::Max)
 		_max_dirty = true;
 
 	if (_owner != nullptr)
-		_owner->MakeParentLayoutDirty(sizeType);
+		_owner->MakeParentLayoutDirty(dirt_flags);
 }
 
 void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 {
-	MakeDirty(FudgetSizeType::All);
+	MakeDirty(FudgetDirtType::All);
 	auto slot = CreateSlot(control);
 	if (index == -1)
 		_slots.Add(slot);
@@ -65,7 +82,7 @@ void FudgetLayout::ChildAdded(FudgetControl *control, int index)
 
 void FudgetLayout::ChildRemoved(int index)
 {
-	MakeDirty(FudgetSizeType::All);
+	MakeDirty(FudgetDirtType::All);
 	Delete(_slots[index]);
 	_slots.RemoveAtKeepOrder(index);
 }
@@ -75,8 +92,15 @@ void FudgetLayout::ChildMoved(int from, int to)
 	if (from == to || from < 0 || to < 0 || from >= _slots.Count() || to >= _slots.Count())
 		return;
 
-	MakeDirty(FudgetSizeType::All);
+	MakeDirty(FudgetDirtType::All);
 	MoveInArray(_slots, from, to);
+}
+
+void FudgetLayout::AllDeleted()
+{
+	if (_slots.Count() == 0)
+		return;
+	
 }
 
 Float2 FudgetLayout::GetHintSize() const
@@ -101,6 +125,14 @@ Float2 FudgetLayout::GetMaxSize() const
 		return _cached_max;
 	_cached_max = GetRequestedSize(FudgetSizeType::Max);
 	return _cached_max;
+}
+
+void FudgetLayout::RequestLayoutChildren(bool forced)
+{
+	if (!_dirty && !forced)
+		return;
+	if (LayoutChildren())
+		_dirty = false;
 }
 
 void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
@@ -137,7 +169,7 @@ void FudgetLayout::FillSlots()
 	}
 }
 
-void FudgetLayout::ClearedDirt()
+void FudgetLayout::UnmarkLayoutDirty()
 {
 	_dirty = false;
 }
