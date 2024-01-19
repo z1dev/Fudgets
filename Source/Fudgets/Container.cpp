@@ -5,14 +5,14 @@
 #include "Utils/Utils.h"
 
 
-FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
+FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params), fill_color(1.0f), fill_background(false),
 	_layout(nullptr), _changing(false), _width_from_layout(true), _height_from_layout(true),
 	_min_width_from_layout(true), _max_width_from_layout(true), _min_height_from_layout(true), _max_height_from_layout(true), _root(nullptr)
 {
 
 }
 
-FudgetContainer::FudgetContainer(Fudget *_ui_owner) : Base(SpawnParams(Guid::New(), TypeInitializer)),
+FudgetContainer::FudgetContainer(Fudget *_ui_owner) : Base(SpawnParams(Guid::New(), TypeInitializer)), fill_color(1.0f), fill_background(false),
 	_layout(nullptr), _changing(false), _height_from_layout(_ui_owner == nullptr), _width_from_layout(_ui_owner == nullptr),
 	_min_width_from_layout(_ui_owner == nullptr), _max_width_from_layout(_ui_owner == nullptr),
 	_min_height_from_layout(_ui_owner == nullptr), _max_height_from_layout(_ui_owner == nullptr), _root(_ui_owner)
@@ -220,16 +220,16 @@ Float2 FudgetContainer::GetHintSize() const
 	{
 		Float2 value = _layout->GetHintSize();
 		if (_width_from_layout && _height_from_layout)
-			return Float2::Max(GetMinSize(), value);
+			return value;
 
 		Float2 base = Base::GetHintSize();
 		if (!_width_from_layout)
 			value.X = base.X;
 		if (!_height_from_layout)
 			value.Y = base.Y;
-		return Float2::Max(GetMinSize(), value);
+		return value;
 	}
-	return Float2::Max(GetMinSize(), Base::GetHintSize());
+	return Base::GetHintSize();
 }
 
 Float2 FudgetContainer::GetMinSize() const
@@ -237,16 +237,16 @@ Float2 FudgetContainer::GetMinSize() const
 	if (_root != nullptr)
 		return _root->GetSize();
 
-	if (_layout != nullptr && (_min_width_from_layout || _max_height_from_layout))
+	if (_layout != nullptr && (_min_width_from_layout || _min_height_from_layout))
 	{
 		Float2 value = _layout->GetMinSize();
-		if (_min_width_from_layout || _max_height_from_layout)
+		if (_min_width_from_layout || _min_height_from_layout)
 			return Float2::Max(Float2::Zero, value);
 
 		Float2 base = Base::GetMinSize();
 		if (!_min_width_from_layout)
 			value.X = base.X;
-		if (!_max_height_from_layout)
+		if (!_min_height_from_layout)
 			value.Y = base.Y;
 		return Float2::Max(Float2::Zero, value);
 	}
@@ -264,18 +264,16 @@ Float2 FudgetContainer::GetMaxSize() const
 	{
 		Float2 value = _layout->GetMaxSize();
 		if (_max_width_from_layout && _max_height_from_layout)
-			return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
+			return value;
 
 		Float2 base = Base::GetMaxSize();
 		if (!_max_width_from_layout)
 			value.X = base.X;
 		if (!_max_height_from_layout)
 			value.Y = base.Y;
-		return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
+		return value;
 	}
-
-	Float2 value = Base::GetMaxSize();
-	return Float2::Max(Float2(value.X < 0 ? value.X : hint_size.X, value.Y < 0 ? value.Y : hint_size.Y), value);
+	return Base::GetMaxSize();
 
 }
 
@@ -367,9 +365,9 @@ void FudgetContainer::MarkLayoutDirty(FudgetDirtType dirt_flags, bool content_ch
 	if (_parent != nullptr && _layout->IsSizeDirty())
 	{
 		// Notify the parent only, if the change in the layout influences the container's size as well
-		if (IsUsingLayoutWidth() || IsUsingLayoutHeight() ||
-			IsUsingLayoutMinWidth() || IsUsingLayoutMaxWidth() ||
-			IsUsingLayoutMinHeight() || IsUsingLayoutMaxHeight())
+		if (GetUsingLayoutWidth() || GetUsingLayoutHeight() ||
+			GetUsingLayoutMinWidth() || GetUsingLayoutMaxWidth() ||
+			GetUsingLayoutMinHeight() || GetUsingLayoutMaxHeight())
 			_parent->MarkLayoutDirty(dirt_flags, true);
 	}
 }
@@ -382,6 +380,8 @@ void FudgetContainer::RequestLayout()
 		return;
 	}
 
+	// TODO: mark sizes dirty and don't do anything when it's not
+
 	// With no layout, every control is positioned wherever they want to be.
 	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
 	{
@@ -393,6 +393,12 @@ void FudgetContainer::RequestLayout()
 void FudgetContainer::Draw()
 {
 	RequestLayout();
+
+	if (fill_background)
+	{
+		FillRectangle(Float2(0.0f), GetSize(), fill_color);
+	}
+
 	for (FudgetControl *c : _children)
 		c->Draw();
 }
@@ -425,7 +431,7 @@ void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
 
 	Base::LayoutUpdate(pos, size);
 
-	if (_layout != nullptr && pos_changed || size_changed)
+	if (_layout != nullptr && (pos_changed || size_changed))
 	{
 		FudgetDirtType type = (FudgetDirtType)((pos_changed ? (int)FudgetDirtType::Position : 0) & (size_changed ? (int)FudgetDirtType::Size : 0));
 

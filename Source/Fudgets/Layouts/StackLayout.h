@@ -2,6 +2,8 @@
 
 #include "Layout.h"
 
+// TODO: some details changed, update the docs! (i.e. no more separate caching for sizes, use of layout flags)
+// 
 // This is a layout with the absolute minimal implementation. See the descriptions in the .cpp
 // file for what these functions do. A more complicated layout is FudgetListLayout, with an example
 // on how to store values for each control in slots, that are specific to that layout.

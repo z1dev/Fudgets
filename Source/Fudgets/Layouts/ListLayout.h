@@ -15,11 +15,26 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 	
 	FudgetListLayoutSlot(FudgetControl *control);
 
-	FudgetHorzAlign _horz_align;
-	FudgetVertAlign _vert_align;
+	/// <summary>
+	/// Horizontal alignment of control in its column or row
+	/// </summary>
+	API_FIELD() FudgetHorzAlign _horz_align;
 
-	bool _enforce_limits;
-	FudgetSlotPadding _padding;
+	/// <summary>
+	/// Vertical alignment of control in its column or row
+	/// </summary>
+	API_FIELD() FudgetVertAlign _vert_align;
+
+	/// <summary>
+	/// Whether the min or max size of this slot is respected during resize. When it's false, the sizes
+	/// are used when calculating the preferred minimum and maximum size of the parent container, but not
+	/// when layouting
+	/// </summary>
+	API_FIELD() bool _enforce_limits;
+	/// <summary>
+	/// Padding around the control in its slot
+	/// </summary>
+	API_FIELD() FudgetSlotPadding _padding;
 };
 
 /// <summary>

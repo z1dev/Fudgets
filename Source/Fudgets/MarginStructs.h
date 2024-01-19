@@ -11,9 +11,20 @@ struct FUDGETS_API FudgetSlotPadding
 	{
 	}
 
-
-	float left;
-	float right;
-	float top;
-	float bottom;
+	/// <summary>
+	/// Padding to the left
+	/// </summary>
+	API_FIELD() float left;
+	/// <summary>
+	/// Padding to the right
+	/// </summary>
+	API_FIELD() float right;
+	/// <summary>
+	/// Padding to the top
+	/// </summary>
+	API_FIELD() float top;
+	/// <summary>
+	/// Padding to the bottom
+	/// </summary>
+	API_FIELD() float bottom;
 };

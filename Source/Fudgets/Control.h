@@ -201,7 +201,7 @@ public:
 
 
 	API_FUNCTION() virtual Float2 LocalToGlobal(Float2 local) const;
-	API_FUNCTION() virtual Float2 GlobalTolocal(Float2 global) const;
+	API_FUNCTION() virtual Float2 GlobalToLocal(Float2 global) const;
 
 
 	// Render2D wrapper:

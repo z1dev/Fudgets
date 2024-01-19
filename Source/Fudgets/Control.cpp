@@ -126,7 +126,7 @@ Float2 FudgetControl::LocalToGlobal(Float2 value) const
 }
 
 
-Float2 FudgetControl::GlobalTolocal(Float2 value) const
+Float2 FudgetControl::GlobalToLocal(Float2 value) const
 {
 	FudgetContainer *parent = _parent;
 	value -= _pos;

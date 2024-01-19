@@ -74,6 +74,16 @@ public:
     }
 
     /// <summary>
+    /// The color to use to fill the background of this container if fill_background is true
+    /// </summary>
+    API_FIELD() Color fill_color;
+
+    /// <summary>
+    /// Whether the fill_color is used to fill the background of this container. Mainly for testing
+    /// </summary>
+    API_FIELD() bool fill_background;
+
+    /// <summary>
     /// Inserts a control into the layout of this container. If an index is provided, the controls with same or higher
     /// index are moved into a higher index in the hierarchy. The control with the highest index is drawn last.
     /// Control's drawing and events will be managed by the container. The control's lifetime is also controlled
@@ -176,7 +186,7 @@ public:
     /// based on the hint size.
     /// </summary>
     /// <returns>Using the layout's width or not</returns>
-    API_PROPERTY() bool IsUsingLayoutWidth() const { return _width_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutWidth() const { return _width_from_layout; }
 
     /// <summary>
     /// Determines if the width of the container is calculated by the layout or the preferred size is
@@ -190,7 +200,7 @@ public:
     /// based on the hint size.
     /// </summary>
     /// <returns>Using the layout's height or not</returns>
-    API_PROPERTY() bool IsUsingLayoutHeight() const { return _height_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutHeight() const { return _height_from_layout; }
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
@@ -204,7 +214,7 @@ public:
     /// the container
     /// </summary>
     /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() bool IsUsingLayoutMinWidth() const { return _min_width_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutMinWidth() const { return _min_width_from_layout; }
 
     /// <summary>
     /// Determines if the minimum width of the container is calculated by the layout or it is set directly on
@@ -218,7 +228,7 @@ public:
     /// the container
     /// </summary>
     /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() bool IsUsingLayoutMaxWidth() const { return _max_width_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutMaxWidth() const { return _max_width_from_layout; }
 
     /// <summary>
     /// Determines if the maximum width of the container is calculated by the layout or it is set directly on
@@ -232,7 +242,7 @@ public:
     /// the container
     /// </summary>
     /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() bool IsUsingLayoutMinHeight() const { return _min_height_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutMinHeight() const { return _min_height_from_layout; }
 
     /// <summary>
     /// Determines if the minimum height of the container is calculated by the layout or it is set directly on
@@ -246,7 +256,7 @@ public:
     /// the container
     /// </summary>
     /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() bool IsUsingLayoutMaxHeight() const { return _max_height_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutMaxHeight() const { return _max_height_from_layout; }
 
     /// <summary>
     /// Determines if the maximum height of the container is calculated by the layout or it is set directly on

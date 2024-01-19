@@ -116,11 +116,22 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 
 	FudgetLayoutSlot(FudgetControl *control);
 
-	// Hide in editor
-	FudgetControl *_control;
-	Float2 _hint_size;
-	Float2 _min_size;
-	Float2 _max_size;
+	/// <summary>
+	/// The control placed in the slot. The attributes affect its position and size 
+	/// </summary>
+	API_FIELD(Attributes="HideInEditor") FudgetControl *_control;
+	/// <summary>
+	/// The calculated hint size for caching
+	/// </summary>
+	API_FIELD(Attributes="HideInEditor") Float2 _hint_size;
+	/// <summary>
+	/// The calculated min size for caching
+	/// </summary>
+	API_FIELD(Attributes="HideInEditor") Float2 _min_size;
+	/// <summary>
+	/// The calculated max size for caching
+	/// </summary>
+	API_FIELD(Attributes="HideInEditor") Float2 _max_size;
 };
 
 

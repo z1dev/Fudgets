@@ -235,9 +235,9 @@ Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type) const
 {
 	if (_size_dirty)
 	{
-		_cached_hint = RequestSize(type);
-		_cached_min = RequestSize(type);
-		_cached_max = RequestSize(type);
+		_cached_hint = RequestSize(FudgetSizeType::Hint);
+		_cached_min = RequestSize(FudgetSizeType::Min);
+		_cached_max = RequestSize(FudgetSizeType::Max);
 		_size_dirty = false;
 	}
 	switch (type)
