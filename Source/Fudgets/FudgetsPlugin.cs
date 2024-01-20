@@ -7,10 +7,10 @@ namespace Fudgets
     /// The sample game plugin.
     /// </summary>
     /// <seealso cref="FlaxEngine.GamePlugin" />
-    public class Fudgets : GamePlugin
+    public class FudgetsPlugin : GamePlugin
     {
         /// <inheritdoc />
-        public Fudgets()
+        public FudgetsPlugin()
         {
             _description = new PluginDescription
             {

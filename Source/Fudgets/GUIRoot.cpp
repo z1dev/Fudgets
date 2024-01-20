@@ -1,5 +1,6 @@
 #include "GUIRoot.h"
 #include "Fudget.h"
+#include "IFudgetMouseHook.h"
 
 #include "Engine/Input/Input.h"
 #include "Engine/Core/Log.h"
@@ -7,6 +8,8 @@
 #include "Engine/Platform/Base/WindowBase.h"
 
 #include "Engine/Core/Log.h"
+
+Array<IFudgetMouseHook*> FudgetGUIRoot::mouse_hooks;
 
 FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer), FudgetControlFlags::ContainerControl),
 	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr)
@@ -55,6 +58,18 @@ Float2 FudgetGUIRoot::GetMaxSize() const
 		return _root->GetSize();
 	return Base::GetHintSize();
 }
+
+void FudgetGUIRoot::RegisterMouseHook(IFudgetMouseHook *hook)
+{
+	mouse_hooks.AddUnique(hook);
+}
+
+void FudgetGUIRoot::UnregisterMouseHook(IFudgetMouseHook *hook)
+{
+	if (mouse_hooks.Remove(hook))
+		LOG(Warning, "Mouse hook passed in UnregisterMouseHook was not registered");
+}
+
 
 void FudgetGUIRoot::StartMouseCapture(FudgetControl *control)
 {
@@ -107,6 +122,13 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
 
+	if (!mouse_hooks.IsEmpty())
+	{
+		for (int ix = 0, siz = mouse_hooks.Count(); ix < siz; ++ix)
+			if (!mouse_hooks[ix]->OnMouseDown(this, pos, button))
+				return;
+	}
+
 	if (mouse_capture_control == nullptr)
 		mouse_capture_button = button;
 
@@ -129,6 +151,13 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
+
+	if (!mouse_hooks.IsEmpty())
+	{
+		for (int ix = 0, siz = mouse_hooks.Count(); ix < siz; ++ix)
+			if (!mouse_hooks[ix]->OnMouseUp(this, pos, button))
+				return;
+	}
 
 	if (mouse_capture_control != nullptr && mouse_capture_button == button)
 	{
@@ -161,6 +190,13 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
+
+	if (!mouse_hooks.IsEmpty())
+	{
+		for (int ix = 0, siz = mouse_hooks.Count(); ix < siz; ++ix)
+			if (!mouse_hooks[ix]->OnMouseDoubleClick(this, pos, button))
+				return;
+	}
 
 	if (mouse_capture_control != nullptr && mouse_capture_button == button)
 	{
@@ -196,6 +232,13 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 {
 	Float2 pos = Input::GetMousePosition();
+
+	if (!mouse_hooks.IsEmpty())
+	{
+		for (int ix = 0, siz = mouse_hooks.Count(); ix < siz; ++ix)
+			if (!mouse_hooks[ix]->OnMouseMove(this, pos))
+				return;
+	}
 
 	if (mouse_capture_control != nullptr)
 	{
@@ -249,6 +292,13 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 
 void FudgetGUIRoot::OnMouseLeave()
 {
+	if (!mouse_hooks.IsEmpty())
+	{
+		for (int ix = 0, siz = mouse_hooks.Count(); ix < siz; ++ix)
+			if (!mouse_hooks[ix]->OnMouseLeave(this))
+				return;
+	}
+
 	if (mouse_capture_control != nullptr)
 	{
 		LOG(Error, "MouseCapture not null on OnMouseLeave");
