@@ -35,14 +35,16 @@ public:
     /// Don't forget to UnregisterMouseHook cleanup, because it is not done automatically.
     /// </summary>
     /// <param name="hook">The mouse hook to register</param>
-    API_FUNCTION() void RegisterMouseHook(IFudgetMouseHook *hook);
+    /// <param name="type">Whether to register the hook for global, local events or both</param>
+    API_FUNCTION() void RegisterMouseHook(IFudgetMouseHook *hook, FudgetMouseHookType type);
 
     /// <summary>
     /// Unregisters a class as mouse event hook after it was registered with RegisterMouseHook. Always
     /// call when hook is no longer necessary
     /// </summary>
     /// <param name="hook">The mouse hook to unregister</param>
-    API_FUNCTION() void UnregisterMouseHook(IFudgetMouseHook *hook);
+    /// <param name="type">Whether to unregister the hook for global, local events or both</param>
+    API_FUNCTION() void UnregisterMouseHook(IFudgetMouseHook *hook, FudgetMouseHookType type);
 
     /// <summary>
     /// Call in an OnMouseDown function of a control to direct future mouse events to it until
@@ -66,6 +68,15 @@ public:
     /// </summary>
     API_PROPERTY() FudgetControl* GetMouseCaptureControl() const { return mouse_capture_control; }
 private:
+    enum class HookProcessingType
+    {
+        MouseDown,
+        MouseUp,
+        MouseMove,
+        MouseEnter,
+        MouseLeave
+    };
+    FudgetMouseHookResult ProcessLocalMouseHooks(HookProcessingType type, FudgetControl *control, Float2 pos, Float2 global_pos, MouseButton button, bool double_click);
 
     void InitializeEvents();
     void UninitializeEvents();
@@ -95,7 +106,9 @@ private:
     // The game window, needed to actually capture the mouse
     WindowBase *_window;
 
-    // Interface objects that were registered to inspect or modify mouse events
-    Array<IFudgetMouseHook*> mouse_hooks;
+    // Interface objects that were registered to inspect or modify global mouse events
+    Array<IFudgetMouseHook*> global_mouse_hooks;
+    // Interface objects that were registered to inspect or stop local mouse events
+    Array<IFudgetMouseHook*> local_mouse_hooks;
 };
 
