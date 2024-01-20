@@ -2,7 +2,7 @@
 #include "../GUIRoot.h"
 
 FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
-	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown),
+	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::ConvertDoubleClickToSingle),
 	Dark(0.6f), Light(1.f), _color(0.9f), _down(false), _over(false)
 {
 }

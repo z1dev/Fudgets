@@ -111,13 +111,18 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 		mouse_capture_button = button;
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		Float2 cpos = c->GlobalToLocal(pos);
-		if (c->WantsMouseEventAtPos(cpos) && c->OnMouseDown(cpos, button) || mouse_capture_control != nullptr)
-			return;
+		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
+		{
+			Float2 cpos = c->GlobalToLocal(pos);
+			if (c->WantsMouseEventAtPos(cpos) && c->OnMouseDown(cpos, button) || mouse_capture_control != nullptr)
+				break;
+		}
+		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+			break;
 	}
 }
 
@@ -134,17 +139,22 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		Float2 cpos = c->GlobalToLocal(pos);
-		if (c->WantsMouseEventAtPos(cpos) && c->OnMouseUp(cpos, button))
+		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
-			ReleaseMouseCapture();
-			OnMouseMove(pos);
-			return;
+			Float2 cpos = c->GlobalToLocal(pos);
+			if (c->WantsMouseEventAtPos(cpos) && c->OnMouseUp(cpos, button))
+			{
+				ReleaseMouseCapture();
+				OnMouseMove(pos);
+				break;
+			}
 		}
+		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+			break;
 	}
 }
 
@@ -159,16 +169,27 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 		return;
 	}
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		Float2 cpos = c->GlobalToLocal(pos);
-		if (c->WantsMouseEventAtPos(cpos) && (c->OnMouseDoubleClick(cpos, button) || mouse_capture_control != nullptr))
+		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
-			OnMouseMove(pos);
-			return;
+			Float2 cpos = c->GlobalToLocal(pos);
+			bool double_as_single_click = c->HasAnyFlag(FudgetControlFlags::ConvertDoubleClickToSingle);
+			if (c->WantsMouseEventAtPos(cpos))
+			{
+				if ((!double_as_single_click && c->OnMouseDoubleClick(cpos, button)) ||
+					(double_as_single_click && c->OnMouseDown(cpos, button)) ||
+					mouse_capture_control != nullptr)
+				{
+					OnMouseMove(pos);
+					break;
+				}
+			}
 		}
+		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+			break;
 	}
 }
 
@@ -183,34 +204,39 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseMove, controls_for_input);
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::BlockMouseEvents, controls_for_input);
 
 	bool post_leave = mouse_over_control != nullptr;
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		Float2 cpos = c->GlobalToLocal(pos);
-		if (c->WantsMouseEventAtPos(cpos))
+		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
-			if (mouse_over_control != c)
+			Float2 cpos = c->GlobalToLocal(pos);
+			if (c->WantsMouseEventAtPos(cpos))
 			{
-				bool wants_enterleave = c->HasAnyFlag(FudgetControlFlags::CanHandleMouseEnterLeave);
-				FudgetControl *old_mouse_control = mouse_over_control;
-				// Make sure the old control can check which is the new one.
-				mouse_over_control = wants_enterleave ? c : nullptr;
-				if (old_mouse_control != nullptr)
-					old_mouse_control->OnMouseLeave();
-				if (wants_enterleave)
+				if (mouse_over_control != c)
 				{
-					// Let the new control check where the mouse came from
-					mouse_over_control = old_mouse_control;
-					c->OnMouseEnter(cpos);
-					mouse_over_control = c;
+					bool wants_enterleave = c->HasAnyFlag(FudgetControlFlags::CanHandleMouseEnterLeave);
+					FudgetControl *old_mouse_control = mouse_over_control;
+					// Make sure the old control can check which is the new one.
+					mouse_over_control = wants_enterleave ? c : nullptr;
+					if (old_mouse_control != nullptr)
+						old_mouse_control->OnMouseLeave();
+					if (wants_enterleave)
+					{
+						// Let the new control check where the mouse came from
+						mouse_over_control = old_mouse_control;
+						c->OnMouseEnter(cpos);
+						mouse_over_control = c;
+					}
 				}
+				c->OnMouseMove(cpos);
+				return;
 			}
-			c->OnMouseMove(cpos);
-			return;
 		}
+		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+			break;
 	}
 	if (post_leave)
 	{

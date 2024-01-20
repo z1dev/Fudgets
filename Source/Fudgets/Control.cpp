@@ -8,7 +8,7 @@
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
 
-FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, FudgetControlFlags::None)
+FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, FudgetControlFlags::BlockMouseEvents)
 {
 }
 

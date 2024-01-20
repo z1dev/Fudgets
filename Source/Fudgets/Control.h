@@ -82,15 +82,26 @@ enum class FudgetControlFlags
 	/// </summary>
 	CanHandleMouseUpDown = 1 << 1,
 	/// <summary>
-	/// Supports mouse move inputs. This can be set for any control that might not react
-	/// to mouse events by default, but is not transparent. The top control with this flag will be the only
-	/// one receiving the event if it's under the mouse.
+	/// Supports mouse move inputs. This can be set for any control that might not react to mouse events by
+	/// default, but is not transparent. The top control with this flag will be the only one receiving the
+	/// event if it's under the mouse.
 	/// </summary>
 	CanHandleMouseMove = 1 << 2,
 	/// <summary>
 	/// Supports mouse enter and mouse leave events, but only while CanHandleMouseMove is also set.
 	/// </summary>
 	CanHandleMouseEnterLeave = 1 << 3,
+	/// <summary>
+	/// Makes control "eat" all mouse messages if the mouse is over it, even if it does not have any of the
+	/// other flags for mouse events. Ignored while the mouse is captured by another control. This doesn't
+	/// prevent parents peeking at the message early (when it's implemented)
+	/// </summary>
+	BlockMouseEvents = 1 << 4,
+	/// <summary>
+	/// Double clicking a control makes the second click arrive as OnMouseDoubleClick instead of OnMouseDown.
+	/// This flag changes that behavior, and all clicks will work like a normal mouse button press.
+	/// </summary>
+	ConvertDoubleClickToSingle = 1 << 5
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 

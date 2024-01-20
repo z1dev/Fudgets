@@ -1,6 +1,6 @@
 #include "FilledBox.h"
 
-FudgetFilledBox::FudgetFilledBox(const SpawnParams &params) : FudgetControl(params, FudgetControlFlags::CanHandleMouseMove), _color(1.0f)
+FudgetFilledBox::FudgetFilledBox(const SpawnParams &params) : Base(params), _color(1.0f)
 {
 }
 

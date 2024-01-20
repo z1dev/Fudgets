@@ -5,7 +5,7 @@
 #include "Utils/Utils.h"
 
 
-FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::None)
+FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::None | FudgetControlFlags::BlockMouseEvents)
 {
 
 }
