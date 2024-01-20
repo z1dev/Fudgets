@@ -5,8 +5,17 @@
 #include "Utils/Utils.h"
 
 
-FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params), fill_color(1.0f), fill_background(false),
-	_layout(nullptr), _changing(false), _width_from_layout(false), _height_from_layout(false),
+FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::None)
+{
+
+}
+
+FudgetContainer::FudgetContainer(FudgetControlFlags flags) : FudgetContainer(SpawnParams(Guid::New(), TypeInitializer), flags)
+{
+}
+
+FudgetContainer::FudgetContainer(const SpawnParams &params, FudgetControlFlags flags) : Base(params, flags | FudgetControlFlags::ContainerControl),
+	fill_color(1.0f), fill_background(false),_layout(nullptr), _changing(false), _width_from_layout(false), _height_from_layout(false),
 	_min_width_from_layout(false), _max_width_from_layout(false), _min_height_from_layout(false), _max_height_from_layout(false)
 {
 
@@ -192,11 +201,6 @@ void FudgetContainer::SetMaxSize(Float2 value)
 	if ((_max_width_from_layout && _max_height_from_layout) || _layout == nullptr)
 		return;
 	MarkLayoutDirty(FudgetDirtType::Size);
-}
-
-Float2 FudgetContainer::GetSize() const
-{
-	return Base::GetSize();
 }
 
 Float2 FudgetContainer::GetHintSize() const
@@ -401,6 +405,21 @@ bool FudgetContainer::IsControlPositioningPermitted(const FudgetControl *control
 	if (control->GetParent() != this)
 		return false;
 	return _layout->IsControlPositioningPermitted(control);
+}
+
+void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result)
+{
+	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
+	{
+		FudgetControl *control = _children[ix];
+		if (!control->GetBoundingBox().Contains(pos))
+			continue;
+
+		if (control->HasAnyFlag(request))
+			result.Add(control);
+		if (control->HasAnyFlag(FudgetControlFlags::ContainerControl))
+			dynamic_cast<FudgetContainer*>(control)->ControlsUnderMouse(pos - control->_pos, request, result);
+	}
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)

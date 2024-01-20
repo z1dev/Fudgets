@@ -4,8 +4,16 @@
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
 
-FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-	_parent(nullptr), _index(-1), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
+
+FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
+
+
+FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, FudgetControlFlags::None)
+{
+}
+
+FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
+	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
 	_max_size(-1.f, -1.f), _changing(false)
 {
 }
@@ -77,21 +85,6 @@ void FudgetControl::SetMaxSize(Float2 value)
 	SizeOrPosModified(FudgetDirtType::Size);
 }
 
-Float2 FudgetControl::GetSize() const
-{
-	if (_parent == nullptr)
-		return _hint_size;
-	_parent->RequestLayout();
-	return _size;
-}
-
-Float2 FudgetControl::GetPosition() const
-{
-	if (_parent != nullptr)
-		_parent->RequestLayout();
-	return _pos;
-}
-
 Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const
 {
 	switch (type)
@@ -107,6 +100,21 @@ Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const
 	}
 }
 
+Float2 FudgetControl::GetSize() const
+{
+	if (_parent == nullptr)
+		return _hint_size;
+	_parent->RequestLayout();
+	return _size;
+}
+
+Float2 FudgetControl::GetPosition() const
+{
+	if (_parent != nullptr)
+		_parent->RequestLayout();
+	return _pos;
+}
+
 void FudgetControl::SetPosition(Float2 value)
 {
 	if (Float2::NearEqual(_pos, value) || !IsPositionChangePermitted())
@@ -116,40 +124,59 @@ void FudgetControl::SetPosition(Float2 value)
 	SizeOrPosModified(FudgetDirtType::Position);
 }
 
-
 Float2 FudgetControl::LocalToGlobal(Float2 value) const
 {
 	FudgetContainer *parent = _parent;
-	value += _pos;
+	value += GetPosition();
 
 	while (parent != nullptr)
 	{
-		value += parent->_pos;
+		value += parent->GetPosition();
 		parent = parent->_parent;
 	}
 
 	return value;
 }
-
 
 Float2 FudgetControl::GlobalToLocal(Float2 value) const
 {
 	FudgetContainer *parent = _parent;
-	value -= _pos;
+	value -= GetPosition();
 
 	while (parent != nullptr)
 	{
-		value -= parent->_pos;
+		value -= parent->GetPosition();
 		parent = parent->_parent;
 	}
 
 	return value;
 }
 
+FudgetControlFlags FudgetControl::GetControlFlags() const
+{
+	return _flags;
+}
+
+void FudgetControl::SetControlFlags(FudgetControlFlags flags)
+{
+	_flags = flags;
+
+	// Might not need recalculation but we can't be sure.
+	SizeOrPosModified(FudgetDirtType::All);
+}
+
+bool FudgetControl::HasAllFlags(FudgetControlFlags flags) const
+{
+	return (flags & _flags) == flags;
+}
+
+bool FudgetControl::HasAnyFlag(FudgetControlFlags flags) const
+{
+	return (int)(flags & _flags) != 0;
+}
 
 void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
 {
-
 	pos = LocalToGlobal(pos);
 
 	Render2D::FillRectangle(Rectangle(pos, size), color);

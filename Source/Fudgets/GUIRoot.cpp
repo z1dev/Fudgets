@@ -2,15 +2,24 @@
 #include "Fudget.h"
 
 #include "Engine/Input/Input.h"
+#include "Engine/Core/Log.h"
+#include "Engine/Engine/Screen.h"
+#include "Engine/Platform/Base/WindowBase.h"
 
-FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer)), events_initialized(false)
+#include "Engine/Core/Log.h"
+
+FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer), FudgetControlFlags::ContainerControl),
+	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr)
 {
 	_root = nullptr;
+	_window = nullptr;
 }
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget *root) : FudgetGUIRoot()
 {
 	_root = root;
+	_window = (WindowBase*)Screen::GetMainWindow();
+	_guiRoot = this;
 	InitializeEvents();
 }
 
@@ -47,6 +56,25 @@ Float2 FudgetGUIRoot::GetMaxSize() const
 	return Base::GetHintSize();
 }
 
+void FudgetGUIRoot::StartMouseCapture(FudgetControl *control)
+{
+	if (mouse_capture_control == control)
+		return;
+	if (mouse_capture_control != nullptr)
+		ReleaseMouseCapture();
+	mouse_capture_control = control;
+	if (mouse_capture_control != nullptr && _window != nullptr)
+		_window->StartTrackingMouse(false);
+}
+
+void FudgetGUIRoot::ReleaseMouseCapture()
+{
+	if (mouse_capture_control == nullptr)
+		return;
+	mouse_capture_control = nullptr;
+	_window->EndTrackingMouse();
+}
+
 void FudgetGUIRoot::InitializeEvents()
 {
 	if (events_initialized)
@@ -75,29 +103,139 @@ void FudgetGUIRoot::UninitializeEvents()
 	events_initialized = false;
 }
 
-void FudgetGUIRoot::OnMouseDown(const Float2 &pos, MouseButton button)
+void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 {
+	Float2 pos = Input::GetMousePosition();
 
+	if (mouse_capture_control == nullptr)
+		mouse_capture_button = button;
+
+	Array<FudgetControl*> controls_for_input;
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
+	{
+		FudgetControl *c = controls_for_input[ix];
+		Float2 cpos = c->GlobalToLocal(pos);
+		if (c->WantsMouseEventAtPos(cpos) && c->OnMouseDown(cpos, button) || mouse_capture_control != nullptr)
+			return;
+	}
 }
 
-void FudgetGUIRoot::OnMouseUp(const Float2 &pos, MouseButton button)
+void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 {
+	Float2 pos = Input::GetMousePosition();
 
+	if (mouse_capture_control != nullptr && mouse_capture_button == button)
+	{
+		mouse_capture_control->OnMouseUp(mouse_capture_control->GlobalToLocal(pos), button);
+		ReleaseMouseCapture();
+		OnMouseMove(pos);
+		return;
+	}
+
+	Array<FudgetControl*> controls_for_input;
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
+	{
+		FudgetControl *c = controls_for_input[ix];
+		Float2 cpos = c->GlobalToLocal(pos);
+		if (c->WantsMouseEventAtPos(cpos) && c->OnMouseUp(cpos, button))
+		{
+			ReleaseMouseCapture();
+			OnMouseMove(pos);
+			return;
+		}
+	}
 }
 
-void FudgetGUIRoot::OnMouseMove(const Float2 &pos)
+void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 {
+	Float2 pos = Input::GetMousePosition();
 
+	if (mouse_capture_control != nullptr && mouse_capture_button == button)
+	{
+		LOG(Error, "MouseCapture not null on OnMouseDoubleClick");
+		ReleaseMouseCapture();
+		return;
+	}
+	Array<FudgetControl*> controls_for_input;
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown, controls_for_input);
+	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
+	{
+		FudgetControl *c = controls_for_input[ix];
+		Float2 cpos = c->GlobalToLocal(pos);
+		if (c->WantsMouseEventAtPos(cpos) && (c->OnMouseDoubleClick(cpos, button) || mouse_capture_control != nullptr))
+		{
+			OnMouseMove(pos);
+			return;
+		}
+	}
+}
+
+void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
+{
+	Float2 pos = Input::GetMousePosition();
+
+	if (mouse_capture_control != nullptr)
+	{
+		mouse_capture_control->OnMouseMove(mouse_capture_control->GlobalToLocal(pos));
+		return;
+	}
+
+	Array<FudgetControl*> controls_for_input;
+	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseMove, controls_for_input);
+
+	bool post_leave = mouse_over_control != nullptr;
+	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
+	{
+		FudgetControl *c = controls_for_input[ix];
+		Float2 cpos = c->GlobalToLocal(pos);
+		if (c->WantsMouseEventAtPos(cpos))
+		{
+			if (mouse_over_control != c)
+			{
+				bool wants_enterleave = c->HasAnyFlag(FudgetControlFlags::CanHandleMouseEnterLeave);
+				FudgetControl *old_mouse_control = mouse_over_control;
+				// Make sure the old control can check which is the new one.
+				mouse_over_control = wants_enterleave ? c : nullptr;
+				if (old_mouse_control != nullptr)
+					old_mouse_control->OnMouseLeave();
+				if (wants_enterleave)
+				{
+					// Let the new control check where the mouse came from
+					mouse_over_control = old_mouse_control;
+					c->OnMouseEnter(cpos);
+					mouse_over_control = c;
+				}
+			}
+			c->OnMouseMove(cpos);
+			return;
+		}
+	}
+	if (post_leave)
+	{
+		FudgetControl *old_mouse_control = mouse_over_control;
+		// Make sure the control can check that no control has the mouse
+		mouse_over_control = nullptr;
+		old_mouse_control->OnMouseLeave();
+	}
 }
 
 void FudgetGUIRoot::OnMouseLeave()
 {
+	if (mouse_capture_control != nullptr)
+	{
+		LOG(Error, "MouseCapture not null on OnMouseLeave");
+		ReleaseMouseCapture();
+		return;
+	}
 
+	if (mouse_over_control != nullptr)
+	{
+		FudgetControl *old_mouse_control = mouse_over_control;
+		// Make sure the control can check that no control has the mouse
+		mouse_over_control = nullptr;
+		old_mouse_control->OnMouseLeave();
+	}
 }
-
-void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &pos, MouseButton button)
-{
-
-}
-
 

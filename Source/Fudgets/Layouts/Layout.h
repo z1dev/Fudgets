@@ -383,12 +383,11 @@ protected:
 	/// <summary>
 	/// Describes what changes will cause a layout to mark itself dirty.
 	/// </summary>
-	/// <returns>The new flags</returns>
+	/// <returns>The flags set for the layout</returns>
 	API_PROPERTY() FudgetLayoutFlag GetLayoutFlags() const;
 
 	/// <summary>
 	/// Describes what changes will cause a layout to mark itself dirty.
-	/// Override in derived classes if the flags can change during runtime
 	/// </summary>
 	/// <param name="flags">The new flags</param>
 	API_PROPERTY() void SetLayoutFlags(FudgetLayoutFlag flags);
@@ -397,7 +396,7 @@ protected:
 	/// Matches the given flags with those of the layout, returning true only if all the flags were found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
-	/// <returns>Whether the values were all matching the layout flags</returns>
+	/// <returns>Whether the flags were all found on the layout</returns>
 	API_FUNCTION() bool HasAllFlags(FudgetLayoutFlag flags) const;
 
 	/// <summary>

@@ -3,9 +3,12 @@
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Core/Math/Color.h"
+#include "Engine/Input/Enums.h"
+#include "Engine/Core/Math/Rectangle.h"
 
 
 class FudgetContainer;
+class FudgetGUIRoot;
 
 
 /// <summary>
@@ -58,6 +61,71 @@ enum class FudgetDirtType : uint8
 
 DECLARE_ENUM_OPERATORS(FudgetDirtType);
 
+/// <summary>
+/// Flags for controls that describe their behavior
+/// </summary>
+API_ENUM(Attributes = "Flags")
+enum class FudgetControlFlags
+{
+	/// <summary>
+	/// Empty flag
+	/// </summary>
+	None = 0,
+	/// <summary>
+	/// FudgetContainers will add this flag themselves for derived classes, while other classes should
+	/// never set this
+	/// </summary>
+	ContainerControl = 1 << 0,
+	/// <summary>
+	/// Supports mouse button up and down inputs. This should be set for any control that might not react
+	/// to mouse events by default but is not transparent. Controls can decide to handle the events per call.
+	/// </summary>
+	CanHandleMouseUpDown = 1 << 1,
+	/// <summary>
+	/// Supports mouse move inputs. This can be set for any control that might not react
+	/// to mouse events by default, but is not transparent. The top control with this flag will be the only
+	/// one receiving the event if it's under the mouse.
+	/// </summary>
+	CanHandleMouseMove = 1 << 2,
+	/// <summary>
+	/// Supports mouse enter and mouse leave events, but only while CanHandleMouseMove is also set.
+	/// </summary>
+	CanHandleMouseEnterLeave = 1 << 3,
+};
+DECLARE_ENUM_OPERATORS(FudgetControlFlags);
+
+/// <summary>
+/// Types of mouse and touch inputs a control can handle.
+/// </summary>
+API_ENUM()
+enum class FudgetPointerInput
+{
+	/// <summary>
+	/// Mouse button pressed
+	/// </summary>
+	MouseDown,
+	/// <summary>
+	/// Mouse button released
+	/// </summary>
+	MouseUp,
+	/// <summary>
+	/// Mouse button double clicked
+	/// </summary>
+	MouseDoubleClick,
+	/// <summary>
+	/// Mouse movement over a control
+	/// </summary>
+	MouseMove,
+	/// <summary>
+	/// First mouse event after the mouse enters a control
+	/// </summary>
+	MouseEnter,
+	/// <summary>
+	/// Last mouse event after the mouse leaves a control
+	/// </summary>
+	MouseLeave,
+};
+
 
 /// <summary>
 /// Base class for controls, including containers and panels.
@@ -68,7 +136,7 @@ class FUDGETS_API FudgetControl : public ScriptingObject
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
-	//FudgetControl();
+	FudgetControl(const SpawnParams &params, FudgetControlFlags flags);
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -195,14 +263,19 @@ public:
 	/// Gets the position of this control in its parent's layout, relative to the top-left corner.
 	/// </summary>
 	/// <returns>The control's current position</returns>
-	API_PROPERTY() virtual Float2 GetPosition() const;
+	API_PROPERTY() Float2 GetPosition() const;
 
 	/// <summary>
-	/// Modifies the position of the control in its parent's layout, relative to the top-left corner, if
+	/// Modifies the position of the control in its parent's layout, relative to the top-left corner if
 	/// the layout allows free positioning.
 	/// </summary>
 	/// <param name="value">The requested new position</param>
 	API_PROPERTY() virtual void SetPosition(Float2 value);
+
+	/// <summary>
+	/// Gets the local bounding box of the control relative to its parent, calculating the size if necessary.
+	/// </summary>
+	API_PROPERTY() Rectangle GetBoundingBox() const { return Rectangle(GetPosition(), GetSize()); }
 
 	/// <summary>
 	/// Gets the left side's coordinate of this control in its parent's layout, relative to the top-left corner.
@@ -244,10 +317,97 @@ public:
 	/// <summary>
 	/// Converts a coordinate from global UI space to local control space.
 	/// </summary>
-	/// <param name="local">The coordinate relative to the top-left corner of the UI screen</param>
+	/// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
 	/// <returns>The coordinate relative to the top-left corner of the control</returns>
 	API_FUNCTION() virtual Float2 GlobalToLocal(Float2 global) const;
 
+	/// <summary>
+	/// Gets flags describing the control's behavior or appearance.
+	/// </summary>
+	/// <returns>The flags set for the control</returns>
+	API_PROPERTY() virtual FudgetControlFlags GetControlFlags() const;
+
+	/// <summary>
+	/// Sets flags describing the control's behavior or appearance.
+	/// </summary>
+	/// <param name="flags">The new flags</param>
+	API_PROPERTY() virtual void SetControlFlags(FudgetControlFlags flags);
+
+	/// <summary>
+	/// Matches the given flags with those of the control, returning true only if all the flags were found.
+	/// </summary>
+	/// <param name="flags">The flags to look for</param>
+	/// <returns>Whether the flags were all found on the control</returns>
+	API_FUNCTION() virtual bool HasAllFlags(FudgetControlFlags flags) const;
+
+	/// <summary>
+	/// Matches the given flags with those of the layout, returning true if any of the flags was found.
+	/// </summary>
+	/// <param name="flags">The flags to look for</param>
+	/// <returns>Whether at least one flag was found on the control</returns>
+	API_FUNCTION() virtual bool HasAnyFlag(FudgetControlFlags flags) const;
+
+	// Input:
+
+	/// <summary>
+	/// Called when a mouse button was pressed over this control. The control can start capturing
+	/// the mouse with StartMouseCapture to be sure to receive OnMouseUp and OnMouseMove even when the
+	/// mouse pointer is not over it.
+	/// Return true if the control wants to prevent other controls below to get the mouse event.
+	/// </summary>
+	/// <param name="pos">Local mouse position</param>
+	/// <param name="button">Button that was just pressed</param>
+	/// <returns>Whether to stop OnMouseDown reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseDown(Float2 pos, MouseButton button) { return true; }
+
+	/// <summary>
+	/// Called when a mouse button was released over this control. The control should stop capturing
+	/// the mouse with StopMouseCapture if it started capturing it on OnMouseDown for the same button.
+	/// Return true if the control wants to prevent other controls below to get the mouse event. This
+	/// should mirror the result of OnMouseDown.
+	/// </summary>
+	/// <param name="pos">Local mouse position</param>
+	/// <param name="button">Button that was just released</param>
+	/// <returns>Whether to stop OnMouseUp reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, MouseButton button) { return true; }
+
+	/// <summary>
+	/// Called when a mouse button was double-clicked over this control. The control should stop capturing
+	/// the mouse with StopMouseCapture if it started capturing it on OnMouseDown for the same button.
+	/// Return true if the control wants to prevent other controls below to get the mouse event. This
+	/// should mirror the result of OnMouseDown.
+	/// </summary>
+	/// <param name="pos">Local mouse position</param>
+	/// <param name="button">Button that was just double-clicked</param>
+	/// <returns>Whether to stop OnMouseDoubleClick reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseDoubleClick(Float2 pos, MouseButton button) { return true; }
+
+	/// <summary>
+	/// Called during mouse event handling to make sure this control wants to handle mouse events at
+	/// the passed position. This can be used for controls with transparent pixels to ignore the mouse
+	/// events there.
+	/// </summary>
+	/// <param name="pos">Local mouse position</param>
+	/// <returns>Whether the control wants to handle mouse events at pos or not</returns>
+	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos) { return true; }
+
+	/// <summary>
+	/// Notification that the mouse just moved over this control
+	/// </summary>
+	/// <param name="pos">Local mouse position</param>
+	API_FUNCTION() virtual void OnMouseMove(Float2 pos) { }
+
+	/// <summary>
+	/// Notification that the mouse just moved over this control somewhere
+	/// </summary>
+	/// <param name="pos">Local mouse position></param>
+	API_FUNCTION() virtual void OnMouseEnter(Float2 pos) { }
+
+	/// <summary>
+	/// Notification that the mouse just left this control while it wasn't capturing it. It's also
+	/// called if the control was capturing the mouse but released it, and the mouse wasn't over it.
+	/// </summary>
+	API_FUNCTION() virtual void OnMouseLeave() {}
 
 	// Render2D wrapper:
 
@@ -265,7 +425,11 @@ public:
 	/// </summary>
 	/// <param name="dirt_flags">Flags of what changed</param>
 	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
+
+	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
 private:
+	static FudgetGUIRoot *_guiRoot;
+
 	/// <summary>
 	/// Controls in a layout usually can't be moved freely. This function determines if that's the case or not.
 	/// </summary>
@@ -283,6 +447,8 @@ private:
 	int _index;
 	String _name;
 
+	FudgetControlFlags _flags;
+
 	Float2 _pos;
 	Float2 _size;
 
@@ -295,4 +461,5 @@ private:
 
 	friend class FudgetLayout;
 	friend class FudgetContainer;
+	friend class FudgetGUIRoot;
 };

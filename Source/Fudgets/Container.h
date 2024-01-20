@@ -2,6 +2,7 @@
 
 #include "Control.h"
 #include "Engine/Core/Collections/Array.h"
+#include "Engine/Input/Enums.h"
 
 class FudgetLayout;
 class Fudget;
@@ -53,6 +54,8 @@ class FUDGETS_API FudgetContainer : public FudgetControl
     using Base = FudgetControl;
 	DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
+    FudgetContainer(FudgetControlFlags flags);
+    FudgetContainer(const SpawnParams &params, FudgetControlFlags flags);
     ~FudgetContainer();
 
     template<typename T>
@@ -139,15 +142,6 @@ public:
     /// </summary>
     API_FUNCTION() void DeleteAll();
 
-
-    /// <summary>
-    /// Gets the size that the container currently occupies in its parent's layout. This value can't be directly
-    /// changed. Use SetHintSize to change it for normal containers. The root container inherits its size from
-    /// the screen.
-    /// </summary>
-    /// <returns>The current size of the container.</returns>
-    Float2 GetSize() const override;
-
     /// <inheritdoc />
     void SetHintSize(Float2 value) override;
 
@@ -177,7 +171,6 @@ public:
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
     Float2 GetMaxSize() const override;
-
 
     /// <summary>
     /// Determines if the width of the container is calculated by the layout or the preferred size is
@@ -300,6 +293,18 @@ public:
     /// <param name="control">The control requesting position change</param>
     /// <returns>Whether the control can change its position or not</returns>
     API_FUNCTION() bool IsControlPositioningPermitted(const FudgetControl *control) const;
+
+    // Input:
+
+    /// <summary>
+    /// Lists every control under the mouse from bottom to top that has the flag to handle the monitored mouse event.
+    /// Every container will also have this function called to fill the array and find everything.
+    /// </summary>
+    /// <param name="pos">Mouse position relative to this container</param>
+    /// <param name="request">The flag that's related to inputs</param>
+    /// <param name="result">Controls that can handle the event from top to bottom</param>
+    /// <returns>List of controls </returns>
+    API_FUNCTION() virtual void ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result);
 private:
     /// <summary>
     /// Directly changes the position and size of the control. Only to be called by FudgetLayout. This derived
