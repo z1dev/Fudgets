@@ -109,8 +109,8 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
         return;
     auto bounds = Canvas->GetBounds();
     bounds.Transformation.Translation -= renderContext.View.Origin;
-    if (renderContext.View.Frustum.Contains(bounds.GetBoundingBox()) == ContainmentType::Disjoint)
-        return;
+    //if (renderContext.View.Frustum.Contains(bounds.GetBoundingBox()) == ContainmentType::Disjoint)
+    //    return;
 
     int profilerEvent = ProfilerGPU::BeginEvent(TEXT("UI Canvas 2D"));
 
