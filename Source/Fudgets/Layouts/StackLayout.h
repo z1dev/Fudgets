@@ -2,21 +2,20 @@
 
 #include "Layout.h"
 
-// TODO: some details changed, update the docs! (i.e. no more separate caching for sizes, use of layout flags)
-// 
+
 // This is a layout with the absolute minimal implementation. See the descriptions in the .cpp
-// file for what these functions do. A more complicated layout is FudgetListLayout, with an example
-// on how to store values for each control in slots, that are specific to that layout.
+// file for what the functions do. A more complicated layout is FudgetListLayout, but it's too complicated for
+// a complete explanation.
 // 
-// LayoutChildren(...) - calculates the position and size of controls, relative to the parent
-//		container's origin.
+// The constructor: - every layout has a constructor that takes the default SpawnParams, and a flags variable.
+//		the flags are necessary in the layouting step. They decide when recalculation is necessary.
+//		See the FudgetLayoutFlag enum in Layout.h
+// 
+// LayoutChildren(...) - calculates the position and size of controls, relative to the parent container's top-left
+//		origin.
 // RequestSize(...) - uses the child controls to calculate the min, max and hint sizes.
-// CreateSlot(...) - Creates an object that's derived from FudgetLayoutSlot (or this class itself)
-//      to store custom data for the layout. This simple example layout doesn't implement it. Check
-//		FudgetListLayout with some description.
-
-
-
+// CreateSlot(...) - Creates an object that's derived from FudgetLayoutSlot to store custom data for the layout.
+//		This simple example creates the default object.
 
 
 /// <summary>

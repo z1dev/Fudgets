@@ -34,6 +34,46 @@ void FudgetListLayout::SetStretched(bool value)
 	MarkDirty(FudgetDirtType::All, true);
 }
 
+FudgetHorzAlign FudgetListLayout::GetItemHorizontalAlignment(int index) const
+{
+	return GetSlot(index)->_horz_align;
+}
+
+void FudgetListLayout::SetItemHorizontalAlignment(int index, FudgetHorzAlign value)
+{
+	GetSlot(index)->_horz_align = value;
+}
+
+FudgetVertAlign FudgetListLayout::GetItemVerticalAlignment(int index) const
+{
+	return GetSlot(index)->_vert_align;
+}
+
+void FudgetListLayout::SetItemVerticalAlignment(int index, FudgetVertAlign value)
+{
+	GetSlot(index)->_vert_align = value;
+}
+
+bool FudgetListLayout::GetItemLimitsEnforced(int index) const
+{
+	return GetSlot(index)->_enforce_limits;
+}
+
+void FudgetListLayout::SetItemLimitsEnforced(int index, bool value)
+{
+	GetSlot(index)->_enforce_limits = value;
+}
+
+FudgetSlotPadding& FudgetListLayout::GetItemPadding(int index) const
+{
+	return GetSlot(index)->_padding;
+}
+
+void FudgetListLayout::SetItemPadding(int index, FudgetSlotPadding value)
+{
+	GetSlot(index)->_padding = value;
+}
+
 bool FudgetListLayout::LayoutChildren()
 {
 	// See FudgetStackLayout for a simpler implementation and better explanation. This function
@@ -68,7 +108,7 @@ bool FudgetListLayout::LayoutChildren()
 		{
 			auto slot = GetSlot(ix);
 
-			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), Float2(
+			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.Left, pos.Y + slot->_padding.Top), Float2(
 				_ori == FudgetOrientation::Horizontal ? Math::Max(0.0f, slot->_hint_size.X) : _wanted.X - OppositePad(slot->_padding),
 				_ori == FudgetOrientation::Vertical ? Math::Max(0.0f, slot->_hint_size.Y) : _wanted.Y - OppositePad(slot->_padding)));
 
@@ -218,7 +258,7 @@ bool FudgetListLayout::LayoutChildren()
 			float size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0.0f);
 			float size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0.0f);
 
-			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.left, pos.Y + slot->_padding.top), Float2(size_x, size_y));
+			PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.Left, pos.Y + slot->_padding.Top), Float2(size_x, size_y));
 
 			if (_ori == FudgetOrientation::Horizontal)
 				pos.X += RelevantPad(slot->_padding) + size_x;
@@ -265,8 +305,8 @@ Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 	{
 		auto slot = GetSlot(ix);
 		auto &pad = slot->_padding;
-		result.X += pad.left + pad.right;
-		result.Y += pad.top + pad.bottom;
+		result.X += pad.Left + pad.Right;
+		result.Y += pad.Top + pad.Bottom;
 		Float2 size = slot->_control->GetRequestedSize(type);
 		Float2 fixed_size = size;
 

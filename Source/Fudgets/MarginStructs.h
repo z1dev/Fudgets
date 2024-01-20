@@ -2,29 +2,32 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 
+/// <summary>
+/// Padding around a control, that is considered as an extension of the control when calculating layouts.
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetSlotPadding
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetSlotPadding)
 
-	FudgetSlotPadding() : left(0.0f), right(0.0f), top(0.0f), bottom(0.0f)
+	FudgetSlotPadding() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f)
 	{
 	}
 
 	/// <summary>
 	/// Padding to the left
 	/// </summary>
-	API_FIELD() float left;
+	API_FIELD() float Left;
 	/// <summary>
 	/// Padding to the right
 	/// </summary>
-	API_FIELD() float right;
+	API_FIELD() float Right;
 	/// <summary>
 	/// Padding to the top
 	/// </summary>
-	API_FIELD() float top;
+	API_FIELD() float Top;
 	/// <summary>
 	/// Padding to the bottom
 	/// </summary>
-	API_FIELD() float bottom;
+	API_FIELD() float Bottom;
 };

@@ -14,21 +14,45 @@ class FudgetContainer;
 API_ENUM()
 enum class FudgetSizeType : uint8
 {
+	/// <summary>
+	/// Specifies the hint size. The hint size is the size a container prefers to have if there's
+	/// enough space. Unless the layout enforces it, the control should have this size independent
+	/// of the available space
+	/// </summary>
 	Hint,
+	/// <summary>
+	/// The minimum suggested size which still makes use of the control possible. Layouts are allowed
+	/// to ignore this when there isn't enough space. Negative values have the same effect as 0
+	/// </summary>
 	Min,
+	/// <summary>
+	/// The maximum suggested size for a control. Layouts might make a control grow larger than the
+	/// hint size, but can use this size to limit that. Layouts are allowed to ignore this value based
+	/// on a slot's settings or the layout's function.
+	/// Negative values count as "infinite" size (near float limits.)
+	/// </summary>
 	Max,
 };
 
 
 /// <summary>
-/// Used for any function call in controls and layouts that need one specific size of controls.
+/// Used for any function call in controls and layouts that need to know if it affects size or position
 /// </summary>
 API_ENUM(Attributes = "Flags")
 enum class FudgetDirtType : uint8
 {
+	/// <summary>
+	/// Flag corresponding to size. Used for example to indicate when a control's size changes
+	/// </summary>
 	Size = 1,
+	/// <summary>
+	/// Flag corresponding to position. Used for example to indicate when a control's position changes
+	/// </summary>
 	Position = 2,
 
+	/// <summary>
+	/// Flag corresponding to both size and position.
+	/// </summary>
 	All = Size | Position
 };
 
@@ -49,8 +73,7 @@ public:
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
 	/// </summary>
-	API_FUNCTION()
-	virtual void Draw() {}
+	API_FUNCTION() virtual void Draw() {}
 
 	/// <summary>
 	/// Fetches the parent who is managing this control. The parent is also responsible for destruction
@@ -87,6 +110,18 @@ public:
 	/// </summary>
 	/// <param name="value">The requested order in the parent. Invalid values result in no change.</param>
 	API_PROPERTY() void SetIndexInParent(int value);
+
+	/// <summary>
+	/// A custom name that can be used to identify the control. Names don't have to be unique.
+	/// </summary>
+	/// <returns>Name of the control</returns>
+	API_PROPERTY() String GetName() const { return _name; }
+
+	/// <summary>
+	/// Set a custom name that can be used to identify the control. Names don't have to be unique.
+	/// </summary>
+	/// <param name="value">The control's new name</param>
+	API_PROPERTY() void SetName(String value);
 
 	/// <summary>
 	/// The size preferred by the control that serves as a hint to the layout, which might ignore it if it doesn't fit.
@@ -140,7 +175,7 @@ public:
 	/// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
 	/// and GetSize.
 	/// </summary>
-	/// <param name="type">The size to return</param>
+	/// <param name="sizeType">Which size to return</param>
 	/// <returns>The control's size specified in type</returns>
 	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType sizeType) const;
 
@@ -199,8 +234,18 @@ public:
 	/// <param name="delta_time">The time passed since the last update</param>
 	API_FUNCTION() virtual void Update(float delta_time) {}
 
-
+	/// <summary>
+	/// Converts a coordinate from local control space to global UI space.
+	/// </summary>
+	/// <param name="local">The coordinate relative to the top-left corner of the control</param>
+	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
 	API_FUNCTION() virtual Float2 LocalToGlobal(Float2 local) const;
+
+	/// <summary>
+	/// Converts a coordinate from global UI space to local control space.
+	/// </summary>
+	/// <param name="local">The coordinate relative to the top-left corner of the UI screen</param>
+	/// <returns>The coordinate relative to the top-left corner of the control</returns>
 	API_FUNCTION() virtual Float2 GlobalToLocal(Float2 global) const;
 
 
@@ -236,6 +281,7 @@ private:
 
 	FudgetContainer *_parent;
 	int _index;
+	String _name;
 
 	Float2 _pos;
 	Float2 _size;

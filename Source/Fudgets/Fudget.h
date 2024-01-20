@@ -104,6 +104,10 @@ public:
     //bool size_set = false;
 };
 
+/// <summary>
+/// The Actor that represents the UI system in the scene tree. It initializes renderers to draw the controls and handles
+/// input and other event forwarding
+/// </summary>
 API_CLASS(Sealed, NoConstructor, Attributes = "ActorContextMenu(\"New/UI/UIX Canvas\"), ActorToolbox(\"UIX\")")
 class FUDGETS_API Fudget : public Actor
 {

@@ -47,6 +47,12 @@ void FudgetControl::SetIndexInParent(int value)
 	_changing = false;
 }
 
+void FudgetControl::SetName(String value)
+{
+	// TODO: event on name change?
+	_name = value;
+}
+
 void FudgetControl::SetHintSize(Float2 value)
 {
 	if (Float2::NearEqual(_hint_size, value))

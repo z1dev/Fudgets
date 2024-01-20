@@ -16,12 +16,39 @@ enum class FudgetDirtType : uint8;
 API_ENUM()
 enum class FudgetHorzAlign
 {
+	/// <summary>
+	/// Control should stick to the left side of the available space. If the slot is too small, the control will fill the area
+	/// and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Left,
+	/// <summary>
+	/// Control should be centered horizontally in the available space. If the slot is too small, the control will fill the
+	/// area and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Center,
+	/// <summary>
+	/// Control should stick to the right side of the available space. If the slot is too small, the control will fill the area
+	/// and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Right,
+	/// <summary>
+	/// Makes the control fill the available area horizontally, no matter its size.
+	/// </summary>
 	Fill,
+	/// <summary>
+	/// Control should stick to the left side of the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the right or be clipped.
+	/// </summary>
 	ClipLeft,
+	/// <summary>
+	/// Control should be centered horizontally in the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the sides or be clipped.
+	/// </summary>
 	ClipCenter,
+	/// <summary>
+	/// Control should stick to the right side of the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the left or be clipped.
+	/// </summary>
 	ClipRight
 };
 
@@ -31,12 +58,39 @@ enum class FudgetHorzAlign
 API_ENUM()
 enum class FudgetVertAlign
 {
+	/// <summary>
+	/// Control should stick to the top side of the available space. If the slot is too small, the control will fill the area
+	/// and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Top,
+	/// <summary>
+	/// Control should be centered vertically in the available space. If the slot is too small, the control will fill the
+	/// area and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Center,
+	/// <summary>
+	/// Control should stick to the bottom side of the available space. If the slot is too small, the control will fill the area
+	/// and this setting wil act the same as if it was Fill.
+	/// </summary>
 	Bottom,
+	/// <summary>
+	/// Makes the control fill the available area vertically, no matter its size.
+	/// </summary>
 	Fill,
+	/// <summary>
+	/// Control should stick to the top side of the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the bottom or be clipped.
+	/// </summary>
 	ClipTop,
+	/// <summary>
+	/// Control should be centered vertically in the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the sides or be clipped.
+	/// </summary>
 	ClipCenter,
+	/// <summary>
+	/// Control should stick to the bottom side of the available space. If the slot is too small, the control will keep its minimal
+	/// size, and either stick out to the top or be clipped.
+	/// </summary>
 	ClipBottom
 };
 
@@ -46,7 +100,13 @@ enum class FudgetVertAlign
 API_ENUM()
 enum class FudgetOrientation
 {
+	/// <summary>
+	/// The layout will orient itself horizontally. For list layouts this means items are placed from left to right
+	/// </summary>
 	Horizontal,
+	/// <summary>
+	/// The layout will orient itself vertically. For list layouts this means items are placed from top to bottom
+	/// </summary>
 	Vertical
 };
 
@@ -117,27 +177,34 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 	FudgetLayoutSlot(FudgetControl *control);
 
 	/// <summary>
+	/// Fetches the control that is positioned and sized by the values in this slot
+	/// </summary>
+	/// <returns>The control in this slot</returns>
+	API_PROPERTY() FudgetControl* GetControl() const { return _control; }
+
+	/// <summary>
 	/// The control placed in the slot. The attributes affect its position and size 
 	/// </summary>
-	API_FIELD(Attributes="HideInEditor") FudgetControl *_control;
+	API_FIELD() FudgetControl *_control;
 	/// <summary>
 	/// The calculated hint size for caching
 	/// </summary>
-	API_FIELD(Attributes="HideInEditor") Float2 _hint_size;
+	API_FIELD() Float2 _hint_size;
 	/// <summary>
 	/// The calculated min size for caching
 	/// </summary>
-	API_FIELD(Attributes="HideInEditor") Float2 _min_size;
+	API_FIELD() Float2 _min_size;
 	/// <summary>
 	/// The calculated max size for caching
 	/// </summary>
-	API_FIELD(Attributes="HideInEditor") Float2 _max_size;
+	API_FIELD() Float2 _max_size;
 };
 
 
 /// <summary>
-/// Base class for all layouts that can be assigned to container controls. Layouts don't directly contain controls,
-/// instead they access the controls of the container to set sizes and positions
+/// Base class for all layouts that can be assigned to container controls. Layouts don't directly contain
+/// controls, instead they access the controls of the container to set sizes and positions. To create a
+/// new layout, see the implementation of StackLayout as a minimal example and for more explanation.
 /// </summary>
 API_CLASS(Abstract, NoSpawn)
 class FUDGETS_API FudgetLayout : public ScriptingObject

@@ -78,6 +78,73 @@ public:
 	/// <param name="value">Whether the layout fills the available space</param>
 	API_PROPERTY() void SetStretched(bool value);
 
+	/// <summary>
+	/// Gets a control's horizontal alignment given its index in the owner container. The horizontal alignment
+	/// determines how the control is placed in its designated slot.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <returns>The control's horizontal alignment</returns>
+	API_FUNCTION() FudgetHorzAlign GetItemHorizontalAlignment(int index) const;
+
+	/// <summary>
+	/// Sets a control's horizontal alignment given its index in the owner container. The horizontal alignment
+	/// determines how the control is placed in its designated slot.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <param name="value">The control's new horizontal alignment</param>
+	API_FUNCTION() void SetItemHorizontalAlignment(int index, FudgetHorzAlign value);
+
+	/// <summary>
+	/// Gets a control's vertical alignment given its index in the owner container. The vertical alignment
+	/// determines how the control is placed in its designated slot.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <returns>The control's vertical alignment</returns>
+	API_FUNCTION() FudgetVertAlign GetItemVerticalAlignment(int index) const;
+
+	/// <summary>
+	/// Sets a control's vertical alignment given its index in the owner container. The vertical alignment
+	/// determines how the control is placed in its designated slot.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <param name="value">The control's new vertical alignment</param>
+	API_FUNCTION() void SetItemVerticalAlignment(int index, FudgetVertAlign value);
+
+	/// <summary>
+	/// Returns true if the control wants its minimum or maximum size respected in the layout when it's
+	/// possible. During the size calculation of the layout, the minimum and maximum sizes are taken into
+	/// account independent of this setting. It's only relevant, when the control sizing and placement is
+	/// calculated.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <returns>Whether control's size limits will be respected during layout or not</returns>
+	API_FUNCTION() bool GetItemLimitsEnforced(int index) const;
+
+	/// <summary>
+	/// Tells the layout if the control wants its minimum or maximum size respected when it is possible.
+	/// During the size calculation of the layout, the minimum and maximum sizes are taken into account
+	/// independent of this setting. It's only relevant, when the control sizing and placement is
+	/// calculated.
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <param name="value">Whether control's size limits should be respected during layout or not</param>
+	API_FUNCTION() void SetItemLimitsEnforced(int index, bool value);
+
+	/// <summary>
+	/// Gets the padding of a control in its slot. The padding with the control together counts as the
+	/// content of a slot, and it is calculated as an inner border around the control
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <returns>The padding values for the sides</returns>
+	API_FUNCTION() FudgetSlotPadding& GetItemPadding(int index) const;
+
+	/// <summary>
+	/// Sets the padding of a control in its slot. The padding with the control together counts as the
+	/// content of a slot, and it is calculated as an inner border around the control
+	/// </summary>
+	/// <param name="index">The control's index in its container</param>
+	/// <param name="value">The padding values for the sides</param>
+	API_FUNCTION() void SetItemPadding(int index, FudgetSlotPadding value);
 protected:
 	/// <inheritdoc />
 	Float2 RequestSize(FudgetSizeType type) const override;
@@ -124,14 +191,14 @@ private:
 	FORCE_INLINE float RelevantPad(const FudgetSlotPadding &padding) const
 	{
 		if (_ori == FudgetOrientation::Horizontal)
-			return padding.left + padding.top;
-		return padding.top + padding.bottom;
+			return padding.Left + padding.Top;
+		return padding.Top + padding.Bottom;
 	}
 	FORCE_INLINE float OppositePad(const FudgetSlotPadding &padding) const
 	{
 		if (_ori == FudgetOrientation::Horizontal)
-			return padding.top + padding.bottom;
-		return padding.left + padding.top;
+			return padding.Top + padding.Bottom;
+		return padding.Left + padding.Top;
 	}
 
 	FudgetOrientation _ori;
