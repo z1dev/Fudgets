@@ -53,8 +53,6 @@ class FUDGETS_API FudgetContainer : public FudgetControl
     using Base = FudgetControl;
 	DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
-    FudgetContainer(Fudget *_ui_owner);
-
     ~FudgetContainer();
 
     template<typename T>
@@ -150,7 +148,7 @@ public:
     /// <returns>The current size of the container.</returns>
     Float2 GetSize() const override;
 
-    /// <inheritdoc >
+    /// <inheritdoc />
     void SetHintSize(Float2 value) override;
 
     /// <summary>
@@ -160,7 +158,7 @@ public:
     /// <returns>The container's preferred size with the current layout</returns>
     Float2 GetHintSize() const override;
 
-    /// <inheritdoc >
+    /// <inheritdoc />
     void SetMinSize(Float2 value) override;
 
     /// <summary>
@@ -170,7 +168,7 @@ public:
     /// <returns>The container's minimum size with the current layout</returns>
     Float2 GetMinSize() const override;
 
-    /// <inheritdoc >
+    /// <inheritdoc />
     void SetMaxSize(Float2 value) override;
 
     /// <summary>
@@ -324,7 +322,4 @@ private:
 
     // Used locally to avoid double calling functions from child controls.
     bool _changing;
-
-    // True only for the container covering the screen as the root of the hierarchy
-    Fudget *_root;
 };

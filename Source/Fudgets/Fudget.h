@@ -16,8 +16,7 @@
 
 
 class Fudget;
-class FudgetContainer;
-
+class FudgetGUIRoot;
 
 /// <summary>
 /// The canvas rendering modes.
@@ -297,7 +296,7 @@ public:
     /// Gets the canvas GUI root control.
     /// </summary>
     API_PROPERTY()
-    FORCE_INLINE FudgetContainer* GetGUI() const
+    FORCE_INLINE FudgetGUIRoot* GetGUI() const
     {
         return _guiRoot;
     }
@@ -418,9 +417,9 @@ private:
 
 #if USE_EDITOR
     SceneRenderTask *_editorTask = nullptr;
-    FudgetContainer *_editorRoot = nullptr;
+    FudgetGUIRoot *_editorRoot = nullptr;
 
-    /*internal*/ void EditorOverride(SceneRenderTask *task, FudgetContainer *root);
+    /*internal*/ void EditorOverride(SceneRenderTask *task, FudgetGUIRoot *root);
 
     API_PROPERTY()
     bool Editor_IsWorldSpace()
@@ -452,7 +451,7 @@ private:
     //int _order = 0;
 
     FudgetRenderMode _renderMode = FudgetRenderMode::ScreenSpace;
-    /* readonly */ FudgetContainer* _guiRoot = nullptr;
+    /* readonly */ FudgetGUIRoot* _guiRoot = nullptr;
     FudgetRenderer* _renderer = nullptr;
     FudgetRenderer2D* _renderer2d = nullptr;
     bool _isLoading = false;
@@ -469,7 +468,6 @@ private:
     mutable Float2 _saved_size = Float2(500.f);
 
 
-    //friend class FudgetContainer;
     friend class FudgetRenderer;
     friend class FudgetRenderer2D;
 

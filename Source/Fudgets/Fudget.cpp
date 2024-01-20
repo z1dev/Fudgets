@@ -1,6 +1,6 @@
 ﻿#include "Fudget.h"
 //#include "RootControl.h"
-#include "Container.h"
+#include "GUIRoot.h"
 
 #include "Engine/Level/Scene/Scene.h"
 #include "Engine/Profiler/Profiler.h"
@@ -178,7 +178,7 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
 
 
 
-Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetContainer>(this))
+Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetGUIRoot>(this))
 {
     //_guiRoot->SetIsLayoutLocked(false);
     NavigateUp = New<FudgetInputEvent>(TEXT("NavigateUp"));
@@ -739,7 +739,7 @@ bool Fudget::IsVisible(LayersMask layersMask) const
 }
 
 #if USE_EDITOR
-void Fudget::EditorOverride(SceneRenderTask *task, FudgetContainer *root)
+void Fudget::EditorOverride(SceneRenderTask *task, FudgetGUIRoot *root)
 {
     if (_editorTask == task && _editorRoot == root)
         return;
