@@ -8,7 +8,7 @@ class WindowBase;
 /// <summary>
 /// Root container representing the whole area where UI controls can appear. For example the screen.
 /// </summary>
-API_CLASS(NoSpawn, Hidden)
+API_CLASS(NoSpawn)
 class FUDGETS_API FudgetGUIRoot : public FudgetContainer
 {
     using Base = FudgetContainer;
@@ -35,22 +35,23 @@ public:
     /// Don't forget to UnregisterMouseHook cleanup, because it is not done automatically.
     /// </summary>
     /// <param name="hook">The mouse hook to register</param>
-    API_FUNCTION() static void RegisterMouseHook(IFudgetMouseHook *hook);
+    API_FUNCTION() void RegisterMouseHook(IFudgetMouseHook *hook);
 
     /// <summary>
     /// Unregisters a class as mouse event hook after it was registered with RegisterMouseHook. Always
     /// call when hook is no longer necessary
     /// </summary>
     /// <param name="hook">The mouse hook to unregister</param>
-    API_FUNCTION() static void UnregisterMouseHook(IFudgetMouseHook *hook);
+    API_FUNCTION() void UnregisterMouseHook(IFudgetMouseHook *hook);
 
     /// <summary>
     /// Call in an OnMouseDown function of a control to direct future mouse events to it until
-    /// ReleaseMouseCapture is called. Make sure to call ReleaseMouseCapture() on OnMouseUp for
+    /// ReleaseMouseCapture is called. Make sure to call ReleaseMouseCapture on OnMouseUp for
     /// the same control. Mouse can only be captured for a single button.
-    /// If a different control captured the mouse, it'll be released first.
+    /// If a different control tries to capture the mouse, it'll be released first, before the
+    /// other control starts capturing it.
     /// </summary>
-    /// <param name="control"></param>
+    /// <param name="control">The control that will get mouse messages</param>
     API_FUNCTION() void StartMouseCapture(FudgetControl *control);
 
     /// <summary>
@@ -58,8 +59,12 @@ public:
     /// button. It can be called any other time too but it might disrupt mouse handling for the control
     /// that captured the mouse, if it's not prepared for this.
     /// </summary>
-    /// <returns></returns>
     API_FUNCTION() void ReleaseMouseCapture();
+
+    /// <summary>
+    /// The control which is currently capturing the mouse on this UI.
+    /// </summary>
+    API_PROPERTY() FudgetControl* GetMouseCaptureControl() const { return mouse_capture_control; }
 private:
 
     void InitializeEvents();
@@ -91,6 +96,6 @@ private:
     WindowBase *_window;
 
     // Interface objects that were registered to inspect or modify mouse events
-    static Array<IFudgetMouseHook*> mouse_hooks;
+    Array<IFudgetMouseHook*> mouse_hooks;
 };
 

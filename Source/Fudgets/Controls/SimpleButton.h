@@ -41,19 +41,19 @@ public:
 	void Draw() override;
 
 	/// <inheritdoc />
-	void OnMouseEnter(Float2 pos) override;
+	void OnMouseEnter(Float2 pos, Float2 global_pos) override;
 
 	/// <inheritdoc />
 	void OnMouseLeave() override;
 
 	/// <inheritdoc />
-	void OnMouseMove(Float2 pos) override;
+	void OnMouseMove(Float2 pos, Float2 global_pos) override;
 
 	/// <inheritdoc />
-	bool OnMouseDown(Float2 pos, MouseButton button) override;
+	bool OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
 
 	/// <inheritdoc />
-	bool OnMouseUp(Float2 pos, MouseButton button) override;
+	bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 private:
 	Color _color;
 	

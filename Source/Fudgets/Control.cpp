@@ -1,5 +1,6 @@
 #include "Control.h"
 #include "Container.h"
+#include "GUIRoot.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
@@ -187,6 +188,24 @@ void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
 {
 	if (_parent != nullptr)
 		_parent->MarkLayoutDirty(dirt_flags, true);
+}
+
+void FudgetControl::CaptureMouseInput()
+{
+	auto root = GetGUIRoot();
+	if (root == nullptr)
+		return;
+
+	root->StartMouseCapture(this);
+}
+
+void FudgetControl::ReleaseMouseInput()
+{
+	auto root = GetGUIRoot();
+	if (root == nullptr || root->GetMouseCaptureControl() != this)
+		return;
+
+	root->ReleaseMouseCapture();
 }
 
 bool FudgetControl::IsPositionChangePermitted() const

@@ -9,8 +9,6 @@
 
 #include "Engine/Core/Log.h"
 
-Array<IFudgetMouseHook*> FudgetGUIRoot::mouse_hooks;
-
 FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer), FudgetControlFlags::ContainerControl),
 	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr)
 {
@@ -140,7 +138,7 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
-			if (c->WantsMouseEventAtPos(cpos) && c->OnMouseDown(cpos, button) || mouse_capture_control != nullptr)
+			if (c->WantsMouseEventAtPos(cpos, pos) && c->OnMouseDown(cpos, pos, button, false) || mouse_capture_control != nullptr)
 				break;
 		}
 		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
@@ -161,7 +159,7 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 
 	if (mouse_capture_control != nullptr && mouse_capture_button == button)
 	{
-		mouse_capture_control->OnMouseUp(mouse_capture_control->GlobalToLocal(pos), button);
+		mouse_capture_control->OnMouseUp(mouse_capture_control->GlobalToLocal(pos), pos, button);
 		ReleaseMouseCapture();
 		OnMouseMove(pos);
 		return;
@@ -175,7 +173,7 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
-			if (c->WantsMouseEventAtPos(cpos) && c->OnMouseUp(cpos, button))
+			if (c->WantsMouseEventAtPos(cpos, pos) && c->OnMouseUp(cpos, pos, button))
 			{
 				ReleaseMouseCapture();
 				OnMouseMove(pos);
@@ -212,12 +210,9 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
-			bool double_as_single_click = c->HasAnyFlag(FudgetControlFlags::ConvertDoubleClickToSingle);
-			if (c->WantsMouseEventAtPos(cpos))
+			if (c->WantsMouseEventAtPos(cpos, pos))
 			{
-				if ((!double_as_single_click && c->OnMouseDoubleClick(cpos, button)) ||
-					(double_as_single_click && c->OnMouseDown(cpos, button)) ||
-					mouse_capture_control != nullptr)
+				if (c->OnMouseDown(cpos, pos, button, true) || mouse_capture_control != nullptr)
 				{
 					OnMouseMove(pos);
 					break;
@@ -242,7 +237,7 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 
 	if (mouse_capture_control != nullptr)
 	{
-		mouse_capture_control->OnMouseMove(mouse_capture_control->GlobalToLocal(pos));
+		mouse_capture_control->OnMouseMove(mouse_capture_control->GlobalToLocal(pos), pos);
 		return;
 	}
 
@@ -256,7 +251,7 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
-			if (c->WantsMouseEventAtPos(cpos))
+			if (c->WantsMouseEventAtPos(cpos, pos))
 			{
 				if (mouse_over_control != c)
 				{
@@ -270,11 +265,11 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 					{
 						// Let the new control check where the mouse came from
 						mouse_over_control = old_mouse_control;
-						c->OnMouseEnter(cpos);
+						c->OnMouseEnter(cpos, pos);
 						mouse_over_control = c;
 					}
 				}
-				c->OnMouseMove(cpos);
+				c->OnMouseMove(cpos, pos);
 				return;
 			}
 		}

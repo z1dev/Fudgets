@@ -2,7 +2,7 @@
 #include "../GUIRoot.h"
 
 FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
-	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::ConvertDoubleClickToSingle),
+	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown),
 	Dark(0.6f), Light(1.f), _color(0.9f), _down(false), _over(false)
 {
 }
@@ -18,7 +18,7 @@ void FudgetSimpleButton::Draw()
 	//Render2D::FillRectangle(Rectangle(GetPosition(), GetSize()), _color);
 }
 
-void FudgetSimpleButton::OnMouseEnter(Float2 pos)
+void FudgetSimpleButton::OnMouseEnter(Float2 pos, Float2 global_pos)
 {
 	_over = true;
 }
@@ -28,30 +28,30 @@ void FudgetSimpleButton::OnMouseLeave()
 	_over = false;
 }
 
-void FudgetSimpleButton::OnMouseMove(Float2 pos)
+void FudgetSimpleButton::OnMouseMove(Float2 pos, Float2 global_pos)
 {
 	_over = pos.X >= 0 && pos.Y >= 0 && pos.X < GetSize().X && pos.Y < GetSize().Y;
 }
 
-bool FudgetSimpleButton::OnMouseDown(Float2 pos, MouseButton button)
+bool FudgetSimpleButton::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
 	if (button != MouseButton::Left)
 		return true;
 	_down = true;
 	_over = true;
 
-	GetGUIRoot()->StartMouseCapture(this);
+	CaptureMouseInput();
 
 	return true;
 }
 
-bool FudgetSimpleButton::OnMouseUp(Float2 pos, MouseButton button)
+bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
 	if (button != MouseButton::Left)
 		return true;
 
 	if (_down)
-		GetGUIRoot()->ReleaseMouseCapture();
+		ReleaseMouseInput();
 
 	_down = false;
 

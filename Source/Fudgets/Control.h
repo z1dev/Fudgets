@@ -97,11 +97,6 @@ enum class FudgetControlFlags
 	/// prevent parents peeking at the message early (when it's implemented)
 	/// </summary>
 	BlockMouseEvents = 1 << 4,
-	/// <summary>
-	/// Double clicking a control makes the second click arrive as OnMouseDoubleClick instead of OnMouseDown.
-	/// This flag changes that behavior, and all clicks will work like a normal mouse button press.
-	/// </summary>
-	ConvertDoubleClickToSingle = 1 << 5
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -348,14 +343,14 @@ public:
 	/// Matches the given flags with those of the control, returning true only if all the flags were found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
-	/// <returns>Whether the flags were all found on the control</returns>
+	/// <returns>True  if all the flags were found on the control</returns>
 	API_FUNCTION() virtual bool HasAllFlags(FudgetControlFlags flags) const;
 
 	/// <summary>
 	/// Matches the given flags with those of the layout, returning true if any of the flags was found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
-	/// <returns>Whether at least one flag was found on the control</returns>
+	/// <returns>True if at least one flag was found on the control</returns>
 	API_FUNCTION() virtual bool HasAnyFlag(FudgetControlFlags flags) const;
 
 	// Input:
@@ -367,9 +362,11 @@ public:
 	/// Return true if the control wants to prevent other controls below to get the mouse event.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
+	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just pressed</param>
-	/// <returns>Whether to stop OnMouseDown reaching other controls or not</returns>
-	API_FUNCTION() virtual bool OnMouseDown(Float2 pos, MouseButton button) { return true; }
+	/// <param name="double_click">Whether the call is the result of double clicking</param>
+	/// <returns>Prevent OnMouseDown reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) { return true; }
 
 	/// <summary>
 	/// Called when a mouse button was released over this control. The control should stop capturing
@@ -378,9 +375,10 @@ public:
 	/// should mirror the result of OnMouseDown.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
+	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just released</param>
-	/// <returns>Whether to stop OnMouseUp reaching other controls or not</returns>
-	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, MouseButton button) { return true; }
+	/// <returns>Prevent OnMouseUp reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
 
 	/// <summary>
 	/// Called when a mouse button was double-clicked over this control. The control should stop capturing
@@ -389,9 +387,10 @@ public:
 	/// should mirror the result of OnMouseDown.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
+	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just double-clicked</param>
-	/// <returns>Whether to stop OnMouseDoubleClick reaching other controls or not</returns>
-	API_FUNCTION() virtual bool OnMouseDoubleClick(Float2 pos, MouseButton button) { return true; }
+	/// <returns>Prevent OnMouseDoubleClick reaching other controls or not</returns>
+	API_FUNCTION() virtual bool OnMouseDoubleClick(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
 
 	/// <summary>
 	/// Called during mouse event handling to make sure this control wants to handle mouse events at
@@ -399,20 +398,23 @@ public:
 	/// events there.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
+	/// <param name="global_pos">Global mouse position</param>
 	/// <returns>Whether the control wants to handle mouse events at pos or not</returns>
-	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos) { return true; }
+	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) { return true; }
 
 	/// <summary>
 	/// Notification that the mouse just moved over this control
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
-	API_FUNCTION() virtual void OnMouseMove(Float2 pos) { }
+	/// <param name="global_pos">Global mouse position</param>
+	API_FUNCTION() virtual void OnMouseMove(Float2 pos, Float2 global_pos) { }
 
 	/// <summary>
 	/// Notification that the mouse just moved over this control somewhere
 	/// </summary>
 	/// <param name="pos">Local mouse position></param>
-	API_FUNCTION() virtual void OnMouseEnter(Float2 pos) { }
+	/// <param name="global_pos">Global mouse position</param>
+	API_FUNCTION() virtual void OnMouseEnter(Float2 pos, Float2 global_pos) { }
 
 	/// <summary>
 	/// Notification that the mouse just left this control while it wasn't capturing it. It's also
@@ -437,7 +439,26 @@ public:
 	/// <param name="dirt_flags">Flags of what changed</param>
 	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
 
+	/// <summary>
+	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
+	/// </summary>
+	/// <returns></returns>
 	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
+
+	/// <summary>
+	/// Call in OnMouseDown to direct future mouse events to this control until ReleaseMouseCapture is called.
+	/// Make sure to call ReleaseMouseCapture on OnMouseUp. Mouse can only be captured for a single button.
+	/// If a different control tries to capture the mouse, it'll be released first, before the other control
+	/// starts capturing it.
+	/// </summary>
+	API_FUNCTION() void CaptureMouseInput();
+
+	/// <summary>
+	/// Call in OnMouseUp when mouse capturing was started on this control for the same button. Unlike when calling
+	/// the same function on FudgetGUIRoot directly, this function only releases the mouse if the control was
+	/// capturing it.
+	/// </summary>
+	API_FUNCTION() void ReleaseMouseInput();
 private:
 	static FudgetGUIRoot *_guiRoot;
 
