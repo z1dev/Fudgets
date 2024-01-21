@@ -64,9 +64,19 @@ public:
     API_FUNCTION() void ReleaseMouseCapture();
 
     /// <summary>
-    /// The control which is currently capturing the mouse on this UI.
+    /// The control which is currently capturing the mouse on this UI
     /// </summary>
     API_PROPERTY() FudgetControl* GetMouseCaptureControl() const { return mouse_capture_control; }
+
+    /// <summary>
+    /// Returns the control currently focused, that will receive keyboard events
+    /// </summary>
+    API_PROPERTY() FudgetControl* GetFocusedControl() const { return focus_control; }
+
+    /// <summary>
+    /// Sets which control should be focused and receive keyboard events
+    /// </summary>
+    API_PROPERTY() void SetFocusedControl(FudgetControl *value);
 private:
     enum class HookProcessingType
     {
@@ -92,6 +102,11 @@ private:
     // Used for checking if this class has initialized events with Input.
     bool events_initialized;
 
+    // The actor on the scene forwarding all the events to the root
+    Fudget *_root;
+    // The game window, needed to actually capture the mouse
+    WindowBase *_window;
+
     // Control currently capturing th emouse.
     FudgetControl *mouse_capture_control;
     // Which button was pressed before the mouse was captured. This is updated independent of
@@ -101,14 +116,12 @@ private:
     // if something has captured the mouse already.
     FudgetControl *mouse_over_control;
 
-	// The actor on the scene forwarding all the events to the root
-    Fudget *_root;
-    // The game window, needed to actually capture the mouse
-    WindowBase *_window;
-
     // Interface objects that were registered to inspect or modify global mouse events
     Array<IFudgetMouseHook*> global_mouse_hooks;
     // Interface objects that were registered to inspect or stop local mouse events
     Array<IFudgetMouseHook*> local_mouse_hooks;
+
+    // The control currently taking the keyboard input
+    FudgetControl *focus_control;
 };
 

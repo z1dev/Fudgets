@@ -287,6 +287,13 @@ public:
 	API_FUNCTION() void RequestLayoutChildren(bool forced);
 protected:
 	/// <summary>
+	/// Checks the index argument and determines if it is a valid index for accessing a slot on the layout
+	/// </summary>
+	/// <param name="index">The index to check</param>
+	/// <returns>True on valid and false on invalid</returns>
+	API_FUNCTION() bool GoodSlotIndex(int index) const;
+
+	/// <summary>
 	/// Directly sets a control's position and size on the owner container.
 	/// </summary>
 	/// <param name="index">The index of the control</param>

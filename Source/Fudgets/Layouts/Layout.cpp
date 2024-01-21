@@ -201,6 +201,13 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
 		_layout_dirty = false;
 }
 
+bool FudgetLayout::GoodSlotIndex(int index) const
+{
+	if (_owner == nullptr)
+		return false;
+	return index >= 0 && index < _slots.Count();
+}
+
 void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
 {
 	if (_owner == nullptr)
@@ -211,7 +218,7 @@ void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
 
 FudgetLayoutSlot* FudgetLayout::GetSlot(int index) const
 {
-	if (index < 0 || index >= _slots.Count())
+	if (!GoodSlotIndex(index))
 		return nullptr;
 	return _slots[index];
 }

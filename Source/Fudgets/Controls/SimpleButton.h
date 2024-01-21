@@ -38,6 +38,22 @@ public:
 	/// </summary>
 	API_FIELD() Color Light;
 
+	/// <summary>
+	/// If the button can be focused, it's the color used to draw a rectangle around it.
+	/// </summary>
+	API_FIELD() Color FocusColor;
+
+	/// <summary>
+	/// Gets whether the button can receive the keyboard input focus when clicked with the left mouse button.
+	/// </summary>
+	API_PROPERTY() bool GetCanFocus() const { return _can_focus; }
+
+	/// <summary>
+	/// Sets whether the button can receive the keyboard input focus when clicked with the left mouse button.
+	/// </summary>
+	/// <param name="value">Should receive focus or not</param>
+	API_PROPERTY() void SetCanFocus(bool value);
+
 	void Draw() override;
 
 	/// <inheritdoc />
@@ -50,7 +66,7 @@ public:
 	void OnMouseMove(Float2 pos, Float2 global_pos) override;
 
 	/// <inheritdoc />
-	bool OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
+	FudgetMouseButtonResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
 
 	/// <inheritdoc />
 	bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
@@ -59,4 +75,6 @@ private:
 	
 	bool _down;
 	bool _over;
+
+	bool _can_focus;
 };

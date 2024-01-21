@@ -34,43 +34,66 @@ void FudgetListLayout::SetStretched(bool value)
 	MarkDirty(FudgetDirtType::All, true);
 }
 
-FudgetHorzAlign FudgetListLayout::GetItemHorizontalAlignment(int index) const
+FudgetHorzAlign FudgetListLayout::GetSlotHorizontalAlignment(int index) const
 {
+	if (!GoodSlotIndex(index))
+		return FudgetHorzAlign::Left;
+
 	return GetSlot(index)->_horz_align;
 }
 
-void FudgetListLayout::SetItemHorizontalAlignment(int index, FudgetHorzAlign value)
+void FudgetListLayout::SetSlotHorizontalAlignment(int index, FudgetHorzAlign value)
 {
+	if (!GoodSlotIndex(index))
+		return;
+
 	GetSlot(index)->_horz_align = value;
 }
 
-FudgetVertAlign FudgetListLayout::GetItemVerticalAlignment(int index) const
+FudgetVertAlign FudgetListLayout::GetSlotVerticalAlignment(int index) const
 {
+	if (!GoodSlotIndex(index))
+		return FudgetVertAlign::Top;
+
 	return GetSlot(index)->_vert_align;
 }
 
-void FudgetListLayout::SetItemVerticalAlignment(int index, FudgetVertAlign value)
+void FudgetListLayout::SetSlotVerticalAlignment(int index, FudgetVertAlign value)
 {
+	if (!GoodSlotIndex(index))
+		return;
+
 	GetSlot(index)->_vert_align = value;
 }
 
-bool FudgetListLayout::GetItemLimitsEnforced(int index) const
+bool FudgetListLayout::GetSlotLimitsEnforced(int index) const
 {
+	if (!GoodSlotIndex(index))
+		return false;
+
 	return GetSlot(index)->_enforce_limits;
 }
 
-void FudgetListLayout::SetItemLimitsEnforced(int index, bool value)
+void FudgetListLayout::SetSlotLimitsEnforced(int index, bool value)
 {
+	if (!GoodSlotIndex(index))
+		return;
+
 	GetSlot(index)->_enforce_limits = value;
 }
 
-FudgetSlotPadding& FudgetListLayout::GetItemPadding(int index) const
+FudgetSlotPadding& FudgetListLayout::GetSlotPadding(int index) const
 {
+	ASSERT(GoodSlotIndex(index));
+
 	return GetSlot(index)->_padding;
 }
 
-void FudgetListLayout::SetItemPadding(int index, FudgetSlotPadding value)
+void FudgetListLayout::SetSlotPadding(int index, FudgetSlotPadding value)
 {
+	if (!GoodSlotIndex(index))
+		return;
+
 	GetSlot(index)->_padding = value;
 }
 

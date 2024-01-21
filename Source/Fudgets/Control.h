@@ -97,6 +97,26 @@ enum class FudgetControlFlags
 	/// prevent parents peeking at the message early (when it's implemented)
 	/// </summary>
 	BlockMouseEvents = 1 << 4,
+	/// <summary>
+	/// Set the input focus for keyboard on the control when pressing the left mouse button over it. Ignored
+	/// while another control is capturing the mouse input.
+	/// </summary>
+	FocusOnMouseLeft = 1 << 5,
+	/// <summary>
+	/// Set the input focus for keyboard on the control when pressing the right mouse button over it. Ignored
+	/// while another control is capturing the mouse input.
+	/// </summary>
+	FocusOnMouseRight = 1 << 6,
+	/// <summary>
+	/// Set the mouse capture on the control when the left button is pressed down, and release it when the
+	/// same button is released.
+	/// </summary>
+	CaptureReleaseMouseLeft = 1 << 7,
+	/// <summary>
+	/// Set the mouse capture on the control when the right button is pressed down, and release it when the
+	/// same button is released.
+	/// </summary>
+	CaptureReleaseMouseRight = 1 << 8,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -130,6 +150,30 @@ enum class FudgetPointerInput
 	/// Last mouse event after the mouse leaves a control
 	/// </summary>
 	MouseLeave,
+};
+
+/// <summary>
+/// A set of options to decide what should happen when the mouse button was pressed over a
+/// control. 
+/// </summary>
+API_ENUM()
+enum class FudgetMouseButtonResult
+{
+	/// <summary>
+	/// The mouse button press event should be ignored. This won't let the event pass through to the control
+	/// below, but will prevent any automatic handling, like focusing the control.
+	/// </summary>
+	Ignore,
+	/// <summary>
+	/// The mouse button press event should be ignored for the control. The event processing will continue
+	/// and the event will be posted to the control below that expects mouse events.
+	/// </summary>
+	PassThrough,
+	/// <summary>
+	/// The control used the mouse event, preventing it to be sent to controls below it. Automatic handling, like
+	/// setting focus on the control is allowed, if the control has the right flags.
+	/// </summary>
+	Consume
 };
 
 
@@ -365,8 +409,8 @@ public:
 	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just pressed</param>
 	/// <param name="double_click">Whether the call is the result of double clicking</param>
-	/// <returns>Prevent OnMouseDown reaching other controls or not</returns>
-	API_FUNCTION() virtual bool OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) { return true; }
+	/// <returns>One of the result options that decide how to deal with the mouse event</returns>
+	API_FUNCTION() virtual FudgetMouseButtonResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) { return FudgetMouseButtonResult::Consume; }
 
 	/// <summary>
 	/// Called when a mouse button was released over this control. The control should stop capturing
@@ -379,18 +423,6 @@ public:
 	/// <param name="button">Button that was just released</param>
 	/// <returns>Prevent OnMouseUp reaching other controls or not</returns>
 	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
-
-	/// <summary>
-	/// Called when a mouse button was double-clicked over this control. The control should stop capturing
-	/// the mouse with StopMouseCapture if it started capturing it on OnMouseDown for the same button.
-	/// Return true if the control wants to prevent other controls below to get the mouse event. This
-	/// should mirror the result of OnMouseDown.
-	/// </summary>
-	/// <param name="pos">Local mouse position</param>
-	/// <param name="global_pos">Global mouse position</param>
-	/// <param name="button">Button that was just double-clicked</param>
-	/// <returns>Prevent OnMouseDoubleClick reaching other controls or not</returns>
-	API_FUNCTION() virtual bool OnMouseDoubleClick(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
 
 	/// <summary>
 	/// Called during mouse event handling to make sure this control wants to handle mouse events at
@@ -433,6 +465,15 @@ public:
 	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
 
 	/// <summary>
+	/// Wrapper to Render2D's FillRectangle.
+	/// </summary>
+	/// <param name="pos">Position relative to the control</param>
+	/// <param name="size">Size of control</param>
+	/// <param name="color">Color to use for filling</param>
+	/// <param name="thickness">Thickness of the rectangle's lines</param>
+	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f) const;
+
+	/// <summary>
 	/// Called by inner size or position changing functions to deal with changes. This implementation
 	/// notifies a parent to mark itself dirty.
 	/// </summary>
@@ -442,7 +483,7 @@ public:
 	/// <summary>
 	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>The root UI container</returns>
 	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
 
 	/// <summary>
@@ -451,14 +492,27 @@ public:
 	/// If a different control tries to capture the mouse, it'll be released first, before the other control
 	/// starts capturing it.
 	/// </summary>
-	API_FUNCTION() void CaptureMouseInput();
+	API_FUNCTION() virtual void CaptureMouseInput();
 
 	/// <summary>
 	/// Call in OnMouseUp when mouse capturing was started on this control for the same button. Unlike when calling
 	/// the same function on FudgetGUIRoot directly, this function only releases the mouse if the control was
 	/// capturing it.
 	/// </summary>
-	API_FUNCTION() void ReleaseMouseInput();
+	API_FUNCTION() virtual void ReleaseMouseInput();
+
+	/// <summary>
+	/// Returns whether this control has the keyboard input focus or not. Focused controls can have a distinct
+	/// appearance to make it easy to distinguish between their focused and unfocused states.
+	/// </summary>
+	API_PROPERTY() virtual bool GetFocused() const;
+
+	/// <summary>
+	/// Sets the keyboard input focus to this control or removes focus from it. Focused controls can have a distinct
+	/// appearance to make it easy to distinguish between their focused and unfocused states.
+	/// </summary>
+	API_PROPERTY() virtual void SetFocused(bool value);
+
 private:
 	static FudgetGUIRoot *_guiRoot;
 

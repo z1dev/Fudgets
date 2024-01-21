@@ -183,6 +183,12 @@ void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
 	Render2D::FillRectangle(Rectangle(pos, size), color);
 }
 
+void FudgetControl::DrawRectangle(Float2 pos, Float2 size, Color color, float thickness) const
+{
+	pos = LocalToGlobal(pos);
+
+	Render2D::DrawRectangle(Rectangle(pos, size), color, thickness);
+}
 
 void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
 {
@@ -206,6 +212,25 @@ void FudgetControl::ReleaseMouseInput()
 		return;
 
 	root->ReleaseMouseCapture();
+}
+
+bool FudgetControl::GetFocused() const
+{
+	auto root = GetGUIRoot();
+	if (root == nullptr)
+		return false;
+	return root->GetFocusedControl() == this;
+}
+
+void FudgetControl::SetFocused(bool value)
+{
+	auto root = GetGUIRoot();
+	if (root == nullptr)
+		return;
+	if (value)
+		root->SetFocusedControl(this);
+	if (!value && root->GetFocusedControl() == this)
+		root->SetFocusedControl(nullptr);
 }
 
 bool FudgetControl::IsPositionChangePermitted() const

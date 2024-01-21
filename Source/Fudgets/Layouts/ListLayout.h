@@ -84,7 +84,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <returns>The control's horizontal alignment</returns>
-	API_FUNCTION() FudgetHorzAlign GetItemHorizontalAlignment(int index) const;
+	API_FUNCTION() FudgetHorzAlign GetSlotHorizontalAlignment(int index) const;
 
 	/// <summary>
 	/// Sets a control's horizontal alignment given its index in the owner container. The horizontal alignment
@@ -92,7 +92,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <param name="value">The control's new horizontal alignment</param>
-	API_FUNCTION() void SetItemHorizontalAlignment(int index, FudgetHorzAlign value);
+	API_FUNCTION() void SetSlotHorizontalAlignment(int index, FudgetHorzAlign value);
 
 	/// <summary>
 	/// Gets a control's vertical alignment given its index in the owner container. The vertical alignment
@@ -100,7 +100,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <returns>The control's vertical alignment</returns>
-	API_FUNCTION() FudgetVertAlign GetItemVerticalAlignment(int index) const;
+	API_FUNCTION() FudgetVertAlign GetSlotVerticalAlignment(int index) const;
 
 	/// <summary>
 	/// Sets a control's vertical alignment given its index in the owner container. The vertical alignment
@@ -108,7 +108,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <param name="value">The control's new vertical alignment</param>
-	API_FUNCTION() void SetItemVerticalAlignment(int index, FudgetVertAlign value);
+	API_FUNCTION() void SetSlotVerticalAlignment(int index, FudgetVertAlign value);
 
 	/// <summary>
 	/// Returns true if the control wants its minimum or maximum size respected in the layout when it's
@@ -118,7 +118,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <returns>Whether control's size limits will be respected during layout or not</returns>
-	API_FUNCTION() bool GetItemLimitsEnforced(int index) const;
+	API_FUNCTION() bool GetSlotLimitsEnforced(int index) const;
 
 	/// <summary>
 	/// Tells the layout if the control wants its minimum or maximum size respected when it is possible.
@@ -128,7 +128,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <param name="value">Whether control's size limits should be respected during layout or not</param>
-	API_FUNCTION() void SetItemLimitsEnforced(int index, bool value);
+	API_FUNCTION() void SetSlotLimitsEnforced(int index, bool value);
 
 	/// <summary>
 	/// Gets the padding of a control in its slot. The padding with the control together counts as the
@@ -136,7 +136,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <returns>The padding values for the sides</returns>
-	API_FUNCTION() FudgetSlotPadding& GetItemPadding(int index) const;
+	API_FUNCTION() FudgetSlotPadding& GetSlotPadding(int index) const;
 
 	/// <summary>
 	/// Sets the padding of a control in its slot. The padding with the control together counts as the
@@ -144,7 +144,9 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <param name="value">The padding values for the sides</param>
-	API_FUNCTION() void SetItemPadding(int index, FudgetSlotPadding value);
+	API_FUNCTION() void SetSlotPadding(int index, FudgetSlotPadding value);
+
+
 protected:
 	/// <inheritdoc />
 	Float2 RequestSize(FudgetSizeType type) const override;
