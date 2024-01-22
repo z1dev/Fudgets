@@ -415,7 +415,7 @@ void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request,
 		if (!control->GetBoundingBox().Contains(pos))
 			continue;
 
-		if (control->HasAnyFlag(request))
+		if (request == FudgetControlFlags::None || control->HasAnyFlag(request))
 			result.Add(control);
 		if (control->HasAnyFlag(FudgetControlFlags::ContainerControl))
 			dynamic_cast<FudgetContainer*>(control)->ControlsUnderMouse(pos - control->_pos, request, result);
