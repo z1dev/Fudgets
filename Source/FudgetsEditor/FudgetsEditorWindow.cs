@@ -7,8 +7,8 @@ using FlaxEditor.Windows;
 using FlaxEngine;
 using FlaxEngine.GUI;
 using Fudgets;
+using System;
 using System.Collections.Generic;
-using static FlaxEditor.Surface.Archetypes.Animation;
 
 namespace FudgetsEditor;
 
@@ -40,10 +40,14 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
     private Vector2 _resolution = new Vector2(1920, 1080);
     private CustomEditorPresenter _fudgetControlsEditor;
 
+    private List<FudgetControl> _selectedControls = null;
+
     public EditorViewport PresenterViewport => null;
 
     public FudgetsEditorWindow(Editor editor, bool hideOnClose, ScrollBars scrollBars) : base(editor, hideOnClose, scrollBars)
     {
+        _selectedControls = new List<FudgetControl>();
+
         _editor = editor;
         _resolution = Screen.Size;
 
@@ -61,13 +65,13 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
         if (_texture != null)
         {
-            Object.Destroy(_texture);
+            FlaxEngine.Object.Destroy(_texture);
             _texture = null;
         }
 
         if (_renderTask != null)
         {
-            Object.Destroy(_renderTask);
+            FlaxEngine.Object.Destroy(_renderTask);
             _renderTask = null;
         }
 
@@ -97,6 +101,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
         _fudgetControlsEditor = new CustomEditorPresenter(null, "No control selected.", this); // No undo for knowledge editing
         _fudgetControlsEditor.Features = FeatureFlags.None;
+        _fudgetControlsEditor.Modified += ControlsEditorChanged;
         _fudgetControlsEditor.Panel.Parent = _editorPropertiesPanel;
 
         Image image = _imagePanel.AddChild<Image>();
@@ -123,9 +128,111 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         image.Brush = brush;
     }
 
+    private void ControlsEditorChanged()
+    {
+        RefreshNames();
+    }
+
+    private void ChangeControlParent(FudgetControl control, FudgetContainer newParent)
+    {
+        TreeNode controlNode = FindNodeByControl(control);
+        TreeNode newParentNode = FindNodeByControl(newParent);
+
+        controlNode.Parent = newParentNode;
+        control.Parent = newParent;
+    }
+
+    private void DeleteControl(FudgetControl control)
+    {
+        TreeNode controlNode = FindNodeByControl(control);
+        controlNode.Parent = null;
+        control.Parent = null;
+
+        List<TreeNode> nodes = RecurseAndGetSubset(controlNode, (node) => { return true; });
+        foreach (TreeNode node in nodes)
+        {
+            if (node.Tag != null)
+            {
+                if (node.Tag is not FudgetControl tagControl)
+                {
+                    continue;
+                }
+
+                FlaxEngine.Object.Destroy(tagControl);
+            }
+        }
+
+        FlaxEngine.Object.Destroy(control);
+        controlNode.DisposeChildren();
+        controlNode.Dispose();
+    }
+
+    private List<TreeNode> RecurseAndGetSubset(ContainerControl current, Func<TreeNode, bool> validator)
+    {
+        List<TreeNode> subset = new List<TreeNode>();
+        foreach (Control child in current.Children)
+        {
+            if (child is not TreeNode node)
+            {
+                continue;
+            }
+
+            if (validator(node))
+            {
+                subset.Add(node);
+            }
+
+            subset.AddRange(RecurseAndGetSubset(node, validator));
+        }
+
+        return subset;
+    }
+
+    private void RefreshNames()
+    {
+        List<TreeNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
+        foreach (TreeNode node in nodes)
+        {
+            if (node.Tag is not FudgetControl control)
+            {
+                continue;
+            }
+
+            node.Text = control.Name;
+        }
+    }
+
+    private TreeNode FindNodeByControl(FudgetControl control)
+    {
+        List<TreeNode> subset = RecurseAndGetSubset(_tree, (node) =>
+        {
+            if (node.Tag == (object) control)
+            {
+                return true;
+            }
+
+            return false;
+        });
+
+        return subset.Count >= 1 ? subset[0] : null;
+    }
+
     private void SelectedControlChanged(List<TreeNode> before, List<TreeNode> after)
     {
-        _fudgetControlsEditor.Select(after[0].Tag);
+        List<FudgetControl> selectedNodes = new List<FudgetControl>();
+        foreach (TreeNode node in after)
+        {
+            if (node.Tag == null)
+                continue;
+
+            if (node.Tag is not FudgetControl control)
+                continue;
+            selectedNodes.Add(control);
+        }
+        _selectedControls = selectedNodes;
+
+        _fudgetControlsEditor.Deselect();
+        _fudgetControlsEditor.Select(_selectedControls);
     }
 
     // Temporary
@@ -165,13 +272,48 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         root.AddChild(containerTest);
     }
 
-    private void OnRebuildTree()
+    private List<object> GatherExpanded(ContainerControl current)
     {
-        _tree.RemoveChildren();
-        BuildForControl(_fudget.GUI, _tree);
+        List<object> output = new List<object>();
+        foreach (Control child in current.Children)
+        {
+            if (child is not TreeNode node)
+            {
+                continue;
+            }
+
+            if (node.IsExpanded)
+            {
+                output.Add(node.Tag);
+            }
+
+            output.AddRange(GatherExpanded(node));
+        }
+
+        return output;
     }
 
-    private void BuildForControl(FudgetContainer container, ContainerControl currentTreeNode)
+    private void OnRebuildTree()
+    {
+        List<FudgetControl> oldControlSelection = _selectedControls;
+
+        _tree.Deselect();
+        List<object> expandedControls = GatherExpanded(_tree);
+        _tree.RemoveChildren();
+
+        List<TreeNode> newExpandedNodes = new List<TreeNode>();
+        List<TreeNode> newSelectedNodes = new List<TreeNode>();
+        BuildForControl(_fudget.GUI, _tree, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
+
+        foreach (TreeNode node in newExpandedNodes)
+        {
+            node.Expand(true);
+        }
+
+        _tree.Select(newSelectedNodes);
+    }
+
+    private void BuildForControl(FudgetContainer container, ContainerControl currentTreeNode, List<object> expanded, ref List<TreeNode> newExpandedNodes, List<FudgetControl> selected, ref List<TreeNode> newSelectedNodes)
     {
         for (int i = 0; i < container.ChildCount; i++)
         {
@@ -180,9 +322,19 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
             node.Text = control.Name;
             node.Tag = control;
 
+            if (selected.Contains(control))
+            {
+                newSelectedNodes.Add(node);
+            }
+
             if (control is FudgetContainer con)
             {
-                BuildForControl(con, node);
+                if (expanded.Contains(control))
+                {
+                    newExpandedNodes.Add(node);
+                }
+
+                BuildForControl(con, node, expanded, ref newExpandedNodes, selected, ref newSelectedNodes);
             }
         }
     }
@@ -201,13 +353,13 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         base.OnDestroy();
         if (_texture != null)
         {
-            Object.Destroy(_texture);
+            FlaxEngine.Object.Destroy(_texture);
             _texture = null;
         }
 
         if (_renderTask != null)
         {
-            Object.Destroy(_renderTask);
+            FlaxEngine.Object.Destroy(_renderTask);
             _renderTask = null;
         }
     }
