@@ -1,5 +1,8 @@
 ﻿using FlaxEditor;
+using FlaxEditor.Content.Import;
 using FlaxEditor.CustomEditors;
+using FlaxEditor.GUI;
+using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.GUI.Tree;
 using FlaxEditor.SceneGraph;
 using FlaxEditor.Viewport;
@@ -9,6 +12,7 @@ using FlaxEngine.GUI;
 using Fudgets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace FudgetsEditor;
 
@@ -97,6 +101,8 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         _tree = _editorTreePanel.AddChild<Tree>();
         _tree.AnchorPreset = AnchorPresets.StretchAll;
         _tree.SelectedChanged += SelectedControlChanged;
+        _tree.RightClick += TreeRightClicked;
+        _tree.Tag = this;
         OnRebuildTree();
 
         _fudgetControlsEditor = new CustomEditorPresenter(null, "No control selected.", this); // No undo for knowledge editing
@@ -104,8 +110,9 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         _fudgetControlsEditor.Modified += ControlsEditorChanged;
         _fudgetControlsEditor.Panel.Parent = _editorPropertiesPanel;
 
-        Image image = _imagePanel.AddChild<Image>();
+        FudgetRenderImage image = _imagePanel.AddChild<FudgetRenderImage>();
         image.AnchorPreset = AnchorPresets.StretchAll;
+        image.Tag = this;
 
         GPUTextureBrush brush = new GPUTextureBrush();
 
@@ -128,6 +135,15 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         image.Brush = brush;
     }
 
+    private void TreeRightClicked(TreeNode node, Float2 location)
+    {
+        var menu = new ContextMenu();
+        menu.Tag = node;
+        menu.AddButton("Rename", (node as ItemNode).StartRenaming);
+        menu.AddButton("Delete", (node as ItemNode).Delete);
+        menu.Show(node, location);
+    }
+
     private void ControlsEditorChanged()
     {
         RefreshNames();
@@ -142,37 +158,35 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         control.Parent = newParent;
     }
 
-    private void DeleteControl(FudgetControl control)
+    protected void DeleteControl(FudgetControl control)
     {
         TreeNode controlNode = FindNodeByControl(control);
+
+        // Ensure the node is deselected.
+        ValueContainer selection = _fudgetControlsEditor.Selection;
+        selection.Remove(control);
+        _fudgetControlsEditor.Deselect();
+        _fudgetControlsEditor.Select(selection);
+
+        List<TreeNode> nodesSelection = _tree.Selection;
+        nodesSelection.Remove(controlNode);
+        _tree.Deselect();
+        _tree.Select(nodesSelection);
+
         controlNode.Parent = null;
         control.Parent = null;
-
-        List<TreeNode> nodes = RecurseAndGetSubset(controlNode, (node) => { return true; });
-        foreach (TreeNode node in nodes)
-        {
-            if (node.Tag != null)
-            {
-                if (node.Tag is not FudgetControl tagControl)
-                {
-                    continue;
-                }
-
-                FlaxEngine.Object.Destroy(tagControl);
-            }
-        }
 
         FlaxEngine.Object.Destroy(control);
         controlNode.DisposeChildren();
         controlNode.Dispose();
     }
 
-    private List<TreeNode> RecurseAndGetSubset(ContainerControl current, Func<TreeNode, bool> validator)
+    private List<ItemNode> RecurseAndGetSubset(ContainerControl current, Func<ItemNode, bool> validator)
     {
-        List<TreeNode> subset = new List<TreeNode>();
+        List<ItemNode> subset = new List<ItemNode>();
         foreach (Control child in current.Children)
         {
-            if (child is not TreeNode node)
+            if (child is not ItemNode node)
             {
                 continue;
             }
@@ -190,7 +204,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
     private void RefreshNames()
     {
-        List<TreeNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
+        List<ItemNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
         foreach (TreeNode node in nodes)
         {
             if (node.Tag is not FudgetControl control)
@@ -202,9 +216,9 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         }
     }
 
-    private TreeNode FindNodeByControl(FudgetControl control)
+    private ItemNode FindNodeByControl(FudgetControl control)
     {
-        List<TreeNode> subset = RecurseAndGetSubset(_tree, (node) =>
+        List<ItemNode> subset = RecurseAndGetSubset(_tree, (node) =>
         {
             if (node.Tag == (object) control)
             {
@@ -318,7 +332,8 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         for (int i = 0; i < container.ChildCount; i++)
         {
             FudgetControl control = container.ChildAt(i);
-            TreeNode node = currentTreeNode.AddChild<TreeNode>();
+            ItemNode newNode = new ItemNode(control);
+            TreeNode node = currentTreeNode.AddChild(newNode);
             node.Text = control.Name;
             node.Tag = control;
 
@@ -337,6 +352,23 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
                 BuildForControl(con, node, expanded, ref newExpandedNodes, selected, ref newSelectedNodes);
             }
         }
+    }
+
+    private List<FudgetControl> GetAllControls(FudgetContainer container)
+    {
+        List<FudgetControl> controls = new List<FudgetControl>();
+        for (int i = 0; i < container.ChildCount; i++)
+        {
+            FudgetControl control = container.ChildAt(i);
+            controls.Add(control);
+
+            if (control is FudgetContainer con)
+            {
+                controls.AddRange(GetAllControls(con));
+            }
+        }
+
+        return controls;
     }
 
     private void RenderWindow(RenderTask task, GPUContext context)
@@ -366,5 +398,141 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
     public void Select(List<SceneGraphNode> nodes)
     {
+    }
+
+
+    private class ItemNode : TreeNode
+    {
+        public FudgetControl Control => (FudgetControl)Tag;
+
+        public ItemNode(FudgetControl control)
+        : base(false)
+        {
+            Text = control.Name;
+            Tag = control;
+        }
+
+        /// <inheritdoc />
+        protected override bool OnMouseDoubleClickHeader(ref Float2 location, MouseButton button)
+        {
+            StartRenaming();
+            return true;
+        }
+
+        public override bool OnKeyDown(KeyboardKeys key)
+        {
+            if (base.OnKeyDown(key))
+                return true;
+            switch (key)
+            {
+                case KeyboardKeys.F2:
+                    StartRenaming();
+                    return true;
+                case KeyboardKeys.Delete:
+                    Delete();
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Deletes the node (and its associated control).
+        /// </summary>
+        public void Delete()
+        {
+            Tree tree = ParentTree;
+            FudgetsEditorWindow window = (FudgetsEditorWindow)tree.Tag;
+            window.DeleteControl(Control);
+        }
+
+        /// <summary>
+        /// Shows the rename popup for the item.
+        /// </summary>
+        public void StartRenaming()
+        {
+            // Start renaming the control.
+            var dialog = RenamePopup.Show(this, HeaderRect, Control.Name, false);
+            dialog.Tag = Tag;
+            dialog.Renamed += OnRenamed;
+        }
+
+        private void OnRenamed(RenamePopup popup)
+        {
+            Control.Name = popup.Text;
+            Text = Control.Name;
+        }
+    }
+
+    private class FudgetRenderImage : Image
+    {
+        public FudgetsEditorWindow EditingWindow => (FudgetsEditorWindow)Tag;
+
+        private bool _dragging = false;
+
+        public override void OnMouseMove(Float2 location)
+        {
+            base.OnMouseMove(location);
+            if (_dragging)
+            {
+                List<FudgetControl> controls = GetControlsAtLocation(location);
+                Debug.Log($"Dragging at coordinates: {ConvertFromControlLocation(location)}");
+                Debug.Log("Found Controls:");
+                foreach (FudgetControl control in controls)
+                {
+                    Debug.Log($"  - '{control.Name}' ({control.Width}x{control.Height})");
+                }
+            }
+        }
+
+        public override bool OnMouseDown(Float2 location, MouseButton button)
+        {
+            if (base.OnMouseDown(location, button))
+                return true;
+
+            _dragging = true;
+            return true;
+        }
+
+        public override bool OnMouseUp(Float2 location, MouseButton button)
+        {
+            if (base.OnMouseUp(location, button))
+                return true;
+
+            _dragging = false;
+            return true;
+        }
+
+        public override void OnMouseLeave()
+        {
+            base.OnMouseLeave();
+            _dragging = false;
+        }
+
+        private Float2 ConvertFromControlLocation(Float2 location)
+        {
+            float xRatio = EditingWindow._resolution.X / Width;
+            float yRatio = EditingWindow._resolution.Y / Height;
+
+            return new Float2(location.X * xRatio, location.Y * yRatio);
+        }
+
+        private List<FudgetControl> GetControlsAtLocation(Float2 location)
+        {
+            location = ConvertFromControlLocation(location);
+            List<FudgetControl> controls = EditingWindow.GetAllControls(EditingWindow._fudget.GUI);
+            List<FudgetControl> intersectingControls = new List<FudgetControl>();
+
+            foreach (FudgetControl control in controls)
+            {
+                Float2 localLocation = control.GlobalToLocal(location);
+                localLocation += control.Position;
+                if (control.BoundingBox.Contains(localLocation))
+                {
+                    intersectingControls.Add(control);
+                }
+            }
+
+            return intersectingControls;
+        }
     }
 }
