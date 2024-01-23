@@ -407,7 +407,24 @@ bool FudgetContainer::IsControlPositioningPermitted(const FudgetControl *control
 	return _layout->IsControlPositioningPermitted(control);
 }
 
-void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result)
+void FudgetContainer::GetAllControls(const FudgetContainer *container, API_PARAM(Ref) Array<FudgetControl*> &result)
+{
+	for (int i = 0; i < container->GetChildCount(); i++)
+	{
+		FudgetControl* child = container->ChildAt(i);
+		result.Add(child);
+
+		if (child->Is<FudgetContainer>())
+			GetAllControls((FudgetContainer*)child, result);
+	}
+}
+
+void FudgetContainer::GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &result) const
+{
+	FudgetContainer::GetAllControls(this, result);
+}
+
+void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(Ref) Array<FudgetControl*> &result)
 {
 	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
 	{

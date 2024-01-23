@@ -12,8 +12,64 @@
 #include <Engine/Serialization/JsonTools.h>
 #include <Engine/Serialization/JsonWriters.h>
 
+
+namespace
+{
+	FudgetControl* ControlFactory(ISerializable::DeserializeStream& stream, ISerializeModifier* modifier)
+	{
+		Guid id = JsonTools::GetGuid(stream, "ID");
+		modifier->IdsMapping.TryGet(id, id);
+		if (!id.IsValid())
+		{
+			LOG(Warning, "Invalid object id.");
+			return nullptr;
+		}
+		FudgetControl* obj = nullptr;
+
+		const auto typeNameMember = stream.FindMember("TypeName");
+		if (typeNameMember != stream.MemberEnd())
+		{
+			if (!typeNameMember->value.IsString())
+			{
+				LOG(Warning, "Invalid object type (TypeName must be an object type full name string).");
+				return nullptr;
+			}
+			const StringAnsiView typeName(typeNameMember->value.GetStringAnsiView());
+			const ScriptingTypeHandle type = Scripting::FindScriptingType(typeName);
+			if (type)
+			{
+				if (!FudgetControl::TypeInitializer.IsAssignableFrom(type))
+				{
+					LOG(Warning, "Invalid control type {0} (inherits from: {1}).", type.ToString(true), type.GetType().GetBaseType().ToString());
+					return nullptr;
+				}
+				const ScriptingObjectSpawnParams params(id, type);
+				obj = (FudgetControl*)type.GetType().Script.Spawn(params);
+
+				if (obj == nullptr)
+				{
+					LOG(Warning, "Failed to spawn object of type {0}.", type.ToString(true));
+					return nullptr;
+				}
+			}
+			else
+			{
+				LOG(Warning, "Unknown object type '{0}', ID: {1}", String(typeName.Get(), typeName.Length()), id.ToString());
+				return nullptr;
+			}
+		}
+		else
+		{
+			LOG(Warning, "Invalid object type.");
+		}
+
+		return obj;
+	}
+}
+
+
 FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer), FudgetControlFlags::ContainerControl),
-	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr)
+	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr), focus_control(nullptr)
 {
 	_root = nullptr;
 	_window = nullptr;
@@ -117,84 +173,21 @@ String FudgetGUIRoot::SerializationTester()
 	return output;
 }
 
-void GetAllControls(FudgetContainer* container, Array<FudgetControl*>& out)
-{
-	for (int i = 0; i < container->GetChildCount(); i++)
-	{
-		FudgetControl* child = container->ChildAt(i);
-		out.Add(child);
-
-		if (child->Is<FudgetContainer>())
-			GetAllControls((FudgetContainer*)child, out);
-	}
-}
-
 void FudgetGUIRoot::Serialize(SerializeStream& stream, const void* otherObj)
 {
 	Array<FudgetControl*> allControls;
-	GetAllControls(this, allControls);
+	GetAllControls(allControls);
 
 	Base::Serialize(stream, otherObj);
 	stream.JKEY("Controls");
 	stream.StartArray();
-	for (auto* control : allControls)
+	for (auto control : allControls)
 	{
 		stream.StartObject();
 		control->Serialize(stream, nullptr);
 		stream.EndObject();
 	}
 	stream.EndArray();
-}
-
-FudgetControl* ControlFactory(ISerializable::DeserializeStream& stream, ISerializeModifier* modifier)
-{
-	Guid id = JsonTools::GetGuid(stream, "ID");
-	modifier->IdsMapping.TryGet(id, id);
-	if (!id.IsValid())
-	{
-		LOG(Warning, "Invalid object id.");
-		return nullptr;
-	}
-	FudgetControl* obj = nullptr;
-
-	const auto typeNameMember = stream.FindMember("TypeName");
-	if (typeNameMember != stream.MemberEnd())
-	{
-		if (!typeNameMember->value.IsString())
-		{
-			LOG(Warning, "Invalid object type (TypeName must be an object type full name string).");
-			return nullptr;
-		}
-		const StringAnsiView typeName(typeNameMember->value.GetStringAnsiView());
-		const ScriptingTypeHandle type = Scripting::FindScriptingType(typeName);
-		if (type)
-		{
-			if (!FudgetControl::TypeInitializer.IsAssignableFrom(type))
-			{
-				LOG(Warning, "Invalid control type {0} (inherits from: {1}).", type.ToString(true), type.GetType().GetBaseType().ToString());
-				return nullptr;
-			}
-			const ScriptingObjectSpawnParams params(id, type);
-			obj = (FudgetControl*)type.GetType().Script.Spawn(params);
-
-			if (obj == nullptr)
-			{
-				LOG(Warning, "Failed to spawn object of type {0}.", type.ToString(true));
-				return nullptr;
-			}
-		}
-		else
-		{
-			LOG(Warning, "Unknown object type '{0}', ID: {1}", String(typeName.Get(), typeName.Length()), id.ToString());
-			return nullptr;
-		}
-	}
-	else
-	{
-		LOG(Warning, "Invalid object type.");
-	}
-
-	return obj;
 }
 
 void FudgetGUIRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
