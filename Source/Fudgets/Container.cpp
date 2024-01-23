@@ -422,6 +422,18 @@ void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request,
 	}
 }
 
+void FudgetContainer::Serialize(SerializeStream& stream, const void* otherObj)
+{
+	Base::Serialize(stream, otherObj);
+	_layout->Serialize(stream, otherObj);
+}
+
+void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
+{
+	Base::Deserialize(stream, modifier);
+	_layout->Deserialize(stream, modifier);
+}
+
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
 {
 	bool pos_changed = !Float2::NearEqual(_pos, pos);

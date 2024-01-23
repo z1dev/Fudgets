@@ -25,7 +25,6 @@ FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Gu
 
 }
 
-
 FudgetLayout::FudgetLayout() : FudgetLayout(SpawnParams(Guid::New(), TypeInitializer), FudgetLayoutFlag::None)
 { 
 
@@ -199,6 +198,17 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
 		return;
 	if (LayoutChildren())
 		_layout_dirty = false;
+}
+
+void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
+{
+	SERIALIZE_GET_OTHER_OBJ(FudgetLayout);
+	SERIALIZE_MEMBER(Flags, _flags);
+}
+
+void FudgetLayout::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
+{
+	DESERIALIZE_MEMBER(Flags, _flags);
 }
 
 bool FudgetLayout::GoodSlotIndex(int index) const

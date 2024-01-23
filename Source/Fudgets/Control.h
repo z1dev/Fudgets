@@ -5,11 +5,11 @@
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Input/Enums.h"
 #include "Engine/Core/Math/Rectangle.h"
+#include "Engine/Serialization/Serialization.h"
 
 
 class FudgetContainer;
 class FudgetGUIRoot;
-
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -181,7 +181,7 @@ enum class FudgetMouseButtonResult
 /// Base class for controls, including containers and panels.
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetControl : public ScriptingObject
+class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 {
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
@@ -513,6 +513,8 @@ public:
 	/// </summary>
 	API_PROPERTY() virtual void SetFocused(bool value);
 
+	void Serialize(SerializeStream& stream, const void* otherObj) override;
+	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
 	static FudgetGUIRoot *_guiRoot;
 

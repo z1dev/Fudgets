@@ -77,6 +77,11 @@ public:
     /// Sets which control should be focused and receive keyboard events
     /// </summary>
     API_PROPERTY() void SetFocusedControl(FudgetControl *value);
+
+    API_FUNCTION() String SerializationTester();
+
+    void Serialize(SerializeStream& stream, const void* otherObj) override;
+    void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
     enum class HookProcessingType
     {

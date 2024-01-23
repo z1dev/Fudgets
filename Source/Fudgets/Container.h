@@ -305,6 +305,9 @@ public:
     /// <param name="result">Controls that can handle the event from top to bottom</param>
     /// <returns>List of controls </returns>
     API_FUNCTION() virtual void ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result);
+
+    void Serialize(SerializeStream& stream, const void* otherObj) override;
+    void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
     /// <summary>
     /// Directly changes the position and size of the control. Only to be called by FudgetLayout. This derived

@@ -4,6 +4,7 @@
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
+#include "Engine/Scripting/Scripting.h"
 
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
@@ -231,6 +232,48 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(this);
 	if (!value && root->GetFocusedControl() == this)
 		root->SetFocusedControl(nullptr);
+}
+
+void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
+{
+	stream.JKEY("TypeName");
+	stream.String(GetType().Fullname);
+
+	SERIALIZE_GET_OTHER_OBJ(FudgetControl);
+	SERIALIZE_MEMBER(Name, _name);
+	SERIALIZE_MEMBER(ID, GetID());
+
+	// Special serialization for parent ID.
+	const Guid* otherParentID = other ? (other->_parent ? &(other->_parent)->GetID() : nullptr) : nullptr;
+	if (Serialization::ShouldSerialize(_parent ? _parent->GetID() : Guid::Empty, otherParentID))
+	{
+		stream.JKEY("ParentID");
+		Serialization::Serialize(stream, _parent ? _parent->GetID() : Guid::Empty, otherParentID);
+	}
+
+	SERIALIZE_MEMBER(Position, _pos);
+	SERIALIZE_MEMBER(HintSize, _hint_size);
+	SERIALIZE_MEMBER(MinSize, _min_size);
+	SERIALIZE_MEMBER(MaxSize, _max_size);
+}
+
+void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
+{
+	DESERIALIZE_MEMBER(Name, _name);
+
+	Guid id;
+	DESERIALIZE_MEMBER(ID, id);
+	ChangeID(id);
+
+	DESERIALIZE_MEMBER(Position, _pos);
+	DESERIALIZE_MEMBER(HintSize, _hint_size);
+	DESERIALIZE_MEMBER(MinSize, _min_size);
+	DESERIALIZE_MEMBER(MaxSize, _max_size);
+
+	Guid parentId;
+	DESERIALIZE_MEMBER(ParentID, parentId);
+	FudgetContainer* parent = Scripting::FindObject<FudgetContainer>(parentId);
+	SetParent(parent);
 }
 
 bool FudgetControl::IsPositionChangePermitted() const

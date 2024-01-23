@@ -9,6 +9,7 @@ using FlaxEditor.Viewport;
 using FlaxEditor.Windows;
 using FlaxEngine;
 using FlaxEngine.GUI;
+using FlaxEngine.Json;
 using Fudgets;
 using System;
 using System.Collections.Generic;
@@ -284,6 +285,8 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         root.AddChild(box);
         root.AddChild(box2);
         root.AddChild(containerTest);
+
+        Debug.Log(root.SerializationTester());
     }
 
     private List<object> GatherExpanded(ContainerControl current)

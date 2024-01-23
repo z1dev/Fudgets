@@ -21,7 +21,7 @@ public class TestEditorPlugin : EditorPlugin
 
             if (win == null)
             {
-                Debug.Log("What the");//
+                Debug.Log("What the");
             }
         };
     }

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Engine/Scripting/ScriptingObject.h"
+#include "Engine/Scripting/Scripting.h"
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Core/Collections/Array.h"
+#include "Engine/Serialization/Serialization.h"
 
 class FudgetControl;
 class FudgetContainer;
@@ -207,7 +209,7 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 /// new layout, see the implementation of StackLayout as a minimal example and for more explanation.
 /// </summary>
 API_CLASS(Abstract, NoSpawn)
-class FUDGETS_API FudgetLayout : public ScriptingObject
+class FUDGETS_API FudgetLayout : public ScriptingObject, public ISerializable
 {
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayout);
@@ -285,6 +287,9 @@ public:
 	/// </summary>
 	/// <param name="forced">Whether to recalculate layouts even if the layout is not dirty.</param>
 	API_FUNCTION() void RequestLayoutChildren(bool forced);
+
+	void Serialize(SerializeStream& stream, const void* otherObj) override;
+	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 protected:
 	/// <summary>
 	/// Checks the index argument and determines if it is a valid index for accessing a slot on the layout
