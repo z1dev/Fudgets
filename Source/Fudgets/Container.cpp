@@ -118,7 +118,7 @@ bool FudgetContainer::MoveChildToIndex(int from, int to)
 	MoveInArray(_children, from, to);
 
 	for (int ix = Math::Min(from, to), siz = Math::Max(from, to) + 1; ix < siz; ++ix)
-		control->SetIndexInParent(ix);
+		_children[ix]->SetIndexInParent(ix);
 
 	if (_layout != nullptr)
 		_layout->ChildMoved(from, to);
