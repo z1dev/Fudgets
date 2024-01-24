@@ -4,6 +4,7 @@
 #include "IFudgetMouseHook.h"
 
 class WindowBase;
+class FudgetTheme;
 
 /// <summary>
 /// Root container representing the whole area where UI controls can appear. For example the screen.
@@ -27,6 +28,8 @@ public:
     Float2 GetMinSize() const override;
     /// <inheritdoc />
     Float2 GetMaxSize() const override;
+
+    API_FUNCTION() Fudget* GetRoot() const { return _root; }
 
     /// <summary>
     /// Registers a class to receive and modify mouse events before they are handle by anything else
@@ -66,18 +69,54 @@ public:
     /// <summary>
     /// The control which is currently capturing the mouse on this UI
     /// </summary>
-    API_PROPERTY() FudgetControl* GetMouseCaptureControl() const { return mouse_capture_control; }
+    API_PROPERTY() FudgetControl* GetMouseCaptureControl() const { return _mouse_capture_control; }
 
     /// <summary>
     /// Returns the control currently focused, that will receive keyboard events
     /// </summary>
-    API_PROPERTY() FudgetControl* GetFocusedControl() const { return focus_control; }
+    API_PROPERTY() FudgetControl* GetFocusedControl() const { return _focus_control; }
 
     /// <summary>
     /// Sets which control should be focused and receive keyboard events
     /// </summary>
     API_PROPERTY() void SetFocusedControl(FudgetControl *value);
 
+    /// <summary>
+    /// Registers or unregisters the control to receive the global update tick. Its OnUpdate will be called by the root.
+    /// </summary>
+    /// <param name="control">The control to register its update</param>
+    /// <param name="value">True to register and false to unregister</param>
+    /// <returns>Whether the registration or unregistration was a success</returns>
+    API_FUNCTION() bool RegisterControlUpdate(FudgetControl *control, bool value);
+
+    /// <summary>
+    /// Registers or unregisters the control to receive the global update tick. Its OnUpdate will be called by the root.
+    /// This function is safe to call during updates, as it will only change the list of controls when updating is done.
+    /// Calling this function with both true and false in the same update is undefined behavior.
+    /// </summary>
+    /// <param name="control">The control to register its update</param>
+    /// <param name="value">True to register and false to unregister</param>
+    API_FUNCTION() void DelayRegisterControlUpdate(FudgetControl *control, bool value);
+
+    /// <summary>
+    /// Unregisters every control from receiving update ticks and removes self too.
+    /// </summary>
+    API_FUNCTION() void UnregisterControlUpdates();
+
+    // Styling
+
+    /// <summary>
+    /// Returns the global theme object used to determine the style of controls.
+    /// TODO: this might need to be moved out to the Fudget, or to some global settings context.
+    /// </summary>
+    /// <returns>The theme</returns>
+    API_FUNCTION() FudgetTheme* GetTheme() const { return _theme; }
+
+    // Serialization
+
+    /// <summary>
+    /// Placeholder summary so the code gen doesn't complain.
+    /// </summary>
     API_FUNCTION() String SerializationTester();
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
@@ -96,6 +135,8 @@ private:
     void InitializeEvents();
     void UninitializeEvents();
 
+    void ControlUpdates();
+
     // Mouse and Touch input:
 
     void OnMouseDown(const Float2 &pos, MouseButton button);
@@ -113,20 +154,33 @@ private:
     WindowBase *_window;
 
     // Control currently capturing th emouse.
-    FudgetControl *mouse_capture_control;
+    FudgetControl *_mouse_capture_control;
     // Which button was pressed before the mouse was captured. This is updated independent of
     // capture status, but is not used when nothing captures it.
-    MouseButton mouse_capture_button;
+    MouseButton _mouse_capture_button;
     // The control currently (or last time it was checked) under the mouse pointer. It's not updated
     // if something has captured the mouse already.
-    FudgetControl *mouse_over_control;
+    FudgetControl *_mouse_over_control;
 
     // Interface objects that were registered to inspect or modify global mouse events
-    Array<IFudgetMouseHook*> global_mouse_hooks;
+    Array<IFudgetMouseHook*> _global_mouse_hooks;
     // Interface objects that were registered to inspect or stop local mouse events
-    Array<IFudgetMouseHook*> local_mouse_hooks;
+    Array<IFudgetMouseHook*> _local_mouse_hooks;
 
     // The control currently taking the keyboard input
-    FudgetControl *focus_control;
+    FudgetControl *_focus_control;
+
+    FudgetTheme *_theme;
+
+    // Controls whose OnUpdate should be called
+    Array<FudgetControl*> _updating_controls;
+    // Will add these controls to _updating_controls after the update is done.
+    Array<FudgetControl*> _controls_to_add_to_updating;
+    // Will remove these controls from _updating_controls after the update is done.
+    Array<FudgetControl*> _controls_to_remove_from_updating;
+    // Forwarding the OnUpdate call to controls. During this call, adding or removing from _updating_controls
+    // should be avoided. It will log a warning if it happens.
+    bool _processing_updates;
+
 };
 

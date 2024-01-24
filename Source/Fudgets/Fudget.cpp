@@ -594,8 +594,12 @@ void Fudget::OnUpdate()
     {
         try
         {
+            // TODO: this is unnecessary because the gui root should get ticks all the time to be able
+            // to update child controls. It is registered already if any control needs updates. We need to
+            // check what this update is for when the UI is not in screen space.
+
             ProfilerCPU::BeginEvent(*GetName());
-            _guiRoot->Update(Time::GetUnscaledDeltaTime());
+            _guiRoot->OnUpdate(Time::GetUnscaledDeltaTime());
         }
         catch (...)
         {

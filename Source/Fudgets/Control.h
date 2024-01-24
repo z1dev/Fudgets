@@ -7,9 +7,12 @@
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Serialization/Serialization.h"
 
+#include "Styling/Token.h"
+
 
 class FudgetContainer;
 class FudgetGUIRoot;
+class FudgetElementPainter;
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -117,6 +120,11 @@ enum class FudgetControlFlags
 	/// same button is released.
 	/// </summary>
 	CaptureReleaseMouseRight = 1 << 8,
+	/// <summary>
+	/// Controls with this flag will have their Update function called. This flag needs to be set in the
+	/// constructor. Controls can register to be updated at any time, by calling TODO.
+	/// </summary>
+	RegisterToUpdates = 1 << 9,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -187,6 +195,7 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
 	FudgetControl(const SpawnParams &params, FudgetControlFlags flags);
+	~FudgetControl();
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -355,7 +364,9 @@ public:
 	/// Called on each frame if the control is registered to receive events
 	/// </summary>
 	/// <param name="delta_time">The time passed since the last update</param>
-	API_FUNCTION() virtual void Update(float delta_time) {}
+	API_FUNCTION() virtual void OnUpdate(float delta_time) {}
+
+	API_PROPERTY() bool IsUpdateRegistered() const { return _updating_registered; }
 
 	/// <summary>
 	/// Converts a coordinate from local control space to global UI space.
@@ -513,6 +524,26 @@ public:
 	/// </summary>
 	API_PROPERTY() virtual void SetFocused(bool value);
 
+	/// <summary>
+	/// Registers or unregisters the control to receive the global update tick.
+	/// </summary>
+	/// <param name="value">Register on true and unregister on false</param>
+	API_FUNCTION() void RegisterToUpdate(bool value);
+
+	// Styling
+	
+	template<typename T>
+	T* GetElementPainter(FudgetToken &token) const
+	{
+		auto root = GetGUIRoot();
+		if (root == nullptr)
+			return nullptr;
+		return root->GetTheme()->GetElementPainter<T>(token);
+	}
+
+
+	// Serialization
+
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
@@ -546,6 +577,9 @@ private:
 
 	// Used locally to avoid double calling functions from the parent.
 	bool _changing;
+
+	// The control's Update function is called with a delta time if this is true.
+	bool _updating_registered;
 
 	friend class FudgetLayout;
 	friend class FudgetContainer;
