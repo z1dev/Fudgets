@@ -294,6 +294,19 @@ public:
     /// <returns>Whether the control can change its position or not</returns>
     API_FUNCTION() bool IsControlPositioningPermitted(const FudgetControl *control) const;
 
+    /// <summary>
+    /// Fills an array with all child controls belonging to the container.
+    /// </summary>
+    /// <param name="container">The parent container holding the controls to list</param>
+    /// <param name="result">A list of all child controls in the order they are on their parents</param>
+    API_FUNCTION() static void GetAllControls(const FudgetContainer *container, API_PARAM(Ref) Array<FudgetControl*> &result);
+
+    /// <summary>
+    /// Fills an array with all child controls belonging to this container.
+    /// </summary>
+    /// <param name="result">A list of all child controls in the order they are on their parents</param>
+    API_FUNCTION() void GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &result) const;
+
     // Input:
 
     /// <summary>
@@ -304,7 +317,9 @@ public:
     /// <param name="request">The flag that's related to inputs</param>
     /// <param name="result">Controls that can handle the event from top to bottom</param>
     /// <returns>List of controls </returns>
-    API_FUNCTION() virtual void ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result);
+    API_FUNCTION() virtual void ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(Ref) Array<FudgetControl*> &result);
+
+    // Serialization
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;

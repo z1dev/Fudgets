@@ -80,7 +80,7 @@ public:
 API_CLASS(Sealed, NoSpawn, Attributes = "HideInEditor")
 class FudgetRenderer2D : public PostProcessEffect
 {
-    DECLARE_SCENE_OBJECT_NO_SPAWN(UIXRenderer2D);
+    DECLARE_SCENE_OBJECT_NO_SPAWN(FudgetRenderer2D);
 
 public:
     /// <inheritdoc />
@@ -107,7 +107,7 @@ public:
 /// The Actor that represents the UI system in the scene tree. It initializes renderers to draw the controls and handles
 /// input and other event forwarding
 /// </summary>
-API_CLASS(Sealed, NoConstructor, Attributes = "ActorContextMenu(\"New/UI/UIX Canvas\"), ActorToolbox(\"UIX\")")
+API_CLASS(Sealed, NoConstructor, Attributes = "ActorContextMenu(\"New/UI/Fudgets\"), ActorToolbox(\"Fudgets\")")
 class FUDGETS_API Fudget : public Actor
 {
     DECLARE_SCENE_OBJECT(Fudget);

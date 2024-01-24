@@ -118,7 +118,7 @@ bool FudgetContainer::MoveChildToIndex(int from, int to)
 	MoveInArray(_children, from, to);
 
 	for (int ix = Math::Min(from, to), siz = Math::Max(from, to) + 1; ix < siz; ++ix)
-		control->SetIndexInParent(ix);
+		_children[ix]->SetIndexInParent(ix);
 
 	if (_layout != nullptr)
 		_layout->ChildMoved(from, to);
@@ -407,7 +407,24 @@ bool FudgetContainer::IsControlPositioningPermitted(const FudgetControl *control
 	return _layout->IsControlPositioningPermitted(control);
 }
 
-void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(ref) Array<FudgetControl*> &result)
+void FudgetContainer::GetAllControls(const FudgetContainer *container, API_PARAM(Ref) Array<FudgetControl*> &result)
+{
+	for (int i = 0; i < container->GetChildCount(); i++)
+	{
+		FudgetControl* child = container->ChildAt(i);
+		result.Add(child);
+
+		if (child->Is<FudgetContainer>())
+			GetAllControls((FudgetContainer*)child, result);
+	}
+}
+
+void FudgetContainer::GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &result) const
+{
+	FudgetContainer::GetAllControls(this, result);
+}
+
+void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(Ref) Array<FudgetControl*> &result)
 {
 	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
 	{

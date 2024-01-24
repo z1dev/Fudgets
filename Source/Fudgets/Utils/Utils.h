@@ -4,7 +4,7 @@
 
 // Moves an item at index from to index to in the array arr. Only use for fast copiable items, like pointers.
 template<typename T>
-void MoveInArray(Array<T> arr, int from, int to)
+void MoveInArray(Array<T> &arr, int from, int to)
 {
 	auto item = arr[from];
 	if (from > to)

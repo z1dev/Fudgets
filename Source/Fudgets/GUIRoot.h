@@ -8,14 +8,14 @@ class WindowBase;
 /// <summary>
 /// Root container representing the whole area where UI controls can appear. For example the screen.
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetGUIRoot : public FudgetContainer
 {
     using Base = FudgetContainer;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetGUIRoot);
+	DECLARE_SCRIPTING_TYPE(FudgetGUIRoot);
 public:
-    FudgetGUIRoot();
     FudgetGUIRoot(Fudget *root);
+    FudgetGUIRoot(const SpawnParams &params, Fudget *root);
 
     ~FudgetGUIRoot();
 
