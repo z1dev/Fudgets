@@ -21,7 +21,7 @@ namespace FlaxEditor.Content
         /// <summary>
         /// The fudget files extension.
         /// </summary>
-        public static readonly string Extension = "fudget";
+        public static readonly string Extension = "json";
 
         /// <summary>
         /// The fudget asset data typename.
@@ -38,7 +38,9 @@ namespace FlaxEditor.Content
         public override EditorWindow Open(Editor editor, ContentItem item)
         {
             // TODO: Make the window an asset editor window.
-            FudgetsEditorWindow window = new FudgetsEditorWindow(editor, false, ScrollBars.None);
+            FudgetJsonAssetItem fudgetItem = (FudgetJsonAssetItem)item;
+            FudgetJsonAsset asset = (FudgetJsonAsset)FlaxEngine.Content.Load(fudgetItem.ID);
+            FudgetsEditorWindow window = new FudgetsEditorWindow(editor, false, ScrollBars.None, asset.WidgetData);
             return window;
         }
 

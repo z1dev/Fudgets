@@ -10,6 +10,7 @@ FudgetJsonAsset::FudgetJsonAsset(const SpawnParams& params, const AssetInfo* inf
     : JsonAssetBase(params, info)
     , WidgetData(nullptr)
 {
+    DataTypeName = TypeName;
 }
 
 String FudgetJsonAsset::GetSerialized()

@@ -20,7 +20,7 @@ public class TestEditorPlugin : EditorPlugin
         base.InitializeEditor();
         Editor.UI.MenuTools.ContextMenu.AddButton("Test Fudgets Window").Clicked += () =>
         {
-            FudgetsEditorWindow win = new FudgetsEditorWindow(Editor, false, FlaxEngine.GUI.ScrollBars.None);
+            FudgetsEditorWindow win = new FudgetsEditorWindow(Editor, false, FlaxEngine.GUI.ScrollBars.None, null);
             win?.Show();
 
             if (win == null)

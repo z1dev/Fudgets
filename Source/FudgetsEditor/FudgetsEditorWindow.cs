@@ -51,13 +51,14 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
     public EditorViewport PresenterViewport => null;
 
-    public FudgetsEditorWindow(Editor editor, bool hideOnClose, ScrollBars scrollBars) : base(editor, hideOnClose, scrollBars)
+    public FudgetsEditorWindow(Editor editor, bool hideOnClose, ScrollBars scrollBars, FudgetGUIRoot fudgetGUI) : base(editor, hideOnClose, scrollBars)
     {
+        RootObject = fudgetGUI;
         _selectedControls = new List<FudgetControl>();
 
         _editor = editor;
         _resolution = Screen.Size;
-
+        RootObject.HintSize = _resolution;
         // Temporary hack
         // TODO: Replace this with proper deserialization of a FudgetGUIRoot
         /*_fudget = Level.FindActor<Fudget>();
