@@ -82,14 +82,14 @@ void FudgetListLayout::SetSlotLimitsEnforced(int index, bool value)
 	GetSlot(index)->_enforce_limits = value;
 }
 
-FudgetSlotPadding& FudgetListLayout::GetSlotPadding(int index) const
+FudgetPadding& FudgetListLayout::GetSlotPadding(int index) const
 {
 	ASSERT(GoodSlotIndex(index));
 
 	return GetSlot(index)->_padding;
 }
 
-void FudgetListLayout::SetSlotPadding(int index, FudgetSlotPadding value)
+void FudgetListLayout::SetSlotPadding(int index, FudgetPadding value)
 {
 	if (!GoodSlotIndex(index))
 		return;

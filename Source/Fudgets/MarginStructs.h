@@ -3,14 +3,14 @@
 #include "Engine/Scripting/ScriptingObject.h"
 
 /// <summary>
-/// Padding around a control, that is considered as an extension of the control when calculating layouts.
+/// Padding inside any element that contains others, like a slot in a layout or a drawn border in a style.
 /// </summary>
 API_STRUCT()
-struct FUDGETS_API FudgetSlotPadding
+struct FUDGETS_API FudgetPadding
 {
-	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetSlotPadding)
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPadding)
 
-	FudgetSlotPadding() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f)
+	FudgetPadding() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f)
 	{
 	}
 

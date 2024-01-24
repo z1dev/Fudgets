@@ -68,11 +68,19 @@ namespace
 }
 
 
-FudgetGUIRoot::FudgetGUIRoot() : Base(SpawnParams(Guid::New(), TypeInitializer), FudgetControlFlags::ContainerControl),
-	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr), focus_control(nullptr)
+FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params) : Base(params, FudgetControlFlags::ContainerControl),
+events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr), focus_control(nullptr)
 {
 	_root = nullptr;
 	_window = nullptr;
+}
+
+FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  FudgetGUIRoot(params)
+{
+	_root = root;
+	_window = (WindowBase*)Screen::GetMainWindow();
+	_guiRoot = this;
+	InitializeEvents();
 }
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget *root) : FudgetGUIRoot()

@@ -34,7 +34,7 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 	/// <summary>
 	/// Padding around the control in its slot
 	/// </summary>
-	API_FIELD() FudgetSlotPadding _padding;
+	API_FIELD() FudgetPadding _padding;
 };
 
 /// <summary>
@@ -136,7 +136,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <returns>The padding values for the sides</returns>
-	API_FUNCTION() FudgetSlotPadding& GetSlotPadding(int index) const;
+	API_FUNCTION() FudgetPadding& GetSlotPadding(int index) const;
 
 	/// <summary>
 	/// Sets the padding of a control in its slot. The padding with the control together counts as the
@@ -144,7 +144,7 @@ public:
 	/// </summary>
 	/// <param name="index">The control's index in its container</param>
 	/// <param name="value">The padding values for the sides</param>
-	API_FUNCTION() void SetSlotPadding(int index, FudgetSlotPadding value);
+	API_FUNCTION() void SetSlotPadding(int index, FudgetPadding value);
 
 
 protected:
@@ -190,13 +190,13 @@ private:
 			return value.Y;
 		return value.X;
 	}
-	FORCE_INLINE float RelevantPad(const FudgetSlotPadding &padding) const
+	FORCE_INLINE float RelevantPad(const FudgetPadding &padding) const
 	{
 		if (_ori == FudgetOrientation::Horizontal)
 			return padding.Left + padding.Top;
 		return padding.Top + padding.Bottom;
 	}
-	FORCE_INLINE float OppositePad(const FudgetSlotPadding &padding) const
+	FORCE_INLINE float OppositePad(const FudgetPadding &padding) const
 	{
 		if (_ori == FudgetOrientation::Horizontal)
 			return padding.Top + padding.Bottom;
