@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using FlaxEngine;
 using FlaxEditor;
+using FlaxEditor.Content;
+using static FlaxEditor.GUI.Docking.DockHintWindow;
 
 namespace FudgetsEditor;
 
@@ -10,6 +12,8 @@ namespace FudgetsEditor;
 /// </summary>
 public class TestEditorPlugin : EditorPlugin
 {
+    private FudgetJsonAssetProxy _proxy;
+
     // TODO: Make this an asset editor to avoid this whole hacky BS
     public override void InitializeEditor()
     {
@@ -24,5 +28,17 @@ public class TestEditorPlugin : EditorPlugin
                 Debug.Log("What the");
             }
         };
+
+        _proxy = new FudgetJsonAssetProxy();
+        Editor.ContentDatabase.AddProxy(_proxy, true);
+    }
+
+    /// <inheritdoc />
+    public override void DeinitializeEditor()
+    {
+        Editor.ContentDatabase.RemoveProxy(_proxy, true);
+        _proxy = null;
+
+        base.DeinitializeEditor();
     }
 }

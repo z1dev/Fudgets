@@ -24,8 +24,10 @@ namespace FudgetsEditor;
 // TODO: Make this an asset editor window, and create an asset for Fudgets.
 public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 {
+    public FudgetGUIRoot RootObject = null;
+
     // TODO: Figure out how to (and if you can) simply store a reference to a FudgetGUIRoot
-    private Fudget _fudget;
+    //private Fudget _fudget;
     private GPUTexture _texture = null;
     private RenderTask _renderTask = null;
     private Editor _editor;
@@ -58,15 +60,15 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
         // Temporary hack
         // TODO: Replace this with proper deserialization of a FudgetGUIRoot
-        _fudget = Level.FindActor<Fudget>();
+        /*_fudget = Level.FindActor<Fudget>();
         if (_fudget == null)
         {
             return;
-        }
+        }*/
         
         // TODO: Figure out how to get update events the FudgetGUIRoot so it can update its layouting when things get moved.
         // Also figure out how edit-time UI should work. Do we skip rendering/layouting in the scene if someone decides to edit during play mode? Or do we make that impossible?
-        ConfigureFudget();
+        //ConfigureFudget();
 
         if (_texture != null)
         {
@@ -251,7 +253,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
     }
 
     // Temporary
-    private void ConfigureFudget()
+    /*private void ConfigureFudget()
     {
         FudgetGUIRoot root = _fudget.GUI;
         FudgetFilledBox box = new FudgetFilledBox();
@@ -287,7 +289,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         root.AddChild(containerTest);
 
         Debug.Log(root.SerializationTester());
-    }
+    }*/
 
     private List<object> GatherExpanded(ContainerControl current)
     {
@@ -320,7 +322,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
         List<TreeNode> newExpandedNodes = new List<TreeNode>();
         List<TreeNode> newSelectedNodes = new List<TreeNode>();
-        BuildForControl(_fudget.GUI, _tree, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
+        BuildForControl(/*_fudget.GUI*/ RootObject, _tree, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
 
         foreach (TreeNode node in newExpandedNodes)
         {
@@ -379,7 +381,8 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         // TODO: Figure out weird behavior, like why does the Fudget also render in the editor/game view when I use the rendering method here?
         // TODO: Test if moving controls around still draws as expected and layouts properly (this requires feeding update events to the FudgetGUIRoot)
         Render2D.Begin(context, _texture);
-        _fudget.GUI.Draw();
+        RootObject.Draw();
+        //_fudget.GUI.Draw();
         Render2D.End();
     }
 
@@ -522,7 +525,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         private List<FudgetControl> GetControlsAtLocation(Float2 location)
         {
             location = ConvertFromControlLocation(location);
-            List<FudgetControl> controls = EditingWindow.GetAllControls(EditingWindow._fudget.GUI);
+            List<FudgetControl> controls = EditingWindow.GetAllControls(EditingWindow.RootObject);//_fudget.GUI);
             List<FudgetControl> intersectingControls = new List<FudgetControl>();
 
             foreach (FudgetControl control in controls)
