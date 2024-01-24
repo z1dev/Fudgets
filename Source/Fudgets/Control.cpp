@@ -5,6 +5,7 @@
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Scripting/Scripting.h"
+#include <Engine/Core/Log.h>
 
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
@@ -261,19 +262,25 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 {
 	DESERIALIZE_MEMBER(Name, _name);
 
-	Guid id;
-	DESERIALIZE_MEMBER(ID, id);
-	ChangeID(id);
-
 	DESERIALIZE_MEMBER(Position, _pos);
 	DESERIALIZE_MEMBER(HintSize, _hint_size);
 	DESERIALIZE_MEMBER(MinSize, _min_size);
 	DESERIALIZE_MEMBER(MaxSize, _max_size);
 
-	Guid parentId;
+	Guid id = Guid::Empty;
+	DESERIALIZE_MEMBER(ID, id);
+
+	if (GetID() != id)
+		ChangeID(id);
+
+	Guid parentId = Guid::Empty;
 	DESERIALIZE_MEMBER(ParentID, parentId);
-	FudgetContainer* parent = Scripting::FindObject<FudgetContainer>(parentId);
-	SetParent(parent);
+
+	if (parentId != Guid::Empty)
+	{
+		FudgetContainer* parent = Scripting::FindObject<FudgetContainer>(parentId);
+		SetParent(parent);
+	}
 }
 
 bool FudgetControl::IsPositionChangePermitted() const

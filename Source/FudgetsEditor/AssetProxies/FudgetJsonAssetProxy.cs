@@ -37,10 +37,7 @@ namespace FlaxEditor.Content
         /// <inheritdoc />
         public override EditorWindow Open(Editor editor, ContentItem item)
         {
-            // TODO: Make the window an asset editor window.
-            FudgetJsonAssetItem fudgetItem = (FudgetJsonAssetItem)item;
-            FudgetJsonAsset asset = (FudgetJsonAsset)FlaxEngine.Content.Load(fudgetItem.ID);
-            FudgetsEditorWindow window = new FudgetsEditorWindow(editor, false, ScrollBars.None, asset.WidgetData);
+            FudgetsEditorWindow window = new FudgetsEditorWindow(editor, (AssetItem)item);
             return window;
         }
 

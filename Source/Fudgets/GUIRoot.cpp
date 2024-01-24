@@ -73,10 +73,10 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params) : Base(params, FudgetCon
 {
 	_root = nullptr;
 	_window = nullptr;
+	_parent = nullptr;
 }
 
-FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  Base(params, FudgetControlFlags::ContainerControl),
-	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr), focus_control(nullptr)
+FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  FudgetGUIRoot(params)
 {
 	_root = root;
 	_window = (WindowBase*)Screen::GetMainWindow();
@@ -86,6 +86,10 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  Base(pa
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget *root) : FudgetGUIRoot(SpawnParams(Guid::New(), TypeInitializer), root)
 {
+	_root = root;
+	_window = (WindowBase*)Screen::GetMainWindow();
+	_guiRoot = this;
+	InitializeEvents();
 }
 
 FudgetGUIRoot::~FudgetGUIRoot()
@@ -198,6 +202,12 @@ void FudgetGUIRoot::Serialize(SerializeStream& stream, const void* otherObj)
 void FudgetGUIRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
 {
 	Base::Deserialize(stream, modifier);
+	// Once we have deserialized everything, register our object.
+	if (!IsRegistered())
+		RegisterObject();
+	/*if (!HasManagedInstance())
+		CreateManaged();*/
+
 	int32 controlsCount = 0;
 	const auto& controlsListMember = stream.FindMember("Controls");
 	if (controlsListMember != stream.MemberEnd() && controlsListMember->value.IsArray())
@@ -220,8 +230,17 @@ void FudgetGUIRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 			}
 
 			control->Deserialize((DeserializeStream&)items[i], modifier);
+
+			// Once we have data, register the object.
+			if (!control->IsRegistered())
+				control->RegisterObject();
+			/*if (!control->HasManagedInstance())
+				control->CreateManaged();*/
 		}
 	}
+
+	//MarkLayoutDirty(FudgetDirtType::All);
+	//RequestLayout();
 }
 
 void FudgetGUIRoot::InitializeEvents()

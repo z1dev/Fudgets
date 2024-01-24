@@ -18,7 +18,7 @@ public class TestEditorPlugin : EditorPlugin
     public override void InitializeEditor()
     {
         base.InitializeEditor();
-        Editor.UI.MenuTools.ContextMenu.AddButton("Test Fudgets Window").Clicked += () =>
+        /*Editor.UI.MenuTools.ContextMenu.AddButton("Test Fudgets Window").Clicked += () =>
         {
             FudgetsEditorWindow win = new FudgetsEditorWindow(Editor, false, FlaxEngine.GUI.ScrollBars.None, null);
             win?.Show();
@@ -27,7 +27,7 @@ public class TestEditorPlugin : EditorPlugin
             {
                 Debug.Log("What the");
             }
-        };
+        };*/
 
         _proxy = new FudgetJsonAssetProxy();
         Editor.ContentDatabase.AddProxy(_proxy, true);

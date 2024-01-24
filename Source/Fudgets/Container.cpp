@@ -3,6 +3,8 @@
 #include "Layouts/Layout.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Utils/Utils.h"
+#include "Engine/Core/Log.h"
+#include "Engine/Serialization/JsonTools.h"
 
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::None | FudgetControlFlags::BlockMouseEvents)
@@ -26,6 +28,60 @@ FudgetContainer::~FudgetContainer()
 	DeleteAll();
 	if (_layout != nullptr)
 		Delete(_layout);
+}
+
+namespace
+{
+	FudgetLayout* LayoutFactory(ISerializable::DeserializeStream& stream, ISerializeModifier* modifier)
+	{
+		Guid id = JsonTools::GetGuid(stream, "ID");
+		modifier->IdsMapping.TryGet(id, id);
+		if (!id.IsValid())
+		{
+			LOG(Warning, "Invalid object id.");
+			return nullptr;
+		}
+		FudgetLayout* obj = nullptr;
+
+		const auto typeNameMember = stream.FindMember("TypeName");
+		if (typeNameMember != stream.MemberEnd())
+		{
+			if (!typeNameMember->value.IsString())
+			{
+				LOG(Warning, "Invalid object type (TypeName must be an object type full name string).");
+				return nullptr;
+			}
+			const StringAnsiView typeName(typeNameMember->value.GetStringAnsiView());
+			const ScriptingTypeHandle type = Scripting::FindScriptingType(typeName);
+			if (type)
+			{
+				if (!FudgetLayout::TypeInitializer.IsAssignableFrom(type))
+				{
+					LOG(Warning, "Invalid layout type {0} (inherits from: {1}).", type.ToString(true), type.GetType().GetBaseType().ToString());
+					return nullptr;
+				}
+				const ScriptingObjectSpawnParams params(id, type);
+				obj = (FudgetLayout*)type.GetType().Script.Spawn(params);
+
+				if (obj == nullptr)
+				{
+					LOG(Warning, "Failed to spawn layout of type {0}.", type.ToString(true));
+					return nullptr;
+				}
+			}
+			else
+			{
+				LOG(Warning, "Unknown layout type '{0}', ID: {1}", String(typeName.Get(), typeName.Length()), id.ToString());
+				return nullptr;
+			}
+		}
+		else
+		{
+			LOG(Warning, "Invalid object type.");
+		}
+
+		return obj;
+	}
 }
 
 int FudgetContainer::AddChild(FudgetControl *control, int index)
@@ -442,13 +498,37 @@ void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request,
 void FudgetContainer::Serialize(SerializeStream& stream, const void* otherObj)
 {
 	Base::Serialize(stream, otherObj);
-	_layout->Serialize(stream, otherObj);
+	if (_layout != nullptr)
+	{
+		stream.JKEY("Layout");
+		stream.StartObject();
+		_layout->Serialize(stream, otherObj);
+		stream.EndObject();
+	}
 }
 
 void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
 {
 	Base::Deserialize(stream, modifier);
-	_layout->Deserialize(stream, modifier);
+
+	const auto& layoutMember = stream.FindMember("Layout");
+	if (layoutMember != stream.MemberEnd() && layoutMember->value.IsObject())
+	{
+		FudgetLayout* layout = LayoutFactory((DeserializeStream&)layoutMember->value, modifier);
+		if (layout == nullptr)
+		{
+			return;
+		}
+
+		layout->Deserialize((DeserializeStream&)layoutMember->value, modifier);
+
+		// Once we have data, register the object.
+		if (!layout->IsRegistered())
+			layout->RegisterObject();
+
+		AddLayoutInternal(layout);
+		//_layout = layout;
+	}
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)

@@ -18,3 +18,18 @@ void FudgetFilledBox::Draw()
 	//Render2D::FillRectangle(Rectangle(GetPosition(), GetSize()), _color);
 }
 
+void FudgetFilledBox::Serialize(SerializeStream& stream, const void* otherObj)
+{
+	Base::Serialize(stream, otherObj);
+	SERIALIZE_GET_OTHER_OBJ(FudgetFilledBox);
+	SERIALIZE_MEMBER(Color, _color);
+	SERIALIZE_MEMBER(BorderColor, BorderColor);
+}
+
+void FudgetFilledBox::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
+{
+	Base::Deserialize(stream, modifier);
+	DESERIALIZE_MEMBER(Color, _color);
+	DESERIALIZE_MEMBER(BorderColor, BorderColor);
+}
+

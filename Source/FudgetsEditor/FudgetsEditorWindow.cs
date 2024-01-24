@@ -1,12 +1,16 @@
 ﻿using FlaxEditor;
+using FlaxEditor.Content;
 using FlaxEditor.Content.Import;
 using FlaxEditor.CustomEditors;
+using FlaxEditor.Gizmo;
 using FlaxEditor.GUI;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.GUI.Tree;
+using FlaxEditor.Options;
 using FlaxEditor.SceneGraph;
 using FlaxEditor.Viewport;
 using FlaxEditor.Windows;
+using FlaxEditor.Windows.Assets;
 using FlaxEngine;
 using FlaxEngine.GUI;
 using FlaxEngine.Json;
@@ -14,6 +18,7 @@ using Fudgets;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace FudgetsEditor;
 
@@ -22,12 +27,13 @@ namespace FudgetsEditor;
 /// </summary>
 
 // TODO: Make this an asset editor window, and create an asset for Fudgets.
-public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
+public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset>, IPresenterOwner
 {
+    // Fudget Data
+    private FudgetJsonAsset _asset;
+    private FudgetJsonAssetItem _assetItem;
     public FudgetGUIRoot RootObject = null;
 
-    // TODO: Figure out how to (and if you can) simply store a reference to a FudgetGUIRoot
-    //private Fudget _fudget;
     private GPUTexture _texture = null;
     private RenderTask _renderTask = null;
     private Editor _editor;
@@ -49,16 +55,22 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
     private List<FudgetControl> _selectedControls = null;
 
+    /// <summary>
+    /// Empty.
+    /// </summary>
     public EditorViewport PresenterViewport => null;
 
-    public FudgetsEditorWindow(Editor editor, bool hideOnClose, ScrollBars scrollBars, FudgetGUIRoot fudgetGUI) : base(editor, hideOnClose, scrollBars)
+    public FudgetsEditorWindow(Editor editor, AssetItem item) : base(editor, item)
     {
-        RootObject = fudgetGUI;
+        _assetItem = (FudgetJsonAssetItem)item;
+        _asset = Content.Load<FudgetJsonAsset>(_assetItem.ID, 100000000000);
+        RootObject = _asset.WidgetData;
         _selectedControls = new List<FudgetControl>();
 
         _editor = editor;
-        _resolution = Screen.Size;
+        //_resolution = Screen.Size;
         RootObject.HintSize = _resolution;
+
         // Temporary hack
         // TODO: Replace this with proper deserialization of a FudgetGUIRoot
         /*_fudget = Level.FindActor<Fudget>();
@@ -66,7 +78,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         {
             return;
         }*/
-        
+
         // TODO: Figure out how to get update events the FudgetGUIRoot so it can update its layouting when things get moved.
         // Also figure out how edit-time UI should work. Do we skip rendering/layouting in the scene if someone decides to edit during play mode? Or do we make that impossible?
         //ConfigureFudget();
@@ -87,6 +99,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         _panel = AddChild(new SplitPanel());
         _panel.AnchorPreset = AnchorPresets.StretchAll;
         _panel.SplitterValue = 0.7f;
+        _panel.Offsets = new Margin(0, 0, _toolstrip.Bottom, 0);
         _imagePanel = _panel.Panel1;
         _editorRootPanel = _panel.Panel2;
 
@@ -131,12 +144,14 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
         _renderTask = new RenderTask();
         _renderTask.Render += RenderWindow;
         _renderTask.Enabled = true;
-        
+
         brush.Texture = _texture;
 
         image.Color = Color.White;
         image.KeepAspectRatio = false;
         image.Brush = brush;
+
+        SetupToolstrip();
     }
 
     private void TreeRightClicked(TreeNode node, Float2 location)
@@ -151,6 +166,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
     private void ControlsEditorChanged()
     {
         RefreshNames();
+        MarkAsEdited();
     }
 
     private void ChangeControlParent(FudgetControl control, FudgetContainer newParent)
@@ -450,6 +466,7 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
             Tree tree = ParentTree;
             FudgetsEditorWindow window = (FudgetsEditorWindow)tree.Tag;
             window.DeleteControl(Control);
+            window.MarkAsEdited();
         }
 
         /// <summary>
@@ -465,6 +482,8 @@ public class FudgetsEditorWindow : EditorWindow, IPresenterOwner
 
         private void OnRenamed(RenamePopup popup)
         {
+            if (Control.Name != popup.Text)
+                ((FudgetsEditorWindow)ParentTree.Tag).MarkAsEdited();
             Control.Name = popup.Text;
             Text = Control.Name;
         }

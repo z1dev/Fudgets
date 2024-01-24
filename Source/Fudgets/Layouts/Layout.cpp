@@ -203,6 +203,10 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
 void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
 {
 	SERIALIZE_GET_OTHER_OBJ(FudgetLayout);
+	stream.JKEY("TypeName");
+	stream.String(GetType().Fullname);
+	SERIALIZE_MEMBER(ID, GetID());
+
 	SERIALIZE_MEMBER(Flags, _flags);
 }
 

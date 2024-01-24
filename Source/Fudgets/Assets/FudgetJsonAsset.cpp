@@ -32,7 +32,7 @@ Asset::LoadResult FudgetJsonAsset::loadAsset()
     WidgetData->Deserialize(*Data, new ISerializeModifier());
     for (int i = 0; i < WidgetData->GetChildCount(); i++)
     {
-        LOG(Info, "Control Name: {0}", WidgetData->GetName());
+        LOG(Info, "Control Name: {0}", WidgetData->ChildAt(i)->GetName());
     }
 
     return result;
