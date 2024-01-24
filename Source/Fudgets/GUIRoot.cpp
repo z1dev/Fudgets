@@ -75,7 +75,8 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params) : Base(params, FudgetCon
 	_window = nullptr;
 }
 
-FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  FudgetGUIRoot(params)
+FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  Base(params, FudgetControlFlags::ContainerControl),
+	events_initialized(false), mouse_capture_control(nullptr), mouse_capture_button(), mouse_over_control(nullptr), focus_control(nullptr)
 {
 	_root = root;
 	_window = (WindowBase*)Screen::GetMainWindow();
@@ -85,10 +86,6 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) :  FudgetG
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget *root) : FudgetGUIRoot(SpawnParams(Guid::New(), TypeInitializer), root)
 {
-	_root = root;
-	_window = (WindowBase*)Screen::GetMainWindow();
-	_guiRoot = this;
-	InitializeEvents();
 }
 
 FudgetGUIRoot::~FudgetGUIRoot()
