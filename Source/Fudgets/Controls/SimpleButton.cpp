@@ -1,10 +1,15 @@
 #include "SimpleButton.h"
 #include "../GUIRoot.h"
+#include "../Styling/Theme.h"
+
 
 FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
-	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::CaptureReleaseMouseLeft),
-	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), _down(false), _over(false), _can_focus(false)
+	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
+	FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates),
+	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), /*_down(false), _over(false), */_can_focus(false)
 {
+	buttonToken = GetGUIRoot()->GetTheme()->RegisterToken(TEXT("SimpleButton"), false);
+	_button_info.DeltaTime = 0.0f;
 }
 
 FudgetSimpleButton::~FudgetSimpleButton()
@@ -22,34 +27,39 @@ void FudgetSimpleButton::SetCanFocus(bool value)
 
 void FudgetSimpleButton::Draw()
 {
-	FillRectangle(Float2(0.f), GetSize(), _over && _down ? Dark : _over ? Light : _color);
+	FudgetSimpleButtonPainter* drawer = GetElementPainter<FudgetSimpleButtonPainter>(buttonToken);
+	if (drawer != nullptr)
+		drawer->Draw(this, _button_info);
 
-	if (_can_focus && GetFocused())
-		DrawRectangle(Float2(0.f), GetSize(), FocusColor, 2.0f);
-	//Render2D::FillRectangle(Rectangle(GetPosition(), GetSize()), _color);
+	// TODO: add an element drawer that draws the ERROR text over controls that get their token wrong.
+}
+
+void FudgetSimpleButton::OnUpdate(float delta_time)
+{
+	_button_info.DeltaTime += delta_time;
 }
 
 void FudgetSimpleButton::OnMouseEnter(Float2 pos, Float2 global_pos)
 {
-	_over = true;
+	_button_info.MouseIsOver = true;
 }
 
 void FudgetSimpleButton::OnMouseLeave()
 {
-	_over = false;
+	_button_info.MouseIsOver = false;
 }
 
 void FudgetSimpleButton::OnMouseMove(Float2 pos, Float2 global_pos)
 {
-	_over = pos.X >= 0 && pos.Y >= 0 && pos.X < GetSize().X && pos.Y < GetSize().Y;
+	_button_info.MouseIsOver = pos.X >= 0 && pos.Y >= 0 && pos.X < GetSize().X && pos.Y < GetSize().Y;
 }
 
 FudgetMouseButtonResult FudgetSimpleButton::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
 	if (button != MouseButton::Left)
 		return FudgetMouseButtonResult::Ignore;
-	_down = true;
-	_over = true;
+	_button_info.MousePressed = true;
+	_button_info.MouseIsOver = true;
 
 	//CaptureMouseInput();
 
@@ -64,7 +74,7 @@ bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton bu
 	//if (_down)
 	//	ReleaseMouseInput();
 
-	_down = false;
+	_button_info.MousePressed = false;
 
 	return true;
 }

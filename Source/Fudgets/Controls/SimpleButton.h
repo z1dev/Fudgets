@@ -3,6 +3,9 @@
 #include "../Control.h"
 #include "Engine/Core/Math/Color.h"
 
+#include "../Styling/Token.h"
+#include "../Styling/ElementPainters/SimpleButtonPainter.h"
+
 /// <summary>
 /// Test control that fills its background with color
 /// </summary>
@@ -56,6 +59,8 @@ public:
 
 	void Draw() override;
 
+	void OnUpdate(float delta_time) override;
+
 	/// <inheritdoc />
 	void OnMouseEnter(Float2 pos, Float2 global_pos) override;
 
@@ -73,8 +78,11 @@ public:
 private:
 	Color _color;
 	
-	bool _down;
-	bool _over;
+	FudgetSimpleButtonDrawInfo _button_info;
+	//bool _down;
+	//bool _over;
 
 	bool _can_focus;
+
+	FudgetToken buttonToken;
 };

@@ -7,7 +7,7 @@
 #include "Engine/Serialization/JsonTools.h"
 
 
-FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::None | FudgetControlFlags::BlockMouseEvents)
+FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::BlockMouseEvents)
 {
 
 }

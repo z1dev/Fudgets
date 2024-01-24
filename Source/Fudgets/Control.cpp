@@ -1,12 +1,13 @@
 #include "Control.h"
 #include "Container.h"
 #include "GUIRoot.h"
+#include "Fudget.h"
+#include "Styling/Theme.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Scripting/Scripting.h"
 #include <Engine/Core/Log.h>
-
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
@@ -17,8 +18,15 @@ FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, 
 
 FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-	_max_size(-1.f, -1.f), _changing(false)
+	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false)
 {
+	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
+		RegisterToUpdate(true);
+}
+
+FudgetControl::~FudgetControl()
+{
+	RegisterToUpdate(false);
 }
 
 void FudgetControl::SetParent(FudgetContainer *value)
@@ -233,6 +241,19 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(this);
 	if (!value && root->GetFocusedControl() == this)
 		root->SetFocusedControl(nullptr);
+}
+
+void FudgetControl::RegisterToUpdate(bool value)
+{
+	if (value == _updating_registered)
+		return;
+
+	auto gui = GetGUIRoot();
+	if (gui == nullptr)
+		return;
+
+	if (gui->RegisterControlUpdate(this, value))
+		_updating_registered = value;
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
