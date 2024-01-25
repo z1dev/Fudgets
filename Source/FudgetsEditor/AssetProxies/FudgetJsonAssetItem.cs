@@ -43,6 +43,9 @@ namespace FlaxEditor.Content
         public override SpriteHandle DefaultThumbnail => Editor.Instance.Icons.BuildSettings128;
 
         /// <inheritdoc />
+        public override string TypeDescription => "Fudget";
+
+        /// <inheritdoc />
         public override bool IsOfType(Type type)
         {
             return type.IsAssignableFrom(typeof(FudgetJsonAsset));
