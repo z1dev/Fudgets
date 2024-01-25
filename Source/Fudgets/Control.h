@@ -559,7 +559,7 @@ public:
 	/// </summary>
 	/// <param name="token">The token for accessing the painter</param>
 	/// <returns>The element painter associated with the token</returns>
-	/*API_FUNCTION()*/ FudgetElementPainter* GetElementPainter(FudgetToken token) const;
+	API_FUNCTION() FudgetElementPainter* GetElementPainter(FudgetToken token) const;
 
 	/// <summary>
 	/// Returns an object that can provide properties while painting this control. For example a button might need to provide

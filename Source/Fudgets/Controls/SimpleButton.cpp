@@ -9,7 +9,7 @@ FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetCon
 
 }
 
-bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken token, /*API_PARAM(Out)*/ bool &result)
+bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result)
 {
 	if (token == FudgetTheme::MouseHoverToken)
 	{
@@ -28,7 +28,7 @@ bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken toke
 	}
 }
 
-bool FudgetSimpleButtonPropertyProvider::GetStoredFloat(FudgetToken token, /*API_PARAM(Out)*/ float &result) const
+bool FudgetSimpleButtonPropertyProvider::GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const
 {
 	auto it = _floats.find(token);
 	if (it == _floats.end())
@@ -44,12 +44,11 @@ void FudgetSimpleButtonPropertyProvider::SetStoredFloat(FudgetToken token, float
 
 
 
-
 FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
 	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
 	FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates),
-	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), /*_delta_time(0.f), */_pressed(false), _down(false),
-	_over(false), _can_focus(false)
+	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), _pressed(false), _down(false),
+	_over(false), _can_focus(false), buttonToken(-1)
 {
 	if (GetGUIRoot() != nullptr && GetGUIRoot()->GetTheme() != nullptr)
 		buttonToken = GetGUIRoot()->GetTheme()->RegisterToken(TEXT("SimpleButton"), false);
@@ -88,10 +87,10 @@ void FudgetSimpleButton::Draw()
 	Base::Draw();
 }
 
-void FudgetSimpleButton::OnUpdate(float delta_time)
-{
-	Base::OnUpdate(delta_time);
-}
+//void FudgetSimpleButton::OnUpdate(float delta_time)
+//{
+//	Base::OnUpdate(delta_time);
+//}
 
 void FudgetSimpleButton::OnMouseEnter(Float2 pos, Float2 global_pos)
 {

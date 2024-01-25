@@ -76,7 +76,7 @@ public:
 	/// </summary>
 	/// <param name="token">The token associated with the element painter</param>
 	/// <returns>The element painter, or null if a painter with the token was not found</returns>
-	/*API_FUNCTION()*/ FudgetElementPainter* GetElementPainter(FudgetToken token) const
+	API_FUNCTION() FudgetElementPainter* GetElementPainter(FudgetToken token) const
 	{
 		if (token == FudgetToken::Invalid)
 			return nullptr;

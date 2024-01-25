@@ -300,7 +300,6 @@ FudgetElementPainter* FudgetControl::GetElementPainter(FudgetToken token) const
 	return root->GetTheme()->GetElementPainter(token);
 }
 
-
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
 {
 	stream.JKEY("TypeName");

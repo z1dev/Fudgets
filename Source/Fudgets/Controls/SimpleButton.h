@@ -24,10 +24,11 @@ public:
 	FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control);
 
 	/// <inheritdoc />
-	bool GetElementBoolProperty(FudgetToken token, /*API_PARAM(Out)*/ bool &result) override;
+	API_FUNCTION() bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
+	API_FUNCTION() bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
+	API_FUNCTION() void SetStoredFloat(FudgetToken token, float value) override;
 
-	bool GetStoredFloat(FudgetToken token, /*API_PARAM(Out)*/ float &result) const override;
-	void SetStoredFloat(FudgetToken token, float value) override;
+
 private:
 	std::map<FudgetToken, float> _floats;
 };
@@ -88,7 +89,7 @@ public:
 
 	void Draw() override;
 
-	void OnUpdate(float delta_time) override;
+	//void OnUpdate(float delta_time) override;
 
 	/// <inheritdoc />
 	void OnMouseEnter(Float2 pos, Float2 global_pos) override;

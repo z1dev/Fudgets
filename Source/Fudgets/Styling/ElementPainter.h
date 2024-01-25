@@ -53,7 +53,7 @@ public:
 	/// <param name="token">The requested property's token. TODO: make a default set of tokens as static values in FudgetToken </param>
 	/// <param name="result">The property's value</param>
 	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
-	/*API_FUNCTION()*/ virtual bool GetElementGenericProperty(FudgetToken token, /*API_PARAM(Out)*/ Variant &result) { return false; }
+	API_FUNCTION() virtual bool GetElementGenericProperty(FudgetToken token, API_PARAM(Out) Variant &result) { return false; }
 
 	/// <summary>
 	/// Called by ElementPainter derived objects when drawing, to get bool properties needed for showing the state of the control.
@@ -62,7 +62,7 @@ public:
 	/// <param name="token">The requested property's token. TODO: make a default set of tokens as static values in FudgetToken </param>
 	/// <param name="result">The property's value</param>
 	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
-	/*API_FUNCTION()*/ virtual bool GetElementBoolProperty(FudgetToken token, /*API_PARAM(Out)*/ bool &result) { return false; }
+	API_FUNCTION() virtual bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) { return false; }
 
 	/// <summary>
 	/// Returns the delta time, which is increased in Control on OnUpdate. It's reset to 0 after drawing is done.
@@ -96,7 +96,7 @@ public:
 	/// <param name="token">Token to the value to get</param>
 	/// <param name="result">The result on success</param>
 	/// <returns>Whether the call was successful and result was updated to the requested value</returns>
-	/*API_FUNCTION()*/ virtual bool GetStoredVariant(FudgetToken token, /*API_PARAM(Out)*/ Variant &result) const { return false; }
+	API_FUNCTION() virtual bool GetStoredVariant(FudgetToken token, API_PARAM(Out) Variant &result) const { return false; }
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Sets or updates a value
@@ -106,7 +106,7 @@ public:
 	/// </summary>
 	/// <param name="token">Token to the value to set</param>
 	/// <param name="value">The updated value</param>
-	/*API_FUNCTION()*/ virtual void SetStoredVariant(FudgetToken token, Variant value) {}
+	API_FUNCTION() virtual void SetStoredVariant(FudgetToken token, Variant value) {}
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Returns the value associated
@@ -117,7 +117,7 @@ public:
 	/// <param name="token">Token to the value to get</param>
 	/// <param name="result">The result on success</param>
 	/// <returns>Whether the call was successful and result was updated to the requested value</returns>
-	/*API_FUNCTION()*/ virtual bool GetStoredFloat(FudgetToken token, /*API_PARAM(Out)*/ float &result) const { return false; }
+	API_FUNCTION() virtual bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const { return false; }
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Sets or updates a value
@@ -127,7 +127,9 @@ public:
 	/// </summary>
 	/// <param name="token">Token to the value to set</param>
 	/// <param name="value">The updated value</param>
-	/*API_FUNCTION()*/ virtual void SetStoredFloat(FudgetToken token, float value) {}
+	API_FUNCTION() virtual void SetStoredFloat(FudgetToken token, float value) {}
+
+
 protected:
 	// The control we provide properties about.
 	FudgetControl *_source_control;
