@@ -14,7 +14,11 @@ public class TestEditorPlugin : EditorPlugin
 {
     private FudgetJsonAssetProxy _proxy;
 
-    // TODO: Make this an asset editor to avoid this whole hacky BS
+
+    /// <summary>
+    /// TODO: Make this an asset editor to avoid this whole hacky BS
+    /// TODO: docs
+    /// </summary>
     public override void InitializeEditor()
     {
         base.InitializeEditor();

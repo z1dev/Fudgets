@@ -3,17 +3,65 @@
 #include "../Styling/Theme.h"
 
 
+
+FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control) : Base(_source_control)
+{
+
+}
+
+bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken token, /*API_PARAM(Out)*/ bool &result)
+{
+	if (token == FudgetTheme::MouseHoverToken)
+	{
+		result = ((FudgetSimpleButton*)_source_control)->IsHovered();
+		return true;
+	}
+	if (token == FudgetTheme::LeftButtonPressedToken)
+	{
+		result = ((FudgetSimpleButton*)_source_control)->IsPressed();
+		return true;
+	}
+	if (token == FudgetTheme::ButtonDownToken)
+	{
+		result = ((FudgetSimpleButton*)_source_control)->IsDown();
+		return true;
+	}
+}
+
+bool FudgetSimpleButtonPropertyProvider::GetStoredFloat(FudgetToken token, /*API_PARAM(Out)*/ float &result) const
+{
+	auto it = _floats.find(token);
+	if (it == _floats.end())
+		return false;
+	result = it->second;
+	return true;
+}
+
+void FudgetSimpleButtonPropertyProvider::SetStoredFloat(FudgetToken token, float value)
+{
+	_floats[token] = value;
+}
+
+
+
+
 FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
 	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
 	FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates),
-	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), /*_down(false), _over(false), */_can_focus(false)
+	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), /*_delta_time(0.f), */_pressed(false), _down(false),
+	_over(false), _can_focus(false)
 {
-	buttonToken = GetGUIRoot()->GetTheme()->RegisterToken(TEXT("SimpleButton"), false);
-	_button_info.DeltaTime = 0.0f;
+	if (GetGUIRoot() != nullptr && GetGUIRoot()->GetTheme() != nullptr)
+		buttonToken = GetGUIRoot()->GetTheme()->RegisterToken(TEXT("SimpleButton"), false);
 }
 
 FudgetSimpleButton::~FudgetSimpleButton()
 {
+}
+
+void FudgetSimpleButton::SetPropertyProvider(FudgetPainterPropertyProvider *new_provider)
+{
+	_painter_provider.reset(new_provider);
 }
 
 void FudgetSimpleButton::SetCanFocus(bool value)
@@ -27,41 +75,46 @@ void FudgetSimpleButton::SetCanFocus(bool value)
 
 void FudgetSimpleButton::Draw()
 {
-	FudgetSimpleButtonPainter* drawer = GetElementPainter<FudgetSimpleButtonPainter>(buttonToken);
-	if (drawer != nullptr)
-		drawer->Draw(this, _button_info);
+	FudgetElementPainter* painter = GetElementPainter(buttonToken);
+	if (painter != nullptr)
+	{
+		if (_painter_provider == nullptr)
+			_painter_provider.reset(New<FudgetSimpleButtonPropertyProvider>(this));
+		painter->Draw(_painter_provider);
+	}
 
-	// TODO: add an element drawer that draws the ERROR text over controls that get their token wrong.
+	// TODO: add an element painter that draws the ERROR text over controls that get their token wrong.
+
+	Base::Draw();
 }
 
 void FudgetSimpleButton::OnUpdate(float delta_time)
 {
-	_button_info.DeltaTime += delta_time;
+	Base::OnUpdate(delta_time);
 }
 
 void FudgetSimpleButton::OnMouseEnter(Float2 pos, Float2 global_pos)
 {
-	_button_info.MouseIsOver = true;
+	_over = true;
 }
 
 void FudgetSimpleButton::OnMouseLeave()
 {
-	_button_info.MouseIsOver = false;
+	_over = false;
 }
 
 void FudgetSimpleButton::OnMouseMove(Float2 pos, Float2 global_pos)
 {
-	_button_info.MouseIsOver = pos.X >= 0 && pos.Y >= 0 && pos.X < GetSize().X && pos.Y < GetSize().Y;
+	_over = pos.X >= 0 && pos.Y >= 0 && pos.X < GetSize().X && pos.Y < GetSize().Y;
 }
 
 FudgetMouseButtonResult FudgetSimpleButton::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
 	if (button != MouseButton::Left)
 		return FudgetMouseButtonResult::Ignore;
-	_button_info.MousePressed = true;
-	_button_info.MouseIsOver = true;
 
-	//CaptureMouseInput();
+	_pressed = true;
+	_over = true;
 
 	return FudgetMouseButtonResult::Consume;
 }
@@ -71,10 +124,9 @@ bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton bu
 	if (button != MouseButton::Left)
 		return true;
 
-	//if (_down)
-	//	ReleaseMouseInput();
-
-	_button_info.MousePressed = false;
+	_pressed = false;
 
 	return true;
 }
+
+

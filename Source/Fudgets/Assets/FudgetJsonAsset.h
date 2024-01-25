@@ -15,7 +15,14 @@ API_CLASS(NoSpawn) class FUDGETS_API FudgetJsonAsset : public JsonAssetBase
     DECLARE_ASSET_HEADER(FudgetJsonAsset);
 
 public:
+    /// <summary>
+    /// TODO: write docs
+    /// </summary>
     API_FIELD() FudgetGUIRoot* WidgetData;
+
+    /// <summary>
+    /// TODO: write docs
+    /// </summary>
     API_FUNCTION() String GetSerialized();
 
 protected:

@@ -3,6 +3,7 @@
 #include "GUIRoot.h"
 #include "Fudget.h"
 #include "Styling/Theme.h"
+#include "Styling/ElementPainter.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
@@ -27,6 +28,16 @@ FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags
 FudgetControl::~FudgetControl()
 {
 	RegisterToUpdate(false);
+}
+
+void FudgetControl::Draw()
+{
+	if (!_updating_registered)
+		return;
+
+	auto provider = GetPainterPropertyProvider();
+	if (provider != nullptr)
+		provider->ResetDeltaTime();
 }
 
 void FudgetControl::SetParent(FudgetContainer *value)
@@ -135,6 +146,37 @@ void FudgetControl::SetPosition(Float2 value)
 	SizeOrPosModified(FudgetDirtType::Position);
 }
 
+void FudgetControl::RegisterToUpdate(bool value)
+{
+	if (value == _updating_registered)
+		return;
+
+	auto gui = GetGUIRoot();
+	if (gui == nullptr)
+		return;
+
+	if (gui->RegisterControlUpdate(this, value))
+	{
+		_updating_registered = value;
+
+		if (!value)
+		{
+			auto provider = GetPainterPropertyProvider();
+			if (provider != nullptr)
+			{
+				provider->ResetDeltaTime();
+				provider->AddDeltaTime(-1.0f);
+			}
+		}
+		else
+		{
+			auto provider = GetPainterPropertyProvider();
+			if (provider != nullptr)
+				provider->ResetDeltaTime();
+		}
+	}
+}
+
 Float2 FudgetControl::LocalToGlobal(Float2 value) const
 {
 	FudgetContainer *parent = _parent;
@@ -206,6 +248,13 @@ void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
 		_parent->MarkLayoutDirty(dirt_flags, true);
 }
 
+void FudgetControl::OnUpdate(float delta_time)
+{
+	auto ppp = GetPainterPropertyProvider();
+	if (ppp != 0)
+		ppp->AddDeltaTime(delta_time);
+}
+
 void FudgetControl::CaptureMouseInput()
 {
 	auto root = GetGUIRoot();
@@ -243,18 +292,14 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(nullptr);
 }
 
-void FudgetControl::RegisterToUpdate(bool value)
+FudgetElementPainter* FudgetControl::GetElementPainter(FudgetToken token) const
 {
-	if (value == _updating_registered)
-		return;
-
-	auto gui = GetGUIRoot();
-	if (gui == nullptr)
-		return;
-
-	if (gui->RegisterControlUpdate(this, value))
-		_updating_registered = value;
+	auto root = GetGUIRoot();
+	if (root == nullptr || root->GetTheme() == nullptr)
+		return nullptr;
+	return root->GetTheme()->GetElementPainter(token);
 }
+
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
 {

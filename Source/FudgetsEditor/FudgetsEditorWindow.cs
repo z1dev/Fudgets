@@ -32,6 +32,10 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     // Fudget Data
     private FudgetJsonAsset _asset;
     private FudgetJsonAssetItem _assetItem;
+
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetGUIRoot RootObject = null;
 
     private GPUTexture _texture = null;
@@ -60,6 +64,9 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     /// </summary>
     public EditorViewport PresenterViewport => null;
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetsEditorWindow(Editor editor, AssetItem item) : base(editor, item)
     {
         _assetItem = (FudgetJsonAssetItem)item;
@@ -145,6 +152,9 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         SetupToolstrip();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     protected override void OnClose()
     {
         base.OnClose();
@@ -222,6 +232,9 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         Render2D.End();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public override void OnDestroy()
     {
         base.OnDestroy();

@@ -3,6 +3,7 @@
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Core/Math/Color.h"
+#include "Engine/Core/Types/BaseTypes.h"
 #include "Engine/Input/Enums.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Serialization/Serialization.h"
@@ -13,6 +14,7 @@
 class FudgetContainer;
 class FudgetGUIRoot;
 class FudgetElementPainter;
+class FudgetPainterPropertyProvider;
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -200,7 +202,7 @@ public:
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
 	/// </summary>
-	API_FUNCTION() virtual void Draw() {}
+	API_FUNCTION() virtual void Draw();
 
 	/// <summary>
 	/// Fetches the parent who is managing this control. The parent is also responsible for destruction
@@ -249,6 +251,8 @@ public:
 	/// </summary>
 	/// <param name="value">The control's new name</param>
 	API_PROPERTY() void SetName(String value);
+
+	// Size and position
 
 	/// <summary>
 	/// The size preferred by the control that serves as a hint to the layout, which might ignore it if it doesn't fit.
@@ -361,12 +365,32 @@ public:
 	API_PROPERTY() float GetBottom() const { return GetTop() + GetHeight(); }
 
 	/// <summary>
+	/// Called by inner size or position changing functions to deal with changes. This implementation
+	/// notifies a parent to mark itself dirty.
+	/// </summary>
+	/// <param name="dirt_flags">Flags of what changed</param>
+	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
+
+	// Update callback
+
+	/// <summary>
 	/// Called on each frame if the control is registered to receive events
 	/// </summary>
 	/// <param name="delta_time">The time passed since the last update</param>
-	API_FUNCTION() virtual void OnUpdate(float delta_time) {}
+	API_FUNCTION() virtual void OnUpdate(float delta_time);
 
+	/// <summary>
+	/// Registers or unregisters the control to receive the global update tick.
+	/// </summary>
+	/// <param name="value">Register on true and unregister on false</param>
+	API_FUNCTION() void RegisterToUpdate(bool value);
+
+	/// <summary>
+	/// Whether the control is executing its OnUpdate after registering it with RegisterToUpdate.
+	/// </summary>
 	API_PROPERTY() bool IsUpdateRegistered() const { return _updating_registered; }
+
+	// Point transformation
 
 	/// <summary>
 	/// Converts a coordinate from local control space to global UI space.
@@ -381,6 +405,8 @@ public:
 	/// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
 	/// <returns>The coordinate relative to the top-left corner of the control</returns>
 	API_FUNCTION() virtual Float2 GlobalToLocal(Float2 global) const;
+
+	// Control flags
 
 	/// <summary>
 	/// Gets flags describing the control's behavior or appearance.
@@ -485,13 +511,6 @@ public:
 	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f) const;
 
 	/// <summary>
-	/// Called by inner size or position changing functions to deal with changes. This implementation
-	/// notifies a parent to mark itself dirty.
-	/// </summary>
-	/// <param name="dirt_flags">Flags of what changed</param>
-	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
-
-	/// <summary>
 	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
 	/// </summary>
 	/// <returns>The root UI container</returns>
@@ -524,23 +543,30 @@ public:
 	/// </summary>
 	API_PROPERTY() virtual void SetFocused(bool value);
 
-	/// <summary>
-	/// Registers or unregisters the control to receive the global update tick.
-	/// </summary>
-	/// <param name="value">Register on true and unregister on false</param>
-	API_FUNCTION() void RegisterToUpdate(bool value);
-
 	// Styling
 	
-	template<typename T>
-	T* GetElementPainter(FudgetToken &token) const
-	{
-		auto root = GetGUIRoot();
-		if (root == nullptr)
-			return nullptr;
-		return root->GetTheme()->GetElementPainter<T>(token);
-	}
+	//template<typename T>
+	//T* GetElementPainter(FudgetToken &token) const
+	//{
+	//	auto root = GetGUIRoot();
+	//	if (root == nullptr)
+	//		return nullptr;
+	//	return root->GetTheme()->GetElementPainter<T>(token);
+	//}
 
+	/// <summary>
+	/// Shortcut to get the element painter from the theme for a token. Calls the theme's GetElementPainter.
+	/// </summary>
+	/// <param name="token">The token for accessing the painter</param>
+	/// <returns>The element painter associated with the token</returns>
+	/*API_FUNCTION()*/ FudgetElementPainter* GetElementPainter(FudgetToken token) const;
+
+	/// <summary>
+	/// Returns an object that can provide properties while painting this control. For example a button might need to provide
+	/// whether it is pressed or down, but not every control can return a valid answer to that.
+	/// </summary>
+	/// <returns>An object that can provide properties to an ElementPainter</returns>
+	API_PROPERTY() virtual FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return nullptr; }
 
 	// Serialization
 

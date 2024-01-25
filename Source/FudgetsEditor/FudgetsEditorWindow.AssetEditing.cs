@@ -82,6 +82,10 @@ public partial class FudgetsEditorWindow
         ClearEditedFlag();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
+    /// <param name="control"></param>
     protected void DeleteControl(FudgetControl control)
     {
         TreeNode controlNode = FindNodeByControl(control);
@@ -142,6 +146,10 @@ public partial class FudgetsEditorWindow
         OnRebuildTree();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
+    /// <param name="nodes"></param>
     public void Select(List<SceneGraphNode> nodes)
     {
     }

@@ -1,77 +1,77 @@
 #include "Token.h"
 
-FudgetToken FudgetToken::Invalid = -1;
+const FudgetToken FudgetToken::Invalid = -1;
 
 
-FudgetToken::FudgetToken() : _id(-1)
+FudgetToken::FudgetToken() : Token(-1)
 {
 
 }
 
 FudgetToken::FudgetToken(int32 val) : FudgetToken()
 {
-	_id = val;
+	Token = val;
 }
 
 FudgetToken::FudgetToken(const FudgetToken &other) : FudgetToken()
 {
-	_id = other._id;
+	Token = other.Token;
 }
 
 FudgetToken::FudgetToken(FudgetToken &&other) noexcept : FudgetToken()
 {
-	_id = other._id;
+	Token = other.Token;
 }
 
 FudgetToken& FudgetToken::operator=(int32 val)
 {
-	_id = val;
+	Token = val;
 	return *this;
 }
 
 FudgetToken& FudgetToken::operator=(const FudgetToken &other)
 {
-	_id = other._id;
+	Token = other.Token;
 	return *this;
 }
 
-FudgetToken& FudgetToken::operator=(FudgetToken &&other)
+FudgetToken& FudgetToken::operator=(FudgetToken &&other) noexcept
 {
-	_id = other._id;
+	Token = other.Token;
 	return *this;
 }
 
 bool FudgetToken::operator==(int32 val) const
 {
-	return _id == val;
+	return Token == val;
 }
 
 bool FudgetToken::operator==(const FudgetToken &other) const
 {
-	return _id == other._id;
+	return Token == other.Token;
 }
 
 bool FudgetToken::operator<(const FudgetToken &other) const
 {
-	return _id < other._id;
+	return Token < other.Token;
 }
 
 bool FudgetToken::operator<=(const FudgetToken &other) const
 {
-	return _id <= other._id;
+	return Token <= other.Token;
 }
 
 bool FudgetToken::operator>(const FudgetToken &other) const
 {
-	return _id > other._id;
+	return Token > other.Token;
 }
 
 bool FudgetToken::operator>=(const FudgetToken &other) const
 {
-	return _id >= other._id;
+	return Token >= other.Token;
 }
 
 bool FudgetToken::operator!=(const FudgetToken &other) const
 {
-	return _id != other._id;
+	return Token != other.Token;
 }
