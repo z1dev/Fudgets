@@ -64,11 +64,6 @@ API_INTERFACE() class FUDGETS_API IFudgetMouseHook
     DECLARE_SCRIPTING_TYPE_MINIMAL(IFudgetMouseHook);
 public:
     /// <summary>
-    /// Cleans up on destruction
-    /// </summary>
-    virtual ~IFudgetMouseHook() = default;
-
-    /// <summary>
     /// Receives the global OnMouseDown event coming from Input. It is allowed to modify it, but should be
     /// consistent with the other functions.
     /// </summary>
