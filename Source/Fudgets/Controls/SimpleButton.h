@@ -1,10 +1,38 @@
 #pragma once
 
+#include <map>
+
 #include "../Control.h"
 #include "Engine/Core/Math/Color.h"
 
 #include "../Styling/Token.h"
 #include "../Styling/ElementPainters/SimpleButtonPainter.h"
+#include "../Utils/SmartPointers.h"
+
+
+/// <summary>
+/// Provides properties for a FudgetSimpleButton. Can be overriden and replaced in simple buttons, if a
+/// new style requires values not available through this class.
+/// </summary>
+API_CLASS(NoSpawn)
+class FUDGETS_API FudgetSimpleButtonPropertyProvider : public FudgetPainterPropertyProvider
+{
+	using Base = FudgetPainterPropertyProvider;
+	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetSimpleButtonPropertyProvider);
+public:
+
+	FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control);
+
+	/// <inheritdoc />
+	API_FUNCTION() bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
+	API_FUNCTION() bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
+	API_FUNCTION() void SetStoredFloat(FudgetToken token, float value) override;
+
+
+private:
+	std::map<FudgetToken, float> _floats;
+};
+
 
 /// <summary>
 /// Test control that fills its background with color
@@ -17,6 +45,8 @@ class FUDGETS_API FudgetSimpleButton : public FudgetControl
 public:
 	//FudgetSimpleButton();
 	~FudgetSimpleButton();
+
+	void SetPropertyProvider(FudgetPainterPropertyProvider *new_provider);
 
 	/// <summary>
 	/// Gets the neutral background color used for filling the control.
@@ -59,7 +89,7 @@ public:
 
 	void Draw() override;
 
-	void OnUpdate(float delta_time) override;
+	//void OnUpdate(float delta_time) override;
 
 	/// <inheritdoc />
 	void OnMouseEnter(Float2 pos, Float2 global_pos) override;
@@ -75,14 +105,30 @@ public:
 
 	/// <inheritdoc />
 	bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+
+	FudgetPainterPropertyProvider* GetPainterPropertyProvider() override { return _painter_provider; }
+
+	/// <summary>
+	/// Whether the button is pressed down by holding a mouse button over it and not releasing it.
+	/// </summary>
+	API_PROPERTY() bool IsPressed() { return _pressed; }
+	/// <summary>
+	/// Whether the button is in its down state.
+	/// </summary>
+	API_PROPERTY() bool IsDown() { return _down; }
+	/// <summary>
+	/// Whether the mouse pointer is over the button
+	/// </summary>
+	API_PROPERTY() bool IsHovered() { return _over; }
 private:
 	Color _color;
-	
-	FudgetSimpleButtonDrawInfo _button_info;
-	//bool _down;
-	//bool _over;
+
+	bool _pressed;
+	bool _down;
+	bool _over;
 
 	bool _can_focus;
 
 	FudgetToken buttonToken;
+	UniquePtr<FudgetPainterPropertyProvider> _painter_provider;
 };

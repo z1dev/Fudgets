@@ -136,6 +136,10 @@ public partial class FudgetsEditorWindow
         OnAnyChange();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
+    /// <param name="nodes"></param>
     public void Select(List<SceneGraphNode> nodes)
     {
     }

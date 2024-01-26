@@ -23,48 +23,75 @@ class FUDGETS_API FudgetTheme : public ScriptingObject
 public:
 	FudgetTheme();
 
-	template<typename T>
-	T* CreateStyle(String token_name)
-	{
-		FudgetToken token = RegisterToken(token_name);
-		if (token == FudgetToken::Invalid)
-			return nullptr;
+	// Standard tokens used by controls. New styles can register new tokens if they need them, and
+	// store them in any way. The same token can be retreived from the FudgetTheme with GetToken, if
+	// the same string is passed to it.
 
-		T *style = New<T>(this, token);
-		style_map[token] = style;
+	// Tokens for getting paint properties:
 
-		return style;
-	}
+	/// <summary>
+	/// Token for the "ButtonDownToken" string.
+	/// </summary>
+	static const FudgetToken ButtonDownToken;
+	/// <summary>
+	/// Token for the "ButtonPressedToken" string.
+	/// </summary>
+	static const FudgetToken LeftButtonPressedToken;
+	/// <summary>
+	/// Token for the "ButtonMouseOverToken" string.
+	/// </summary>
+	static const FudgetToken MouseHoverToken;
 
-	FudgetToken GetToken(String token_name) const;
-	FudgetToken RegisterToken(String token_name, bool duplicate_is_error = true);
 
-	//FudgetStyleBase* GetStyle(String token_name) const;
-	//FudgetStyleBase* GetStyle(FudgetToken token) const;
 
-	template<typename T>
-	T* GetElementPainter(String token_name) const
+	//template<typename T>
+	//T* CreateStyle(String token_name)
+	//{
+	//	FudgetToken token = RegisterToken(token_name);
+	//	if (token == FudgetToken::Invalid)
+	//		return nullptr;
+
+	//	T *style = New<T>(this, token);
+	//	style_map[token] = style;
+
+	//	return style;
+	//}
+
+	static FudgetToken GetToken(String token_name);
+	static FudgetToken RegisterToken(String token_name, bool duplicate_is_error = false);
+
+	/// <summary>
+	/// Tries to retreive an element painter object for a token string.
+	/// </summary>
+	/// <param name="token_name">String of the token</param>
+	/// <returns>The element painter, or null if a painter with the token was not found</returns>
+	API_FUNCTION() FudgetElementPainter* GetElementPainter(String token_name) const
 	{
 		FudgetToken token = GetToken(token_name);
-		return GetElementPainter<T>(token);
+		return GetElementPainter(token);
 	}
 
-	template<typename T>
-	T* GetElementPainter(FudgetToken token) const
+	/// <summary>
+	/// Tries to retreive an element painter object for a token
+	/// </summary>
+	/// <param name="token">The token associated with the element painter</param>
+	/// <returns>The element painter, or null if a painter with the token was not found</returns>
+	API_FUNCTION() FudgetElementPainter* GetElementPainter(FudgetToken token) const
 	{
 		if (token == FudgetToken::Invalid)
 			return nullptr;
 		auto it = element_map.find(token);
 		if (it == element_map.end())
 			return nullptr;
-		return dynamic_cast<T*>(it->second);
+		return it->second;
 	}
+
 private:
 	// Adds some hard-coded values for now.
 	void Init();
 
-	std::map<String, FudgetToken> token_map;
-	int highest_token;
+	static std::map<String, FudgetToken> token_map;
+	static int highest_token;
 
 	//std::map<FudgetToken, FudgetStyleBase*> style_map;
 	std::map<FudgetToken, FudgetElementPainter*> element_map;

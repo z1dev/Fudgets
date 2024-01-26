@@ -440,6 +440,8 @@ void FudgetContainer::Draw()
 
 	for (FudgetControl *c : _children)
 		c->Draw();
+
+	Base::Draw();
 }
 
 void FudgetContainer::AddLayoutInternal(FudgetLayout *layout)

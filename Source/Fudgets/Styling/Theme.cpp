@@ -4,12 +4,20 @@
 #include "ElementPainters/SimpleButtonPainter.h"
 
 
-FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer)), highest_token(0)
+std::map<String, FudgetToken> FudgetTheme::token_map;
+int FudgetTheme::highest_token = 0;
+
+const FudgetToken FudgetTheme::ButtonDownToken = FudgetTheme::RegisterToken(TEXT("ButtonDownToken"));
+const FudgetToken FudgetTheme::LeftButtonPressedToken = FudgetTheme::RegisterToken(TEXT("LeftButtonPressedToken"));
+const FudgetToken FudgetTheme::MouseHoverToken = FudgetTheme::RegisterToken(TEXT("MouseHoverToken"));
+
+
+FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer))
 {
 	Init();
 }
 
-FudgetToken FudgetTheme::GetToken(String token_name) const
+FudgetToken FudgetTheme::GetToken(String token_name)
 {
 	auto it = token_map.find(token_name);
 	if (it == token_map.end())

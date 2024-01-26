@@ -29,6 +29,9 @@ public:
     /// <inheritdoc />
     Float2 GetMaxSize() const override;
 
+    /// <summary>
+    /// Returns the Fudget actor that uses this container for its root.
+    /// </summary>
     API_FUNCTION() Fudget* GetRoot() const { return _root; }
 
     /// <summary>
