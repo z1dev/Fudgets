@@ -11,7 +11,7 @@ void MoveInArray(Array<T> &arr, int from, int to)
 	{
 		for (int ix = from; ix > to; --ix)
 		{
-			arr[from] = arr[from - 1];
+			arr[ix] = arr[ix - 1];
 		}
 		arr[to] = item;
 	}
@@ -19,7 +19,7 @@ void MoveInArray(Array<T> &arr, int from, int to)
 	{
 		for (int ix = from; ix < to; ++ix)
 		{
-			arr[from] = arr[from + 1];
+			arr[ix] = arr[ix + 1];
 		}
 		arr[to] = item;
 	}
