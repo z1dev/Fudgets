@@ -21,6 +21,7 @@ public:
 protected:
     // [JsonAssetBase]
     LoadResult loadAsset() override;
+    void ItemDeleted(ScriptingObject* item);
     void unload(bool isReloading) override;
     void OnGetData(rapidjson_flax::StringBuffer& buffer) const override;
 };

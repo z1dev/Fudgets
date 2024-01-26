@@ -2,17 +2,11 @@
 using FlaxEditor;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FlaxEditor.Options;
 using FlaxEngine;
-using System.Xml.Linq;
 using Fudgets;
 using FlaxEditor.GUI.Tree;
 using FlaxEditor.SceneGraph;
 using FlaxEditor.CustomEditors;
-using System.Runtime.CompilerServices;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine.GUI;
@@ -38,6 +32,7 @@ public partial class FudgetsEditorWindow
 
         // Toolstrip
         _saveButton = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Save64, Save).LinkTooltip("Save");
+        _saveButton.Enabled = false;
         _toolstrip.AddSeparator();
         _toolStripUndo = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Undo64, _undo.PerformUndo).LinkTooltip($"Undo ({inputOptions.Undo})");
         _toolStripRedo = (ToolStripButton)_toolstrip.AddButton(Editor.Icons.Redo64, _undo.PerformRedo).LinkTooltip($"Redo ({inputOptions.Redo})");
@@ -69,20 +64,14 @@ public partial class FudgetsEditorWindow
 
     private void ControlsValueEditorUpdate()
     {
-        RefreshNames();
-        MarkAsEdited();
+        OnAnyChange();
     }
 
     /// <summary>
-    /// Saves the associated FudgetJsonAsset.
+    /// Deletes a selected control.
     /// </summary>
-    public override void Save()
-    {
-        _asset.Save();
-        ClearEditedFlag();
-    }
-
-    protected void DeleteControl(FudgetControl control)
+    /// <param name="control">The target control.</param>
+    public void DeleteControl(FudgetControl control)
     {
         TreeNode controlNode = FindNodeByControl(control);
 
@@ -100,22 +89,26 @@ public partial class FudgetsEditorWindow
         controlNode.Parent = null;
         control.Parent = null;
 
-        FlaxEngine.Object.Destroy(control);
         controlNode.DisposeChildren();
         controlNode.Dispose();
 
+        OnRebuildTree();
+        OnAnyChange();
         Focus();
     }
 
     private void Delete()
     {
+        var actions = new List<IUndoAction>();
         foreach (object selected in _fudgetControlsEditor.Selection)
         {
             FudgetControl control = (FudgetControl)selected;
-            DeleteControl(control);
+            actions.Add(new FudgetDeleteAction(this, control));
         }
 
-        MarkAsEdited();
+        MultiUndoAction multi = new MultiUndoAction(actions);
+        multi.Do();
+        Undo.AddAction(multi);
     }
 
     private void Rename()
@@ -128,7 +121,7 @@ public partial class FudgetsEditorWindow
             node.StartRenaming();
         }
 
-        MarkAsEdited();
+        OnAnyChange();
         Focus();
     }
 
@@ -140,13 +133,17 @@ public partial class FudgetsEditorWindow
         controlNode.Parent = newParentNode;
         control.Parent = newParent;
         OnRebuildTree();
+        OnAnyChange();
     }
 
     public void Select(List<SceneGraphNode> nodes)
     {
     }
 
-    private void OnRebuildTree()
+    /// <summary>
+    /// Rebuilds the fudget display tree after a change is made to the hierarchy.
+    /// </summary>
+    public void OnRebuildTree()
     {
         List<FudgetControl> oldControlSelection = _selectedControls;
 
@@ -185,7 +182,26 @@ public partial class FudgetsEditorWindow
         _fudgetControlsEditor.Select(_selectedControls);
     }
 
-    private class FudgetTree : Tree
+    public void OnAnyChange()
+    {
+        RefreshNames();
+        MarkAsEdited();
+        _saveButton.Enabled = true;
+
+        ForceLayout();
+    }
+
+    /// <summary>
+    /// Saves the associated FudgetJsonAsset.
+    /// </summary>
+    public override void Save()
+    {
+        _asset.Save();
+        ClearEditedFlag();
+        _saveButton.Enabled = false;
+    }
+
+    public class FudgetTree : Tree
     {
         public Action<Float2> BaseTreeRightClick;
         private bool _rightClickDown = false;
@@ -245,13 +261,15 @@ public partial class FudgetsEditorWindow
             var menu = GetOrSetContextMenu();
             menu.Tag = node;
             menu.AddButton("Rename", (node as ItemNode).StartRenaming);
-            menu.AddButton("Delete", (node as ItemNode).Delete);
             menu.Show(node, location);
         }
 
         private void OnBaseTreeRightClick(Float2 location)
         {
             var menu = GetOrSetContextMenu();
+            FudgetsEditorWindow window = (FudgetsEditorWindow)Tag;
+            menu.AddButton("Delete", window.Delete);
+
             _newMenu = menu.GetOrAddChildMenu("New");
             ContextMenu newMenu = _newMenu.ContextMenu;
 
@@ -270,9 +288,23 @@ public partial class FudgetsEditorWindow
             menu.Show(this, location);
         }
 
-        private void OnNewControl(FudgetsEditorWindow window, FudgetControl control)
+        public void OnNewControl(FudgetsEditorWindow window, FudgetControl control, FudgetContainer oldParent, int oldIndex)
         {
-            window.MarkAsEdited();
+            FudgetControl selected = Selection.Count > 0 ? (FudgetControl)Selection[0].Tag : null;
+            if (oldParent != null)
+            {
+                oldParent.AddChild(control, oldIndex);
+            }
+            else if (selected == null || selected is not FudgetContainer container)
+            {
+                window.RootObject.AddChild(control, oldIndex);   
+            }
+            else
+            {
+                container.AddChild(control, oldIndex);
+            }
+
+            window.OnAnyChange();
             window.OnRebuildTree();
             Deselect();
             Select(window.FindNodeByControl(control));
@@ -281,33 +313,48 @@ public partial class FudgetsEditorWindow
         private void ContextMenuNewClicked(ContextMenuButton button)
         {
             ScriptType type = (ScriptType)button.Tag;
-            FudgetControl control = (FudgetControl)type.CreateInstance();
-            if (control == null)
-                return;
-
-            control.Name = button.Text;
             FudgetsEditorWindow window = (FudgetsEditorWindow)Tag;
-            if (Selection.Count <= 0)
-            {
-                control.Parent = window.RootObject;
-                OnNewControl(window, control);
-                return;
-            }
-
-            FudgetControl selected = (FudgetControl)Selection[0].Tag;
-            if (selected == null || selected is not FudgetContainer container)
-            {
-                control.Parent = window.RootObject;
-                OnNewControl(window, control);
-                return;
-            }
-
-            control.Parent = container;
-            OnNewControl(window, control);
+            var action = new FudgetNewControlAction(window, this, type, button.Text);
+            window.Undo.AddAction(action);
+            action.Do();
         }
     }
 
-    private class ItemNode : TreeNode
+    private class TreePanel : Panel
+    {
+        private bool _rightClickDown = false;
+
+        public override bool OnMouseDown(Float2 location, MouseButton button)
+        {
+            if (button == MouseButton.Right)
+                _rightClickDown = true;
+
+            return base.OnMouseDown(location, button);
+        }
+
+        public override void OnMouseLeave()
+        {
+            base.OnMouseLeave();
+            _rightClickDown = false;
+        }
+
+        public override bool OnMouseUp(Float2 location, MouseButton button)
+        {
+            if (button == MouseButton.Right && _rightClickDown)
+            {
+                _rightClickDown = false;
+                FudgetTree tree = (FudgetTree)Tag;
+                if (tree.BaseTreeRightClick != null)
+                {
+                    tree.BaseTreeRightClick(location);
+                }
+            }
+
+            return base.OnMouseUp(location, button);
+        }
+    }
+
+    public class ItemNode : TreeNode
     {
         public FudgetControl Control => (FudgetControl)Tag;
 
@@ -335,7 +382,8 @@ public partial class FudgetsEditorWindow
                     StartRenaming();
                     return true;
                 case KeyboardKeys.Delete:
-                    Delete();
+                    FudgetsEditorWindow window = (FudgetsEditorWindow)ParentTree.Tag;
+                    window.Delete();
                     return true;
             }
             return false;
@@ -349,7 +397,7 @@ public partial class FudgetsEditorWindow
             Tree tree = ParentTree;
             FudgetsEditorWindow window = (FudgetsEditorWindow)tree.Tag;
             window.DeleteControl(Control);
-            window.MarkAsEdited();
+            window.OnAnyChange();
         }
 
         /// <summary>
@@ -366,9 +414,156 @@ public partial class FudgetsEditorWindow
         private void OnRenamed(RenamePopup popup)
         {
             if (Control.Name != popup.Text)
-                ((FudgetsEditorWindow)ParentTree.Tag).MarkAsEdited();
-            Control.Name = popup.Text;
-            Text = Control.Name;
+            {
+                FudgetsEditorWindow window = (FudgetsEditorWindow)ParentTree.Tag;
+                var action = new FudgetRenameAction(window, Control, popup.Text);
+                window.Undo.AddAction(action);
+                action.Do();
+            }
         }
+    }
+}
+
+// Undo Actions
+
+public class FudgetDeleteAction : IUndoAction
+{
+    private FudgetControl _deletionTarget;
+    private FudgetContainer _oldParent;
+    private FudgetsEditorWindow _window;
+    private int _oldIndex = -1;
+    private bool _done = false;
+
+    public FudgetDeleteAction(FudgetsEditorWindow window, FudgetControl deletionTarget)
+    {
+        _window = window;
+        _deletionTarget = deletionTarget;
+        _oldParent = null;
+    }
+
+    public string ActionString => "Delete control";
+
+    public void Dispose()
+    {
+        _deletionTarget = null;
+        _oldParent = null;
+        _window = null;
+
+        if (_done)
+        {
+            FlaxEngine.Object.Destroy(_deletionTarget);
+        }
+    }
+
+    public void Do()
+    {
+        _oldParent = _deletionTarget.Parent;
+        _oldIndex = _deletionTarget.IndexInParent;
+        _window.DeleteControl(_deletionTarget);
+        _done = true;
+
+        _window.OnAnyChange();
+    }
+
+    public void Undo()
+    {
+        _oldParent.AddChild(_deletionTarget, _oldIndex);
+        _oldParent = null;
+        _window.OnRebuildTree();
+        _window.FindNodeByControl(_deletionTarget).Select();
+        _done = false;
+
+        _window.OnAnyChange();
+    }
+}
+
+public class FudgetRenameAction : IUndoAction
+{
+    private FudgetsEditorWindow _window;
+    private FudgetControl _renameTarget;
+    private string _oldName;
+    private string _newName;
+
+    public FudgetRenameAction(FudgetsEditorWindow window, FudgetControl renameTarget, string newName)
+    {
+        _window = window;
+        _renameTarget = renameTarget;
+        _newName = newName;
+    }
+
+    public string ActionString => "Rename control";
+
+    public void Dispose()
+    {
+        _window = null;
+        _renameTarget = null;
+    }
+
+    public void Do()
+    {
+        _oldName = _renameTarget.Name;
+        _renameTarget.Name = _newName;
+        _window.RefreshNames();
+
+        _window.OnAnyChange();
+    }
+
+    public void Undo()
+    {
+        _renameTarget.Name = _oldName;
+        _window.RefreshNames();
+
+        _window.OnAnyChange();
+    }
+}
+
+public class FudgetNewControlAction : IUndoAction
+{
+    private FudgetsEditorWindow _window;
+    private FudgetsEditorWindow.FudgetTree _tree;
+    private ScriptType _newControlType;
+    private FudgetControl _createdControl;
+    private FudgetContainer _oldParent;
+    private string _newName;
+    private int _oldIndex;
+
+    public FudgetNewControlAction(FudgetsEditorWindow window, FudgetsEditorWindow.FudgetTree tree, ScriptType newControlType, string newName)
+    {
+        _window = window;
+        _tree = tree;
+        _newControlType = newControlType;
+        _newName = newName;
+        _oldIndex = -1;
+    }
+
+    public string ActionString => "Add new control";
+
+    public void Dispose()
+    {
+        _window = null;
+        _createdControl = null;
+        _oldParent = null;
+        _tree = null;
+    }
+
+    public void Do()
+    {
+        _createdControl = (FudgetControl)_newControlType.CreateInstance();
+        if (_createdControl == null)
+            return;
+
+        _createdControl.Name = _newName;
+        _tree.OnNewControl(_window, _createdControl, _oldParent, _oldIndex);
+        _oldParent = _createdControl.Parent;
+    }
+
+    public void Undo()
+    {
+        _oldIndex = _createdControl.IndexInParent;
+        _window.DeleteControl(_createdControl);
+
+        _window.OnAnyChange();
+        FlaxEngine.Object.Destroy(_createdControl);
+        _createdControl = null;
     }
 }

@@ -64,94 +64,101 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     {
         _assetItem = (FudgetJsonAssetItem)item;
         _asset = Content.Load<FudgetJsonAsset>(_assetItem.ID);
-        RootObject = _asset.WidgetData;
-        _selectedControls = new List<FudgetControl>();
 
-        _editor = editor;
-        _undo = new Undo();
-        RootObject.HintSize = _resolution;
-
-        // TODO: Figure out how to get update events the FudgetGUIRoot so it can update its layouting when things get moved.
-        // Also figure out how edit-time UI should work. Do we skip rendering/layouting in the scene if someone decides to edit during play mode? Or do we make that impossible?
-        //_resolution = Screen.Size;
-
-        if (_texture != null)
+        if (_asset != null)
         {
-            FlaxEngine.Object.Destroy(_texture);
-            _texture = null;
+            RootObject = _asset.WidgetData;
+            RootObject.HintSize = _resolution;
+            _selectedControls = new List<FudgetControl>();
+
+            _editor = editor;
+            _undo = new Undo();
+            SetupToolstrip();
+
+            // TODO: Figure out how to get update events the FudgetGUIRoot so it can update its layouting when things get moved.
+            // Also figure out how edit-time UI should work. Do we skip rendering/layouting in the scene if someone decides to edit during play mode? Or do we make that impossible?
+            //_resolution = Screen.Size;
+
+            if (_texture != null)
+            {
+                FlaxEngine.Object.Destroy(_texture);
+                _texture = null;
+            }
+
+            if (_renderTask != null)
+            {
+                FlaxEngine.Object.Destroy(_renderTask);
+                _renderTask = null;
+            }
+
+            // Main Panel
+            _panel = AddChild(new SplitPanel());
+            _panel.AnchorPreset = AnchorPresets.StretchAll;
+            _panel.SplitterValue = 0.7f;
+            _panel.Offsets = new Margin(0, 0, _toolstrip.Bottom, 0);
+            _imagePanel = _panel.Panel1;
+            _editorRootPanel = _panel.Panel2;
+
+            // Main Split Panels
+            _imagePanel.AnchorPreset = AnchorPresets.StretchAll;
+            _editorRootPanel.AnchorPreset = AnchorPresets.StretchAll;
+
+            // Editor Panel
+            _editorPanel = _editorRootPanel.AddChild(new SplitPanel(orientation: Orientation.Vertical));
+            _editorPanel.AnchorPreset = AnchorPresets.StretchAll;
+            _editorPanel.SplitterValue = 0.7f;
+            _editorTreePanel = _editorPanel.Panel1.AddChild<TreePanel>();
+            _editorPropertiesPanel = _editorPanel.Panel2;
+
+            // Editor Split Panels
+            _editorTreePanel.AnchorPreset = AnchorPresets.StretchAll;
+            _tree = _editorTreePanel.AddChild<FudgetTree>();
+            _editorTreePanel.Tag = _tree;
+            _tree.AnchorPreset = AnchorPresets.StretchAll;
+            _tree.SelectedChanged += SelectedControlChanged;
+            _tree.Tag = this;
+            OnRebuildTree();
+
+            _fudgetControlsEditor = new CustomEditorPresenter(_undo, "No control selected.", this);
+            _fudgetControlsEditor.Features = FeatureFlags.None;
+            _fudgetControlsEditor.Modified += ControlsValueEditorUpdate;
+            _fudgetControlsEditor.Panel.Parent = _editorPropertiesPanel;
+
+            FudgetRenderImage image = _imagePanel.AddChild<FudgetRenderImage>();
+            image.AnchorPreset = AnchorPresets.StretchAll;
+            image.Tag = this;
+
+            GPUTextureBrush brush = new GPUTextureBrush();
+
+            // Init Fudget Rendering
+            _texture = new GPUTexture();
+            var desc = GPUTextureDescription.New2D(
+                (int)_resolution.X,
+                (int)_resolution.Y,
+                PixelFormat.R8G8B8A8_UNorm);
+            _texture.Init(ref desc);
+
+            _imagePanel.SizeChanged += (_) => RecalculateRenderSize();
+
+            _renderTask = new RenderTask();
+            _renderTask.Render += RenderWindow;
+            _renderTask.Enabled = true;
+
+            brush.Texture = _texture;
+
+            image.Color = Color.White;
+            image.KeepAspectRatio = false;
+            image.Brush = brush;
         }
-
-        if (_renderTask != null)
-        {
-            FlaxEngine.Object.Destroy(_renderTask);
-            _renderTask = null;
-        }
-
-        // Main Panel
-        _panel = AddChild(new SplitPanel());
-        _panel.AnchorPreset = AnchorPresets.StretchAll;
-        _panel.SplitterValue = 0.7f;
-        _panel.Offsets = new Margin(0, 0, _toolstrip.Bottom, 0);
-        _imagePanel = _panel.Panel1;
-        _editorRootPanel = _panel.Panel2;
-
-        // Main Split Panels
-        _imagePanel.AnchorPreset = AnchorPresets.StretchAll;
-        _editorRootPanel.AnchorPreset = AnchorPresets.StretchAll;
-
-        // Editor Panel
-        _editorPanel = _editorRootPanel.AddChild(new SplitPanel(orientation: Orientation.Vertical));
-        _editorPanel.AnchorPreset = AnchorPresets.StretchAll;
-        _editorPanel.SplitterValue = 0.7f;
-        _editorTreePanel = _editorPanel.Panel1;
-        _editorPropertiesPanel = _editorPanel.Panel2;
-
-        // Editor Split Panels
-        _tree = _editorTreePanel.AddChild<FudgetTree>();
-        _tree.AnchorPreset = AnchorPresets.StretchAll;
-        _tree.SelectedChanged += SelectedControlChanged;
-        _tree.Tag = this;
-        OnRebuildTree();
-
-        _fudgetControlsEditor = new CustomEditorPresenter(_undo, "No control selected.", this);
-        _fudgetControlsEditor.Features = FeatureFlags.None;
-        _fudgetControlsEditor.Modified += ControlsValueEditorUpdate;
-        _fudgetControlsEditor.Panel.Parent = _editorPropertiesPanel;
-
-        FudgetRenderImage image = _imagePanel.AddChild<FudgetRenderImage>();
-        image.AnchorPreset = AnchorPresets.StretchAll;
-        image.Tag = this;
-
-        GPUTextureBrush brush = new GPUTextureBrush();
-
-        // Init Fudget Rendering
-        _texture = new GPUTexture();
-        var desc = GPUTextureDescription.New2D(
-            (int)_resolution.X,
-            (int)_resolution.Y,
-            PixelFormat.R8G8B8A8_UNorm);
-        _texture.Init(ref desc);
-
-        _renderTask = new RenderTask();
-        _renderTask.Render += RenderWindow;
-        _renderTask.Enabled = true;
-
-        brush.Texture = _texture;
-
-        image.Color = Color.White;
-        image.KeepAspectRatio = false;
-        image.Brush = brush;
-
-        SetupToolstrip();
     }
 
     protected override void OnClose()
     {
         base.OnClose();
-        _tree.Deinitialize();
+        _tree?.Deinitialize();
     }
 
-    private void RefreshNames()
+    public void RefreshNames()
     {
         List<ItemNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
         foreach (TreeNode node in nodes)
@@ -213,11 +220,39 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         }
     }
 
+    private void ForceLayout()
+    {
+        List<FudgetControl> controls = GetAllControls(RootObject);
+        foreach (FudgetControl control in controls)
+        {
+            if (control is FudgetContainer container)
+            {
+                container.MarkLayoutDirty(FudgetDirtType.All);
+            }
+
+        }
+
+        RootObject.MarkLayoutDirty(FudgetDirtType.All);
+    }
+
+    private void RecalculateRenderSize()
+    {
+        if (_imagePanel.Size.X < 1 || _imagePanel.Size.Y < 1)
+            return;
+
+        _resolution = _imagePanel.Size;
+        _texture.Resize((int)_resolution.X, (int)_resolution.Y);
+
+        RootObject.HintSize = _resolution;
+        ForceLayout();
+    }
+
     private void RenderWindow(RenderTask task, GPUContext context)
     {
         // TODO: Figure out weird behavior, like why does the Fudget also render in the editor/game view when I use the rendering method here?
         // TODO: Test if moving controls around still draws as expected and layouts properly (this requires feeding update events to the FudgetGUIRoot)
         Render2D.Begin(context, _texture);
+        Render2D.FillRectangle(new Rectangle(0, 0, _resolution), new Color(0, 0, 0, 255));
         RootObject.Draw();
         Render2D.End();
     }

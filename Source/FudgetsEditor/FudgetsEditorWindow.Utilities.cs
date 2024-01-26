@@ -27,7 +27,12 @@ public partial class FudgetsEditorWindow
         return controls;
     }
 
-    private ItemNode FindNodeByControl(FudgetControl control)
+    /// <summary>
+    /// Gets the tree node for the target control.
+    /// </summary>
+    /// <param name="control">The control to search for.</param>
+    /// <returns>The node in the tree, or null if nothing is found.</returns>
+    public ItemNode FindNodeByControl(FudgetControl control)
     {
         List<ItemNode> subset = RecurseAndGetSubset(_tree, (node) =>
         {

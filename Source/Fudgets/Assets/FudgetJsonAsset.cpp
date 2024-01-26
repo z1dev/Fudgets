@@ -30,6 +30,7 @@ Asset::LoadResult FudgetJsonAsset::loadAsset()
 
     WidgetData = New<FudgetGUIRoot>();
     WidgetData->Deserialize(*Data, new ISerializeModifier());
+    WidgetData->Deleted.Bind<FudgetJsonAsset, &FudgetJsonAsset::ItemDeleted>(this);
     for (int i = 0; i < WidgetData->GetChildCount(); i++)
     {
         LOG(Info, "Control Name: {0}", WidgetData->ChildAt(i)->GetName());
@@ -38,12 +39,18 @@ Asset::LoadResult FudgetJsonAsset::loadAsset()
     return result;
 }
 
+void FudgetJsonAsset::ItemDeleted(ScriptingObject* item)
+{
+    WidgetData = nullptr;
+}
+
 void FudgetJsonAsset::unload(bool isReloading)
 {
     // Base
     JsonAssetBase::unload(isReloading);
 
-    // TODO: Actually unload.
+    // TODO: Actually unload. (and test if this works)
+    SAFE_DELETE(WidgetData);
 }
 
 void FudgetJsonAsset::OnGetData(rapidjson_flax::StringBuffer& buffer) const
