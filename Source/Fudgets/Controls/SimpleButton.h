@@ -24,9 +24,13 @@ public:
 	FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control);
 
 	/// <inheritdoc />
-	API_FUNCTION() bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
-	API_FUNCTION() bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
-	API_FUNCTION() void SetStoredFloat(FudgetToken token, float value) override;
+	bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
+
+	/// <inheritdoc />
+	bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
+
+	/// <inheritdoc />
+	void SetStoredFloat(FudgetToken token, float value) override;
 
 
 private:

@@ -168,6 +168,9 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         _tree?.Deinitialize();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void RefreshNames()
     {
         List<ItemNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });

@@ -201,6 +201,7 @@ public:
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
+	/// Always call the derived Draw in the overriden method for styled controls.
 	/// </summary>
 	API_FUNCTION() virtual void Draw();
 

@@ -186,6 +186,9 @@ public partial class FudgetsEditorWindow
         _fudgetControlsEditor.Select(_selectedControls);
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void OnAnyChange()
     {
         RefreshNames();
@@ -205,25 +208,38 @@ public partial class FudgetsEditorWindow
         _saveButton.Enabled = false;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public class FudgetTree : Tree
     {
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
         public Action<Float2> BaseTreeRightClick;
         private bool _rightClickDown = false;
         private ContextMenu _menu = null;
         private ContextMenuChildMenu _newMenu = null;
 
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
         public FudgetTree() : base()
         {
             RightClick += TreeNodeRightClick;
             BaseTreeRightClick += OnBaseTreeRightClick;
         }
 
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
         public void Deinitialize()
         {
             RightClick -= TreeNodeRightClick;
             BaseTreeRightClick -= OnBaseTreeRightClick;
         }
 
+        /// <inheritdoc />
         public override bool OnMouseDown(Float2 location, MouseButton button)
         {
             if (button == MouseButton.Right)
@@ -232,12 +248,14 @@ public partial class FudgetsEditorWindow
             return base.OnMouseDown(location, button);
         }
 
+        /// <inheritdoc />
         public override void OnMouseLeave()
         {
             base.OnMouseLeave();
             _rightClickDown = false;
         }
 
+        /// <inheritdoc />
         public override bool OnMouseUp(Float2 location, MouseButton button)
         {
             if (button == MouseButton.Right && _rightClickDown)
@@ -292,6 +310,13 @@ public partial class FudgetsEditorWindow
             menu.Show(this, location);
         }
 
+        /// <summary>
+        /// TODO: Docs
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="control"></param>
+        /// <param name="oldParent"></param>
+        /// <param name="oldIndex"></param>
         public void OnNewControl(FudgetsEditorWindow window, FudgetControl control, FudgetContainer oldParent, int oldIndex)
         {
             FudgetControl selected = Selection.Count > 0 ? (FudgetControl)Selection[0].Tag : null;
@@ -328,6 +353,7 @@ public partial class FudgetsEditorWindow
     {
         private bool _rightClickDown = false;
 
+        /// <inheritdoc />
         public override bool OnMouseDown(Float2 location, MouseButton button)
         {
             if (button == MouseButton.Right)
@@ -336,12 +362,14 @@ public partial class FudgetsEditorWindow
             return base.OnMouseDown(location, button);
         }
 
+        /// <inheritdoc />
         public override void OnMouseLeave()
         {
             base.OnMouseLeave();
             _rightClickDown = false;
         }
 
+        /// <inheritdoc />
         public override bool OnMouseUp(Float2 location, MouseButton button)
         {
             if (button == MouseButton.Right && _rightClickDown)
@@ -358,10 +386,19 @@ public partial class FudgetsEditorWindow
         }
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public class ItemNode : TreeNode
     {
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
         public FudgetControl Control => (FudgetControl)Tag;
 
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
         public ItemNode(FudgetControl control)
         : base(false)
         {
@@ -376,6 +413,7 @@ public partial class FudgetsEditorWindow
             return true;
         }
 
+        /// <inheritdoc />
         public override bool OnKeyDown(KeyboardKeys key)
         {
             if (base.OnKeyDown(key))
@@ -430,6 +468,9 @@ public partial class FudgetsEditorWindow
 
 // Undo Actions
 
+/// <summary>
+/// TODO: docs
+/// </summary>
 public class FudgetDeleteAction : IUndoAction
 {
     private FudgetControl _deletionTarget;
@@ -438,6 +479,9 @@ public class FudgetDeleteAction : IUndoAction
     private int _oldIndex = -1;
     private bool _done = false;
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetDeleteAction(FudgetsEditorWindow window, FudgetControl deletionTarget)
     {
         _window = window;
@@ -445,8 +489,14 @@ public class FudgetDeleteAction : IUndoAction
         _oldParent = null;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public string ActionString => "Delete control";
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Dispose()
     {
         _deletionTarget = null;
@@ -459,6 +509,9 @@ public class FudgetDeleteAction : IUndoAction
         }
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Do()
     {
         _oldParent = _deletionTarget.Parent;
@@ -469,6 +522,9 @@ public class FudgetDeleteAction : IUndoAction
         _window.OnAnyChange();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Undo()
     {
         _oldParent.AddChild(_deletionTarget, _oldIndex);
@@ -481,6 +537,9 @@ public class FudgetDeleteAction : IUndoAction
     }
 }
 
+/// <summary>
+/// TODO: docs
+/// </summary>
 public class FudgetRenameAction : IUndoAction
 {
     private FudgetsEditorWindow _window;
@@ -488,6 +547,9 @@ public class FudgetRenameAction : IUndoAction
     private string _oldName;
     private string _newName;
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetRenameAction(FudgetsEditorWindow window, FudgetControl renameTarget, string newName)
     {
         _window = window;
@@ -495,14 +557,23 @@ public class FudgetRenameAction : IUndoAction
         _newName = newName;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public string ActionString => "Rename control";
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Dispose()
     {
         _window = null;
         _renameTarget = null;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Do()
     {
         _oldName = _renameTarget.Name;
@@ -512,6 +583,9 @@ public class FudgetRenameAction : IUndoAction
         _window.OnAnyChange();
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Undo()
     {
         _renameTarget.Name = _oldName;
@@ -521,6 +595,9 @@ public class FudgetRenameAction : IUndoAction
     }
 }
 
+/// <summary>
+/// TODO: docs
+/// </summary>
 public class FudgetNewControlAction : IUndoAction
 {
     private FudgetsEditorWindow _window;
@@ -531,6 +608,9 @@ public class FudgetNewControlAction : IUndoAction
     private string _newName;
     private int _oldIndex;
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetNewControlAction(FudgetsEditorWindow window, FudgetsEditorWindow.FudgetTree tree, ScriptType newControlType, string newName)
     {
         _window = window;
@@ -540,8 +620,14 @@ public class FudgetNewControlAction : IUndoAction
         _oldIndex = -1;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public string ActionString => "Add new control";
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Dispose()
     {
         _window = null;
@@ -550,6 +636,9 @@ public class FudgetNewControlAction : IUndoAction
         _tree = null;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Do()
     {
         _createdControl = (FudgetControl)_newControlType.CreateInstance();
@@ -561,6 +650,9 @@ public class FudgetNewControlAction : IUndoAction
         _oldParent = _createdControl.Parent;
     }
 
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public void Undo()
     {
         _oldIndex = _createdControl.IndexInParent;
