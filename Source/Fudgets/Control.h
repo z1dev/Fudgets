@@ -15,6 +15,7 @@ class FudgetContainer;
 class FudgetGUIRoot;
 class FudgetElementPainter;
 class FudgetPainterPropertyProvider;
+class FudgetStyle;
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -546,15 +547,6 @@ public:
 
 	// Styling
 	
-	//template<typename T>
-	//T* GetElementPainter(FudgetToken &token) const
-	//{
-	//	auto root = GetGUIRoot();
-	//	if (root == nullptr)
-	//		return nullptr;
-	//	return root->GetTheme()->GetElementPainter<T>(token);
-	//}
-
 	/// <summary>
 	/// Shortcut to get the element painter from the theme for a token. Calls the theme's GetElementPainter.
 	/// </summary>
@@ -568,6 +560,23 @@ public:
 	/// </summary>
 	/// <returns>An object that can provide properties to an ElementPainter</returns>
 	API_PROPERTY() virtual FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return nullptr; }
+
+	/// <summary>
+	/// Gets the style that was set explicitely, that decides the look of the control
+	/// </summary>
+	API_PROPERTY() FudgetStyle* GetStyle() const { return _style; }
+
+	/// <summary>
+	/// Sets the style that decides the look of the control. Set to null to use the default style.
+	/// </summary>
+	API_PROPERTY() void SetStyle(FudgetStyle *value);
+
+	/// <summary>
+	/// The style that's currently used to decide the look of the control. It is the explicitely set style if
+	/// a style was passed to SetStyle or to the Style property (in C#). Otherwise it's the style that was assigned
+	/// to the class, or, if that's not present, the parent class, up to the theme's default style.
+	/// </summary>
+	API_PROPERTY(ReadOnly) FudgetStyle* GetActiveStyle();
 
 	// Serialization
 
@@ -589,6 +598,8 @@ private:
 	/// <param name="size">The new size</param>
 	virtual void LayoutUpdate(Float2 pos, Float2 size);
 
+	void CreateClassTokens();
+
 	FudgetContainer *_parent;
 	int _index;
 	String _name;
@@ -607,6 +618,18 @@ private:
 
 	// The control's Update function is called with a delta time if this is true.
 	bool _updating_registered;
+
+	// Null or the style used to decide the look of the control. When null, the style is decided based on class name.
+	FudgetStyle *_style;
+	// Style used for drawing the control if a specific style hasn't been set. The style is determined based on the
+	// class name, if such a style is present, or the parent class name etc. If none are found, the theme's basic style
+	// is used, but it might lack required settings.
+	FudgetStyle *_cached_style;
+
+	// A list of tokens created for this control that includes tokens for the name of every control in the inheritance
+	// chain, up to FudgetControl. It is mainly used to get a style appropriate for this control when drawing.
+	// The tokens might not be created until the control needs to access the active style.
+	Array<FudgetToken> _class_token;
 
 	friend class FudgetLayout;
 	friend class FudgetContainer;

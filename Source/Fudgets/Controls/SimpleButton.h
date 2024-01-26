@@ -134,5 +134,7 @@ private:
 	bool _can_focus;
 
 	FudgetToken buttonToken;
+
 	UniquePtr<FudgetPainterPropertyProvider> _painter_provider;
+	FudgetElementPainter *_cached_painter;
 };

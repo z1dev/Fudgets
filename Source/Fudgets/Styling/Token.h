@@ -47,4 +47,3 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	API_FIELD() int32 Token;
 
 };
-

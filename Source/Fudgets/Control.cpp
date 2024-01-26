@@ -8,7 +8,9 @@
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Scripting/Scripting.h"
-#include <Engine/Core/Log.h>
+#include "Engine/Core/Log.h"
+#include "Engine/Scripting/ManagedCLR/MClass.h"
+#include "Engine/Scripting/Types.h"
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
@@ -19,7 +21,7 @@ FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, 
 
 FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false)
+	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false), _style(nullptr), _cached_style(nullptr)
 {
 	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
 		RegisterToUpdate(true);
@@ -300,6 +302,32 @@ FudgetElementPainter* FudgetControl::GetElementPainter(FudgetToken token) const
 	return root->GetTheme()->GetElementPainter(token);
 }
 
+void FudgetControl::SetStyle(FudgetStyle *value)
+{
+	if (_style == value)
+		return;
+	_style = value;
+	_cached_style = nullptr;
+}
+
+FudgetStyle* FudgetControl::GetActiveStyle()
+{
+	if (_style != nullptr)
+		return _style;
+	if (_cached_style != nullptr)
+		return _cached_style;
+
+	// No style was found, let's resolve one and save it to cached.
+
+	auto root = GetGUIRoot();
+	if (root == nullptr || root->GetTheme() == nullptr)
+		return nullptr;
+	FudgetStyle *s = root->GetTheme()->GetControlStyleOrDefault(_class_token);
+	_cached_style = s;
+
+	return _cached_style;
+}
+
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
 {
 	stream.JKEY("TypeName");
@@ -359,4 +387,27 @@ void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
 {
 	_pos = pos; 
 	_size = size;
+}
+
+void FudgetControl::CreateClassTokens()
+{
+	if (_class_token.Count() > 0)
+		return;
+	auto root = GetGUIRoot();
+	if (root == nullptr)
+		return;
+	auto theme = root->GetTheme();
+	if (theme == nullptr)
+		return;
+
+
+	auto thisclass = GetClass();
+	StringAnsiView class_name = thisclass->GetName();;
+	while (thisclass != nullptr && class_name != "Object")
+	{
+		_class_token.Add(theme->RegisterToken(class_name.ToString()));
+		thisclass = thisclass->GetBaseClass();
+		if (thisclass != nullptr)
+			class_name = thisclass->GetName();
+	}
 }

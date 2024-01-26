@@ -15,7 +15,7 @@ public:
 
 	void Draw(FudgetPainterPropertyProvider *provider) override;
 
-	// Token used to fetch the hover time for animations.
+	// Token used to save and fetch the custom value for hover time for animations.
 	static const FudgetToken hover_token;
 };
 

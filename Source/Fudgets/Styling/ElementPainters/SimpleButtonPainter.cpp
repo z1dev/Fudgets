@@ -1,10 +1,12 @@
 #include "SimpleButtonPainter.h"
 #include "../../Control.h"
 #include "../Theme.h"
+#include "../Style.h"
 
 #include "Engine/Core/Math/Vector2.h"
 
 const FudgetToken FudgetSimpleButtonPainter::hover_token = FudgetTheme::RegisterToken(TEXT("SimpleButtonHoverTime"));
+
 
 FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
 {
@@ -13,11 +15,14 @@ FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
 
 void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
 {
-	Color Dark = Color(0.6f, 0.6f, 0.6f, 1.0f);
-	Color Light = Color(1.0f);
-	Color Normal = Color(0.8f);
+	FudgetControl *control = provider->GetSourceControl();
+	FudgetStyle *style = control->GetActiveStyle();
 
-	float TimeToAnimate = 0.3f;
+	Color Dark = style->GetColor(FudgetTheme::ColorDarkToken);
+	Color Light = style->GetColor(FudgetTheme::ColorLightToken);
+	Color Normal = style->GetColor(FudgetTheme::ColorNormalToken);
+
+	float TimeToAnimate = style->GetFloat(FudgetTheme::ButtonHoverAnimationTimeToken);
 
 	// Fetching values from the control
 
@@ -71,7 +76,6 @@ void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
 
 	// The drawing part
 
-	auto control = provider->GetSourceControl();
 	control->FillRectangle(Float2(0.f), control->GetSize(), draw_color);
 
 	if (control->GetFocused())
