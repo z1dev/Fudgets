@@ -39,13 +39,13 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	bool IsValid() const { return Token != -1; }
 
 	/// <summary>
-	/// A token that can be used as a result for failed operations.
-	/// </summary>
-	API_FIELD(ReadOnly) static const FudgetToken Invalid;
-
-	/// <summary>
 	/// The inner data used as the identifier of this token
 	/// </summary>
 	API_FIELD() int32 Token;
+
+	/// <summary>
+	/// A token that can be used as a result for failed operations.
+	/// </summary>
+	API_FIELD(ReadOnly) static const FudgetToken Invalid;
 
 };
