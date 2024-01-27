@@ -4,7 +4,6 @@
 #include "IFudgetMouseHook.h"
 
 class WindowBase;
-class FudgetTheme;
 
 /// <summary>
 /// Root container representing the whole area where UI controls can appear. For example the screen.
@@ -106,15 +105,6 @@ public:
     /// </summary>
     API_FUNCTION() void UnregisterControlUpdates();
 
-    // Styling
-
-    /// <summary>
-    /// Returns the global theme object used to determine the style of controls.
-    /// TODO: this might need to be moved out to the Fudget, or to some global settings context.
-    /// </summary>
-    /// <returns>The theme</returns>
-    API_FUNCTION() FudgetTheme* GetTheme() const { return _theme; }
-
     // Serialization
 
     /// <summary>
@@ -172,8 +162,6 @@ private:
 
     // The control currently taking the keyboard input
     FudgetControl *_focus_control;
-
-    FudgetTheme *_theme;
 
     // Controls whose OnUpdate should be called
     Array<FudgetControl*> _updating_controls;

@@ -8,14 +8,15 @@
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Serialization/Serialization.h"
 
+#include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
+#include "Styling/ElementPainter.h"
 
 
 class FudgetContainer;
 class FudgetGUIRoot;
-class FudgetElementPainter;
-class FudgetPainterPropertyProvider;
 class FudgetStyle;
+class FudgetTheme;
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -546,23 +547,35 @@ public:
 	API_PROPERTY() virtual void SetFocused(bool value);
 
 	// Styling
+
+	/// <summary>
+	/// Resets all cached values that are used for styling. Many values are only checked once and not retrieved again, unless
+	/// the style or theme is changed. Call this function if a change should result in changed appearance but the cached values
+	/// prevent that.
+	/// </summary>
+	/// <param name="inherited">For container controls, whether to clear the style cache for controls in the container</param>
+	/// <returns></returns>
+	API_FUNCTION() void ClearStyleCache(bool inherited = false);
 	
 	/// <summary>
-	/// Shortcut to get the element painter from the theme for a token. Calls the theme's GetElementPainter.
+	/// Tries to retrieve the painter for this control. The painter is choosen by the style from a value set in the theme.
 	/// </summary>
 	/// <param name="token">The token for accessing the painter</param>
 	/// <returns>The element painter associated with the token</returns>
-	API_FUNCTION() FudgetElementPainter* GetElementPainter(FudgetToken token) const;
+	API_FUNCTION() FudgetElementPainter* GetElementPainter();
 
 	/// <summary>
-	/// Returns an object that can provide properties while painting this control. For example a button might need to provide
-	/// whether it is pressed or down, but not every control can return a valid answer to that.
+	/// Returns an object that can provide properties while painting this control. For example a button might need to
+	/// provide whether it is pressed or down. Not every provider can give the required values, and usually zero defaults
+	/// are used in that case.
 	/// </summary>
 	/// <returns>An object that can provide properties to an ElementPainter</returns>
-	API_PROPERTY() virtual FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return nullptr; }
+	API_PROPERTY() FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return _painter_provider; }
+
+	API_PROPERTY() void SetPropertyProvider(FudgetPainterPropertyProvider *new_provider);
 
 	/// <summary>
-	/// Gets the style that was set explicitely, that decides the look of the control
+	/// Gets the style that was set explicitly, that decides the look of the control
 	/// </summary>
 	API_PROPERTY() FudgetStyle* GetStyle() const { return _style; }
 
@@ -572,16 +585,49 @@ public:
 	API_PROPERTY() void SetStyle(FudgetStyle *value);
 
 	/// <summary>
-	/// The style that's currently used to decide the look of the control. It is the explicitely set style if
+	/// The style that's currently used to decide the look of the control. It is the explicitly set style if
 	/// a style was passed to SetStyle or to the Style property (in C#). Otherwise it's the style that was assigned
 	/// to the class, or, if that's not present, the parent class, up to the theme's default style.
 	/// </summary>
-	API_PROPERTY(ReadOnly) FudgetStyle* GetActiveStyle();
+	API_PROPERTY() FudgetStyle* GetActiveStyle();
+
+	/// <summary>
+	/// Get the token for the theme which gives the colors and other values used for styling the controls
+	/// </summary>
+	API_PROPERTY() FudgetToken GetThemeId() const { return _theme_id; }
+	/// <summary>
+	/// Sets the token for the theme which gives the colors and other values used for styling the controls
+	/// </summary>
+	API_PROPERTY() void SetThemeId(FudgetToken value);
+
+
+	/// <summary>
+	/// The theme data which is retrieved using the theme id set to this control, or if not set, the theme in the closets
+	/// parent that has a theme. If no theme is set to any control, the main theme is returned.
+	/// </summary>
+	API_PROPERTY() FudgetTheme* GetActiveTheme();
+
+	/// <summary>
+	/// Returns a color for the control based on a theme token. The returned value depends on both the active style and
+	/// the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the color in the active style</param>
+	/// <returns>The color for the token</returns>
+	API_FUNCTION() virtual Color GetStyleColor(FudgetToken token);
+
+	/// <summary>
+	/// Returns a float value for the control based on a theme token. The returned value depends on both the active style
+	/// and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the float value in the active style</param>
+	/// <returns>The float for the token</returns>
+	API_FUNCTION() virtual float GetStyleFloat(FudgetToken token);
 
 	// Serialization
 
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
+
 private:
 	static FudgetGUIRoot *_guiRoot;
 
@@ -619,17 +665,34 @@ private:
 	// The control's Update function is called with a delta time if this is true.
 	bool _updating_registered;
 
+	// The element painter set for this control to draw it. If not set, the painter is retrieved based on the class
+	// hierarchy and stored in _cached_painter.
+	FudgetElementPainter *_element_painter;
+	// The cached element painter used to draw the full control. This is set during first draw and is not changed until
+	// the cached style values are reset with ClearStyleCache, or invalidated by a change of theme or style.
+	FudgetElementPainter *_cached_painter;
+
 	// Null or the style used to decide the look of the control. When null, the style is decided based on class name.
 	FudgetStyle *_style;
+
 	// Style used for drawing the control if a specific style hasn't been set. The style is determined based on the
 	// class name, if such a style is present, or the parent class name etc. If none are found, the theme's basic style
 	// is used, but it might lack required settings.
 	FudgetStyle *_cached_style;
 
+	// The token for the theme set for this control. If not set, nearest parent's theme is used with a set theme. If none
+	// found, the main theme is assumed.
+	FudgetToken _theme_id;
+
+	// The theme used for drawing determined by the _theme_id or the nearest parent's theme id. Resolved once on draw.
+	FudgetTheme *_cached_theme;
+
 	// A list of tokens created for this control that includes tokens for the name of every control in the inheritance
 	// chain, up to FudgetControl. It is mainly used to get a style appropriate for this control when drawing.
 	// The tokens might not be created until the control needs to access the active style.
 	Array<FudgetToken> _class_token;
+
+	UniquePtr<FudgetPainterPropertyProvider> _painter_provider;
 
 	friend class FudgetLayout;
 	friend class FudgetContainer;

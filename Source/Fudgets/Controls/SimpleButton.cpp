@@ -1,6 +1,6 @@
 #include "SimpleButton.h"
 #include "../GUIRoot.h"
-#include "../Styling/Theme.h"
+#include "../Styling/Themes.h"
 
 
 
@@ -11,17 +11,17 @@ FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetCon
 
 bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result)
 {
-	if (token == FudgetTheme::MouseHoverToken)
+	if (token == FudgetThemes::MouseHoverToken)
 	{
 		result = ((FudgetSimpleButton*)_source_control)->IsHovered();
 		return true;
 	}
-	if (token == FudgetTheme::LeftButtonPressedToken)
+	if (token == FudgetThemes::LeftButtonPressedToken)
 	{
 		result = ((FudgetSimpleButton*)_source_control)->IsPressed();
 		return true;
 	}
-	if (token == FudgetTheme::ButtonDownToken)
+	if (token == FudgetThemes::ButtonDownToken)
 	{
 		result = ((FudgetSimpleButton*)_source_control)->IsDown();
 		return true;
@@ -50,19 +50,12 @@ FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetContro
 	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
 	FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates),
 	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), _pressed(false), _down(false),
-	_over(false), _can_focus(false), buttonToken(-1), _cached_painter(nullptr)
+	_over(false), _can_focus(false)
 {
-	if (GetGUIRoot() != nullptr && GetGUIRoot()->GetTheme() != nullptr)
-		buttonToken = GetGUIRoot()->GetTheme()->RegisterToken(TEXT("SimpleButton"), false);
 }
 
 FudgetSimpleButton::~FudgetSimpleButton()
 {
-}
-
-void FudgetSimpleButton::SetPropertyProvider(FudgetPainterPropertyProvider *new_provider)
-{
-	_painter_provider.reset(new_provider);
 }
 
 void FudgetSimpleButton::SetCanFocus(bool value)
@@ -76,13 +69,12 @@ void FudgetSimpleButton::SetCanFocus(bool value)
 
 void FudgetSimpleButton::Draw()
 {
-	if (_cached_painter == nullptr)
-		_cached_painter = GetElementPainter(buttonToken);
-	if (_cached_painter != nullptr)
+	auto painter = GetElementPainter();
+	if (painter != nullptr)
 	{
-		if (_painter_provider == nullptr)
-			_painter_provider.reset(New<FudgetSimpleButtonPropertyProvider>(this));
-		_cached_painter->Draw(_painter_provider);
+		if (GetPainterPropertyProvider() == nullptr)
+			SetPropertyProvider(New<FudgetSimpleButtonPropertyProvider>(this));
+		painter->Draw(GetPainterPropertyProvider());
 	}
 
 	// TODO: add an element painter that draws the ERROR text over controls that get their token wrong.
@@ -130,5 +122,3 @@ bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton bu
 
 	return true;
 }
-
-

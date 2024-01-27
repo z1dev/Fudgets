@@ -36,6 +36,8 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 
 	operator int32() const { return Token; }
 
+	bool IsValid() const { return Token != -1; }
+
 	/// <summary>
 	/// A token that can be used as a result for failed operations.
 	/// </summary>
