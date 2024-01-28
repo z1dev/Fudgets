@@ -86,14 +86,7 @@ FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
 
 void FudgetSimpleButtonPainter::Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider)
 {
-	FudgetTheme *theme = control->GetActiveTheme();
-	FudgetStyle *style = control->GetActiveStyle();
-	if (theme != nullptr && style != nullptr)
-	{
-		FudgetElementPainter *bgpainter = style->GetElementPainter(control->GetActiveTheme(), simple_btn_bg_token);
-		if (bgpainter != nullptr)
-			bgpainter->Draw(control, provider);
-	}
+	DrawWithPainter(control, provider, simple_btn_bg_token);
 
 	if (control->GetFocused())
 	{

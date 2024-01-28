@@ -1,4 +1,5 @@
 #include "ElementPainter.h"
+#include "Style.h"
 #include "../Control.h"
 
 FudgetElementPainter::FudgetElementPainter() : Base(SpawnParams(Guid::New(), TypeInitializer))
@@ -8,7 +9,14 @@ FudgetElementPainter::FudgetElementPainter() : Base(SpawnParams(Guid::New(), Typ
 
 void FudgetElementPainter::DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token)
 {
-
+	FudgetTheme *theme = control->GetActiveTheme();
+	FudgetStyle *style = control->GetActiveStyle();
+	if (theme != nullptr && style != nullptr)
+	{
+		FudgetElementPainter *painter = style->GetElementPainter(control->GetActiveTheme(), painter_token);
+		if (painter != nullptr)
+			painter->Draw(control, provider);
+	}
 }
 
 FudgetPainterPropertyProvider::FudgetPainterPropertyProvider() : Base(SpawnParams(Guid::New(), TypeInitializer)), _delta_time(-1.0f)
