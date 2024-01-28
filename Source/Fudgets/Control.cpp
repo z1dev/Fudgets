@@ -4,6 +4,7 @@
 #include "Fudget.h"
 #include "Styling/Themes.h"
 #include "Styling/ElementPainter.h"
+#include "MarginStructs.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Render2D/TextLayoutOptions.h"
@@ -356,6 +357,12 @@ void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
 	Render2D::FillRectangle(Rectangle(pos, size), color);
 }
 
+void FudgetControl::FillRectangle(const Rectangle &rect, Color color) const
+{
+	CacheGlobalToLocal();
+	Render2D::FillRectangle(CachedLocalToGlobal(rect), color);
+}
+
 void FudgetControl::FillRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4) const
 {
 	CacheGlobalToLocal();
@@ -368,6 +375,12 @@ void FudgetControl::DrawRectangle(Float2 pos, Float2 size, Color color, float th
 	pos = CachedLocalToGlobal(pos);
 
 	Render2D::DrawRectangle(Rectangle(pos, size), color, color, color, color, thickness);
+}
+
+void FudgetControl::DrawRectangle(const Rectangle &rect, Color color, float thickness) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawRectangle(LocalToGlobal(rect), color, color, color, color, thickness);
 }
 
 void FudgetControl::DrawRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4, float thickness) const
@@ -560,6 +573,77 @@ void FudgetControl::FillTriangle(const Float2& p0, const Float2& p1, const Float
 	Render2D::FillTriangle(CachedLocalToGlobal(p0), CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color);
 }
 
+void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, const Rectangle &rect) const
+{
+	if (area.RectType == FudgetRectType::Color)
+	{
+		FillRectangle(rect, area.Color);
+		return;
+	}
+
+	//CacheGlobalToLocal();
+	//Rectangle r = LocalToGlobal(rect);
+
+	if (area.RectType == FudgetRectType::Texture)
+	{
+		DrawTexture(area.Texture, rect);
+		return;
+	}
+	if (area.RectType == FudgetRectType::TextureP)
+	{
+		DrawTexturePoint(area.Texture->GetTexture(), rect);
+		return;
+	}
+	if (area.RectType == FudgetRectType::Sprite)
+	{
+		DrawSprite(area.SpriteHandle, rect);
+		return;
+	}
+	if (area.RectType == FudgetRectType::SpriteP)
+	{
+		DrawSpritePoint(area.SpriteHandle, rect);
+		return;
+	}
+
+	Float4 border;
+	Float4 borderUV;
+	Float2 siz = 0.f;
+	if (area.Texture.Get() != nullptr)
+		siz = area.Texture->Size();
+	else
+		siz = area.SpriteHandle.Atlas->GetSprite(area.SpriteHandle.Index).Area.Size;
+	border = Float4(area.Borders9P.X, siz.X - area.Borders9P.Y, area.Borders9P.Z, siz.Y - area.Borders9P.W);
+	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+
+	if (area.RectType == FudgetRectType::Texture9)
+	{
+		Draw9SlicingTexture(area.Texture, rect, border, borderUV);
+		return;
+	}
+	if (area.RectType == FudgetRectType::Texture9P)
+	{
+		Draw9SlicingTexturePoint(area.Texture, rect, border, borderUV);
+		return;
+	}
+
+	if (area.RectType == FudgetRectType::Sprite9)
+	{
+		Draw9SlicingSprite(area.SpriteHandle, rect, border, borderUV);
+		return;
+	}
+	if (area.RectType == FudgetRectType::Texture9P)
+	{
+		Draw9SlicingSpritePoint(area.SpriteHandle, rect, border, borderUV);
+		return;
+	}
+}
+
+void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, Float2 pos, Float2 siz) const
+{
+	DrawFillArea(area, Rectangle(pos, siz));
+}
+
+
 void FudgetControl::ClearStyleCache(bool inherited)
 {
 	_cached_theme = nullptr;
@@ -640,7 +724,23 @@ FudgetTheme* FudgetControl::GetActiveTheme()
 	return _cached_theme;
 }
 
-Color FudgetControl::GetStyleColor(FudgetToken token)
+bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style != nullptr)
+	{
+		Variant var;
+		if (style->GetResourceValue(GetActiveTheme(), token, var))
+		{
+			result = var;
+			return true;
+			// TODO: cache if needed
+		}
+	}
+	return false;
+}
+
+bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result)
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style != nullptr)
@@ -649,14 +749,17 @@ Color FudgetControl::GetStyleColor(FudgetToken token)
 		if (style->GetResourceValue(GetActiveTheme(), token, var))
 		{
 			if (var.Type.Type == VariantType::Color)
-				return var.AsColor();
-			// TODO: cache!
+			{
+				result = var.AsColor();
+				return true;
+			}
+			// TODO: cache if needed
 		}
 	}
-	return Color::White;
+	return false;
 }
 
-float FudgetControl::GetStyleFloat(FudgetToken token)
+bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result)
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style != nullptr)
@@ -665,11 +768,14 @@ float FudgetControl::GetStyleFloat(FudgetToken token)
 		if (style->GetResourceValue(GetActiveTheme(), token, var))
 		{
 			if (var.Type.Type == VariantType::Float)
-				return var.AsFloat;
-			// TODO: cache!
+			{
+				result = var.AsFloat;
+				return true;
+			}
+			// TODO: cache if needed
 		}
 	}
-	return 0.0f;
+	return false;
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)

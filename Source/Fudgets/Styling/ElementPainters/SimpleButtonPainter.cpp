@@ -2,6 +2,7 @@
 #include "../../Control.h"
 #include "../Themes.h"
 #include "../Style.h"
+#include "../../MarginStructs.h"
 
 #include "Engine/Core/Math/Vector2.h"
 
@@ -17,11 +18,31 @@ FudgetButtonBackgroundPainter::FudgetButtonBackgroundPainter() : Base()
 
 void FudgetButtonBackgroundPainter::Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider)
 {
-	Color Dark = control->GetStyleColor(FudgetThemes::ButtonBackgroundPressedToken);
-	Color Light = control->GetStyleColor(FudgetThemes::ButtonBackgroundHoverToken);
-	Color Normal = control->GetStyleColor(FudgetThemes::ButtonBackgroundNormalToken);
+	Color Dark = Color::Black;
+	control->GetStyleColor(FudgetThemes::ButtonBackgroundPressedToken, Dark);
+	Color Light = Color::White;
+	control->GetStyleColor(FudgetThemes::ButtonBackgroundHoverToken, Light);
 
-	float TimeToAnimate = control->GetStyleFloat(FudgetThemes::ButtonHoverAnimationTimeToken);
+	bool is_area = false;
+	FudgetFillAreaSettings area;
+	Color Normal = Color::LightGray;
+	if (!control->GetStyleColor(FudgetThemes::ButtonBackgroundNormalToken, Normal))
+	{
+		Variant var;
+		if (control->GetStyleValue(FudgetThemes::ButtonBackgroundNormalToken, var))
+		{
+			area = *var.AsStructure<FudgetFillAreaSettings>();
+			if (area.RectType == FudgetRectType::Color)
+			{
+				Normal = area.Color;
+			}
+			else
+				is_area = true;
+		}
+	}
+
+	float TimeToAnimate = 0.0f;
+	control->GetStyleFloat(FudgetThemes::ButtonHoverAnimationTimeToken, TimeToAnimate);
 
 	// Fetching values from the control
 
@@ -60,22 +81,29 @@ void FudgetButtonBackgroundPainter::Draw(FudgetControl *control, FudgetPainterPr
 			hover_time = 0.0f;
 	}
 
-	// Set the color to draw the button
+	if (!is_area)
+	{
+		// Set the color to draw the button
 
-	Color draw_color = mouse_is_over && mouse_is_pressed ? Dark : mouse_is_over ? Light : Normal;
+		Color draw_color = mouse_is_over && mouse_is_pressed ? Dark : mouse_is_over ? Light : Normal;
 
-	// Changing color if hover time is not 0. It represents the percent of "how much" the mouse is over the button
+		// Changing color if hover time is not 0. It represents the percent of "how much" the mouse is over the button
 
-	if (hover_time != 0.0f)
-		draw_color = Normal * (TimeToAnimate - hover_time) / TimeToAnimate + Light * (hover_time) / TimeToAnimate;
+		if (hover_time != 0.0f)
+			draw_color = Normal * (TimeToAnimate - hover_time) / TimeToAnimate + Light * (hover_time) / TimeToAnimate;
 
-	// Storing new value of hover time
+		// Storing new value of hover time
 
-	provider->SetStoredFloat(hover_token, hover_time);
+		provider->SetStoredFloat(hover_token, hover_time);
 
-	// The drawing part
+		// The drawing part
 
-	control->FillRectangle(Float2(0.f), control->GetSize(), draw_color);
+		control->FillRectangle(Float2(0.f), control->GetSize(), draw_color);
+	}
+	else
+	{
+		control->DrawFillArea(area, Float2(0.f), control->GetSize());
+	}
 }
 
 
@@ -90,8 +118,11 @@ void FudgetSimpleButtonPainter::Draw(FudgetControl *control, FudgetPainterProper
 
 	if (control->GetFocused())
 	{
-		Color BorderColor = control->GetStyleColor(FudgetThemes::ButtonFocusRectangleColorToken);
-		control->DrawRectangle(Float2(0.f), control->GetSize(), BorderColor, control->GetStyleFloat(FudgetThemes::ButtonFocusRectangleWidthToken));
+		Color BorderColor = Color::Black;
+		control->GetStyleColor(FudgetThemes::ButtonFocusRectangleColorToken, BorderColor);
+		float borderWidth = 1.0f;
+		control->GetStyleFloat(FudgetThemes::ButtonFocusRectangleWidthToken, borderWidth);
+		control->DrawRectangle(Float2(0.f), control->GetSize(), BorderColor, borderWidth);
 	}
 }
 

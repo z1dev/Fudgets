@@ -17,7 +17,7 @@ FudgetContainer::FudgetContainer(FudgetControlFlags flags) : FudgetContainer(Spa
 }
 
 FudgetContainer::FudgetContainer(const SpawnParams &params, FudgetControlFlags flags) : Base(params, flags | FudgetControlFlags::ContainerControl),
-	fill_color(1.0f), fill_background(false),_layout(nullptr), _changing(false), _width_from_layout(false), _height_from_layout(false),
+	FillColor(1.0f), DrawFilledBackground(false),_layout(nullptr), _changing(false), _width_from_layout(false), _height_from_layout(false),
 	_min_width_from_layout(false), _max_width_from_layout(false), _min_height_from_layout(false), _max_height_from_layout(false)
 {
 
@@ -433,9 +433,9 @@ void FudgetContainer::Draw()
 {
 	RequestLayout();
 
-	if (fill_background)
+	if (DrawFilledBackground)
 	{
-		FillRectangle(Float2(0.0f), GetSize(), fill_color);
+		FillRectangle(Float2(0.0f), GetSize(), FillColor);
 	}
 
 	for (FudgetControl *c : _children)

@@ -27,6 +27,7 @@ struct TextRange;
 class GPUTexture;
 class GPUTextureView;
 class Font;
+struct FudgetFillAreaSettings;
 
 
 /// <summary>
@@ -614,6 +615,13 @@ public:
 	/// Wrapper to Render2D's FillRectangle.
 	/// </summary>
 	/// <param name="rect">The rectangle to fill.</param>
+	/// <param name="color">Color to use for filling</param>
+	API_FUNCTION() void FillRectangle(const Rectangle &rect, Color color) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's FillRectangle.
+	/// </summary>
+	/// <param name="rect">The rectangle to fill.</param>
 	/// <param name="color1">The color to use for upper left vertex.</param>
 	/// <param name="color2">The color to use for upper right vertex.</param>
 	/// <param name="color3">The color to use for bottom right vertex.</param>
@@ -632,7 +640,15 @@ public:
 	/// <summary>
 	/// Wrapper to Render2D's DrawRectangle.
 	/// </summary>
-	/// <param name="rect">The rectangle to fill.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">Color to use for filling</param>
+	/// <param name="thickness">Thickness of the rectangle's lines</param>
+	API_FUNCTION() void DrawRectangle(const Rectangle &rect, Color color, float thickness = 1.2f) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawRectangle.
+	/// </summary>
+	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color1">The color to use for upper left vertex.</param>
 	/// <param name="color2">The color to use for upper right vertex.</param>
 	/// <param name="color3">The color to use for bottom right vertex.</param>
@@ -870,6 +886,10 @@ public:
 	/// <param name="color">The color.</param>
 	API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color) const;
 
+
+	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, const Rectangle &rect) const;
+	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, Float2 pos, Float2 siz) const;
+
 	// Styling
 
 	/// <summary>
@@ -938,20 +958,31 @@ public:
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
 	/// <summary>
+	/// Returns a value for the control based on a theme token. The returned value depends on both the active style and
+	/// the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the value in the active style</param>
+	/// <param name="result">Variable that receives the value</param>
+	/// <returns>Whether the token was found as a valid value token</returns>
+	API_FUNCTION() virtual bool GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result);
+
+	/// <summary>
 	/// Returns a color for the control based on a theme token. The returned value depends on both the active style and
 	/// the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token associated with the color in the active style</param>
-	/// <returns>The color for the token</returns>
-	API_FUNCTION() virtual Color GetStyleColor(FudgetToken token);
+	/// <param name="result">Variable that receives the color</param>
+	/// <returns>Whether the token was found as a valid color token</returns>
+	API_FUNCTION() virtual bool GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result);
 
 	/// <summary>
 	/// Returns a float value for the control based on a theme token. The returned value depends on both the active style
 	/// and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token associated with the float value in the active style</param>
-	/// <returns>The float for the token</returns>
-	API_FUNCTION() virtual float GetStyleFloat(FudgetToken token);
+	/// <param name="result">Variable that receives the float</param>
+	/// <returns>Whether the token was found as a valid float token</returns>
+	API_FUNCTION() virtual bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
 
 	// Serialization
 

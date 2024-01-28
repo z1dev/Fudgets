@@ -1,10 +1,12 @@
 #include "Themes.h"
 #include "Token.h"
+#include "../MarginStructs.h""
 // temp
 #include "ElementPainters/SimpleButtonPainter.h"
 
 #include "Engine/Core/Math/Color.h"
-
+#include "Engine/Content/Content.h"
+#include "Engine/Content/Assets/Texture.h"
 
 FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer))
 {
@@ -102,6 +104,19 @@ void FudgetThemes::Initialize()
 	_default_style->SetResourceOverride(ButtonFocusRectangleWidthToken, FocusRectangleWidthToken);
 
 	_default_style->SetPainterOverride(RegisterToken(TEXT("SimpleButtonBackground")), ButtonBackgroundPainterToken);
+
+	FudgetStyle *_btn_style = _default_style->CreateInheritedStyle(RegisterToken(TEXT("FudgetSimpleButton")));
+
+	FudgetStyle *_next_style = _btn_style->CreateInheritedStyle(RegisterToken(TEXT("TestButtonStyle")));
+	_next_style->SetResourceOverride(ButtonBackgroundPressedToken, ColorLightToken);
+	_next_style->SetResourceOverride(ButtonBackgroundHoverToken, ColorDarkToken);
+
+	AssetReference<Texture> tex = Content::Load<Texture>(TEXT("g:/projects/Flax/UIPluginTest/Content/UI/Images/bg01.flax"));
+
+	//FudgetFillAreaSettings texsettings(tex, Float4(16.f), true);
+	FudgetFillAreaSettings texsettings(tex, true);
+	Variant texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings);
+	_next_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
 
 	FudgetSimpleButtonPainter *sbdrawer = New<FudgetSimpleButtonPainter>();
 	_element_map[RegisterToken(TEXT("SimpleButton"))] = sbdrawer;

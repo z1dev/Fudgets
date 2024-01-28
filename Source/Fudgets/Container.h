@@ -77,12 +77,12 @@ public:
     /// <summary>
     /// The color to use to fill the background of this container if fill_background is true
     /// </summary>
-    API_FIELD() Color fill_color;
+    API_FIELD() Color FillColor;
 
     /// <summary>
     /// Whether the fill_color is used to fill the background of this container. Mainly for testing
     /// </summary>
-    API_FIELD() bool fill_background;
+    API_FIELD() bool DrawFilledBackground;
 
     /// <summary>
     /// Inserts a control into the layout of this container. If an index is provided, the controls with same or higher

@@ -157,7 +157,8 @@ public:
 	API_FUNCTION() static FudgetTheme* GetTheme(FudgetToken token);
 
 	/// <summary>
-	/// Creates a copy of the theme if the source token represents a theme and the destination token is not taken.
+	/// Creates a copy of the theme if the source token represents a theme and the destination token is not taken already.
+	/// Themes not created this way are not registered and can't be used.
 	/// </summary>
 	/// <param name="source_token">Token for theme to duplicate</param>
 	/// <param name="dest_token">Token of the new theme</param>
