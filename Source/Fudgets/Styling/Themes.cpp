@@ -41,6 +41,8 @@ const FudgetToken FudgetThemes::ButtonHoverAnimationTimeToken = FudgetThemes::Re
 const FudgetToken FudgetThemes::ButtonFocusRectangleColorToken = FudgetThemes::RegisterToken(TEXT("ButtonFocusRectangleColor"));
 const FudgetToken FudgetThemes::ButtonFocusRectangleWidthToken = FudgetThemes::RegisterToken(TEXT("ButtonFocusRectangleWidth"));
 
+const FudgetToken FudgetThemes::ButtonBackgroundPainterToken = RegisterToken(TEXT("ButtonBackground"));
+
 
 //FudgetThemes::FudgetThemes() : Base(SpawnParams(Guid::New(), TypeInitializer))
 //{
@@ -77,6 +79,7 @@ void FudgetThemes::Initialize()
 	main_theme->_resources.Add(FocusRectangleWidthToken, 4.5f);
 
 	main_theme->_painter_ids.Add(RegisterToken(TEXT("FudgetSimpleButton")), RegisterToken(TEXT("SimpleButton")));
+	main_theme->_painter_ids.Add(ButtonBackgroundPainterToken, ButtonBackgroundPainterToken);
 
 	FudgetStyle *_default_style = New<FudgetStyle>(TEXT("DefaultStyle"));
 	_default_style->SetResourceOverride(ButtonBackgroundNormalToken, ColorNormalToken);
@@ -86,9 +89,13 @@ void FudgetThemes::Initialize()
 	_default_style->SetResourceOverride(ButtonFocusRectangleColorToken, ColorAccentToken);
 	_default_style->SetResourceOverride(ButtonFocusRectangleWidthToken, FocusRectangleWidthToken);
 
+	_default_style->SetPainterOverride(RegisterToken(TEXT("SimpleButtonBackground")), ButtonBackgroundPainterToken);
+
 	FudgetSimpleButtonPainter *sbdrawer = New<FudgetSimpleButtonPainter>();
 	_element_map[RegisterToken(TEXT("SimpleButton"))] = sbdrawer;
 
+	FudgetButtonBackgroundPainter *bbdrawer = New<FudgetButtonBackgroundPainter>();
+	_element_map[ButtonBackgroundPainterToken] = bbdrawer;
 }
 
 void FudgetThemes::Uninitialize()

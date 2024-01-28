@@ -5,18 +5,18 @@
 
 #include "Engine/Core/Math/Vector2.h"
 
-const FudgetToken FudgetSimpleButtonPainter::hover_token = FudgetThemes::RegisterToken(TEXT("SimpleButtonHoverTime"));
+const FudgetToken FudgetButtonBackgroundPainter::hover_token = FudgetThemes::RegisterToken(TEXT("SimpleButtonHoverTime"));
+
+const FudgetToken FudgetSimpleButtonPainter::simple_btn_bg_token = FudgetThemes::RegisterToken(TEXT("SimpleButtonBackground"));
 
 
-FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
+FudgetButtonBackgroundPainter::FudgetButtonBackgroundPainter() : Base()
 {
-	
+
 }
 
-void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
+void FudgetButtonBackgroundPainter::Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider)
 {
-	FudgetControl *control = provider->GetSourceControl();
-
 	Color Dark = control->GetStyleColor(FudgetThemes::ButtonBackgroundPressedToken);
 	Color Light = control->GetStyleColor(FudgetThemes::ButtonBackgroundHoverToken);
 	Color Normal = control->GetStyleColor(FudgetThemes::ButtonBackgroundNormalToken);
@@ -76,6 +76,24 @@ void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
 	// The drawing part
 
 	control->FillRectangle(Float2(0.f), control->GetSize(), draw_color);
+}
+
+
+FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
+{
+	
+}
+
+void FudgetSimpleButtonPainter::Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider)
+{
+	FudgetTheme *theme = control->GetActiveTheme();
+	FudgetStyle *style = control->GetActiveStyle();
+	if (theme != nullptr && style != nullptr)
+	{
+		FudgetElementPainter *bgpainter = style->GetElementPainter(control->GetActiveTheme(), simple_btn_bg_token);
+		if (bgpainter != nullptr)
+			bgpainter->Draw(control, provider);
+	}
 
 	if (control->GetFocused())
 	{

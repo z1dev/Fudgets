@@ -2,8 +2,10 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
+#include "Engine/Core/Math/Vector4.h"
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Types/BaseTypes.h"
+#include "Engine/Core/Types/Span.h"
 #include "Engine/Input/Enums.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Serialization/Serialization.h"
@@ -17,6 +19,15 @@ class FudgetContainer;
 class FudgetGUIRoot;
 class FudgetStyle;
 class FudgetTheme;
+class TextureBase;
+struct SpriteHandle;
+class MaterialBase;
+struct TextLayoutOptions;
+struct TextRange;
+class GPUTexture;
+class GPUTextureView;
+class Font;
+
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -409,6 +420,68 @@ public:
 	/// <returns>The coordinate relative to the top-left corner of the control</returns>
 	API_FUNCTION() virtual Float2 GlobalToLocal(Float2 global) const;
 
+	/// <summary>
+	/// Converts a rectangle from local control space to global UI space.
+	/// </summary>
+	/// <param name="local">The rectangle with a location relative to the top-left corner of the control</param>
+	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
+	API_FUNCTION() virtual Rectangle LocalToGlobal(const Rectangle &local) const;
+
+	/// <summary>
+	/// Converts a rectangle from global UI space to local control space.
+	/// </summary>
+	/// <param name="global">TThe rectangle with a location relative to the top-left corner of the UI screen</param>
+	/// <returns>The coordinate relative to the top-left corner of the control</returns>
+	API_FUNCTION() virtual Rectangle GlobalToLocal(const Rectangle &global) const;
+
+	/// <summary>
+	/// Calculates and saves the difference between global to local and stores it. This is necessary before the first
+	/// CachedGlobalToLocal or CachedLocalToGlobal call on each draw frame, but calling it once is enough. Does nothing if this
+	/// value has already been saved. The calculated value is invalidated at the start of each Draw but it can also be invalidated
+	/// with InvalidateGlobalToLocalCache
+	/// </summary>
+	API_FUNCTION() void CacheGlobalToLocal() const;
+
+	/// <summary>
+	/// Discards the result of the precalculated global to local difference, that was calculated in CacheGlobalToLocal.
+	/// Calling CacheGlobalToLocal will calculate the value again, which is necessary before the first call to
+	/// CachedGlobalToLocal or CachedLocalToGlobal.
+	/// Avoid calling this function if unnecessary, because it will force recalculation of the cached difference. 
+	/// </summary>
+	API_FUNCTION() void InvalidateGlobalToLocalCache() const;
+
+	/// <summary>
+	/// Converts a coordinate from local control space to global UI space. Can be used multiple times after CacheGlobalToLocal was
+	/// called once on the current draw frame.
+	/// </summary>
+	/// <param name="local">The coordinate relative to the top-left corner of the control</param>
+	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
+	API_FUNCTION() virtual Float2 CachedLocalToGlobal(Float2 local) const;
+
+	/// <summary>
+	/// Converts a coordinate from global UI space to local control space. Can be used multiple times after CacheGlobalToLocal was
+	/// called once on the current draw frame.
+	/// </summary>
+	/// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
+	/// <returns>The coordinate relative to the top-left corner of the control</returns>
+	API_FUNCTION() virtual Float2 CachedGlobalToLocal(Float2 global) const;
+
+	/// <summary>
+	/// Converts a rectangle from local control space to global UI space. Can be used multiple times after CacheGlobalToLocal was
+	/// called once on the current draw frame.
+	/// </summary>
+	/// <param name="local">The rectangle with a location relative to the top-left corner of the control</param>
+	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
+	API_FUNCTION() virtual Rectangle CachedLocalToGlobal(const Rectangle &local) const;
+
+	/// <summary>
+	/// Converts a rectangle from global UI space to local control space. Can be used multiple times after CacheGlobalToLocal was
+	/// called once on the current draw frame.
+	/// </summary>
+	/// <param name="global">TThe rectangle with a location relative to the top-left corner of the UI screen</param>
+	/// <returns>The coordinate relative to the top-left corner of the control</returns>
+	API_FUNCTION() virtual Rectangle CachedGlobalToLocal(const Rectangle &global) const;
+
 	// Control flags
 
 	/// <summary>
@@ -494,25 +567,6 @@ public:
 	/// </summary>
 	API_FUNCTION() virtual void OnMouseLeave() {}
 
-	// Render2D wrapper:
-
-	/// <summary>
-	/// Wrapper to Render2D's FillRectangle.
-	/// </summary>
-	/// <param name="pos">Position relative to the control</param>
-	/// <param name="size">Size of control</param>
-	/// <param name="color">Color to use for filling</param>
-	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
-
-	/// <summary>
-	/// Wrapper to Render2D's FillRectangle.
-	/// </summary>
-	/// <param name="pos">Position relative to the control</param>
-	/// <param name="size">Size of control</param>
-	/// <param name="color">Color to use for filling</param>
-	/// <param name="thickness">Thickness of the rectangle's lines</param>
-	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f) const;
-
 	/// <summary>
 	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
 	/// </summary>
@@ -546,6 +600,276 @@ public:
 	/// </summary>
 	API_PROPERTY() virtual void SetFocused(bool value);
 
+	// Render2D wrapper:
+
+	/// <summary>
+	/// Wrapper to Render2D's FillRectangle.
+	/// </summary>
+	/// <param name="pos">Position relative to the control</param>
+	/// <param name="size">Size of control</param>
+	/// <param name="color">Color to use for filling</param>
+	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's FillRectangle.
+	/// </summary>
+	/// <param name="rect">The rectangle to fill.</param>
+	/// <param name="color1">The color to use for upper left vertex.</param>
+	/// <param name="color2">The color to use for upper right vertex.</param>
+	/// <param name="color3">The color to use for bottom right vertex.</param>
+	/// <param name="color4">The color to use for bottom left vertex.</param>
+	API_FUNCTION() void FillRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawRectangle.
+	/// </summary>
+	/// <param name="pos">Position relative to the control</param>
+	/// <param name="size">Size of control</param>
+	/// <param name="color">Color to use for filling</param>
+	/// <param name="thickness">Thickness of the rectangle's lines</param>
+	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawRectangle.
+	/// </summary>
+	/// <param name="rect">The rectangle to fill.</param>
+	/// <param name="color1">The color to use for upper left vertex.</param>
+	/// <param name="color2">The color to use for upper right vertex.</param>
+	/// <param name="color3">The color to use for bottom right vertex.</param>
+	/// <param name="color4">The color to use for bottom left vertex.</param>
+	/// <param name="thickness">The line thickness.</param>
+	API_FUNCTION() void DrawRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4, float thickness = 1.0f) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's Draw9SlicingTexture.
+	/// </summary>
+	/// <param name="t">The texture to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom)</param>
+	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom)</param>
+	/// <param name="color">The color to multiply all texture pixels</param>
+	/// <returns></returns>
+	API_FUNCTION() void Draw9SlicingTexture(TextureBase *t, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's Draw9SlicingTexturePoint.
+	/// </summary>
+	/// <param name="t">The texture to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom)</param>
+	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom)</param>
+	/// <param name="color">The color to multiply all texture pixels</param>
+	/// <returns></returns>
+	API_FUNCTION() void Draw9SlicingTexturePoint(TextureBase* t, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's Draw9SlicingSprite
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom).</param>
+	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom).</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void Draw9SlicingSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's Draw9SlicingSpritePoint
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom).</param>
+	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom).</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawBezier
+	/// </summary>
+	/// <param name="p1">The start point.</param>
+	/// <param name="p2">The first control point.</param>
+	/// <param name="p3">The second control point.</param>
+	/// <param name="p4">The end point.</param>
+	/// <param name="color">The line color</param>
+	/// <param name="thickness">The line thickness.</param>
+	API_FUNCTION() void DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness = 1.0f) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawBlur
+	/// </summary>
+	/// <param name="rect">The target rectangle to draw (blurs its background).</param>
+	/// <param name="blurStrength">The blur strength defines how blurry the background is. Larger numbers increase blur, resulting in a larger runtime cost on the GPU.</param>
+	API_FUNCTION() void DrawBlur(const Rectangle& rect, float blurStrength) const;
+
+	/// <summary>
+    /// Wrapper to Render2D's DrawLine
+    /// </summary>
+    /// <param name="p1">The start point.</param>
+    /// <param name="p2">The end point.</param>
+    /// <param name="color">The line color.</param>
+    /// <param name="thickness">The line thickness.</param>
+	API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color, float thickness = 1.0f) const;
+
+    /// <summary>
+    /// Wrapper to Render2D's DrawLine
+    /// </summary>
+    /// <param name="p1">The start point.</param>
+    /// <param name="p2">The end point.</param>
+    /// <param name="color1">The line start color.</param>
+    /// <param name="color2">The line end color.</param>
+    /// <param name="thickness">The line thickness.</param>
+    API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color1, const Color& color2, float thickness = 1.0f) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawMaterial
+	/// </summary>
+	/// <param name="material">The material to render. Must be a GUI material type.</param>
+	/// <param name="rect">The target rectangle to draw.</param>
+	/// <param name="color">The color to use.</param>
+	API_FUNCTION() void DrawMaterial(MaterialBase* material, const Rectangle& rect, const Color& color) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawSprite
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawSpritePoint
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawText
+	/// </summary>
+	/// <param name="font">The font to use.</param>
+	/// <param name="text">The text to render.</param>
+	/// <param name="color">The text color.</param>
+	/// <param name="location">The text location.</param>
+	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawText
+	/// </summary>
+	/// <param name="font">The font to use.</param>
+	/// <param name="text">The text to render.</param>
+	/// <param name="textRange">The input text range (substring range of the input text parameter).</param>
+	/// <param name="color">The text color.</param>
+	/// <param name="location">The text location.</param>
+	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawText
+	/// </summary>
+	/// <param name="font">The font to use.</param>
+	/// <param name="text">The text to render.</param>
+	/// <param name="color">The text color.</param>
+	/// <param name="layout">The text layout properties.</param>
+	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawText 
+	/// </summary>
+	/// <param name="font">The font to use.</param>
+	/// <param name="text">The text to render.</param>
+	/// <param name="textRange">The input text range (substring range of the input text parameter).</param>
+	/// <param name="color">The text color.</param>
+	/// <param name="layout">The text layout properties.</param>
+	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexture 
+	/// </summary>
+	/// <param name="rt">The render target handle to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTexture(GPUTextureView* rt, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexture 
+	/// </summary>
+	/// <param name="t">The texture to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTexture(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexture 
+	/// </summary>
+	/// <param name="t">The texture to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexturePoint 
+	/// </summary>
+	/// <param name="t">The texture to draw.</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexturedTriangles 
+	/// </summary>
+	/// <param name="t">The texture.</param>
+	/// <param name="vertices">The vertices array.</param>
+	/// <param name="uvs">The uvs array.</param>
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexturedTriangles 
+	/// </summary>
+	/// <param name="t">The texture.</param>
+	/// <param name="vertices">The vertices array.</param>
+	/// <param name="uvs">The uvs array.</param>
+	/// <param name="color">The color.</param>
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Color& color) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexturedTriangles 
+	/// </summary>
+	/// <param name="t">The texture.</param>
+	/// <param name="vertices">The vertices array.</param>
+	/// <param name="uvs">The uvs array.</param>
+	/// <param name="colors">The colors array.</param>
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's DrawTexturedTriangles 
+	/// </summary>
+	/// <param name="t">The texture.</param>
+	/// <param name="indices">The indices array.</param>
+	/// <param name="vertices">The vertices array.</param>
+	/// <param name="uvs">The uvs array.</param>
+	/// <param name="colors">The colors array.</param>
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<uint16>& indices, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's FillTriangles
+	/// </summary>
+	/// <param name="vertices">The vertices array.</param>
+	/// <param name="colors">The colors array.</param>
+	/// <param name="useAlpha">If true alpha blending will be enabled.</param>
+	API_FUNCTION() void FillTriangles(const Span<Float2>& vertices, const Span<Color>& colors, bool useAlpha) const;
+
+	/// <summary>
+	/// Wrapper to Render2D's FillTriangle
+	/// </summary>
+	/// <param name="p0">The first point.</param>
+	/// <param name="p1">The second point.</param>
+	/// <param name="p2">The third point.</param>
+	/// <param name="color">The color.</param>
+	API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color) const;
+
 	// Styling
 
 	/// <summary>
@@ -572,7 +896,13 @@ public:
 	/// <returns>An object that can provide properties to an ElementPainter</returns>
 	API_PROPERTY() FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return _painter_provider; }
 
-	API_PROPERTY() void SetPropertyProvider(FudgetPainterPropertyProvider *new_provider);
+	/// <summary>
+	/// Sets an object that can provide properties while painting this control. For example a button might need to
+	/// provide whether it is pressed or down. Not every provider can give the required values, and usually zero defaults
+	/// are used in that case.
+	/// </summary>
+	/// <param name="value">Property provider to set for the control</param>
+	API_PROPERTY() void SetPainterPropertyProvider(FudgetPainterPropertyProvider *value);
 
 	/// <summary>
 	/// Gets the style that was set explicitly, that decides the look of the control
@@ -658,6 +988,12 @@ private:
 	Float2 _hint_size;
 	Float2 _min_size;
 	Float2 _max_size;
+
+	// This is reset on each Draw and calculated when needed to simplify GlobalToLocal and LocalToGlobal in draw calls.
+	// It's only used during the drawing functions. It can be manually reset when needed
+	mutable Float2 _cached_global_to_local_translation;
+	// True when _cached_global_to_local_translation is valid.
+	mutable bool _g2l_was_cached;
 
 	// Used locally to avoid double calling functions from the parent.
 	bool _changing;

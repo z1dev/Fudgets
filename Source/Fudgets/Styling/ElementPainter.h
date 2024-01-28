@@ -5,6 +5,8 @@
 
 #include "Token.h"
 
+#include <map>
+
 class FudgetControl;
 class FudgetPainterPropertyProvider;
 
@@ -21,10 +23,19 @@ public:
 	FudgetElementPainter();
 
 	/// <summary>
-	/// Draws an element or full control completely, using the data from the provider to know what state to draw.
+	/// Draws an element of a control or complete control, using the data from the provider for the state to draw.
 	/// </summary>
+	/// <param name="control">Control whose theme and style is used for drawing</param>
 	/// <param name="provider">Property provider that can supply the painter with data about the state to draw</param>
-	API_FUNCTION() virtual void Draw(FudgetPainterPropertyProvider *provider) = 0;
+	API_FUNCTION() virtual void Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider) = 0;
+
+	/// <summary>
+	/// Retrieves an element painter from the control's active style with the passed token and calls its Draw function.
+	/// </summary>
+	/// <param name="control">Control whose theme and style is used for drawing</param>
+	/// <param name="provider">Object providing state values for the painter</param>
+	/// <param name="painter_token">Token of painter overriden in the style</param>
+	API_FUNCTION() void DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token);
 };
 
 /// <summary>
@@ -42,12 +53,7 @@ public:
 	/// Creates the property provider with the specified control as the source for the values that painters can request.
 	/// </summary>
 	/// <param name="_source_control">The control that holds the properties needed for drawing</param>
-	FudgetPainterPropertyProvider(FudgetControl *_source_control);
-
-	/// <summary>
-	/// Returns the control associated with this property provider to provide properties for.
-	/// </summary>
-	API_PROPERTY() FudgetControl* GetSourceControl() const { return _source_control; }
+	FudgetPainterPropertyProvider();
 
 	/// <summary>
 	/// Called by ElementPainter derived objects when drawing to get generic properties needed for showing the state of the control, that
@@ -93,50 +99,41 @@ public:
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Returns the value associated
-	/// to the token if it has been stored.
-	/// The property provider might not support storage for value types required by a painter, so the painter has
-	/// to make sure to use sane defaults.
+	/// with the token if it has been stored.
 	/// </summary>
 	/// <param name="token">Token to the value to get</param>
 	/// <param name="result">The result on success</param>
 	/// <returns>Whether the call was successful and result was updated to the requested value</returns>
-	API_FUNCTION() virtual bool GetStoredVariant(FudgetToken token, API_PARAM(Out) Variant &result) const { return false; }
+	API_FUNCTION() virtual bool GetStoredValue(FudgetToken token, API_PARAM(Out) Variant &result) const;
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Sets or updates a value
-	/// associated to the token.
-	/// The property provider might not support storage for value types required by a painter, so the painter has
-	/// to make sure to use sane defaults.
+	/// associated with the token.
 	/// </summary>
 	/// <param name="token">Token to the value to set</param>
 	/// <param name="value">The updated value</param>
-	API_FUNCTION() virtual void SetStoredVariant(FudgetToken token, Variant value) {}
+	API_FUNCTION() virtual void SetStoredValue(FudgetToken token, const Variant &value);
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Returns the value associated
 	/// to the token if it has been stored.
-	/// The property provider might not support storage for value types required by a painter, so the painter has
-	/// to make sure to use sane defaults.
 	/// </summary>
 	/// <param name="token">Token to the value to get</param>
 	/// <param name="result">The result on success</param>
 	/// <returns>Whether the call was successful and result was updated to the requested value</returns>
-	API_FUNCTION() virtual bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const { return false; }
+	API_FUNCTION() virtual bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const;
 
 	/// <summary>
 	/// Allows element painters to store custom values in the control they need to draw. Sets or updates a value
 	/// associated to the token.
-	/// The property provider might not support storage for value types required by a painter, so the painter has
-	/// to make sure to use sane defaults.
 	/// </summary>
 	/// <param name="token">Token to the value to set</param>
 	/// <param name="value">The updated value</param>
-	API_FUNCTION() virtual void SetStoredFloat(FudgetToken token, float value) {}
+	API_FUNCTION() virtual void SetStoredFloat(FudgetToken token, float value);
 
 
 protected:
-	// The control we provide properties about.
-	FudgetControl *_source_control;
+	std::map<FudgetToken, Variant> _stored_values;
 
 	// Time since this painter was last passed to the property provider. Mostly used by controls that need to animate to draw.
 	// Automatically increased in a control's OnUpdate() if updating is enabled. It should be negative when not used.

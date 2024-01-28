@@ -52,8 +52,8 @@ public:
 	//FudgetThemes();
 	//~FudgetThemes();
 
-	static void Initialize();
-	static void Uninitialize();
+	API_FUNCTION() static void Initialize();
+	API_FUNCTION() static void Uninitialize();
 
 	// Token for the base theme that's guaranteed to be present.
 	static const FudgetToken MainThemeToken;
@@ -117,14 +117,16 @@ public:
 	static const FudgetToken ButtonFocusRectangleColorToken;
 	static const FudgetToken ButtonFocusRectangleWidthToken;
 
+	static const FudgetToken ButtonBackgroundPainterToken;
+
 
 
 	// Returns a token from the string that was used to create it. The same string always returns the same
 	// or equivalent token.
-	static FudgetToken GetToken(String token_name);
+	API_FUNCTION() static FudgetToken GetToken(String token_name);
 	// Registers a new token with a string. The string can be anything, but it's case sensitive. If duplicate_is_error
 	// is true, returns the FudgetToken::Invalid token.
-	static FudgetToken RegisterToken(String token_name, bool duplicate_is_error = false);
+	API_FUNCTION() static FudgetToken RegisterToken(String token_name, bool duplicate_is_error = false);
 
 	/// <summary>
 	/// Tries to retrieve an element painter object for a token string.

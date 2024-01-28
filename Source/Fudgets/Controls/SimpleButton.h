@@ -20,20 +20,18 @@ class FUDGETS_API FudgetSimpleButtonPropertyProvider : public FudgetPainterPrope
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetSimpleButtonPropertyProvider);
 public:
 
-	FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control);
+	FudgetSimpleButtonPropertyProvider(FudgetControl *source_control);
+
+	/// <summary>
+	/// Returns the control associated with this property provider to provide properties for.
+	/// </summary>
+	API_PROPERTY() FudgetControl* GetSourceControl() const { return _source_control; }
 
 	/// <inheritdoc />
 	bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
-
-	/// <inheritdoc />
-	bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
-
-	/// <inheritdoc />
-	void SetStoredFloat(FudgetToken token, float value) override;
-
-
 private:
-	std::map<FudgetToken, float> _floats;
+	// The control we provide properties about.
+	FudgetControl *_source_control;
 };
 
 

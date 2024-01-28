@@ -4,7 +4,7 @@
 
 
 
-FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control) : Base(_source_control)
+FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetControl *source_control) : Base(), _source_control(source_control)
 {
 
 }
@@ -28,20 +28,6 @@ bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken toke
 	}
 
 	return false;
-}
-
-bool FudgetSimpleButtonPropertyProvider::GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const
-{
-	auto it = _floats.find(token);
-	if (it == _floats.end())
-		return false;
-	result = it->second;
-	return true;
-}
-
-void FudgetSimpleButtonPropertyProvider::SetStoredFloat(FudgetToken token, float value)
-{
-	_floats[token] = value;
 }
 
 
@@ -73,8 +59,8 @@ void FudgetSimpleButton::Draw()
 	if (painter != nullptr)
 	{
 		if (GetPainterPropertyProvider() == nullptr)
-			SetPropertyProvider(New<FudgetSimpleButtonPropertyProvider>(this));
-		painter->Draw(GetPainterPropertyProvider());
+			SetPainterPropertyProvider(New<FudgetSimpleButtonPropertyProvider>(this));
+		painter->Draw(this, GetPainterPropertyProvider());
 	}
 
 	// TODO: add an element painter that draws the ERROR text over controls that get their token wrong.

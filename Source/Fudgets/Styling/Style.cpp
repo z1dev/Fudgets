@@ -226,13 +226,29 @@ FudgetStylePainterResource* FudgetStyle::GetPainterResource(FudgetToken token)
 	return nullptr;
 }
 
+FudgetElementPainter* FudgetStyle::GetElementPainter(FudgetTheme *theme, FudgetToken token)
+{
+	FudgetStylePainterResource *res = GetPainterResource(token);
+	if (res != nullptr && res->_value_override.IsValid())
+	{
+		auto painter = FudgetThemes::GetElementPainter(res->_value_override);
+		if (painter != nullptr)
+			return painter;
+	}
+	return nullptr;
+}
+
 FudgetElementPainter* FudgetStyle::GetControlPainter(FudgetTheme *theme, Array<FudgetToken> class_tokens)
 {
 	for (FudgetToken token : class_tokens)
 	{
 		FudgetStylePainterResource *res = GetPainterResource(token);
 		if (res != nullptr && res->_value_override.IsValid())
-			return FudgetThemes::GetElementPainter(res->_value_override);
+		{
+			auto painter = FudgetThemes::GetElementPainter(res->_value_override);
+			if (painter != nullptr)
+				return painter;
+		}
 		auto it = theme->_painter_ids.Find(token);
 		if (it != theme->_painter_ids.End())
 			return FudgetThemes::GetElementPainter((*it).Value);

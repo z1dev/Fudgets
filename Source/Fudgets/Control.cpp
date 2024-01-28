@@ -6,6 +6,7 @@
 #include "Styling/ElementPainter.h"
 
 #include "Engine/Render2D/Render2D.h"
+#include "Engine/Render2D/TextLayoutOptions.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Scripting/Scripting.h"
 #include "Engine/Core/Log.h"
@@ -21,8 +22,8 @@ FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, 
 
 FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false), _element_painter(nullptr), _cached_painter(nullptr),
-	_style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
+	_max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f), _g2l_was_cached(false), _changing(false), _updating_registered(false),
+	_element_painter(nullptr), _cached_painter(nullptr), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
 	_cached_theme(nullptr)
 {
 	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
@@ -36,6 +37,8 @@ FudgetControl::~FudgetControl()
 
 void FudgetControl::Draw()
 {
+	_g2l_was_cached = false;
+
 	if (!_updating_registered)
 		return;
 
@@ -181,32 +184,95 @@ void FudgetControl::RegisterToUpdate(bool value)
 	}
 }
 
-Float2 FudgetControl::LocalToGlobal(Float2 value) const
+Float2 FudgetControl::LocalToGlobal(Float2 local) const
 {
 	FudgetContainer *parent = _parent;
-	value += GetPosition();
+	local += GetPosition();
 
 	while (parent != nullptr)
 	{
-		value += parent->GetPosition();
+		local += parent->GetPosition();
 		parent = parent->_parent;
 	}
 
-	return value;
+	return local;
 }
 
-Float2 FudgetControl::GlobalToLocal(Float2 value) const
+Float2 FudgetControl::GlobalToLocal(Float2 global) const
 {
 	FudgetContainer *parent = _parent;
-	value -= GetPosition();
+	global -= GetPosition();
 
 	while (parent != nullptr)
 	{
-		value -= parent->GetPosition();
+		global -= parent->GetPosition();
 		parent = parent->_parent;
 	}
 
-	return value;
+	return global;
+}
+
+Rectangle FudgetControl::LocalToGlobal(const Rectangle &local) const
+{
+	FudgetContainer *parent = _parent;
+	Float2 pos = local.Location;
+	pos += GetPosition();
+
+	while (parent != nullptr)
+	{
+		pos += parent->GetPosition();
+		parent = parent->_parent;
+	}
+
+	return Rectangle(pos, local.Size);
+}
+
+Rectangle FudgetControl::GlobalToLocal(const Rectangle &global) const
+{
+	FudgetContainer *parent = _parent;
+	Float2 pos = global.Location;
+	pos -= GetPosition();
+
+	while (parent != nullptr)
+	{
+		pos -= parent->GetPosition();
+		parent = parent->_parent;
+	}
+
+	return Rectangle(pos, global.Size);
+}
+
+void FudgetControl::CacheGlobalToLocal() const
+{
+	if (_g2l_was_cached)
+		return;
+	_g2l_was_cached = true;
+	_cached_global_to_local_translation = GlobalToLocal(Float2(0.f));
+}
+
+void FudgetControl::InvalidateGlobalToLocalCache() const
+{
+	_g2l_was_cached = false;
+}
+
+Float2 FudgetControl::CachedLocalToGlobal(Float2 local) const
+{
+	return local - _cached_global_to_local_translation;
+}
+
+Float2 FudgetControl::CachedGlobalToLocal(Float2 global) const
+{
+	return global + _cached_global_to_local_translation;
+}
+
+Rectangle FudgetControl::CachedLocalToGlobal(const Rectangle &local) const
+{
+	return Rectangle(local.Location - _cached_global_to_local_translation, local.Size);
+}
+
+Rectangle FudgetControl::CachedGlobalToLocal(const Rectangle &global) const
+{
+	return Rectangle(global.Location + _cached_global_to_local_translation, global.Size);
 }
 
 FudgetControlFlags FudgetControl::GetControlFlags() const
@@ -230,20 +296,6 @@ bool FudgetControl::HasAllFlags(FudgetControlFlags flags) const
 bool FudgetControl::HasAnyFlag(FudgetControlFlags flags) const
 {
 	return (int)(flags & _flags) != 0;
-}
-
-void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
-{
-	pos = LocalToGlobal(pos);
-
-	Render2D::FillRectangle(Rectangle(pos, size), color);
-}
-
-void FudgetControl::DrawRectangle(Float2 pos, Float2 size, Color color, float thickness) const
-{
-	pos = LocalToGlobal(pos);
-
-	Render2D::DrawRectangle(Rectangle(pos, size), color, thickness);
 }
 
 void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
@@ -296,6 +348,218 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(nullptr);
 }
 
+void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
+{
+	CacheGlobalToLocal();
+	pos = CachedLocalToGlobal(pos);
+
+	Render2D::FillRectangle(Rectangle(pos, size), color);
+}
+
+void FudgetControl::FillRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4) const
+{
+	CacheGlobalToLocal();
+	Render2D::FillRectangle(CachedLocalToGlobal(rect), color1, color2, color3, color4);
+}
+
+void FudgetControl::DrawRectangle(Float2 pos, Float2 size, Color color, float thickness) const
+{
+	CacheGlobalToLocal();
+	pos = CachedLocalToGlobal(pos);
+
+	Render2D::DrawRectangle(Rectangle(pos, size), color, color, color, color, thickness);
+}
+
+void FudgetControl::DrawRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4, float thickness) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawRectangle(CachedLocalToGlobal(rect), color1, color2, color3, color4, thickness);
+}
+
+void FudgetControl::Draw9SlicingTexture(TextureBase *t, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color) const
+{
+	CacheGlobalToLocal();
+	Render2D::Draw9SlicingTexture(t, CachedLocalToGlobal(rect), border, borderUVs, color);
+}
+
+void FudgetControl::Draw9SlicingTexturePoint(TextureBase *t, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color) const
+{
+	CacheGlobalToLocal();
+	Render2D::Draw9SlicingTexturePoint(t, CachedLocalToGlobal(rect), border, borderUVs, color);
+}
+
+void FudgetControl::Draw9SlicingSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color) const
+{
+	CacheGlobalToLocal();
+	Render2D::Draw9SlicingSprite(spriteHandle, CachedLocalToGlobal(rect), border, borderUVs, color);
+}
+
+void FudgetControl::Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color) const
+{
+	CacheGlobalToLocal();
+	Render2D::Draw9SlicingSpritePoint(spriteHandle, CachedLocalToGlobal(rect), border, borderUVs, color);
+}
+
+void FudgetControl::DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawBezier(CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), CachedLocalToGlobal(p3), CachedLocalToGlobal(p4), color, thickness);
+}
+
+void FudgetControl::DrawBlur(const Rectangle& rect, float blurStrength) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawBlur(CachedLocalToGlobal(rect), blurStrength);
+}
+
+void FudgetControl::DrawLine(const Float2& p1, const Float2& p2, const Color& color, float thickness) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawLine(CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color, color, thickness);
+}
+
+void FudgetControl::DrawLine(const Float2& p1, const Float2& p2, const Color& color1, const Color& color2, float thickness) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawLine(CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color1, color2, thickness);
+}
+
+void FudgetControl::DrawMaterial(MaterialBase* material, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawMaterial(material, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawSprite(spriteHandle, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawSpritePoint(spriteHandle, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawText(Font* font, const StringView& text, const Color& color, const Float2& location, MaterialBase* customMaterial) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawText(font, text, color, CachedLocalToGlobal(location), customMaterial);
+}
+
+void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawText(font, text, textRange, color, CachedLocalToGlobal(location), customMaterial);
+}
+
+void FudgetControl::DrawText(Font* font, const StringView& text, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial) const
+{
+	CacheGlobalToLocal();
+	TextLayoutOptions tmp = layout;
+	tmp.Bounds = CachedLocalToGlobal(layout.Bounds);
+	Render2D::DrawText(font, text, color, tmp, customMaterial);
+}
+
+void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial) const
+{
+	CacheGlobalToLocal();
+	TextLayoutOptions tmp = layout;
+	tmp.Bounds = CachedLocalToGlobal(layout.Bounds);
+	Render2D::DrawText(font, text, textRange, color, tmp, customMaterial);
+}
+
+void FudgetControl::DrawTexture(GPUTextureView* rt, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawTexture(rt, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawTexture(GPUTexture* t, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawTexture(t, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawTexture(t, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::DrawTexturePoint(t, CachedLocalToGlobal(rect), color);
+}
+
+void FudgetControl::DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs) const
+{
+	CacheGlobalToLocal();
+	Array<Float2> copy(vertices.Length());
+	for (int ix = 0, siz = vertices.Length(); ix < siz; ++ix)
+	{
+		copy.Add(CachedLocalToGlobal(vertices[ix]));
+	}
+
+	Render2D::DrawTexturedTriangles(t, Span<Float2>(copy.Get(), copy.Count()), uvs);
+}
+
+void FudgetControl::DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Array<Float2> copy(vertices.Length());
+	for (int ix = 0, siz = vertices.Length(); ix < siz; ++ix)
+	{
+		copy.Add(CachedLocalToGlobal(vertices[ix]));
+	}
+
+	Render2D::DrawTexturedTriangles(t, Span<Float2>(copy.Get(), copy.Count()), uvs);
+}
+
+void FudgetControl::DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const
+{
+	CacheGlobalToLocal();
+	Array<Float2> copy(vertices.Length());
+	for (int ix = 0, siz = vertices.Length(); ix < siz; ++ix)
+	{
+		copy.Add(CachedLocalToGlobal(vertices[ix]));
+	}
+
+	Render2D::DrawTexturedTriangles(t, Span<Float2>(copy.Get(), copy.Count()), uvs, colors);
+}
+
+void FudgetControl::DrawTexturedTriangles(GPUTexture* t, const Span<uint16>& indices, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const
+{
+	CacheGlobalToLocal();
+	Array<Float2> copy(vertices.Length());
+	for (int ix = 0, siz = vertices.Length(); ix < siz; ++ix)
+	{
+		copy.Add(CachedLocalToGlobal(vertices[ix]));
+	}
+
+	Render2D::DrawTexturedTriangles(t, indices, Span<Float2>(copy.Get(), copy.Count()), uvs, colors);
+}
+
+void FudgetControl::FillTriangles(const Span<Float2>& vertices, const Span<Color>& colors, bool useAlpha) const
+{
+	CacheGlobalToLocal();
+	Array<Float2> copy(vertices.Length());
+	for (int ix = 0, siz = vertices.Length(); ix < siz; ++ix)
+	{
+		copy.Add(CachedLocalToGlobal(vertices[ix]));
+	}
+
+	Render2D::FillTriangles(Span<Float2>(copy.Get(), copy.Count()), colors, useAlpha);
+}
+
+void FudgetControl::FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color) const
+{
+	CacheGlobalToLocal();
+	Render2D::FillTriangle(CachedLocalToGlobal(p0), CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color);
+}
+
 void FudgetControl::ClearStyleCache(bool inherited)
 {
 	_cached_theme = nullptr;
@@ -321,12 +585,12 @@ FudgetElementPainter* FudgetControl::GetElementPainter()
 	return _cached_painter;
 }
 
-void FudgetControl::SetPropertyProvider(FudgetPainterPropertyProvider *new_provider)
+void FudgetControl::SetPainterPropertyProvider(FudgetPainterPropertyProvider *value)
 {
-	if (new_provider == nullptr || new_provider == _painter_provider)
+	if (value == nullptr || value == _painter_provider)
 		return;
 
-	_painter_provider.reset(new_provider);
+	_painter_provider.reset(value);
 }
 
 void FudgetControl::SetStyle(FudgetStyle *value)

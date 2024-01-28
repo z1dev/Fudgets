@@ -106,11 +106,21 @@ public:
 	API_FUNCTION() FudgetStylePainterResource* GetPainterResource(FudgetToken token);
 
 	/// <summary>
+	/// Tries to get the element painter for the token from the style or the nearest parent style having the token.
+	/// Returns null if no painter was found.
+	/// </summary>
+	/// <param name="theme">The theme that can supply the painter for the class</param>
+	/// <param name="token">Array of the class' tokens</param>
+	/// <returns>An element painter if found or null</returns>
+	API_FUNCTION() FudgetElementPainter* GetElementPainter(FudgetTheme *theme, FudgetToken token);
+
+	/// <summary>
 	/// Tries to get the element painter for a class or an ancestor of the class from the theme. Painters might
-	/// be set in this style as well, which are returned, if they are found.
-	/// First the top class' painter is attempted from the style, and then the theme. After that the next class'
-	/// painter from the style and then the theme, until the last class is tested for a painter. If nothing is found
-	/// then the result is null.
+	/// be overriden in this style for class names, and then those will be returned instead.
+	/// The first class to check is the one at the front of the tokens array. If it has an override, that one is
+	/// returned, otherwise the theme is checked for a painter too. This is repeated for each class token in the
+	/// array, until the last one was tried.
+	/// Returns null if no painter was found.
 	/// </summary>
 	/// <param name="theme">The theme that can supply the painter for the class</param>
 	/// <param name="class_tokens">Array of the class' tokens</param>
@@ -118,11 +128,11 @@ public:
 	API_FUNCTION() FudgetElementPainter* GetControlPainter(FudgetTheme *theme, Array<FudgetToken> class_tokens);
 
 	/// <summary>
-	/// Sets an override for the element painter for a class of the given token. The override is a token
-	/// used to retrieve the element painter from FudgetThemes.
+	/// Sets an override for the element painter for the given token. The override is a token used to retrieve the
+	/// element painter from FudgetThemes.
 	/// </summary>
 	/// <param name="token">Token associated with the class that uses the element painter</param>
-	/// <param name="value">Token of the painter from FudgetThemes to use for the class</param>
+	/// <param name="painter_token">Token of the painter from FudgetThemes to use for the class</param>
 	API_FUNCTION() void SetPainterOverride(FudgetToken token, FudgetToken painter_token);
 
 	/// <summary>
