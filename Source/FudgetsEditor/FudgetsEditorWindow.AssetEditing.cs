@@ -10,6 +10,7 @@ using FlaxEditor.CustomEditors;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine.GUI;
+using static System.Collections.Specialized.BitVector32;
 
 namespace FudgetsEditor;
 
@@ -91,7 +92,6 @@ public partial class FudgetsEditorWindow
 
         controlNode.DisposeChildren();
         controlNode.Dispose();
-
         OnRebuildTree();
         OnAnyChange();
         Focus();
@@ -170,8 +170,14 @@ public partial class FudgetsEditorWindow
 
     private void SelectedControlChanged(List<TreeNode> before, List<TreeNode> after)
     {
+        SetSelection(after, before);
+        Undo.AddAction(new FudgetSelectionChangeAction(this, before, after));
+    }
+
+    private void UpdatePropertiesSelection(List<TreeNode> newSelection)
+    {
         List<FudgetControl> selectedNodes = new List<FudgetControl>();
-        foreach (TreeNode node in after)
+        foreach (TreeNode node in newSelection)
         {
             if (node.Tag == null)
                 continue;
@@ -184,6 +190,12 @@ public partial class FudgetsEditorWindow
 
         _fudgetControlsEditor.Deselect();
         _fudgetControlsEditor.Select(_selectedControls);
+    }
+
+    public void SetSelection(List<TreeNode> newSelection, List<TreeNode> oldSelect = null)
+    {
+        _tree.SetSelectionSilent(newSelection);
+        UpdatePropertiesSelection(newSelection);
     }
 
     public void OnAnyChange()
@@ -250,6 +262,24 @@ public partial class FudgetsEditorWindow
             }
 
             return base.OnMouseUp(location, button);
+        }
+
+        /// <summary>
+        /// Silently (no events fired) sets a new selection. This is used to safely undo without infinite recursion.
+        /// </summary>
+        /// <param name="selection"></param>
+        public void SetSelectionSilent(List<TreeNode> selection)
+        {
+            List<TreeNode> newSelection = new List<TreeNode>();
+            newSelection.AddRange(selection);
+
+            Selection.Clear();
+            Selection.AddRange(newSelection);
+
+            for (int i = 0; i < Selection.Count; i++)
+            {
+                Selection[i].ExpandAllParents();
+            }
         }
 
         private ContextMenu GetOrSetContextMenu()
@@ -569,5 +599,41 @@ public class FudgetNewControlAction : IUndoAction
         _window.OnAnyChange();
         FlaxEngine.Object.Destroy(_createdControl);
         _createdControl = null;
+    }
+}
+
+public class FudgetSelectionChangeAction : IUndoAction
+{
+    private List<TreeNode> _before;
+    private List<TreeNode> _after;
+    private FudgetsEditorWindow _window;
+
+    public FudgetSelectionChangeAction(FudgetsEditorWindow window, List<TreeNode> before, List<TreeNode> after)
+    {
+        _window = window;
+        _before = new List<TreeNode>();
+        _before.AddRange(before);
+
+        _after = new List<TreeNode>();
+        _after.AddRange(after);
+    }
+
+    public string ActionString => "Change selected control";
+
+    public void Dispose()
+    {
+        _window = null;
+        _before = null;
+        _after = null;
+    }
+
+    public void Do()
+    {
+        _window.SetSelection(_after);
+    }
+
+    public void Undo()
+    {
+        _window.SetSelection(_before);
     }
 }
