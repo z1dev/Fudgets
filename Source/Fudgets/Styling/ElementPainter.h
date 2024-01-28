@@ -20,7 +20,11 @@ class FUDGETS_API FudgetElementPainter : public ScriptingObject
 public:
 	FudgetElementPainter();
 
-	virtual void Draw(FudgetPainterPropertyProvider *provider) = 0;
+	/// <summary>
+	/// Draws an element or full control completely, using the data from the provider to know what state to draw.
+	/// </summary>
+	/// <param name="provider">Property provider that can supply the painter with data about the state to draw</param>
+	API_FUNCTION() virtual void Draw(FudgetPainterPropertyProvider *provider) = 0;
 };
 
 /// <summary>

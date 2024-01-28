@@ -1,10 +1,12 @@
 #include "SimpleButtonPainter.h"
 #include "../../Control.h"
-#include "../Theme.h"
+#include "../Themes.h"
+#include "../Style.h"
 
 #include "Engine/Core/Math/Vector2.h"
 
-const FudgetToken FudgetSimpleButtonPainter::hover_token = FudgetTheme::RegisterToken(TEXT("SimpleButtonHoverTime"));
+const FudgetToken FudgetSimpleButtonPainter::hover_token = FudgetThemes::RegisterToken(TEXT("SimpleButtonHoverTime"));
+
 
 FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
 {
@@ -13,18 +15,20 @@ FudgetSimpleButtonPainter::FudgetSimpleButtonPainter() : Base()
 
 void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
 {
-	Color Dark = Color(0.6f, 0.6f, 0.6f, 1.0f);
-	Color Light = Color(1.0f);
-	Color Normal = Color(0.8f);
+	FudgetControl *control = provider->GetSourceControl();
 
-	float TimeToAnimate = 0.3f;
+	Color Dark = control->GetStyleColor(FudgetThemes::ButtonBackgroundPressedToken);
+	Color Light = control->GetStyleColor(FudgetThemes::ButtonBackgroundHoverToken);
+	Color Normal = control->GetStyleColor(FudgetThemes::ButtonBackgroundNormalToken);
+
+	float TimeToAnimate = control->GetStyleFloat(FudgetThemes::ButtonHoverAnimationTimeToken);
 
 	// Fetching values from the control
 
 	bool mouse_is_over = false;
-	provider->GetElementBoolProperty(FudgetTheme::MouseHoverToken, mouse_is_over);
+	provider->GetElementBoolProperty(FudgetThemes::MouseHoverToken, mouse_is_over);
 	bool mouse_is_pressed = false;
-	provider->GetElementBoolProperty(FudgetTheme::LeftButtonPressedToken, mouse_is_pressed);
+	provider->GetElementBoolProperty(FudgetThemes::LeftButtonPressedToken, mouse_is_pressed);
 	float delta_time = provider->GetDeltaTime();
 
 	// Custom stored time used to animate the button color
@@ -71,13 +75,12 @@ void FudgetSimpleButtonPainter::Draw(FudgetPainterPropertyProvider *provider)
 
 	// The drawing part
 
-	auto control = provider->GetSourceControl();
 	control->FillRectangle(Float2(0.f), control->GetSize(), draw_color);
 
 	if (control->GetFocused())
 	{
-		Color BorderColor = Color(0.4f, 0.7f, 0.5f, 1.0f);
-		control->DrawRectangle(Float2(0.f), control->GetSize(), BorderColor, 4.5f);
+		Color BorderColor = control->GetStyleColor(FudgetThemes::ButtonFocusRectangleColorToken);
+		control->DrawRectangle(Float2(0.f), control->GetSize(), BorderColor, control->GetStyleFloat(FudgetThemes::ButtonFocusRectangleWidthToken));
 	}
 }
 

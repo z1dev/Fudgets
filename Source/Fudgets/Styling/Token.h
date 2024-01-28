@@ -6,9 +6,10 @@
 /// A simple structure that can be used to identify things in the fudget theming classes or to find values
 /// associated with a string.
 /// </summary>
-API_STRUCT() struct FudgetToken
+API_STRUCT() struct FUDGETS_API FudgetToken
 {
-	static FUDGETS_API struct ScriptingTypeInitializer TypeInitializer;
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetToken)
+	//static FUDGETS_API struct ScriptingTypeInitializer TypeInitializer;
 
 	FORCE_INLINE FudgetToken(int32 val)
 	{
@@ -35,6 +36,8 @@ API_STRUCT() struct FudgetToken
 
 	operator int32() const { return Token; }
 
+	bool IsValid() const { return Token != -1; }
+
 	/// <summary>
 	/// The inner data used as the identifier of this token
 	/// </summary>
@@ -43,6 +46,6 @@ API_STRUCT() struct FudgetToken
 	/// <summary>
 	/// A token that can be used as a result for failed operations.
 	/// </summary>
-	static FUDGETS_API const FudgetToken Invalid;
-};
+	API_FIELD(ReadOnly) static const FudgetToken Invalid;
 
+};

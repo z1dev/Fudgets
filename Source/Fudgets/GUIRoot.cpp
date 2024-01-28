@@ -1,7 +1,7 @@
 #include "GUIRoot.h"
 #include "Fudget.h"
 #include "IFudgetMouseHook.h"
-#include "Styling/Theme.h"
+#include "Styling/Themes.h"
 
 #include "Engine/Level/Scene/Scene.h"
 #include "Engine/Engine/Time.h"
@@ -76,22 +76,24 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params) : FudgetGUIRoot(params, 
 }
 
 FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params, Fudget* root) : Base(params),
-events_initialized(false), _mouse_capture_control(nullptr), _mouse_capture_button(),
-_mouse_over_control(nullptr), _focus_control(nullptr), _theme(nullptr), _processing_updates(false)
+	events_initialized(false), _mouse_capture_control(nullptr), _mouse_capture_button(),
+	_mouse_over_control(nullptr), _focus_control(nullptr), _processing_updates(false)
 {
 	_root = root;
 	_window = (WindowBase*)Screen::GetMainWindow();
 	_guiRoot = this;
-	_theme = New<FudgetTheme>();
 	InitializeEvents();
 }
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget* root) : FudgetGUIRoot(SpawnParams(Guid::New(), TypeInitializer), root)
 {
+	FudgetThemes::Initialize();
 }
 
 FudgetGUIRoot::~FudgetGUIRoot()
 {
+	FudgetThemes::Uninitialize();
+
 	UninitializeEvents();
 	UnregisterControlUpdates();
 }

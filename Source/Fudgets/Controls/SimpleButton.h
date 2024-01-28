@@ -7,7 +7,6 @@
 
 #include "../Styling/Token.h"
 #include "../Styling/ElementPainters/SimpleButtonPainter.h"
-#include "../Utils/SmartPointers.h"
 
 
 /// <summary>
@@ -24,9 +23,13 @@ public:
 	FudgetSimpleButtonPropertyProvider(FudgetControl *_source_control);
 
 	/// <inheritdoc />
-	API_FUNCTION() bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
-	API_FUNCTION() bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
-	API_FUNCTION() void SetStoredFloat(FudgetToken token, float value) override;
+	bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) override;
+
+	/// <inheritdoc />
+	bool GetStoredFloat(FudgetToken token, API_PARAM(Out) float &result) const override;
+
+	/// <inheritdoc />
+	void SetStoredFloat(FudgetToken token, float value) override;
 
 
 private:
@@ -45,8 +48,6 @@ class FUDGETS_API FudgetSimpleButton : public FudgetControl
 public:
 	//FudgetSimpleButton();
 	~FudgetSimpleButton();
-
-	void SetPropertyProvider(FudgetPainterPropertyProvider *new_provider);
 
 	/// <summary>
 	/// Gets the neutral background color used for filling the control.
@@ -106,8 +107,6 @@ public:
 	/// <inheritdoc />
 	bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
-	FudgetPainterPropertyProvider* GetPainterPropertyProvider() override { return _painter_provider; }
-
 	/// <summary>
 	/// Whether the button is pressed down by holding a mouse button over it and not releasing it.
 	/// </summary>
@@ -128,7 +127,4 @@ private:
 	bool _over;
 
 	bool _can_focus;
-
-	FudgetToken buttonToken;
-	UniquePtr<FudgetPainterPropertyProvider> _painter_provider;
 };

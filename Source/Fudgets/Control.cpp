@@ -2,13 +2,15 @@
 #include "Container.h"
 #include "GUIRoot.h"
 #include "Fudget.h"
-#include "Styling/Theme.h"
+#include "Styling/Themes.h"
 #include "Styling/ElementPainter.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Scripting/Scripting.h"
-#include <Engine/Core/Log.h>
+#include "Engine/Core/Log.h"
+#include "Engine/Scripting/ManagedCLR/MClass.h"
+#include "Engine/Scripting/Types.h"
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
@@ -19,7 +21,9 @@ FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, 
 
 FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false)
+	_max_size(-1.f, -1.f), _changing(false), _updating_registered(false), _element_painter(nullptr), _cached_painter(nullptr),
+	_style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
+	_cached_theme(nullptr)
 {
 	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
 		RegisterToUpdate(true);
@@ -292,12 +296,116 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(nullptr);
 }
 
-FudgetElementPainter* FudgetControl::GetElementPainter(FudgetToken token) const
+void FudgetControl::ClearStyleCache(bool inherited)
 {
-	auto root = GetGUIRoot();
-	if (root == nullptr || root->GetTheme() == nullptr)
+	_cached_theme = nullptr;
+	_cached_style = nullptr;
+	_cached_painter = nullptr;
+}
+
+FudgetElementPainter* FudgetControl::GetElementPainter()
+{
+	if (_element_painter != nullptr)
+		return _element_painter;
+
+	if (_cached_painter != nullptr)
+		return _cached_painter;
+
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
 		return nullptr;
-	return root->GetTheme()->GetElementPainter(token);
+
+	CreateClassTokens();
+	_cached_painter = style->GetControlPainter(GetActiveTheme(), _class_token);
+
+	return _cached_painter;
+}
+
+void FudgetControl::SetPropertyProvider(FudgetPainterPropertyProvider *new_provider)
+{
+	if (new_provider == nullptr || new_provider == _painter_provider)
+		return;
+
+	_painter_provider.reset(new_provider);
+}
+
+void FudgetControl::SetStyle(FudgetStyle *value)
+{
+	if (_style == value)
+		return;
+	_style = value;
+	_cached_style = nullptr;
+}
+
+FudgetStyle* FudgetControl::GetActiveStyle()
+{
+	if (_style != nullptr)
+		return _style;
+	if (_cached_style != nullptr)
+		return _cached_style;
+
+	// No style was found, let's resolve one and save it to cached.
+
+	CreateClassTokens();
+	_cached_style = FudgetThemes::GetControlStyleOrDefault(_class_token);
+
+	return _cached_style;
+}
+
+void FudgetControl::SetThemeId(FudgetToken value)
+{
+	if (_theme_id == value || FudgetThemes::GetTheme(value) == nullptr)
+		return;
+
+	_theme_id = value;
+	ClearStyleCache(true);
+}
+
+FudgetTheme* FudgetControl::GetActiveTheme()
+{
+	if (_cached_theme != nullptr)
+		return _cached_theme;
+
+	if (_theme_id.IsValid())
+		_cached_theme = FudgetThemes::GetTheme(_theme_id);
+	else if (_parent != nullptr)
+		_cached_theme = _parent->GetActiveTheme();
+	if (_cached_theme == nullptr)
+		_cached_theme = FudgetThemes::GetTheme(FudgetThemes::MainThemeToken);
+
+	return _cached_theme;
+}
+
+Color FudgetControl::GetStyleColor(FudgetToken token)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style != nullptr)
+	{
+		Variant var;
+		if (style->GetResourceValue(GetActiveTheme(), token, var))
+		{
+			if (var.Type.Type == VariantType::Color)
+				return var.AsColor();
+			// TODO: cache!
+		}
+	}
+	return Color::White;
+}
+
+float FudgetControl::GetStyleFloat(FudgetToken token)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style != nullptr)
+	{
+		Variant var;
+		if (style->GetResourceValue(GetActiveTheme(), token, var))
+		{
+			if (var.Type.Type == VariantType::Float)
+				return var.AsFloat;
+			// TODO: cache!
+		}
+	}
+	return 0.0f;
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
@@ -359,4 +467,20 @@ void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
 {
 	_pos = pos; 
 	_size = size;
+}
+
+void FudgetControl::CreateClassTokens()
+{
+	if (_class_token.Count() > 0)
+		return;
+
+	auto thisclass = GetClass();
+	StringAnsiView class_name = thisclass->GetName();
+	while (thisclass != nullptr && class_name != "Object")
+	{
+		_class_token.Add(FudgetThemes::RegisterToken(class_name.ToString()));
+		thisclass = thisclass->GetBaseClass();
+		if (thisclass != nullptr)
+			class_name = thisclass->GetName();
+	}
 }
