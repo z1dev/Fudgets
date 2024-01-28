@@ -11,6 +11,18 @@ FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer))
 
 }
 
+FudgetTheme::FudgetTheme(const FudgetTheme &ori) : FudgetTheme()
+{
+	_resources = ori._resources;
+	_painter_ids = ori._painter_ids;
+}
+
+FudgetTheme* FudgetTheme::Duplicate() const
+{
+	FudgetTheme *result = New<FudgetTheme>(*this);
+	return result;
+}
+
 std::map<String, FudgetToken> FudgetThemes::_token_map;
 int FudgetThemes::_highest_token = 0;
 
@@ -69,14 +81,14 @@ void FudgetThemes::Initialize()
 
 	_themes_initialized = true;
 
-	_theme_map[MainThemeToken] = New<FudgetTheme>();
-	FudgetTheme *main_theme = _theme_map[MainThemeToken];
+	FudgetTheme *main_theme = New<FudgetTheme>();
+	_theme_map[MainThemeToken] = main_theme;
 	main_theme->_resources.Add(ColorDarkToken, Color(0.6f, 0.6f, 0.6f, 1.0f));
 	main_theme->_resources.Add(ColorLightToken, Color(1.0f));
 	main_theme->_resources.Add(ColorNormalToken, Color(0.8f, 0.8f, 0.8f, 1.0f));
 	main_theme->_resources.Add(HoverAnimationTimeToken, 0.3f);
 	main_theme->_resources.Add(ColorAccentToken, Color(0.3f, 0.5f, 0.8f, 1.0f));
-	main_theme->_resources.Add(FocusRectangleWidthToken, 4.5f);
+	main_theme->_resources.Add(FocusRectangleWidthToken, 2.5f);
 
 	main_theme->_painter_ids.Add(RegisterToken(TEXT("FudgetSimpleButton")), RegisterToken(TEXT("SimpleButton")));
 	main_theme->_painter_ids.Add(ButtonBackgroundPainterToken, ButtonBackgroundPainterToken);
@@ -96,6 +108,19 @@ void FudgetThemes::Initialize()
 
 	FudgetButtonBackgroundPainter *bbdrawer = New<FudgetButtonBackgroundPainter>();
 	_element_map[ButtonBackgroundPainterToken] = bbdrawer;
+
+	FudgetToken test_theme_token = RegisterToken(TEXT("TestTheme"));
+	if (!DuplicateTheme(MainThemeToken, test_theme_token))
+		return;
+
+	FudgetTheme *test_theme = GetTheme(test_theme_token);
+
+	test_theme->_resources[ColorDarkToken] = Color(0.7, 0.4, 0.1, 1.0f);
+	test_theme->_resources[ColorLightToken] = Color(1.0f, 0.8f, 0.3f, 1.0f);
+	test_theme->_resources[ColorNormalToken] = Color(0.85f, 0.5f, 0.15f, 1.0f);
+	test_theme->_resources[HoverAnimationTimeToken] = 0.15f;
+	test_theme->_resources[ColorAccentToken] = Color(0.3f, 0.8f, 0.5f, 1.0f);
+	test_theme->_resources[FocusRectangleWidthToken] = 4.5f;
 }
 
 void FudgetThemes::Uninitialize()
@@ -160,6 +185,19 @@ FudgetTheme* FudgetThemes::GetTheme(FudgetToken token)
 	if (it == _theme_map.end())
 		return nullptr;
 	return it->second;
+}
+
+bool FudgetThemes::DuplicateTheme(FudgetToken source_token, FudgetToken dest_token)
+{
+	if (!source_token.IsValid() || !dest_token.IsValid())
+		return false;
+	auto it_src = _theme_map.find(source_token);
+	auto it_dst = _theme_map.find(dest_token);
+	if (it_src == _theme_map.end() || it_dst != _theme_map.end())
+		return false;
+
+	_theme_map[dest_token] = it_src->second->Duplicate();
+	return true;
 }
 
 FudgetStyle* FudgetThemes::GetStyle(FudgetToken token)

@@ -16,8 +16,8 @@ FudgetListLayout::FudgetListLayout(const SpawnParams &params) : FudgetListLayout
 }
 
 FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation) : Base(params,
-	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange
-	), _ori(orientation), _stretched(true)
+	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
+	FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange), _ori(orientation), _stretched(true)
 {
 
 }

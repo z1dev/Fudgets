@@ -23,6 +23,13 @@ class FUDGETS_API FudgetTheme : public ScriptingObject
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetTheme)
 public:
 	FudgetTheme();
+	FudgetTheme(const FudgetTheme &ori);
+
+	/// <summary>
+	/// Creates a theme that is a duplicate of this theme. All values and painter ids will be matching.
+	/// </summary>
+	/// <returns></returns>
+	API_FUNCTION() FudgetTheme* Duplicate() const;
 
 	/// <summary>
 	/// The values in this theme, that can be referenced by styles. Although it's not read-only, the values
@@ -148,6 +155,14 @@ public:
 	/// <param name="token">Token associated with the theme</param>
 	/// <returns>The theme if found, or null</returns>
 	API_FUNCTION() static FudgetTheme* GetTheme(FudgetToken token);
+
+	/// <summary>
+	/// Creates a copy of the theme if the source token represents a theme and the destination token is not taken.
+	/// </summary>
+	/// <param name="source_token">Token for theme to duplicate</param>
+	/// <param name="dest_token">Token of the new theme</param>
+	/// <returns>True if the theme was successfully duplicated and false if not</returns>
+	API_FUNCTION() static bool DuplicateTheme(FudgetToken source_token, FudgetToken dest_token);
 
 	/// <summary>
 	/// Tries to retrieve a style for the token. The token can correspond to any string, but if it's a control
