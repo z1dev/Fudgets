@@ -10,7 +10,6 @@ using FlaxEditor.CustomEditors;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine.GUI;
-using static System.Collections.Specialized.BitVector32;
 
 namespace FudgetsEditor;
 
