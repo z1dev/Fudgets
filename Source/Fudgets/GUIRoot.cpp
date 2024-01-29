@@ -35,13 +35,10 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params, Fudget* root) : Base(par
 
 FudgetGUIRoot::FudgetGUIRoot(Fudget* root) : FudgetGUIRoot(SpawnParams(Guid::New(), TypeInitializer), root)
 {
-	FudgetThemes::Initialize();
 }
 
 FudgetGUIRoot::~FudgetGUIRoot()
 {
-	FudgetThemes::Uninitialize();
-
 	UninitializeEvents();
 	UnregisterControlUpdates();
 }

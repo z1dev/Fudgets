@@ -17,6 +17,17 @@ struct FUDGETS_API FudgetPadding
 	{
 	}
 
+	FudgetPadding(float left, float right, float top, float bottom) : Left(left), Right(right), Top(top), Bottom(bottom)
+	{
+	}
+
+	FudgetPadding(float padding) : Left(padding), Right(padding), Top(padding), Bottom(padding)
+	{
+	}
+
+	float Width() const { return Left + Right; }
+	float Height() const { return Top + Bottom; }
+
 	/// <summary>
 	/// Padding to the left
 	/// </summary>
@@ -37,17 +48,21 @@ struct FUDGETS_API FudgetPadding
 
 
 API_ENUM()
-enum class FudgetRectType
+enum class FudgetFillAreaType : uint8
 {
 	Color,
 	Texture,
-	TextureP,
+	TextureStretch,
+	TexturePoint,
+	TexturePointStretch,
 	Texture9,
-	Texture9P,
+	Texture9Point,
 	Sprite,
-	SpriteP,
+	SpriteStretch,
+	SpritePoint,
+	SpritePointStretch,
 	Sprite9,
-	Sprite9P,
+	Sprite9Point,
 };
 
 API_STRUCT()
@@ -55,67 +70,88 @@ struct FUDGETS_API FudgetFillAreaSettings
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFillAreaSettings)
 
-	FudgetFillAreaSettings() : RectType(FudgetRectType::Color), Color(Color::White), Texture(nullptr), SpriteHandle(), Borders9P(-1.0f)
+	FudgetFillAreaSettings() : AreaType(FudgetFillAreaType::Color), Color(Color::White), Texture(nullptr), SpriteHandle(), Borders9P(-1.0f)
 	{
 	}
 
-	FudgetFillAreaSettings(Color color) : RectType(FudgetRectType::Color), Color(color), Texture(nullptr), SpriteHandle(), Borders9P(-1.0f)
+	FudgetFillAreaSettings(Color color) : AreaType(FudgetFillAreaType::Color), Color(color), Texture(nullptr), SpriteHandle(), Borders9P(-1.0f)
 	{
 	}
 
-	FudgetFillAreaSettings(TextureBase *texture, bool point_tex = false) :
-		RectType(point_tex ? FudgetRectType::TextureP : FudgetRectType::Texture), Color(), Texture(texture), SpriteHandle(), Borders9P(-1.0f)
+	FudgetFillAreaSettings(TextureBase *texture, bool stretch = false, bool point_tex = false, const Color &color = Color::White) :
+		AreaType(point_tex && stretch ? FudgetFillAreaType::TexturePointStretch : point_tex ? FudgetFillAreaType::TexturePoint :
+			stretch ? FudgetFillAreaType::TextureStretch : FudgetFillAreaType::Texture), Color(color), Texture(texture), SpriteHandle(), Borders9P(-1.0f)
 	{
 	}
 
-	FudgetFillAreaSettings(TextureBase *texture, Float4 borders_9p, bool point_tex = false) :
-		RectType(point_tex ? FudgetRectType::Texture9P : FudgetRectType::Texture9),
-		Color(), Texture(texture), SpriteHandle(), Borders9P(borders_9p)
+	FudgetFillAreaSettings(TextureBase *texture, Float4 borders_9p, bool point_tex = false, const Color &color = Color::White) :
+		AreaType(point_tex ? FudgetFillAreaType::Texture9Point : FudgetFillAreaType::Texture9),
+		Color(color), Texture(texture), SpriteHandle(), Borders9P(borders_9p)
 	{
 	}
 
-	FudgetFillAreaSettings(const SpriteHandle &sprite_handle, bool point_sprite) :
-		RectType(point_sprite ? FudgetRectType::SpriteP : FudgetRectType::Sprite), Color(), Texture(nullptr), SpriteHandle(sprite_handle), Borders9P(-1.0f)
+	FudgetFillAreaSettings(const SpriteHandle &sprite_handle, bool stretch = false, bool point_sprite = false, const Color &color = Color::White) :
+		AreaType(point_sprite && stretch ? FudgetFillAreaType::SpritePointStretch : point_sprite ? FudgetFillAreaType::SpritePoint :
+		stretch ? FudgetFillAreaType::SpriteStretch : FudgetFillAreaType::Sprite), Color(color), Texture(nullptr), SpriteHandle(sprite_handle), Borders9P(-1.0f)
 	{
 	}
 
-	FudgetFillAreaSettings(const SpriteHandle &sprite_handle, Float4 borders_9p, bool point_sprite) :
-		RectType(point_sprite ? FudgetRectType::Sprite9P : FudgetRectType::Sprite9),
-		Color(), Texture(nullptr), SpriteHandle(sprite_handle), Borders9P(borders_9p)
+	FudgetFillAreaSettings(const SpriteHandle &sprite_handle, Float4 borders_9p, bool point_sprite, const Color &color = Color::White) :
+		AreaType(point_sprite ? FudgetFillAreaType::Sprite9Point : FudgetFillAreaType::Sprite9),
+		Color(color), Texture(nullptr), SpriteHandle(sprite_handle), Borders9P(borders_9p)
 	{
+	}
+
+	FudgetFillAreaSettings(const FudgetFillAreaSettings &other)
+	{
+		Color = other.Color;
+		AreaType = other.AreaType;
+		Texture = other.Texture;
+		SpriteHandle = other.SpriteHandle;
+		Borders9P = other.Borders9P;
+	}
+
+	FudgetFillAreaSettings(FudgetFillAreaSettings &&other) noexcept
+	{
+		Color = other.Color;
+		AreaType = other.AreaType;
+		Texture = other.Texture;
+		other.Texture = nullptr;
+		SpriteHandle = other.SpriteHandle;
+		Borders9P = other.Borders9P;
 	}
 
 	FudgetFillAreaSettings& operator=(const FudgetFillAreaSettings &other)
 	{
-		RectType = other.RectType;
+		Color = other.Color;
+		AreaType = other.AreaType;
 		Texture = other.Texture;
 		SpriteHandle = other.SpriteHandle;
 		Borders9P = other.Borders9P;
 		return *this;
 	}
 
-	FudgetFillAreaSettings& operator=(FudgetFillAreaSettings &&other)
+	FudgetFillAreaSettings& operator=(FudgetFillAreaSettings &&other) noexcept
 	{
-		RectType = other.RectType;
+		Color = other.Color;
+		AreaType = other.AreaType;
 		Texture = other.Texture;
+		other.Texture = nullptr;
 		SpriteHandle = other.SpriteHandle;
 		Borders9P = other.Borders9P;
 		return *this;
 	}
 
 	// Which of the fields is used, and in what way
-	FudgetRectType RectType;
-
-	//This could be a union?
+	FudgetFillAreaType AreaType;
 
 	// Flat color to fill the area
 	Color Color;
+
 	// Texture to draw in the area
 	AssetReference<TextureBase> Texture;
 
 	//// Sprite information to draw in the area
-	//API_FIELD() SpriteAtlas *SpriteAtlas;
-	//API_FIELD() int SpriteIndex;
 	SpriteHandle SpriteHandle;
 
 	// Set when using 9-slicing images.

@@ -760,6 +760,24 @@ public:
 	API_FUNCTION() void DrawSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
+	/// Draws a sprite in a rectangle with tiling or clipping as necessary.
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="size">The size to use for the sprite</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Draws a sprite in a rectangle with tiling or clipping as necessary. Uses point sampler.
+	/// </summary>
+	/// <param name="spriteHandle">The sprite to draw.</param>
+	/// <param name="size">The size to use for the sprite</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
 	/// Wrapper to Render2D's DrawText
 	/// </summary>
 	/// <param name="font">The font to use.</param>
@@ -826,12 +844,30 @@ public:
 	API_FUNCTION() void DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
+	/// Draws a texture in a rectangle with tiling or clipping as necessary.
+	/// </summary>
+	/// <param name="t">The texture to draw.</param>
+	/// <param name="size">The size to use for the texture</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTextureTiled(GPUTexture *t, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
 	/// Wrapper to Render2D's DrawTexturePoint 
 	/// </summary>
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
 	API_FUNCTION() void DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White) const;
+
+	/// <summary>
+	/// Draws a texture in a rectangle with tiling or clipping as necessary. Uses point sampler.
+	/// </summary>
+	/// <param name="t">The texture to draw.</param>
+	/// <param name="size">The size to use for the texture</param>
+	/// <param name="rect">The rectangle to draw.</param>
+	/// <param name="color">The color to multiply all texture pixels.</param>
+	API_FUNCTION() void DrawTexturePointTiled(GPUTexture* t, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -984,12 +1020,25 @@ public:
 	/// <returns>Whether the token was found as a valid float token</returns>
 	API_FUNCTION() virtual bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
 
+	/// <summary>
+	/// Returns settings for filling a rectangular area for the control based on a theme token. The functions result is
+	/// valid both if the token refers to a simple color or if it refers to the FudgetFillAreaSettings structure. In the
+	/// first case, the area type will be set to Color.
+	/// The returned value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the FudgetFillAreaSettings value in the active style</param>
+	/// <param name="result">Variable that receives the settings</param>
+	/// <returns>Whether the token was found as a valid float token</returns>
+	API_FUNCTION() bool GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetFillAreaSettings &result);
+
 	// Serialization
 
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
 private:
+	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, const Rectangle& rect, const Color& color) const;
+
 	static FudgetGUIRoot *_guiRoot;
 
 	/// <summary>

@@ -117,14 +117,20 @@ public:
 	static const FudgetToken FocusRectangleWidthToken;
 
 
+	static const FudgetToken ButtonBackgroundPaddingToken;
 	static const FudgetToken ButtonBackgroundNormalToken;
 	static const FudgetToken ButtonBackgroundPressedToken;
 	static const FudgetToken ButtonBackgroundHoverToken;
+	static const FudgetToken ButtonBorderNormalImageToken;
+	static const FudgetToken ButtonBorderPressedImageToken;
+	static const FudgetToken ButtonBorderHoverImageToken;
 	static const FudgetToken ButtonHoverAnimationTimeToken;
 	static const FudgetToken ButtonFocusRectangleColorToken;
 	static const FudgetToken ButtonFocusRectangleWidthToken;
 
+	static const FudgetToken SimpleButtonPainterToken;
 	static const FudgetToken ButtonBackgroundPainterToken;
+	static const FudgetToken ButtonBorderPainterToken;
 
 
 
@@ -192,8 +198,11 @@ public:
 	API_FUNCTION() static bool GetValueFromTheme(FudgetToken theme_token, FudgetToken value_token, API_PARAM(Out) Variant &result);
 
 private:
-	static void RegisterStyle(FudgetToken token, FudgetStyle *style);
+	static bool RegisterStyle(FudgetToken token, FudgetStyle *style);
 	static void UnregisterStyle(FudgetToken token, FudgetStyle *style);
+
+	static bool RegisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
+	static void UnregisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
 
 	static std::map<String, FudgetToken> _token_map;
 	static int _highest_token;
@@ -211,4 +220,5 @@ private:
 	static bool _themes_initialized;
 
 	friend class FudgetStyle;
+	friend class FudgetElementPainter;
 };
