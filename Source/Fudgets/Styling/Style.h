@@ -48,7 +48,7 @@ class FUDGETS_API FudgetStyle : public ScriptingObject
 public:
 	FudgetStyle(String name);
 	FudgetStyle(FudgetToken name_token);
-	~FudgetStyle();
+	virtual ~FudgetStyle();
 
 	/// <summary>
 	/// Creates a new style that inherits all its values from this one, or null if the token is already taken.

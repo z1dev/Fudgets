@@ -2,6 +2,7 @@
 #include "Themes.h"
 
 #include "Engine/Core/Types/BaseTypes.h"
+#include "Engine/Core/Log.h"
 
 FudgetStyle::FudgetStyle(String name) : FudgetStyle(FudgetThemes::RegisterToken(name))
 {
@@ -11,7 +12,8 @@ FudgetStyle::FudgetStyle(String name) : FudgetStyle(FudgetThemes::RegisterToken(
 FudgetStyle::FudgetStyle(FudgetToken name_token) : Base(SpawnParams(Guid::New(), TypeInitializer)),
 	_style_name(name_token), _parent(nullptr)
 {
-	FudgetThemes::RegisterStyle(_style_name, this);
+	if (!FudgetThemes::RegisterStyle(_style_name, this))
+		LOG(Error, "Invalid token for FudgetStyle. Style wasn't registered.");
 }
 
 FudgetStyle::~FudgetStyle()
@@ -59,14 +61,15 @@ FudgetStyleResource* FudgetStyle::GetResource(FudgetToken token)
 
 	if (_parent != nullptr)
 	{
+		FudgetStyleResource tmp;
+
 		FudgetStyleResource *res = _parent->GetResource(token);
 		if (res != nullptr)
 		{
 			// "Inherit" the resource here.
-			FudgetStyleResource tmp;
 			tmp._inherited_resource = res;
-			_resources[token] = tmp;
 		}
+		_resources[token] = tmp;
 		return res;
 	}
 
@@ -212,14 +215,14 @@ FudgetStylePainterResource* FudgetStyle::GetPainterResource(FudgetToken token)
 
 	if (_parent != nullptr)
 	{
+		FudgetStylePainterResource tmp;
 		FudgetStylePainterResource *res = _parent->GetPainterResource(token);
 		if (res != nullptr)
 		{
 			// "Inherit" the resource here.
-			FudgetStylePainterResource tmp;
 			tmp._inherited_resource = res;
-			_painters[token] = tmp;
 		}
+		_painters[token] = tmp;
 		return res;
 	}
 

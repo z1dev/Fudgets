@@ -20,7 +20,9 @@ class FUDGETS_API FudgetElementPainter : public ScriptingObject
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetElementPainter);
 public:
-	FudgetElementPainter();
+	FudgetElementPainter(String name);
+	FudgetElementPainter(FudgetToken name_token);
+	~FudgetElementPainter();
 
 	/// <summary>
 	/// Draws an element of a control or complete control, using the data from the provider for the state to draw.
@@ -36,6 +38,8 @@ public:
 	/// <param name="provider">Object providing state values for the painter</param>
 	/// <param name="painter_token">Token of painter overriden in the style</param>
 	API_FUNCTION() void DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token);
+private:
+	FudgetToken _painter_name;
 };
 
 /// <summary>

@@ -33,12 +33,16 @@ namespace Fudgets
             base.Initialize();
 
             Debug.Log("Hello from plugin code!");
+
+            FudgetThemes.Initialize();
         }
 
         /// <inheritdoc />
         public override void Deinitialize()
         {
             // Use it to cleanup data
+
+            FudgetThemes.Uninitialize();
 
             base.Deinitialize();
         }

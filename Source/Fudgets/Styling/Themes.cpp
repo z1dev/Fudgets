@@ -1,6 +1,6 @@
 #include "Themes.h"
 #include "Token.h"
-#include "../MarginStructs.h""
+#include "../MarginStructs.h"
 // temp
 #include "ElementPainters/SimpleButtonPainter.h"
 
@@ -48,14 +48,20 @@ const FudgetToken FudgetThemes::HoverAnimationTimeToken = FudgetThemes::Register
 const FudgetToken FudgetThemes::ColorAccentToken = FudgetThemes::RegisterToken(TEXT("ColorAccent"));
 const FudgetToken FudgetThemes::FocusRectangleWidthToken = FudgetThemes::RegisterToken(TEXT("FocusRectangleWidth"));
 
+const FudgetToken FudgetThemes::ButtonBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("ButtonBackgroundPadding"));
 const FudgetToken FudgetThemes::ButtonBackgroundNormalToken = FudgetThemes::RegisterToken(TEXT("ButtonBackgroundNormal"));
 const FudgetToken FudgetThemes::ButtonBackgroundPressedToken = FudgetThemes::RegisterToken(TEXT("ButtonBackgroundPressed"));
 const FudgetToken FudgetThemes::ButtonBackgroundHoverToken = FudgetThemes::RegisterToken(TEXT("ButtonBackgroundHover"));
+const FudgetToken FudgetThemes::ButtonBorderNormalImageToken = FudgetThemes::RegisterToken(TEXT("ButtonBorderNormalImage"));
+const FudgetToken FudgetThemes::ButtonBorderPressedImageToken = FudgetThemes::RegisterToken(TEXT("ButtonBorderPressedImage"));
+const FudgetToken FudgetThemes::ButtonBorderHoverImageToken = FudgetThemes::RegisterToken(TEXT("ButtonBorderHoverImage"));
 const FudgetToken FudgetThemes::ButtonHoverAnimationTimeToken = FudgetThemes::RegisterToken(TEXT("ButtonHoverAnimationTime"));
 const FudgetToken FudgetThemes::ButtonFocusRectangleColorToken = FudgetThemes::RegisterToken(TEXT("ButtonFocusRectangleColor"));
 const FudgetToken FudgetThemes::ButtonFocusRectangleWidthToken = FudgetThemes::RegisterToken(TEXT("ButtonFocusRectangleWidth"));
 
+const FudgetToken FudgetThemes::SimpleButtonPainterToken = RegisterToken(TEXT("SimpleButton"));
 const FudgetToken FudgetThemes::ButtonBackgroundPainterToken = RegisterToken(TEXT("ButtonBackground"));
+const FudgetToken FudgetThemes::ButtonBorderPainterToken = RegisterToken(TEXT("ButtonBorder"));
 
 
 //FudgetThemes::FudgetThemes() : Base(SpawnParams(Guid::New(), TypeInitializer))
@@ -92,8 +98,9 @@ void FudgetThemes::Initialize()
 	main_theme->_resources.Add(ColorAccentToken, Color(0.3f, 0.5f, 0.8f, 1.0f));
 	main_theme->_resources.Add(FocusRectangleWidthToken, 2.5f);
 
-	main_theme->_painter_ids.Add(RegisterToken(TEXT("FudgetSimpleButton")), RegisterToken(TEXT("SimpleButton")));
+	main_theme->_painter_ids.Add(RegisterToken(TEXT("FudgetSimpleButton")), SimpleButtonPainterToken);
 	main_theme->_painter_ids.Add(ButtonBackgroundPainterToken, ButtonBackgroundPainterToken);
+	main_theme->_painter_ids.Add(ButtonBorderPainterToken, ButtonBorderPainterToken);
 
 	FudgetStyle *_default_style = New<FudgetStyle>(TEXT("DefaultStyle"));
 	_default_style->SetResourceOverride(ButtonBackgroundNormalToken, ColorNormalToken);
@@ -107,22 +114,42 @@ void FudgetThemes::Initialize()
 
 	FudgetStyle *_btn_style = _default_style->CreateInheritedStyle(RegisterToken(TEXT("FudgetSimpleButton")));
 
-	FudgetStyle *_next_style = _btn_style->CreateInheritedStyle(RegisterToken(TEXT("TestButtonStyle")));
-	_next_style->SetResourceOverride(ButtonBackgroundPressedToken, ColorLightToken);
-	_next_style->SetResourceOverride(ButtonBackgroundHoverToken, ColorDarkToken);
+	FudgetStyle *_img_button_style = _btn_style->CreateInheritedStyle(RegisterToken(TEXT("ImageButtonStyle")));
+	//_img_button_style->SetResourceOverride(ButtonBackgroundPressedToken, ColorLightToken);
+	//_img_button_style->SetResourceOverride(ButtonBackgroundHoverToken, ColorDarkToken);
+
+	FudgetPadding img_btn_padding(5.f);
+	Variant padvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetPadding")), img_btn_padding);
+	_img_button_style->SetValueOverride(ButtonBackgroundPaddingToken, padvar);
+	_img_button_style->SetPainterOverride(RegisterToken(TEXT("SimpleButtonBorderImage")), ButtonBorderPainterToken);
 
 	AssetReference<Texture> tex = Content::Load<Texture>(TEXT("g:/projects/Flax/UIPluginTest/Content/UI/Images/bg01.flax"));
+	AssetReference<Texture> tex2 = Content::Load<Texture>(TEXT("g:/projects/Flax/UIPluginTest/Content/UI/Images/border01.flax"));
 
-	//FudgetFillAreaSettings texsettings(tex, Float4(16.f), true);
-	FudgetFillAreaSettings texsettings(tex, true);
+	FudgetFillAreaSettings texsettings(tex, false, false, Color::White);
 	Variant texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings);
-	_next_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
+	_img_button_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
+	texsettings.Color = Color(1.2f, 1.2f, 1.2f, 1.0f);
+	texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings);
+	_img_button_style->SetValueOverride(ButtonBackgroundHoverToken, texvar);
+	texsettings.Color = Color(0.8f, 0.8f, 0.8f, 1.0f);
+	texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings);
+	_img_button_style->SetValueOverride(ButtonBackgroundPressedToken, texvar);
 
-	FudgetSimpleButtonPainter *sbdrawer = New<FudgetSimpleButtonPainter>();
-	_element_map[RegisterToken(TEXT("SimpleButton"))] = sbdrawer;
+	FudgetFillAreaSettings texsettings2(tex2, Float4(16.f), false, Color::White);
+	texsettings2.AreaType = FudgetFillAreaType::Texture9;
+	texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings2);
+	_img_button_style->SetValueOverride(ButtonBorderNormalImageToken, texvar);
+	texsettings2.Color = Color(1.2f, 1.2f, 1.2f, 1.0f);
+	texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings2);
+	_img_button_style->SetValueOverride(ButtonBorderHoverImageToken, texvar);
+	texsettings2.Color = Color(0.8f, 0.8f, 0.8f, 1.0f);
+	texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings2);
+	_img_button_style->SetValueOverride(ButtonBorderPressedImageToken, texvar);
 
-	FudgetButtonBackgroundPainter *bbdrawer = New<FudgetButtonBackgroundPainter>();
-	_element_map[ButtonBackgroundPainterToken] = bbdrawer;
+	New<FudgetSimpleButtonPainter>(SimpleButtonPainterToken);
+	New<FudgetButtonBackgroundPainter>(ButtonBackgroundPainterToken);
+	New<FudgetButtonBorderPainter>(ButtonBorderPainterToken);
 
 	FudgetToken test_theme_token = RegisterToken(TEXT("TestTheme"));
 	if (!DuplicateTheme(MainThemeToken, test_theme_token))
@@ -252,14 +279,15 @@ bool FudgetThemes::GetValueFromTheme(FudgetToken theme_token, FudgetToken value_
 	return true;
 }
 
-void FudgetThemes::RegisterStyle(FudgetToken token, FudgetStyle *style)
+bool FudgetThemes::RegisterStyle(FudgetToken token, FudgetStyle *style)
 {
 	if (!token.IsValid())
-		return;
+		return false;
 	auto it = _style_map.find(token);
 	if (it != _style_map.end())
-		return;
+		return false;
 	_style_map[token] = style;
+	return true;
 }
 
 void FudgetThemes::UnregisterStyle(FudgetToken token, FudgetStyle *style)
@@ -269,3 +297,20 @@ void FudgetThemes::UnregisterStyle(FudgetToken token, FudgetStyle *style)
 	_style_map.erase(token);
 }
 
+bool FudgetThemes::RegisterElementPainter(FudgetToken token, FudgetElementPainter *painter)
+{
+	if (!token.IsValid())
+		return false;
+	auto it = _element_map.find(token);
+	if (it != _element_map.end())
+		return false;
+	_element_map[token] = painter;
+	return true;
+}
+
+void FudgetThemes::UnregisterElementPainter(FudgetToken token, FudgetElementPainter *painter)
+{
+	if (!token.IsValid())
+		return;
+	_element_map.erase(token);
+}
