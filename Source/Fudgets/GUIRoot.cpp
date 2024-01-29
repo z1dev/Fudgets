@@ -2,6 +2,7 @@
 #include "Fudget.h"
 #include "IFudgetMouseHook.h"
 #include "Styling/Themes.h"
+#include "Utils/Utils.h"
 
 #include "Engine/Level/Scene/Scene.h"
 #include "Engine/Engine/Time.h"
@@ -16,60 +17,7 @@
 #include <Engine/Serialization/JsonWriters.h>
 
 
-namespace
-{
-	FudgetControl* ControlFactory(ISerializable::DeserializeStream& stream, ISerializeModifier* modifier)
-	{
-		Guid id = JsonTools::GetGuid(stream, "ID");
-		modifier->IdsMapping.TryGet(id, id);
-		if (!id.IsValid())
-		{
-			LOG(Warning, "Invalid object id.");
-			return nullptr;
-		}
-		FudgetControl* obj = nullptr;
-
-		const auto typeNameMember = stream.FindMember("TypeName");
-		if (typeNameMember != stream.MemberEnd())
-		{
-			if (!typeNameMember->value.IsString())
-			{
-				LOG(Warning, "Invalid object type (TypeName must be an object type full name string).");
-				return nullptr;
-			}
-			const StringAnsiView typeName(typeNameMember->value.GetStringAnsiView());
-			const ScriptingTypeHandle type = Scripting::FindScriptingType(typeName);
-			if (type)
-			{
-				if (!FudgetControl::TypeInitializer.IsAssignableFrom(type))
-				{
-					LOG(Warning, "Invalid control type {0} (inherits from: {1}).", type.ToString(true), type.GetType().GetBaseType().ToString());
-					return nullptr;
-				}
-				const ScriptingObjectSpawnParams params(id, type);
-				obj = (FudgetControl*)type.GetType().Script.Spawn(params);
-
-				if (obj == nullptr)
-				{
-					LOG(Warning, "Failed to spawn object of type {0}.", type.ToString(true));
-					return nullptr;
-				}
-			}
-			else
-			{
-				LOG(Warning, "Unknown object type '{0}', ID: {1}", String(typeName.Get(), typeName.Length()), id.ToString());
-				return nullptr;
-			}
-		}
-		else
-		{
-			LOG(Warning, "Invalid object type.");
-		}
-
-		return obj;
-	}
-}
-
+FUDGET_FACTORY(FudgetControl, control);
 
 FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params) : FudgetGUIRoot(params, nullptr)
 {
@@ -283,7 +231,7 @@ void FudgetGUIRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 		controls.Resize(controlsCount, false);
 		for (int32 i = 0; i < controlsCount; i++)
 		{
-			FudgetControl* control = ControlFactory((DeserializeStream&)items[i], modifier);
+			FudgetControl* control = FudgetControlFactory((DeserializeStream&)items[i], modifier);
 			if (control == nullptr)
 			{
 				// Skip
