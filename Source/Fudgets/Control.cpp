@@ -24,7 +24,7 @@ FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, 
 FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
 	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
 	_max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f), _g2l_was_cached(false), _changing(false), _updating_registered(false),
-	_element_painter(nullptr), _cached_painter(nullptr), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
+	/*_element_painter(nullptr),*/ _cached_painter(nullptr), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
 	_cached_theme(nullptr)
 {
 	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
@@ -699,8 +699,8 @@ void FudgetControl::ClearStyleCache(bool inherited)
 
 FudgetElementPainter* FudgetControl::GetElementPainter()
 {
-	if (_element_painter != nullptr)
-		return _element_painter;
+	//if (_element_painter != nullptr)
+	//	return _element_painter;
 
 	if (_cached_painter != nullptr)
 		return _cached_painter;

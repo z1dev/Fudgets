@@ -15,8 +15,8 @@ FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer))
 
 FudgetTheme::FudgetTheme(const FudgetTheme &ori) : FudgetTheme()
 {
-	_resources = ori._resources;
-	_painter_ids = ori._painter_ids;
+	Resources = ori.Resources;
+	PainterIds = ori.PainterIds;
 }
 
 FudgetTheme* FudgetTheme::Duplicate() const
@@ -26,6 +26,7 @@ FudgetTheme* FudgetTheme::Duplicate() const
 }
 
 std::map<String, FudgetToken> FudgetThemes::_token_map;
+std::map<FudgetToken, String> FudgetThemes::_string_map;
 int FudgetThemes::_highest_token = 0;
 
 std::map<FudgetToken, FudgetElementPainter*> FudgetThemes::_element_map;
@@ -91,16 +92,16 @@ void FudgetThemes::Initialize()
 
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_theme_map[MainThemeToken] = main_theme;
-	main_theme->_resources.Add(ColorDarkToken, Color(0.6f, 0.6f, 0.6f, 1.0f));
-	main_theme->_resources.Add(ColorLightToken, Color(1.0f));
-	main_theme->_resources.Add(ColorNormalToken, Color(0.8f, 0.8f, 0.8f, 1.0f));
-	main_theme->_resources.Add(HoverAnimationTimeToken, 0.3f);
-	main_theme->_resources.Add(ColorAccentToken, Color(0.3f, 0.5f, 0.8f, 1.0f));
-	main_theme->_resources.Add(FocusRectangleWidthToken, 2.5f);
+	main_theme->Resources.Add(ColorDarkToken, Color(0.6f, 0.6f, 0.6f, 1.0f));
+	main_theme->Resources.Add(ColorLightToken, Color(1.0f));
+	main_theme->Resources.Add(ColorNormalToken, Color(0.8f, 0.8f, 0.8f, 1.0f));
+	main_theme->Resources.Add(HoverAnimationTimeToken, 0.3f);
+	main_theme->Resources.Add(ColorAccentToken, Color(0.3f, 0.5f, 0.8f, 1.0f));
+	main_theme->Resources.Add(FocusRectangleWidthToken, 2.5f);
 
-	main_theme->_painter_ids.Add(RegisterToken(TEXT("FudgetSimpleButton")), SimpleButtonPainterToken);
-	main_theme->_painter_ids.Add(ButtonBackgroundPainterToken, ButtonBackgroundPainterToken);
-	main_theme->_painter_ids.Add(ButtonBorderPainterToken, ButtonBorderPainterToken);
+	main_theme->PainterIds.Add(RegisterToken(TEXT("FudgetSimpleButton")), SimpleButtonPainterToken);
+	main_theme->PainterIds.Add(ButtonBackgroundPainterToken, ButtonBackgroundPainterToken);
+	main_theme->PainterIds.Add(ButtonBorderPainterToken, ButtonBorderPainterToken);
 
 	FudgetStyle *_default_style = New<FudgetStyle>(TEXT("DefaultStyle"));
 	_default_style->SetResourceOverride(ButtonBackgroundNormalToken, ColorNormalToken);
@@ -157,12 +158,12 @@ void FudgetThemes::Initialize()
 
 	FudgetTheme *test_theme = GetTheme(test_theme_token);
 
-	test_theme->_resources[ColorDarkToken] = Color(0.7, 0.4, 0.1, 1.0f);
-	test_theme->_resources[ColorLightToken] = Color(1.0f, 0.8f, 0.3f, 1.0f);
-	test_theme->_resources[ColorNormalToken] = Color(0.85f, 0.5f, 0.15f, 1.0f);
-	test_theme->_resources[HoverAnimationTimeToken] = 0.15f;
-	test_theme->_resources[ColorAccentToken] = Color(0.3f, 0.8f, 0.5f, 1.0f);
-	test_theme->_resources[FocusRectangleWidthToken] = 4.5f;
+	test_theme->Resources[ColorDarkToken] = Color(0.7, 0.4, 0.1, 1.0f);
+	test_theme->Resources[ColorLightToken] = Color(1.0f, 0.8f, 0.3f, 1.0f);
+	test_theme->Resources[ColorNormalToken] = Color(0.85f, 0.5f, 0.15f, 1.0f);
+	test_theme->Resources[HoverAnimationTimeToken] = 0.15f;
+	test_theme->Resources[ColorAccentToken] = Color(0.3f, 0.8f, 0.5f, 1.0f);
+	test_theme->Resources[FocusRectangleWidthToken] = 4.5f;
 }
 
 void FudgetThemes::Uninitialize()
@@ -190,8 +191,19 @@ FudgetToken FudgetThemes::GetToken(String token_name)
 	return it->second;
 }
 
+String FudgetThemes::GetTokenName(FudgetToken token)
+{
+	auto it = _string_map.find(token);
+	if (it == _string_map.end())
+		return TEXT("");
+	return it->second;
+}
+
 FudgetToken FudgetThemes::RegisterToken(String token_name, bool duplicate_is_error)
 {
+	if (token_name.IsEmpty())
+		return FudgetToken::Invalid;
+
 	auto it = _token_map.find(token_name);
 	if (it != _token_map.end())
 	{
@@ -200,6 +212,7 @@ FudgetToken FudgetThemes::RegisterToken(String token_name, bool duplicate_is_err
 		return it->second;
 	}
 	_token_map[token_name] = ++_highest_token;
+	_string_map[_highest_token] = token_name;
 	return _highest_token;
 }
 
@@ -272,8 +285,8 @@ bool FudgetThemes::GetValueFromTheme(FudgetToken theme_token, FudgetToken value_
 	if (it == _theme_map.end())
 		return false;
 
-	auto itr = it->second->_resources.Find(value_token);
-	if (itr == it->second->_resources.End())
+	auto itr = it->second->Resources.Find(value_token);
+	if (itr == it->second->Resources.End())
 		return false;
 	result = (*itr).Value;
 	return true;

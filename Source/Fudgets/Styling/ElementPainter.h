@@ -14,12 +14,17 @@ class FudgetPainterPropertyProvider;
 /// Base type for classes that can draw elements or a full control. Derived classes can draw something simple
 /// like a line of text or the background of a button, or can draw every part of a complex control.
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS(NoSpawn, Abstract)
 class FUDGETS_API FudgetElementPainter : public ScriptingObject
 {
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetElementPainter);
 public:
+	//static FudgetElementPainter* Spawn(const SpawnParams& params) { return nullptr; }
+	//explicit FudgetElementPainter() : FudgetElementPainter(SpawnParams(Guid::New(), FudgetElementPainter::TypeInitializer)) {}
+	//explicit FudgetElementPainter(const SpawnParams& params);
+
+	FudgetElementPainter();
 	FudgetElementPainter(String name);
 	FudgetElementPainter(FudgetToken name_token);
 	~FudgetElementPainter();
@@ -29,7 +34,7 @@ public:
 	/// </summary>
 	/// <param name="control">Control whose theme and style is used for drawing</param>
 	/// <param name="provider">Property provider that can supply the painter with data about the state to draw</param>
-	API_FUNCTION() virtual void Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider) = 0;
+	virtual void Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider) {}
 
 	/// <summary>
 	/// Retrieves an element painter from the control's active style with the passed token and calls its Draw function.
@@ -39,6 +44,8 @@ public:
 	/// <param name="painter_token">Token of painter overriden in the style</param>
 	API_FUNCTION() void DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token);
 private:
+	API_FUNCTION() void InitializeInternal(FudgetToken name_token);
+
 	FudgetToken _painter_name;
 };
 
@@ -77,6 +84,8 @@ public:
 	/// <param name="result">The property's value</param>
 	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
 	API_FUNCTION() virtual bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) { return false; }
+
+	// TODO: add more property getters. GetElementGenericProperty should work for everything, but using variants in c++ is more work.
 
 	/// <summary>
 	/// Returns the delta time, which is increased in Control on OnUpdate. It's reset to 0 after drawing is done.

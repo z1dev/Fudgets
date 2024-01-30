@@ -166,17 +166,19 @@ enum class FudgetLayoutFlag : uint16
 };
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
+//API_CLASS(NoSpawn)
 
 /// <summary>
 /// Base class for "slots" in a layout that can be used to assign properties for controls for layouting
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
+	//DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
+	DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
-	FudgetLayoutSlot(FudgetControl *control);
+	FudgetLayoutSlot(const SpawnParams &params, FudgetControl *control);
 
 	/// <summary>
 	/// Fetches the control that is positioned and sized by the values in this slot
@@ -423,6 +425,14 @@ protected:
 	FudgetLayout(const SpawnParams &params, FudgetLayoutFlag _flags);
 
 private:
+	/// <summary>
+	/// Sets the container that holds the controls this layout can reposition or resize. For internal use, it doesn't
+	/// notify the container of the changes. Use SetOwner for normal use.
+	/// </summary>
+	/// <param name="value">The new container this layout will be assined to</param>
+	API_PROPERTY() void SetOwnerInternal(FudgetContainer *value);
+
+
 	FudgetContainer *_owner;
 	Array<FudgetLayoutSlot*> _slots;
 
@@ -434,6 +444,8 @@ private:
 	mutable Float2 _cached_max;
 
 	FudgetLayoutFlag _flags;
+
+	bool _changing;
 
 	friend class FudgetContainer;
 };

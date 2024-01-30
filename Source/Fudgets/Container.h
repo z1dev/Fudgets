@@ -70,7 +70,7 @@ public:
     FORCE_INLINE T* CreateLayout()
     {
         T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
-        AddLayoutInternal(layout);
+        SetLayoutInternal(layout);
         return layout;
     }
 
@@ -277,8 +277,17 @@ public:
     /// <returns></returns>
     void Draw() override;
 
-    API_FUNCTION(Internal) void AddLayoutInternal(FudgetLayout *layout);
-    API_FUNCTION() FudgetLayout* GetLayoutInternal() const { return _layout; }
+    /// <summary>
+    /// Returns the current layout set for the container
+    /// </summary>
+    API_PROPERTY() FudgetLayout* GetLayout() const { return _layout; }
+
+    /// <summary>
+    /// Sets the given layout for the container. It's the responsibility of the user to get the current layout beforehand and
+    /// delete it when this function is done.
+    /// </summary>
+    /// <param name="value">The new layout for the container</param>
+    API_PROPERTY() void SetLayout(FudgetLayout *value);
 
     /// <summary>
     /// In the base FudgeControl, this would notify parent containers of changes, but changes are
@@ -324,7 +333,17 @@ public:
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
+
+protected:
+
+    /// <summary>
+    /// Sets the layout to the container and changes its owner
+    /// </summary>
+    /// <param name="layout">The layout to set</param>
+    API_FUNCTION(Internal) void SetLayoutInternal(FudgetLayout *layout);
+
 private:
+
     /// <summary>
     /// Directly changes the position and size of the control. Only to be called by FudgetLayout. This derived
     /// version makes sure that the control's size change will cause the contents to recalculate when necessary.

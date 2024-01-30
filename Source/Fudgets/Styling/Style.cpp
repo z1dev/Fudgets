@@ -90,8 +90,8 @@ bool FudgetStyle::GetResourceValue(FudgetTheme *theme, FudgetToken token, API_PA
 
 	if (res->_resource_id.IsValid())
 	{
-		auto it = theme->_resources.Find(res->_resource_id);
-		if (it == theme->_resources.End())
+		auto it = theme->Resources.Find(res->_resource_id);
+		if (it == theme->Resources.End())
 			return false;
 		result = (*it).Value;
 		return true;
@@ -252,8 +252,8 @@ FudgetElementPainter* FudgetStyle::GetControlPainter(FudgetTheme *theme, Array<F
 			if (painter != nullptr)
 				return painter;
 		}
-		auto it = theme->_painter_ids.Find(token);
-		if (it != theme->_painter_ids.End())
+		auto it = theme->PainterIds.Find(token);
+		if (it != theme->PainterIds.End())
 			return FudgetThemes::GetElementPainter((*it).Value);
 	}
 	return nullptr;

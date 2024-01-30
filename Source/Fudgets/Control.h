@@ -986,7 +986,6 @@ public:
 	/// </summary>
 	API_PROPERTY() void SetThemeId(FudgetToken value);
 
-
 	/// <summary>
 	/// The theme data which is retrieved using the theme id set to this control, or if not set, the theme in the closets
 	/// parent that has a theme. If no theme is set to any control, the main theme is returned.
@@ -1081,9 +1080,11 @@ private:
 	// The control's Update function is called with a delta time if this is true.
 	bool _updating_registered;
 
-	// The element painter set for this control to draw it. If not set, the painter is retrieved based on the class
-	// hierarchy and stored in _cached_painter.
-	FudgetElementPainter *_element_painter;
+	// TODO: if it is requested, this can be made available. Warning: SetElementPainter function is not implemented yet.
+	//// The element painter set for this control to draw it. If not set, the painter is retrieved based on the class
+	//// hierarchy and stored in _cached_painter.
+	//FudgetElementPainter *_element_painter;
+
 	// The cached element painter used to draw the full control. This is set during first draw and is not changed until
 	// the cached style values are reset with ClearStyleCache, or invalidated by a change of theme or style.
 	FudgetElementPainter *_cached_painter;
