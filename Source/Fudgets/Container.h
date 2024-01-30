@@ -278,6 +278,7 @@ public:
     void Draw() override;
 
     API_FUNCTION(Internal) void AddLayoutInternal(FudgetLayout *layout);
+    API_FUNCTION() FudgetLayout* GetLayoutInternal() const { return _layout; }
 
     /// <summary>
     /// In the base FudgeControl, this would notify parent containers of changes, but changes are
