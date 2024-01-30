@@ -423,6 +423,14 @@ protected:
 	FudgetLayout(const SpawnParams &params, FudgetLayoutFlag _flags);
 
 private:
+	/// <summary>
+	/// Sets the container that holds the controls this layout can reposition or resize. For internal use, it doesn't
+	/// notify the container of the changes. Use SetOwner for normal use.
+	/// </summary>
+	/// <param name="value">The new container this layout will be assined to</param>
+	API_PROPERTY() void SetOwnerInternal(FudgetContainer *value);
+
+
 	FudgetContainer *_owner;
 	Array<FudgetLayoutSlot*> _slots;
 
@@ -434,6 +442,8 @@ private:
 	mutable Float2 _cached_max;
 
 	FudgetLayoutFlag _flags;
+
+	bool _changing;
 
 	friend class FudgetContainer;
 };

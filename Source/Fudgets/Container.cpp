@@ -392,11 +392,15 @@ void FudgetContainer::Draw()
 	Base::Draw();
 }
 
-void FudgetContainer::AddLayoutInternal(FudgetLayout *layout)
+void FudgetContainer::SetLayout(FudgetLayout *value)
 {
-	_layout = layout;
-	// TODO: check that this dirties the parent layouts
-	layout->SetOwner(this);
+	if (_layout == value || _changing)
+		return;
+	_changing = true;
+	_layout = value;
+	if (_layout != nullptr)
+		_layout->SetOwner(this);
+	_changing = false;
 }
 
 void FudgetContainer::SizeOrPosModified(FudgetDirtType dirt_flags)
@@ -476,9 +480,18 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 		if (!layout->IsRegistered())
 			layout->RegisterObject();
 
-		AddLayoutInternal(layout);
+		SetLayoutInternal(layout);
 		//_layout = layout;
 	}
+}
+
+void FudgetContainer::SetLayoutInternal(FudgetLayout *layout)
+{
+	if (_layout == layout)
+		return;
+	_layout = layout;
+	if (_layout != nullptr)
+		_layout->SetOwnerInternal(this);
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
@@ -495,3 +508,4 @@ void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)
 		_layout->MarkDirtyOnLayoutUpdate(type);
 	}
 }
+

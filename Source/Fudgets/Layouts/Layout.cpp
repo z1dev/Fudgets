@@ -41,7 +41,7 @@ FudgetLayout::FudgetLayout(const SpawnParams &params) : FudgetLayout(params, Fud
 }
 
 FudgetLayout::FudgetLayout(const SpawnParams &params, FudgetLayoutFlag flags) : ScriptingObject(params), _owner(nullptr),
-		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(flags)
+		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(flags), _changing(false)
 {
 
 }
@@ -54,8 +54,10 @@ FudgetLayout::~FudgetLayout()
 
 void FudgetLayout::SetOwner(FudgetContainer *value)
 {
-	if (_owner == value)
+	if (_changing || _owner == value)
 		return;
+
+	_changing = true;
 
 	_owner = value;
 	_layout_dirty = true;
@@ -63,6 +65,10 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 
 	if (value != nullptr)
 		FillSlots();
+
+	value->SetLayout(this);
+
+	_changing = false;
 }
 
 void FudgetLayout::MarkDirty(FudgetDirtType dirt_flags, bool content_changed)
@@ -278,3 +284,17 @@ Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type) const
 			return Float2(0.f);
 	}
 }
+
+void FudgetLayout::SetOwnerInternal(FudgetContainer *value)
+{
+	if (_owner == value)
+		return;
+
+	_owner = value;
+	_layout_dirty = true;
+	_size_dirty = true;
+
+	if (value != nullptr)
+		FillSlots();
+}
+

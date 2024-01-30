@@ -36,7 +36,7 @@ namespace Fudgets
                 return null;
 
             var child = New<T>(); //Activator.CreateInstance<T>();
-            AddLayoutInternal(child);
+            SetLayoutInternal(child);
             return (T)child;
         }
 
