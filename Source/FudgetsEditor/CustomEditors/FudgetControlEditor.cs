@@ -32,7 +32,7 @@ namespace FudgetsEditor.CustomEditors
                 return;
 
             FudgetContainer parent = control.Parent;
-            FudgetLayout fudgetLayout = parent.GetLayoutInternal();
+            FudgetLayout fudgetLayout = parent.Layout;
 
             FudgetLayoutSlot slot = fudgetLayout.GetSlotInternal(control.IndexInParent);
 
@@ -44,14 +44,14 @@ namespace FudgetsEditor.CustomEditors
                     return null;
 
                 FudgetContainer container = control.Parent;
-                FudgetLayout fudgetLayout = container.GetLayoutInternal();
+                FudgetLayout fudgetLayout = container.Layout;
 
                 return fudgetLayout.GetSlotInternal(control.IndexInParent);
             });
             values.Add(slot);
 
             GenericEditor editor = new GenericEditor();
-            _group = layout.Group("Layout", null);
+            _group = layout.Group("Layout Properties", null);
             CustomEditor newEditor = _group.Object(values, editor);
 
             newEditor.Refresh();
@@ -61,7 +61,7 @@ namespace FudgetsEditor.CustomEditors
             if (control is not FudgetContainer container)
                 return;
 
-            _group.Space(16);
+            _group = layout.Group("Layout", null);
             _label = _group.Label($"Current Layout: {FlaxEditor.Utilities.Utils.GetPropertyNameUI(new ScriptType(fudgetLayout.GetType()).Name)}");
             _button = _group.Button("Change Layout");
             _button.Button.Clicked += () =>
@@ -80,8 +80,7 @@ namespace FudgetsEditor.CustomEditors
                         {
                             ScriptType type = (ScriptType)x.Tag;
                             FudgetContainer control = Values[0] as FudgetContainer;
-                            Debug.Log($"Picked {FlaxEditor.Utilities.Utils.GetPropertyNameUI(type.Name)}");
-                            //control.AddLayoutInternal(type.CreateInstance() as FudgetLayout);
+                            control.Layout = type.CreateInstance() as FudgetLayout;
 
                             _label.Label.Text = $"Current Layout: {FlaxEditor.Utilities.Utils.GetPropertyNameUI(type.Name)}";
                         };
