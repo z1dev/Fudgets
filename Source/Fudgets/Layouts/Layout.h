@@ -166,17 +166,19 @@ enum class FudgetLayoutFlag : uint16
 };
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
+//API_CLASS(NoSpawn)
 
 /// <summary>
 /// Base class for "slots" in a layout that can be used to assign properties for controls for layouting
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
+	//DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
+	DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
-	FudgetLayoutSlot(FudgetControl *control);
+	FudgetLayoutSlot(const SpawnParams &params, FudgetControl *control);
 
 	/// <summary>
 	/// Fetches the control that is positioned and sized by the values in this slot

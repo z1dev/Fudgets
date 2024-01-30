@@ -156,13 +156,13 @@ public:
     /// The values in this theme, that can be referenced by styles. Although it's not read-only, the values
     /// shouldn't be changed directly, because styles cache the values and they won't be refreshed.
     /// </summary>
-    Dictionary<FudgetToken, Variant> Resources;
+    API_FIELD() Dictionary<FudgetToken, Variant> Resources;
 
     /// <summary>
     /// Element painter tokens that can be set for controls based on their name. The tokens are used to retrieve
     /// the painter from FudgetThemes::GetElementPainter
     /// </summary>
-    Dictionary<FudgetToken, FudgetToken> PainterIds;
+    API_FIELD() Dictionary<FudgetToken, FudgetToken> PainterIds;
 private:
     /// <summary>
     /// Creates a theme that is a duplicate of this theme. All values and painter ids will be matching.
@@ -192,10 +192,10 @@ public:
     API_FUNCTION() static void Uninitialize();
 
     // Token for the base theme that's guaranteed to be present.
-    static const FudgetToken MainThemeToken;
+    API_FIELD(ReadOnly) static const FudgetToken MainThemeToken;
 
     // Token to get the default style that holds basic values.
-    static const FudgetToken DefaultStyleToken;
+    API_FIELD(ReadOnly) static const FudgetToken DefaultStyleToken;
 
     // The static tokens below are probably all temporary here and will be removed:
 
@@ -208,15 +208,15 @@ public:
     /// <summary>
     /// Token for the "ButtonDownToken" string.
     /// </summary>
-    static const FudgetToken ButtonDownToken;
+    API_FIELD(ReadOnly) static const FudgetToken ButtonDownToken;
     /// <summary>
     /// Token for the "ButtonPressedToken" string.
     /// </summary>
-    static const FudgetToken LeftButtonPressedToken;
+    API_FIELD(ReadOnly) static const FudgetToken LeftButtonPressedToken;
     /// <summary>
     /// Token for the "ButtonMouseOverToken" string.
     /// </summary>
-    static const FudgetToken MouseHoverToken;
+    API_FIELD(ReadOnly) static const FudgetToken MouseHoverToken;
 
     // Tokens of standard values that can be used to find style settings
 

@@ -20,7 +20,14 @@ float AddBigFloats(float a, float b)
 }
 
 
-FudgetLayoutSlot::FudgetLayoutSlot(FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer)), _control(control), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
+//SpawnParams(Guid::New(), TypeInitializer)
+
+FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params)
+{
+	CRASH
+}
+
+FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params, FudgetControl *control) : Base(params), _control(control), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
 {
 
 }

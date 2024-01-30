@@ -125,5 +125,5 @@ FudgetLayoutSlot* FudgetStackLayout::CreateSlot(FudgetControl *control)
 {
 	// See the function of FudgetListLayout::CreateSlot(...) for a description.
 
-	return New<FudgetLayoutSlot>(control);
+	return New<FudgetLayoutSlot>(SpawnParams(Guid::New(), FudgetLayoutSlot::TypeInitializer), control);
 }

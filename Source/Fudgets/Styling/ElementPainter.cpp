@@ -5,6 +5,10 @@
 
 #include "Engine/Core/Log.h"
 
+FudgetElementPainter::FudgetElementPainter() : Base(SpawnParams(Guid::New(), TypeInitializer)), _painter_name(FudgetToken::Invalid)
+{
+}
+
 FudgetElementPainter::FudgetElementPainter(String name) : FudgetElementPainter(FudgetThemes::RegisterToken(name))
 {
 }
@@ -12,6 +16,13 @@ FudgetElementPainter::FudgetElementPainter(String name) : FudgetElementPainter(F
 FudgetElementPainter::FudgetElementPainter(FudgetToken name_token) : Base(SpawnParams(Guid::New(), TypeInitializer)),
 	_painter_name(name_token)
 {
+	InitializeInternal(_painter_name);
+}
+
+void FudgetElementPainter::InitializeInternal(FudgetToken name_token)
+{
+	ASSERT(name_token == _painter_name);
+
 	if (!FudgetThemes::RegisterElementPainter(_painter_name, this))
 		LOG(Error, "Invalid token for FudgetElementPainter. Element painter wasn't registered.");
 }

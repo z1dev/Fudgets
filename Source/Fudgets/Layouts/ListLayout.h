@@ -7,12 +7,13 @@
 /// <summary>
 /// Derived slot holding attributes necessary for layouting for the list layout
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS()
 class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 {
 	using Base = FudgetLayoutSlot;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetListLayoutSlot);
+	DECLARE_SCRIPTING_TYPE(FudgetListLayoutSlot);
 	
+	FudgetListLayoutSlot(const SpawnParams &params, FudgetControl *control);
 	FudgetListLayoutSlot(FudgetControl *control);
 
 	/// <summary>

@@ -4,11 +4,18 @@
 
 
 
-FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : Base(control),
+FudgetListLayoutSlot::FudgetListLayoutSlot(const SpawnParams &params) : FudgetListLayoutSlot(SpawnParams(Guid::New(), TypeInitializer), nullptr)
+{
+}
+
+FudgetListLayoutSlot::FudgetListLayoutSlot(const SpawnParams &params, FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer), control),
 	_horz_align(FudgetHorzAlign::Left), _vert_align(FudgetVertAlign::Top), _enforce_limits(true)
 {
 }
 
+FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : FudgetListLayoutSlot(SpawnParams(Guid::New(), TypeInitializer), control)
+{
+}
 
 FudgetListLayout::FudgetListLayout(const SpawnParams &params) : FudgetListLayout(params, FudgetOrientation::Horizontal)
 {
