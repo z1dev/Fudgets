@@ -78,6 +78,8 @@ public:
 	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
 	API_FUNCTION() virtual bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) { return false; }
 
+	// TODO: add more property getters. GetElementGenericProperty should work for everything, but using variants in c++ is more work.
+
 	/// <summary>
 	/// Returns the delta time, which is increased in Control on OnUpdate. It's reset to 0 after drawing is done.
 	/// </summary>
