@@ -10,6 +10,8 @@ using FlaxEditor.CustomEditors;
 using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine.GUI;
+using FlaxEditor.Utilities;
+using System.IO;
 
 namespace FudgetsEditor;
 
@@ -105,9 +107,12 @@ public partial class FudgetsEditorWindow
             actions.Add(new FudgetDeleteAction(this, control));
         }
 
-        MultiUndoAction multi = new MultiUndoAction(actions);
-        multi.Do();
-        Undo.AddAction(multi);
+        if (actions.Count > 0)
+        {
+            MultiUndoAction multi = new MultiUndoAction(actions);
+            multi.Do();
+            Undo.AddAction(multi);
+        }
     }
 
     private void Rename()
@@ -116,6 +121,8 @@ public partial class FudgetsEditorWindow
         // Also this behavior is probably terrible
         foreach (TreeNode selected in _tree.Selection)
         {
+            if (selected.Tag == null)
+                continue;
             ItemNode node = (ItemNode)selected;
             node.StartRenaming();
         }
@@ -150,13 +157,20 @@ public partial class FudgetsEditorWindow
     {
         List<FudgetControl> oldControlSelection = _selectedControls;
 
-        _tree.Deselect();
+        _tree.DeselectSilent();
         List<object> expandedControls = GatherExpanded(_tree);
         _tree.RemoveChildren();
 
         List<TreeNode> newExpandedNodes = new List<TreeNode>();
         List<TreeNode> newSelectedNodes = new List<TreeNode>();
-        BuildForControl(RootObject, _tree, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
+
+        ItemNode rootNode = new ItemNode(RootObject);
+        TreeNode localNode = _tree.AddChild(rootNode);
+        localNode.Text = Path.GetFileNameWithoutExtension(_asset != null ? _asset.Path : "Fudget UI");
+        localNode.Tag = null;
+        newExpandedNodes.Add(localNode);
+
+        BuildForControl(RootObject, rootNode, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
 
         foreach (TreeNode node in newExpandedNodes)
         {
@@ -169,7 +183,7 @@ public partial class FudgetsEditorWindow
 
     private void SelectedControlChanged(List<TreeNode> before, List<TreeNode> after)
     {
-        SetSelection(after, before);
+        SetSelection(after);
         Undo.AddAction(new FudgetSelectionChangeAction(this, before, after));
     }
 
@@ -194,7 +208,7 @@ public partial class FudgetsEditorWindow
     /// <summary>
     /// TODO: docs
     /// </summary>
-    public void SetSelection(List<TreeNode> newSelection, List<TreeNode> oldSelect = null)
+    public void SetSelection(List<TreeNode> newSelection)
     {
         _tree.SetSelectionSilent(newSelection);
         UpdatePropertiesSelection(newSelection);
@@ -238,7 +252,7 @@ public partial class FudgetsEditorWindow
         /// <summary>
         /// TODO: docs
         /// </summary>
-        public FudgetTree() : base()
+        public FudgetTree() : base(true)
         {
             RightClick += TreeNodeRightClick;
             BaseTreeRightClick += OnBaseTreeRightClick;
@@ -269,23 +283,8 @@ public partial class FudgetsEditorWindow
             _rightClickDown = false;
         }
 
-        /*/// <inheritdoc />
-        public override bool OnMouseUp(Float2 location, MouseButton button)
-        {
-            if (button == MouseButton.Right && _rightClickDown)
-            {
-                _rightClickDown = false;
-                if (BaseTreeRightClick != null)
-                {
-                    BaseTreeRightClick(location);
-                }
-            }
-
-            return base.OnMouseUp(location, button);
-        }*/
-
         /// <summary>
-        /// Silently (no events fired) sets a new selection. This is used to safely undo without infinite recursion.
+        /// Silently (no events fired) sets a new selection. This is used to safely undo without infinite recursion from events.
         /// </summary>
         /// <param name="selection"></param>
         public void SetSelectionSilent(List<TreeNode> selection)
@@ -300,6 +299,14 @@ public partial class FudgetsEditorWindow
             {
                 Selection[i].ExpandAllParents();
             }
+        }
+
+        /// <summary>
+        /// Silently (no events fired) clears current select. This is used to safely undo.
+        /// </summary>
+        public void DeselectSilent()
+        {
+            Selection.Clear();
         }
 
         private ContextMenu GetOrSetContextMenu()
@@ -441,6 +448,9 @@ public partial class FudgetsEditorWindow
         /// <inheritdoc />
         protected override bool OnMouseDoubleClickHeader(ref Float2 location, MouseButton button)
         {
+            if (Tag == null)
+                return false;
+
             StartRenaming();
             return true;
         }
@@ -562,7 +572,7 @@ public class FudgetDeleteAction : IUndoAction
         _oldParent.AddChild(_deletionTarget, _oldIndex);
         _oldParent = null;
         _window.OnRebuildTree();
-        _window.FindNodeByControl(_deletionTarget).Select();
+        _window.SelectNodeByControl(_deletionTarget);
         _done = false;
 
         _window.OnAnyChange();

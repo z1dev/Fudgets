@@ -195,7 +195,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
                 continue;
             }
 
-            if (node.IsExpanded)
+            if (node.IsExpanded && node.Tag != null)
             {
                 output.Add(node.Tag);
             }

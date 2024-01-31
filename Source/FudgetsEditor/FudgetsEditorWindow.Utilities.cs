@@ -47,6 +47,23 @@ public partial class FudgetsEditorWindow
         return subset.Count >= 1 ? subset[0] : null;
     }
 
+    /// <summary>
+    /// Additively selects the tree node of a specified control.
+    /// </summary>
+    /// <param name="control">The control to select.</param>
+    public void SelectNodeByControl(FudgetControl control)
+    {
+        ItemNode node = FindNodeByControl(control);
+        if (node == null)
+            return;
+
+        List<TreeNode> nodes = new List<TreeNode>();
+        nodes.AddRange(_tree.Selection);
+        nodes.Add(node);
+
+        _tree.SetSelectionSilent(nodes);
+    }
+
     private List<ItemNode> RecurseAndGetSubset(ContainerControl current, Func<ItemNode, bool> validator)
     {
         List<ItemNode> subset = new List<ItemNode>();
