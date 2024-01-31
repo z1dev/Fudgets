@@ -163,7 +163,7 @@ public partial class FudgetsEditorWindow
             node.Expand(true);
         }
 
-        _tree.Select(newSelectedNodes);
+        _tree.SetSelectionSilent(newSelectedNodes);
         Focus();
     }
 
@@ -269,7 +269,7 @@ public partial class FudgetsEditorWindow
             _rightClickDown = false;
         }
 
-        /// <inheritdoc />
+        /*/// <inheritdoc />
         public override bool OnMouseUp(Float2 location, MouseButton button)
         {
             if (button == MouseButton.Right && _rightClickDown)
@@ -282,7 +282,7 @@ public partial class FudgetsEditorWindow
             }
 
             return base.OnMouseUp(location, button);
-        }
+        }*/
 
         /// <summary>
         /// Silently (no events fired) sets a new selection. This is used to safely undo without infinite recursion.
