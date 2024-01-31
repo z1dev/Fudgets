@@ -54,14 +54,13 @@ class FUDGETS_API FudgetContainer : public FudgetControl
     using Base = FudgetControl;
 	DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
-    FudgetContainer(FudgetControlFlags flags);
-    FudgetContainer(const SpawnParams &params, FudgetControlFlags flags);
     ~FudgetContainer();
 
     template<typename T>
     FORCE_INLINE T* CreateChild()
     {
         T* child = New<T>(SpawnParams(Guid::New(), TypeInitializer));
+        child->Initialize();
         AddChild(child);
         return child;
     }
@@ -70,6 +69,7 @@ public:
     FORCE_INLINE T* CreateLayout()
     {
         T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
+        layout->Initialize();
         SetLayoutInternal(layout);
         return layout;
     }
@@ -335,6 +335,8 @@ public:
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
 protected:
+
+    FudgetControlFlags GetCreationFlags() const override;
 
     /// <summary>
     /// Sets the layout to the container and changes its owner

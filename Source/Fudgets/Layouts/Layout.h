@@ -178,8 +178,7 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 	//DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
 	DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
-	FudgetLayoutSlot(const SpawnParams &params, FudgetControl *control);
-
+public:
 	/// <summary>
 	/// Fetches the control that is positioned and sized by the values in this slot
 	/// </summary>
@@ -210,15 +209,18 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 /// controls, instead they access the controls of the container to set sizes and positions. To create a
 /// new layout, see the implementation of StackLayout as a minimal example and for more explanation.
 /// </summary>
-API_CLASS(Abstract, NoSpawn)
+API_CLASS(Abstract)
 class FUDGETS_API FudgetLayout : public ScriptingObject, public ISerializable
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayout);
+	DECLARE_SCRIPTING_TYPE(FudgetLayout);
 public:
-	FudgetLayout();
-	FudgetLayout(FudgetLayoutFlag flags);
 	~FudgetLayout();
+
+	/// <summary>
+	/// Always call after the layout is created. Containers do this automatically in CreateLayout.
+	/// </summary>
+	API_FUNCTION() virtual void Initialize();
 
 	/// <summary>
 	/// Gets the container that holds the controls this layout can reposition or resize
@@ -341,13 +343,13 @@ protected:
 	/// </summary>
 	/// <param name="type">Which size to calculate and return</param>
 	/// <returns>The calculated size</returns>
-	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const = 0;
+	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const { return Float2(0.f); }
 
 	/// <summary>
 	/// Calculates the child controls position and size on the owner container.
 	/// </summary>
 	/// <returns>Whether the layout was successful and the dirty flag can be cleared</returns>
-	API_FUNCTION() virtual bool LayoutChildren() = 0;
+	API_FUNCTION() virtual bool LayoutChildren() { return false;  }
 
 	/// <summary>
 	/// Creates a slot which represents properties of a single child control on the owner container. The function
@@ -355,7 +357,7 @@ protected:
 	/// </summary>
 	/// <param name="control">The control that will be inserted into the slot</param>
 	/// <returns>The created object holding layouting properties of the control</returns>
-	API_FUNCTION() virtual FudgetLayoutSlot* CreateSlot(FudgetControl *control) = 0;
+	API_FUNCTION() virtual FudgetLayoutSlot* CreateSlot(FudgetControl *control);
 
 	/// <summary>
 	/// Called by the owner container when a child control was added to it. Checks which recalculations
@@ -420,9 +422,13 @@ protected:
 	/// <returns>Whether at least one value was matching the layout flags</returns>
 	API_FUNCTION() bool HasAnyFlag(FudgetLayoutFlag flags) const;
 
-
-	FudgetLayout(const SpawnParams &params);
-	FudgetLayout(const SpawnParams &params, FudgetLayoutFlag _flags);
+	/// <summary>
+	/// Called during layout initialization to set some basic behavior of the layout that will apply to all layouts of
+	/// this type. It can be modified for individual layouts with SetLayoutFlags later.
+	/// Include the result of the base control's GetCreationFlags to also return those flags for correct behavior.
+	/// </summary>
+	/// <returns>The creation flags for this control.</returns>
+	API_FUNCTION() virtual FudgetLayoutFlag GetCreationFlags() const { return FudgetLayoutFlag::None; }
 
 private:
 	/// <summary>

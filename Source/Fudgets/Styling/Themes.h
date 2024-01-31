@@ -152,23 +152,31 @@ public:
     /// </summary>
     FudgetTheme(const FudgetTheme &ori);
 
-    /// <summary>
-    /// The values in this theme, that can be referenced by styles. Although it's not read-only, the values
-    /// shouldn't be changed directly, because styles cache the values and they won't be refreshed.
-    /// </summary>
-    API_FIELD() Dictionary<FudgetToken, Variant> Resources;
+    API_FUNCTION() bool GetResource(FudgetToken token, API_PARAM(Out) Variant &result) const;
+    API_FUNCTION() void SetResource(FudgetToken token, Variant value);
 
-    /// <summary>
-    /// Element painter tokens that can be set for controls based on their name. The tokens are used to retrieve
-    /// the painter from FudgetThemes::GetElementPainter
-    /// </summary>
-    API_FIELD() Dictionary<FudgetToken, FudgetToken> PainterIds;
+    API_FUNCTION() FudgetToken GetPainterId(FudgetToken token) const;
+    API_FUNCTION() void SetPainterId(FudgetToken token, FudgetToken value);
+
 private:
     /// <summary>
     /// Creates a theme that is a duplicate of this theme. All values and painter ids will be matching.
     /// </summary>
     /// <returns></returns>
     FudgetTheme* Duplicate() const;
+
+
+    /// <summary>
+    /// The values in this theme, that can be referenced by styles. Although it's not read-only, the values
+    /// shouldn't be changed directly, because styles cache the values and they won't be refreshed.
+    /// </summary>
+    std::map<FudgetToken, Variant> _resources;
+
+    /// <summary>
+    /// Element painter tokens that can be set for controls based on their name. The tokens are used to retrieve
+    /// the painter from FudgetThemes::GetElementPainter
+    /// </summary>
+    std::map<FudgetToken, FudgetToken> _painter_ids;
 
     friend class FudgetThemes;
 };
@@ -300,6 +308,41 @@ public:
     API_FUNCTION() static FudgetElementPainter* GetElementPainter(FudgetToken token);
 
     /// <summary>
+    /// Creates a new painter object that can be referenced by a unique token in styles and other painters. The name in the
+    /// token must be unique among element painters
+    /// </summary>
+    /// <typeparam name="T">A type derived from FudgetElementPainter</typeparam>
+    /// <param name="token">Name that can be used to get the painter. Must be unique for painters</param>
+    /// <returns>The created element painter, or null if the token is already taken or invalid</returns>
+    template<typename T>
+    static T* CreateElementPainter(String name)
+    {
+        return CreateElementPainter(RegisterToken(name));
+    }
+
+    /// <summary>
+    /// Creates a new painter object that can be referenced by a unique token in styles and other painters. The name in the
+    /// token must be unique among element painters
+    /// </summary>
+    /// <typeparam name="T">A type derived from FudgetElementPainter</typeparam>
+    /// <param name="token">Name that can be used to get the painter. Must be unique for painters</param>
+    /// <returns>The created element painter, or null if the token is already taken or invalid</returns>
+    template<typename T>
+    static T* CreateElementPainter(FudgetToken token)
+    {
+        if (!token.IsValid())
+            return nullptr;
+        auto it = _element_map.find(token);
+        if (it != _element_map.end())
+            return nullptr;
+
+        T *painter = New<T>();
+
+        RegisterElementPainter(token, painter);
+        return painter;
+    }
+
+    /// <summary>
     /// Tries to retrieve a theme for the token or null if no token was found.
     /// </summary>
     /// <param name="token">Token associated with the theme</param>
@@ -310,14 +353,40 @@ public:
     /// Creates a copy of the theme if the source token represents a theme and the destination token is not taken already.
     /// Themes not created this way are not registered and can't be used.
     /// </summary>
-    /// <param name="source_token">Token for theme to duplicate</param>
-    /// <param name="dest_token">Token of the new theme</param>
-    /// <returns>True if the theme was successfully duplicated and false if not</returns>
-    API_FUNCTION() static bool DuplicateTheme(FudgetToken source_token, FudgetToken dest_token);
+    /// <param name="source_token">Token for theme to duplicate. This token must be for a valid theme</param>
+    /// <param name="dest_token">Token of the new theme. This token cannot be taken by another theme</param>
+    /// <returns>The theme created, or null if one of the tokens were invalid</returns>
+    API_FUNCTION() static FudgetTheme* DuplicateTheme(FudgetToken source_token, FudgetToken dest_token);
 
     /// <summary>
-    /// Tries to retrieve a style for the token. The token can correspond to any string, but if it's a control
-    /// class name, the control specific token might be returned.
+    /// Creates and registers a new style object with a unique name. If the name is already taken, the result will
+    /// be null. The style can be accessed with GetStyle later with the token matching the name. Styles with a
+    /// name matching a control's full class name will be used for that control by default.
+    /// </summary>
+    /// <param name="token">Token for the style</param>
+    /// <returns>The created style, or null if the token was invalid or used by another style</returns>
+    static FudgetStyle* CreateStyle(String name);
+
+    /// <summary>
+    /// Creates and registers a new style object with a unique token. If the token is already taken, the result will
+    /// be null. The style can be accessed with GetStyle later with the token. Styles with a name matching a control's
+    /// full class name will be used for that control by default.
+    /// </summary>
+    /// <param name="token">Token for the style</param>
+    /// <returns>The created style, or null if the token was invalid or used by another style</returns>
+    API_FUNCTION(NoProxy) static FudgetStyle* CreateStyle(FudgetToken token);
+
+    /// <summary>
+    /// Tries to retrieve a style for the name. Styles with the name matching a control's full class name are used
+    /// for that control by default.
+    /// </summary>
+    /// <param name="name">Token associated with the style</param>
+    /// <returns>The style if found or null</returns>
+    API_FUNCTION() static FudgetStyle* GetStyle(String name);
+
+    /// <summary>
+    /// Tries to retrieve a style for the token. Styles with the token matching a control's full class name are used
+    /// for that control by default.
     /// </summary>
     /// <param name="token">Token associated with the style</param>
     /// <returns>The style if found or null</returns>
@@ -332,21 +401,11 @@ public:
     /// <returns>The style that matches one of the tokens or the default style of the theme</returns>
     API_FUNCTION() static FudgetStyle* GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens);
 
-    /// <summary>
-    /// Looks up a value from the theme and sets the result to it.
-    /// </summary>
-    /// <param name="theme_token">Theme that should have the value</param>
-    /// <param name="value_token">Token associated with the value</param>
-    /// <param name="result">The result will be stored here</param>
-    /// <returns>True if the value was found in the theme, false if not</returns>
-    API_FUNCTION() static bool GetValueFromTheme(FudgetToken theme_token, FudgetToken value_token, API_PARAM(Out) Variant &result);
-
 private:
-    static bool RegisterStyle(FudgetToken token, FudgetStyle *style);
-    static void UnregisterStyle(FudgetToken token, FudgetStyle *style);
-
-    static bool RegisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
-    static void UnregisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
+    /// <summary>
+    /// Used internally to register the element painter in both C++ and C# code. Adds the painter to the element map
+    /// </summary>
+    API_FUNCTION() static void RegisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
 
     static std::map<String, FudgetToken> _token_map;
     static std::map<FudgetToken, String> _string_map;
@@ -363,7 +422,4 @@ private:
     static std::map<FudgetToken, FudgetTheme*> _theme_map;
 
     static bool _themes_initialized;
-
-    friend class FudgetStyle;
-    friend class FudgetElementPainter;
 };

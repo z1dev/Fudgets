@@ -3,8 +3,7 @@
 #include "../Utils/Utils.h"
 
 
-FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params,
-	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize)
+FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params)
 {
 
 }
@@ -124,6 +123,11 @@ Float2 FudgetStackLayout::RequestSize(FudgetSizeType type) const
 FudgetLayoutSlot* FudgetStackLayout::CreateSlot(FudgetControl *control)
 {
 	// See the function of FudgetListLayout::CreateSlot(...) for a description.
-
-	return New<FudgetLayoutSlot>(SpawnParams(Guid::New(), FudgetLayoutSlot::TypeInitializer), control);
+	return Base::CreateSlot(control);
 }
+
+FudgetLayoutFlag FudgetStackLayout::GetCreationFlags() const
+{
+	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize | Base::GetCreationFlags();
+}
+

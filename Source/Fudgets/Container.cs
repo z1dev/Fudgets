@@ -1,9 +1,4 @@
 ﻿using FlaxEngine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fudgets
 {
@@ -21,6 +16,7 @@ namespace Fudgets
                 return null;
 
             var child = New<T>();
+            child.Initialize();
             AddChild(child);
             return (T)child;
         }
@@ -35,28 +31,10 @@ namespace Fudgets
             if (typeof(T).IsAbstract)
                 return null;
 
-            var child = New<T>(); //Activator.CreateInstance<T>();
-            SetLayoutInternal(child);
-            return (T)child;
+            var layout = New<T>(); //Activator.CreateInstance<T>();
+            layout.Initialize();
+            SetLayoutInternal(layout);
+            return (T)layout;
         }
-
-
-        /*
-    template<typename T>
-    FORCE_INLINE T* CreateChild()
-    {
-        T* child = New<T>();
-        AddChild(child);
-        return child;
-    }
-
-    template<typename T>
-    FORCE_INLINE T* CreateLayout()
-    {
-        T* layout = New<T>();
-        _layout = layout;
-        layout->SetOwner(this);
-        return layout;
-    }         */
     }
 }

@@ -42,6 +42,7 @@ namespace Fudgets
         {
             // Use it to cleanup data
 
+            FudgetThemes.UninitializeManaged();
             FudgetThemes.Uninitialize();
 
             base.Deinitialize();

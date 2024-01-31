@@ -148,7 +148,7 @@ public partial class FudgetsEditorWindow
             {
                 Float2 localLocation = control.GlobalToLocal(location);
                 localLocation += control.Position;
-                if (control.BoundingBox.Contains(localLocation))
+                if (control.BoundsInParent.Contains(localLocation))
                 {
                     intersectingControls.Add(control);
                 }

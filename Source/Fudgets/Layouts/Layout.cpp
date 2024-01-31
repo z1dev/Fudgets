@@ -20,35 +20,14 @@ float AddBigFloats(float a, float b)
 }
 
 
-//SpawnParams(Guid::New(), TypeInitializer)
-
-FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params)
-{
-	CRASH
-}
-
-FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params, FudgetControl *control) : Base(params), _control(control), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
+FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), _control(nullptr), _hint_size(0.f), _min_size(0.f), _max_size(0.f)
 {
 
 }
 
-FudgetLayout::FudgetLayout() : FudgetLayout(SpawnParams(Guid::New(), TypeInitializer), FudgetLayoutFlag::None)
-{ 
 
-}
-
-FudgetLayout::FudgetLayout(FudgetLayoutFlag flags) : FudgetLayout(SpawnParams(Guid::New(), TypeInitializer), _flags)
-{
-
-}
-
-FudgetLayout::FudgetLayout(const SpawnParams &params) : FudgetLayout(params, FudgetLayoutFlag::None)
-{
-
-}
-
-FudgetLayout::FudgetLayout(const SpawnParams &params, FudgetLayoutFlag flags) : ScriptingObject(params), _owner(nullptr),
-		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(flags), _changing(false)
+FudgetLayout::FudgetLayout(const SpawnParams &params) : Base(params), _owner(nullptr),
+		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(FudgetLayoutFlag::None), _changing(false)
 {
 
 }
@@ -57,6 +36,11 @@ FudgetLayout::~FudgetLayout()
 {
 	if (_owner != nullptr)
 		CleanUp();
+}
+
+void FudgetLayout::Initialize()
+{
+	_flags = GetCreationFlags();
 }
 
 void FudgetLayout::SetOwner(FudgetContainer *value)
@@ -104,6 +88,13 @@ void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags)
 		_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition);
 		_size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition);
 	}
+}
+
+FudgetLayoutSlot* FudgetLayout::CreateSlot(FudgetControl *control)
+{
+	FudgetLayoutSlot *slot = New<FudgetLayoutSlot>(SpawnParams(Guid::New(), FudgetLayoutSlot::TypeInitializer));
+	slot->_control = control;
+	return slot;
 }
 
 void FudgetLayout::ChildAdded(FudgetControl *control, int index)

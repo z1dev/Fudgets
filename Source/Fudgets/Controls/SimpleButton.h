@@ -44,7 +44,6 @@ class FUDGETS_API FudgetSimpleButton : public FudgetControl
 	using Base = FudgetControl;
 	DECLARE_SCRIPTING_TYPE(FudgetSimpleButton);
 public:
-	//FudgetSimpleButton();
 	~FudgetSimpleButton();
 
 	/// <summary>
@@ -117,6 +116,9 @@ public:
 	/// Whether the mouse pointer is over the button
 	/// </summary>
 	API_PROPERTY() bool IsHovered() { return _over; }
+protected:
+	/// <inheritdoc />
+	FudgetControlFlags GetCreationFlags() const override;
 private:
 	Color _color;
 

@@ -12,10 +12,8 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 {
 	using Base = FudgetLayoutSlot;
 	DECLARE_SCRIPTING_TYPE(FudgetListLayoutSlot);
-	
-	FudgetListLayoutSlot(const SpawnParams &params, FudgetControl *control);
-	FudgetListLayoutSlot(FudgetControl *control);
 
+public:	
 	/// <summary>
 	/// Horizontal alignment of control in its column or row
 	/// </summary>
@@ -47,9 +45,6 @@ class FUDGETS_API FudgetListLayout : public FudgetLayout
 	using Base = FudgetLayout;
 	DECLARE_SCRIPTING_TYPE(FudgetListLayout);
 public:
-	//FudgetListLayout(const SpawnParams &params);
-
-	FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation);
 
 	/// <summary>
 	/// Gets the layout orientation of controls on the owner. Depending on the value, they are either
@@ -164,6 +159,10 @@ protected:
 	/// <param name="index">The index of the control to make the slot for</param>
 	/// <returns>The slot for layouting attributes or null if the index is invalid</returns>
 	API_FUNCTION(new) FudgetListLayoutSlot* GetSlot(int index) const;
+
+	/// <inheritdoc />
+	FudgetLayoutFlag GetCreationFlags() const override;
+
 private:
 	void PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size);
 
