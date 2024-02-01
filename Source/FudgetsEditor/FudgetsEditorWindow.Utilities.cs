@@ -32,9 +32,9 @@ public partial class FudgetsEditorWindow
     /// </summary>
     /// <param name="control">The control to search for.</param>
     /// <returns>The node in the tree, or null if nothing is found.</returns>
-    public ItemNode FindNodeByControl(FudgetControl control)
+    public FudgetControlNode FindNodeByControl(FudgetControl control)
     {
-        List<ItemNode> subset = RecurseAndGetSubset(_tree, (node) =>
+        List<FudgetControlNode> subset = RecurseAndGetSubset(_tree, (node) =>
         {
             if (node.Tag == (object)control)
             {
@@ -53,7 +53,7 @@ public partial class FudgetsEditorWindow
     /// <param name="control">The control to select.</param>
     public void SelectNodeByControl(FudgetControl control)
     {
-        ItemNode node = FindNodeByControl(control);
+        FudgetControlNode node = FindNodeByControl(control);
         if (node == null)
             return;
 
@@ -64,12 +64,12 @@ public partial class FudgetsEditorWindow
         _tree.SetSelectionSilent(nodes);
     }
 
-    private List<ItemNode> RecurseAndGetSubset(ContainerControl current, Func<ItemNode, bool> validator)
+    private List<FudgetControlNode> RecurseAndGetSubset(ContainerControl current, Func<FudgetControlNode, bool> validator)
     {
-        List<ItemNode> subset = new List<ItemNode>();
+        List<FudgetControlNode> subset = new List<FudgetControlNode>();
         foreach (Control child in current.Children)
         {
-            if (child is not ItemNode node)
+            if (child is not FudgetControlNode node)
             {
                 continue;
             }

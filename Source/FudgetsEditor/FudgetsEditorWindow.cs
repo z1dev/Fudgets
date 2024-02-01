@@ -34,7 +34,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     private FudgetJsonAssetItem _assetItem;
 
     /// <summary>
-    /// TODO: docs
+    /// The root of the GUI being edited by this window.
     /// </summary>
     public FudgetGUIRoot RootObject = null;
 
@@ -65,8 +65,10 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     public EditorViewport PresenterViewport => null;
 
     /// <summary>
-    /// TODO: docs
+    /// Initializes a new instance of the <see cref="FudgetsEditorWindow"/> class.
     /// </summary>
+    /// <param name="editor">The gui editor.</param>
+    /// <param name="item">The gui asset.</param>
     public FudgetsEditorWindow(Editor editor, AssetItem item) : base(editor, item)
     {
         _assetItem = (FudgetJsonAssetItem)item;
@@ -173,7 +175,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     /// </summary>
     public void RefreshNames()
     {
-        List<ItemNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
+        List<FudgetControlNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
         foreach (TreeNode node in nodes)
         {
             if (node.Tag is not FudgetControl control)
@@ -211,7 +213,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         for (int i = 0; i < container.ChildCount; i++)
         {
             FudgetControl control = container.ChildAt(i);
-            ItemNode newNode = new ItemNode(control);
+            FudgetControlNode newNode = new FudgetControlNode(control);
             TreeNode node = currentTreeNode.AddChild(newNode);
             node.Text = control.Name;
             node.Tag = control;
