@@ -7,16 +7,7 @@
 #include "Engine/Serialization/JsonTools.h"
 
 
-FudgetContainer::FudgetContainer(const SpawnParams &params) : FudgetContainer(params, FudgetControlFlags::BlockMouseEvents)
-{
-
-}
-
-FudgetContainer::FudgetContainer(FudgetControlFlags flags) : FudgetContainer(SpawnParams(Guid::New(), TypeInitializer), flags)
-{
-}
-
-FudgetContainer::FudgetContainer(const SpawnParams &params, FudgetControlFlags flags) : Base(params, flags | FudgetControlFlags::ContainerControl),
+FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
 	FillColor(1.0f), DrawFilledBackground(false),_layout(nullptr), _changing(false), _width_from_layout(false), _height_from_layout(false),
 	_min_width_from_layout(false), _max_width_from_layout(false), _min_height_from_layout(false), _max_height_from_layout(false)
 {
@@ -439,7 +430,7 @@ void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request,
 	for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
 	{
 		FudgetControl *control = _children[ix];
-		if (!control->GetBoundingBox().Contains(pos))
+		if (!control->GetBoundsInParent().Contains(pos))
 			continue;
 
 		if (request == FudgetControlFlags::None || control->HasAnyFlag(request))
@@ -483,6 +474,11 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 		SetLayoutInternal(layout);
 		//_layout = layout;
 	}
+}
+
+FudgetControlFlags FudgetContainer::GetCreationFlags() const
+{
+	return Base::GetCreationFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
 }
 
 void FudgetContainer::SetLayoutInternal(FudgetLayout *layout)

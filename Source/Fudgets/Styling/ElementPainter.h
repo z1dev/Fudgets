@@ -14,19 +14,16 @@ class FudgetPainterPropertyProvider;
 /// Base type for classes that can draw elements or a full control. Derived classes can draw something simple
 /// like a line of text or the background of a button, or can draw every part of a complex control.
 /// </summary>
-API_CLASS(NoSpawn, Abstract)
+API_CLASS(Abstract)
 class FUDGETS_API FudgetElementPainter : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetElementPainter);
+	DECLARE_SCRIPTING_TYPE(FudgetElementPainter);
 public:
 	//static FudgetElementPainter* Spawn(const SpawnParams& params) { return nullptr; }
 	//explicit FudgetElementPainter() : FudgetElementPainter(SpawnParams(Guid::New(), FudgetElementPainter::TypeInitializer)) {}
 	//explicit FudgetElementPainter(const SpawnParams& params);
 
-	FudgetElementPainter();
-	FudgetElementPainter(String name);
-	FudgetElementPainter(FudgetToken name_token);
 	~FudgetElementPainter();
 
 	/// <summary>
@@ -34,7 +31,7 @@ public:
 	/// </summary>
 	/// <param name="control">Control whose theme and style is used for drawing</param>
 	/// <param name="provider">Property provider that can supply the painter with data about the state to draw</param>
-	virtual void Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider) {}
+	API_FUNCTION() virtual void Draw(FudgetControl *control, FudgetPainterPropertyProvider *provider) {}
 
 	/// <summary>
 	/// Retrieves an element painter from the control's active style with the passed token and calls its Draw function.
@@ -43,28 +40,18 @@ public:
 	/// <param name="provider">Object providing state values for the painter</param>
 	/// <param name="painter_token">Token of painter overriden in the style</param>
 	API_FUNCTION() void DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token);
-private:
-	API_FUNCTION() void InitializeInternal(FudgetToken name_token);
-
-	FudgetToken _painter_name;
 };
 
 /// <summary>
 /// Base type for property providers, whose task is to return values about a control and to hold draw state data.
 /// </summary>
-API_CLASS(NoSpawn)
+API_CLASS(Abstract)
 class FUDGETS_API FudgetPainterPropertyProvider : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetPainterPropertyProvider);
+	DECLARE_SCRIPTING_TYPE(FudgetPainterPropertyProvider);
 public:
 	// TODO: add property getters as necessary
-
-	/// <summary>
-	/// Creates the property provider with the specified control as the source for the values that painters can request.
-	/// </summary>
-	/// <param name="_source_control">The control that holds the properties needed for drawing</param>
-	FudgetPainterPropertyProvider();
 
 	/// <summary>
 	/// Called by ElementPainter derived objects when drawing to get generic properties needed for showing the state of the control, that

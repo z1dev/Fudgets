@@ -37,4 +37,6 @@ protected:
 
 	/// <inheritdoc />
 	FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
+
+	FudgetLayoutFlag GetCreationFlags() const override;
 };

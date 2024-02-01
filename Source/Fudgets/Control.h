@@ -28,6 +28,7 @@ class GPUTexture;
 class GPUTextureView;
 class Font;
 struct FudgetFillAreaSettings;
+struct FudgetPadding;
 
 
 /// <summary>
@@ -210,8 +211,13 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
-	FudgetControl(const SpawnParams &params, FudgetControlFlags flags);
+	//FudgetControl(const SpawnParams &params, FudgetControlFlags flags);
 	~FudgetControl();
+
+	/// <summary>
+	/// Always call after the control is created. Containers do this automatically in CreateChild.
+	/// </summary>
+	API_FUNCTION() virtual void Initialize();
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -351,9 +357,15 @@ public:
 	API_PROPERTY() virtual void SetPosition(Float2 value);
 
 	/// <summary>
-	/// Gets the local bounding box of the control relative to its parent, calculating the size if necessary.
+	/// Gets the local bounding rectangle of the control relative to its parent, calculating the size if necessary.
 	/// </summary>
-	API_PROPERTY() Rectangle GetBoundingBox() const { return Rectangle(GetPosition(), GetSize()); }
+	API_PROPERTY() Rectangle GetBoundsInParent() const { return Rectangle(GetPosition(), GetSize()); }
+
+	/// <summary>
+	/// Gets the bounding rectangle of the control relative to itself, calculating the size if necessary. The
+	/// top-left corner of the rectangle is always at zero coordinates.
+	/// </summary>
+	API_PROPERTY() Rectangle GetBounds() const { return Rectangle(Float2(0.f), GetSize()); }
 
 	/// <summary>
 	/// Gets the left side's coordinate of this control in its parent's layout, relative to the top-left corner.
@@ -699,6 +711,42 @@ public:
 	API_FUNCTION() void Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
 
 	/// <summary>
+	/// Draws 9-slicing texture by calling Draw9SlicingTexture, using borderWidths to calculate the border and UV parameters.
+	/// </summary>
+	/// <param name="t">The texture to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="borderWidths">The size of the stationary border on each side</param>
+	/// <param name="color">The color to multiply drawn pixels with</param>
+	API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+
+	/// <summary>
+	/// Draws 9-slicing texture by calling Draw9SlicingTexturePoint, using borderWidths to calculate the border and UV parameters.
+	/// </summary>
+	/// <param name="t">The texture to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="borderWidths">The size of the stationary border on each side</param>
+	/// <param name="color">The color to multiply drawn pixels with</param>
+	API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+
+	/// <summary>
+	/// Draws 9-slicing sprite by calling Draw9SlicingSprite, using borderWidths to calculate the border and UV parameters.
+	/// </summary>
+	/// <param name="t">The sprite to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="borderWidths">The size of the stationary border on each side</param>
+	/// <param name="color">The color to multiply drawn pixels with</param>
+	API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+
+	/// <summary>
+	/// Draws 9-slicing sprite by calling Draw9SlicingSpritePoint, using borderWidths to calculate the border and UV parameters.
+	/// </summary>
+	/// <param name="t">The sprite to draw</param>
+	/// <param name="rect">The rectangle to draw in</param>
+	/// <param name="borderWidths">The size of the stationary border on each side</param>
+	/// <param name="color">The color to multiply drawn pixels with</param>
+	API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+
+	/// <summary>
 	/// Wrapper to Render2D's DrawBezier
 	/// </summary>
 	/// <param name="p1">The start point.</param>
@@ -922,8 +970,19 @@ public:
 	/// <param name="color">The color.</param>
 	API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color) const;
 
-
+	/// <summary>
+	/// Draws a rectangular area filled with color or texture, depending on the area settings
+	/// </summary>
+	/// <param name="area">Settings for filling the rectangle</param>
+	/// <param name="rect">Rectangle to fill</param>
 	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, const Rectangle &rect) const;
+
+	/// <summary>
+	/// Draws a rectangular area filled with color or texture, depending on the area settings
+	/// </summary>
+	/// <param name="area">Settings for filling the rectangle</param>
+	/// <param name="pos">Position of the rectangle</param>
+	/// <param name="siz">Size of the rectangle</param>
 	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, Float2 pos, Float2 siz) const;
 
 	// Styling
@@ -1035,7 +1094,19 @@ public:
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
+protected:
+
+	/// <summary>
+	/// Called during control initialization to set some basic behavior of the control that will apply to all controls of
+	/// this type. It can be modified for individual controls with SetControlFlags later.
+	/// Controls with the creation flag of RegisterToUpdates will automatically call RegisterToUpdate in the constructor.
+	/// Include the result of the base control's GetCreationFlags to also return those flags for correct behavior.
+	/// </summary>
+	/// <returns>The creation flags for this control.</returns>
+	API_FUNCTION() virtual FudgetControlFlags GetCreationFlags() const { return FudgetControlFlags::None; }
+
 private:
+
 	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, const Rectangle& rect, const Color& color) const;
 
 	static FudgetGUIRoot *_guiRoot;

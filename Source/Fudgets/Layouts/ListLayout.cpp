@@ -4,27 +4,12 @@
 
 
 
-FudgetListLayoutSlot::FudgetListLayoutSlot(const SpawnParams &params) : FudgetListLayoutSlot(SpawnParams(Guid::New(), TypeInitializer), nullptr)
-{
-}
-
-FudgetListLayoutSlot::FudgetListLayoutSlot(const SpawnParams &params, FudgetControl *control) : Base(SpawnParams(Guid::New(), TypeInitializer), control),
+FudgetListLayoutSlot::FudgetListLayoutSlot(const SpawnParams &params) : Base(SpawnParams(Guid::New(), TypeInitializer)),
 	_horz_align(FudgetHorzAlign::Left), _vert_align(FudgetVertAlign::Top), _enforce_limits(true)
 {
 }
 
-FudgetListLayoutSlot::FudgetListLayoutSlot(FudgetControl *control) : FudgetListLayoutSlot(SpawnParams(Guid::New(), TypeInitializer), control)
-{
-}
-
-FudgetListLayout::FudgetListLayout(const SpawnParams &params) : FudgetListLayout(params, FudgetOrientation::Horizontal)
-{
-
-}
-
-FudgetListLayout::FudgetListLayout(const SpawnParams &params, FudgetOrientation orientation) : Base(params,
-	FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
-	FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange), _ori(orientation), _stretched(true)
+FudgetListLayout::FudgetListLayout(const SpawnParams &params) : Base(params), _ori(FudgetOrientation::Horizontal), _stretched(true)
 {
 
 }
@@ -306,7 +291,9 @@ FudgetLayoutSlot* FudgetListLayout::CreateSlot(FudgetControl *control)
 	// provide their own derived value. To make use easier, you can define a new GetSlot()
 	// function that will hide the original call. See below.
 
-	return New<FudgetListLayoutSlot>(control);
+	FudgetLayoutSlot *slot = New<FudgetListLayoutSlot>(SpawnParams(Guid::New(), FudgetLayoutSlot::TypeInitializer));
+	slot->_control = control;
+	return slot;
 }
 
 FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
@@ -316,6 +303,12 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 	// was declared with API_FUNCTION(new).
 
 	return (FudgetListLayoutSlot*)Base::GetSlot(index);
+}
+
+FudgetLayoutFlag FudgetListLayout::GetCreationFlags() const
+{
+	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
+		FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | Base::GetCreationFlags();
 }
 
 Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const

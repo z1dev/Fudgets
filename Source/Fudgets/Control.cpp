@@ -17,23 +17,24 @@
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
 
-FudgetControl::FudgetControl(const SpawnParams &params) : FudgetControl(params, FudgetControlFlags::BlockMouseEvents)
-{
-}
-
-FudgetControl::FudgetControl(const SpawnParams &params, FudgetControlFlags flags) : ScriptingObject(params),
-	_parent(nullptr), _index(-1), _flags(flags), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
+FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
+	_parent(nullptr), _index(-1), _flags(FudgetControlFlags::None), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
 	_max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f), _g2l_was_cached(false), _changing(false), _updating_registered(false),
 	/*_element_painter(nullptr),*/ _cached_painter(nullptr), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
 	_cached_theme(nullptr)
 {
-	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
-		RegisterToUpdate(true);
 }
 
 FudgetControl::~FudgetControl()
 {
 	RegisterToUpdate(false);
+}
+
+void FudgetControl::Initialize()
+{
+	_flags = GetCreationFlags();
+	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
+		RegisterToUpdate(true);
 }
 
 void FudgetControl::Draw()
@@ -413,6 +414,50 @@ void FudgetControl::Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, co
 	Render2D::Draw9SlicingSpritePoint(spriteHandle, CachedLocalToGlobal(rect), border, borderUVs, color);
 }
 
+void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
+{
+	Float4 border;
+	Float4 borderUV;
+	Float2 siz = t->Size();
+	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+
+	Draw9SlicingTexture(t, rect, border, borderUV);
+}
+
+void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
+{
+	Float4 border;
+	Float4 borderUV;
+	Float2 siz = t->Size();
+	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+
+	Draw9SlicingTexturePoint(t, rect, border, borderUV);
+}
+
+void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
+{
+	Float4 border;
+	Float4 borderUV;
+	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
+	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+
+	Draw9SlicingSprite(spriteHandle, rect, border, borderUV);
+}
+
+void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
+{
+	Float4 border;
+	Float4 borderUV;
+	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
+	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+
+	Draw9SlicingSpritePoint(spriteHandle, rect, border, borderUV);
+}
+
 void FudgetControl::DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness) const
 {
 	CacheGlobalToLocal();
@@ -651,35 +696,39 @@ void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, const Recta
 		return;
 	}
 
-	Float4 border;
-	Float4 borderUV;
-	Float2 siz = 0.f;
-	if (area.Texture.Get() != nullptr)
-		siz = area.Texture->Size();
-	else
-		siz = area.SpriteHandle.Atlas->GetSprite(area.SpriteHandle.Index).Area.Size;
-	border = Float4(area.Borders9P.X, siz.X - area.Borders9P.Y, area.Borders9P.Z, siz.Y - area.Borders9P.W);
-	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
+	//Float4 border;
+	//Float4 borderUV;
+	//Float2 siz = 0.f;
+	//if (area.Texture.Get() != nullptr)
+	//	siz = area.Texture->Size();
+	//else
+	//	siz = area.SpriteHandle.Atlas->GetSprite(area.SpriteHandle.Index).Area.Size;
+	//border = Float4(area.Borders9P.X, siz.X - area.Borders9P.Y, area.Borders9P.Z, siz.Y - area.Borders9P.W);
+	//borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
 	if (area.AreaType == FudgetFillAreaType::Texture9)
 	{
-		Draw9SlicingTexture(area.Texture, rect, border, borderUV);
+		Draw9SlicingPrecalculatedTexture(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		//Draw9SlicingTexture(area.Texture, rect, border, borderUV);
 		return;
 	}
 	if (area.AreaType == FudgetFillAreaType::Texture9Point)
 	{
-		Draw9SlicingTexturePoint(area.Texture, rect, border, borderUV);
+		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		//Draw9SlicingTexturePoint(area.Texture, rect, border, borderUV);
 		return;
 	}
 
 	if (area.AreaType == FudgetFillAreaType::Sprite9)
 	{
-		Draw9SlicingSprite(area.SpriteHandle, rect, border, borderUV);
+		Draw9SlicingPrecalculatedSprite(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		//Draw9SlicingSprite(area.SpriteHandle, rect, border, borderUV);
 		return;
 	}
 	if (area.AreaType == FudgetFillAreaType::Texture9Point)
 	{
-		Draw9SlicingSpritePoint(area.SpriteHandle, rect, border, borderUV);
+		Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		//Draw9SlicingSpritePoint(area.SpriteHandle, rect, border, borderUV);
 		return;
 	}
 }

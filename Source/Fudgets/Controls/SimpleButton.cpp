@@ -4,7 +4,7 @@
 
 
 
-FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetControl *source_control) : Base(), _source_control(source_control)
+FudgetSimpleButtonPropertyProvider::FudgetSimpleButtonPropertyProvider(FudgetControl *source_control) : Base(SpawnParams(Guid::New(), TypeInitializer)), _source_control(source_control)
 {
 
 }
@@ -32,9 +32,7 @@ bool FudgetSimpleButtonPropertyProvider::GetElementBoolProperty(FudgetToken toke
 
 
 
-FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params, 
-	FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
-	FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates),
+FudgetSimpleButton::FudgetSimpleButton(const SpawnParams &params) : FudgetControl(params),
 	Dark(0.6f), Light(1.f), FocusColor(0.4f, 0.6f, 0.8f, 1.0f), _color(0.9f, 0.9f, 0.9f, 1.0f), _pressed(false), _down(false),
 	_over(false), _can_focus(false)
 {
@@ -108,3 +106,10 @@ bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton bu
 
 	return true;
 }
+
+FudgetControlFlags FudgetSimpleButton::GetCreationFlags() const
+{
+	return FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
+		FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates | Base::GetCreationFlags();
+}
+

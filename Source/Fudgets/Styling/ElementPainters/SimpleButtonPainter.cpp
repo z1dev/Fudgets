@@ -12,11 +12,7 @@ const FudgetToken FudgetSimpleButtonPainter::simple_btn_bg_token = FudgetThemes:
 const FudgetToken FudgetSimpleButtonPainter::simple_btn_border_token = FudgetThemes::RegisterToken(TEXT("SimpleButtonBorderImage"));
 
 
-FudgetButtonBackgroundPainter::FudgetButtonBackgroundPainter(String name) : Base(name)
-{
-}
-
-FudgetButtonBackgroundPainter::FudgetButtonBackgroundPainter(FudgetToken name_token) : Base(name_token)
+FudgetButtonBackgroundPainter::FudgetButtonBackgroundPainter(const SpawnParams &params) : Base(params)
 {
 }
 
@@ -47,7 +43,6 @@ void FudgetButtonBackgroundPainter::Draw(FudgetControl *control, FudgetPainterPr
 	provider->GetElementBoolProperty(FudgetThemes::MouseHoverToken, mouse_is_over);
 	bool mouse_is_pressed = false;
 	provider->GetElementBoolProperty(FudgetThemes::LeftButtonPressedToken, mouse_is_pressed);
-	float delta_time = provider->GetDeltaTime();
 
 	// Custom stored time used to animate the button color
 
@@ -79,11 +74,7 @@ void FudgetButtonBackgroundPainter::Draw(FudgetControl *control, FudgetPainterPr
 	control->DrawFillArea(Light, draw_rect);
 }
 
-FudgetButtonBorderPainter::FudgetButtonBorderPainter(String name) : Base(name)
-{
-}
-
-FudgetButtonBorderPainter::FudgetButtonBorderPainter(FudgetToken name_token) : Base(name_token)
+FudgetButtonBorderPainter::FudgetButtonBorderPainter(const SpawnParams &params) : Base(params)
 {
 }
 
@@ -106,7 +97,6 @@ void FudgetButtonBorderPainter::Draw(FudgetControl *control, FudgetPainterProper
 	provider->GetElementBoolProperty(FudgetThemes::MouseHoverToken, mouse_is_over);
 	bool mouse_is_pressed = false;
 	provider->GetElementBoolProperty(FudgetThemes::LeftButtonPressedToken, mouse_is_pressed);
-	float delta_time = provider->GetDeltaTime();
 
 	// Custom stored time used to animate the button color
 
@@ -139,11 +129,7 @@ void FudgetButtonBorderPainter::Draw(FudgetControl *control, FudgetPainterProper
 }
 
 
-FudgetSimpleButtonPainter::FudgetSimpleButtonPainter(String name) : Base(name)
-{
-}
-
-FudgetSimpleButtonPainter::FudgetSimpleButtonPainter(FudgetToken name_token) : Base(name_token)
+FudgetSimpleButtonPainter::FudgetSimpleButtonPainter(const SpawnParams &params) : Base(params)
 {
 }
 

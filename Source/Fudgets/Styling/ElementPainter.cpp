@@ -5,31 +5,30 @@
 
 #include "Engine/Core/Log.h"
 
-FudgetElementPainter::FudgetElementPainter() : Base(SpawnParams(Guid::New(), TypeInitializer)), _painter_name(FudgetToken::Invalid)
-{
-}
+//FudgetElementPainter::FudgetElementPainter(String name) : FudgetElementPainter(FudgetThemes::RegisterToken(name))
+//{
+//}
+//
+//FudgetElementPainter::FudgetElementPainter(FudgetToken name_token) : Base(SpawnParams(Guid::New(), TypeInitializer)),
+//	_painter_name(name_token)
+//{
+//	InitializeInternal(_painter_name);
+//}
+//
+//void FudgetElementPainter::InitializeInternal(FudgetToken name_token)
+//{
+//	ASSERT(name_token == _painter_name);
+//
+//	if (!FudgetThemes::RegisterElementPainter(_painter_name, this))
+//		LOG(Error, "Invalid token for FudgetElementPainter. Element painter wasn't registered.");
+//}
 
-FudgetElementPainter::FudgetElementPainter(String name) : FudgetElementPainter(FudgetThemes::RegisterToken(name))
+FudgetElementPainter::FudgetElementPainter(const SpawnParams &params) : Base(params)
 {
-}
-
-FudgetElementPainter::FudgetElementPainter(FudgetToken name_token) : Base(SpawnParams(Guid::New(), TypeInitializer)),
-	_painter_name(name_token)
-{
-	InitializeInternal(_painter_name);
-}
-
-void FudgetElementPainter::InitializeInternal(FudgetToken name_token)
-{
-	ASSERT(name_token == _painter_name);
-
-	if (!FudgetThemes::RegisterElementPainter(_painter_name, this))
-		LOG(Error, "Invalid token for FudgetElementPainter. Element painter wasn't registered.");
 }
 
 FudgetElementPainter::~FudgetElementPainter()
 {
-	FudgetThemes::UnregisterElementPainter(_painter_name, this);
 }
 
 void FudgetElementPainter::DrawWithPainter(FudgetControl *control, FudgetPainterPropertyProvider *provider, FudgetToken painter_token)
@@ -44,7 +43,7 @@ void FudgetElementPainter::DrawWithPainter(FudgetControl *control, FudgetPainter
 	}
 }
 
-FudgetPainterPropertyProvider::FudgetPainterPropertyProvider() : Base(SpawnParams(Guid::New(), TypeInitializer)), _delta_time(-1.0f)
+FudgetPainterPropertyProvider::FudgetPainterPropertyProvider(const SpawnParams &params) : Base(params), _delta_time(-1.0f)
 {
 
 }
