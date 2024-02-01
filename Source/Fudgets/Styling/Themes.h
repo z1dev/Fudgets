@@ -3,6 +3,7 @@
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Types/Variant.h"
 #include "Engine/Core/Collections/Dictionary.h"
+#include "Engine/Render2D/FontAsset.h"
 
 #include "Token.h"
 
@@ -343,6 +344,20 @@ public:
     }
 
     /// <summary>
+    /// Stores a font asset, that can be retrieved with GetFontAsset using the same token. The token must be unique among
+    /// font assets.
+    /// </summary>
+    /// <param name="token">Token to associate with the font asset</param>
+    /// <param name="asset">The font asset to store</param>
+    /// <returns>Whether the asset was successfully stored. False if token was already taken</returns>
+    API_FUNCTION() static bool RegisterFontAsset(FudgetToken token, FontAsset *asset);
+
+    /// <summary>
+    /// Returns a font asset associated with the given token, or null if no asset was found
+    /// </summary>
+    API_FUNCTION() static FontAsset* GetFontAsset(FudgetToken token);
+
+    /// <summary>
     /// Tries to retrieve a theme for the token or null if no token was found.
     /// </summary>
     /// <param name="token">Token associated with the theme</param>
@@ -420,6 +435,8 @@ private:
     // A collection of themes. Each theme is a collection of data in itself to provide values that can be used by
     // styles and element painters.
     static std::map<FudgetToken, FudgetTheme*> _theme_map;
+
+    static std::map<FudgetToken, FontAsset*> _font_asset_map;
 
     static bool _themes_initialized;
 };

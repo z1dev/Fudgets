@@ -2,9 +2,10 @@
 #include "Container.h"
 #include "GUIRoot.h"
 #include "Fudget.h"
+#include "MarginStructs.h"
 #include "Styling/Themes.h"
 #include "Styling/ElementPainter.h"
-#include "MarginStructs.h"
+#include "Styling/StyleStructs.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Render2D/TextLayoutOptions.h"
@@ -13,6 +14,8 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Scripting/ManagedCLR/MClass.h"
 #include "Engine/Scripting/Types.h"
+#include "Engine/Render2D/SpriteAtlas.h"
+
 
 FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
 
@@ -746,6 +749,7 @@ void FudgetControl::ClearStyleCache(bool inherited)
 	_cached_theme = nullptr;
 	_cached_style = nullptr;
 	_cached_painter = nullptr;
+	ResetCreatedFonts();
 }
 
 FudgetElementPainter* FudgetControl::GetElementPainter()
@@ -898,6 +902,63 @@ bool FudgetControl::GetStyleFillSettings(FudgetToken token, API_PARAM(Out) Fudge
 		// TODO: cache if needed
 	}
 	return false;
+}
+
+bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
+{
+	if (!token.IsValid())
+		return false;
+
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+		return false;
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		const FudgetFontSettings *ptr = var.AsStructure<FudgetFontSettings>();
+		if (ptr == nullptr)
+			return false;
+
+		result = *ptr;
+		return true;
+		// TODO: cache if needed
+	}
+	return false;
+}
+
+bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(OUT) FudgetFont &result)
+{
+	if (!token.IsValid())
+		return false;
+
+	auto it = _cached_fonts.find(token);
+	if (it != _cached_fonts.end())
+	{
+		result = it->second;
+		return true;
+	}
+
+	if (!GetStyleFontSettings(token, result.Settings))
+		return false;
+
+	FontAsset *asset = FudgetThemes::GetFontAsset(result.Settings.FontToken);
+	if (asset == nullptr)
+		return nullptr;
+
+	if (result.Settings.Bold)
+		asset = asset->GetBold();
+	else if (result.Settings.Italics)
+		asset = asset->GetItalic();
+	// TODO: No bold and italic at the same time? asset doesn't seem to support it.
+	result.Font = asset->CreateFont(result.Settings.Size);
+	_cached_fonts[token] = result;
+
+	return true;
+}
+
+void FudgetControl::ResetCreatedFonts()
+{
+	_cached_fonts.clear();
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)

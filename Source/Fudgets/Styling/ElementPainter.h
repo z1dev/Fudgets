@@ -52,27 +52,38 @@ class FUDGETS_API FudgetPainterPropertyProvider : public ScriptingObject
 	DECLARE_SCRIPTING_TYPE(FudgetPainterPropertyProvider);
 public:
 	// TODO: add property getters as necessary
+	// TODO: These comments were written early in development. Rewrite because it's bad. Also the naming is bad
 
 	/// <summary>
-	/// Called by ElementPainter derived objects when drawing to get generic properties needed for showing the state of the control, that
-	/// don't fit in any of the type specific getters.
-	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
+	/// Called by ElementPainter derived objects while drawing, to get properties needed for showing the state of the
+	/// control, that don't fit in any of the type specific getters.
+	/// The property provider might not support every property required by a painter, so the painter has to make sure
+	/// to use sane defaults.
 	/// </summary>
-	/// <param name="token">The requested property's token. TODO: make a default set of tokens as static values in FudgetToken </param>
+	/// <param name="token">The requested property's token</param>
 	/// <param name="result">The property's value</param>
-	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
-	API_FUNCTION() virtual bool GetElementGenericProperty(FudgetToken token, API_PARAM(Out) Variant &result) { return false; }
+	/// <returns>Whether the control supports this property or not</returns>
+	API_FUNCTION() virtual bool GetElementValueProperty(FudgetToken token, API_PARAM(Out) Variant &result) { return false; }
 
 	/// <summary>
 	/// Called by ElementPainter derived objects when drawing, to get bool properties needed for showing the state of the control.
 	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
 	/// </summary>
-	/// <param name="token">The requested property's token. TODO: make a default set of tokens as static values in FudgetToken </param>
-	/// <param name="result">The property's value</param>
-	/// <returns>Whether the control supports a specific property or not. If false, the result is ignored</returns>
+	/// <param name="token">The requested property's token</param>
+	/// <param name="result">The bool value</param>
+	/// <returns>Whether the control supports this bool property or not</returns>
 	API_FUNCTION() virtual bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) { return false; }
 
-	// TODO: add more property getters. GetElementGenericProperty should work for everything, but using variants in c++ is more work.
+	/// <summary>
+	/// Called by ElementPainter derived objects when drawing, to get string properties needed for showing the state of the control.
+	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
+	/// </summary>
+	/// <param name="token">The requested property's token</param>
+	/// <param name="result">The string value</param>
+	/// <returns>Whether the control supports this string property or not</returns>
+	API_FUNCTION() virtual bool GetElementStringProperty(FudgetToken token, API_PARAM(Out) String &result) { return false; }
+
+	// TODO: add more property getters. GetElementValueProperty should work for everything, but using variants in c++ is more work.
 
 	/// <summary>
 	/// Returns the delta time, which is increased in Control on OnUpdate. It's reset to 0 after drawing is done.

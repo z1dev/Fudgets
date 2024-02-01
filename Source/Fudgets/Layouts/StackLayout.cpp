@@ -10,20 +10,18 @@ FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params)
 
 bool FudgetStackLayout::LayoutChildren()
 {
-	// Minimal LayoutChildren(...) example:
+	// Minimal LayoutChildren() example:
 	//
 	// It places all the controls inside the parent container's area. The size of the container is
-	// already calculated at this point. However the hint, min and max sizes of this layout can be dirty
-	// A call to GetHintSize(), GetMaxSize() or GetMinSize() can be used to calculate them.
+	// already calculated at this point, and the layout sizes are cached too, together with all the slots.
 	//
 	// To access the size or attributes of a control, use (as an example):
 	//		auto slot = GetSlot(control_index);
 	// The sizes for the control are stored in slot->_hint_size, slot->_min_size and slot->_max_size
-	// (Only after the sizes are calculated, see above.)
 	//
-	// Finally, when the calculations are done, use SetControlDimensions(control_index, position, size)
-	// to directly modify the control's dimensions and placement. This will automatically mark the
-	// control for recalculation if it's a container.
+	// For each control calculated, use SetControlDimensions(control_index, position, size) to directly
+	// modify the control's dimensions and placement. This will automatically mark the control for
+	// recalculation if it's a container.
 
 	auto owner = GetOwner();
 	if (owner == nullptr)
@@ -34,6 +32,8 @@ bool FudgetStackLayout::LayoutChildren()
 	if (count == 0)
 		return true;
 
+	// The size of the container might depend on the layout. Since it was calculated in RequestSize, this
+	// value should be correct.
 	Float2 space = owner->GetSize();
 
 	for (int ix = 0; ix < count; ++ix)
@@ -46,10 +46,14 @@ bool FudgetStackLayout::LayoutChildren()
 
 Float2 FudgetStackLayout::RequestSize(FudgetSizeType type) const
 {
+	// This function is called when one of the sizes is dirty and needs to be recalculated. The layout
+	// might be required to do some complicated logic here, since it has to return the size based on
+	// the positioning of controls.
+	//
 	// There are three type of sizes in Fudgets:
-	// * Hint size is the size a control or layout would have if not constrained by anything.
+	// * Hint size is the size a control or layout would have if not constrained.
 	// * Min size is how much a control tolerates to be compressed, until it becomes unusable. This
-	//		might be changed by the user, if they want a control to at least have the changed size.
+	//		might be changed by the user if they want a different size.
 	// * Max size is the maximum a control wants to grow to. If this size is negative, the control might
 	//		grow as big as the layout allows, if the layout forcefully resizes controls.
 	// 
@@ -58,10 +62,6 @@ Float2 FudgetStackLayout::RequestSize(FudgetSizeType type) const
 	// situation.
 	// 
 	// 
-	// This function is called when one of the sizes is dirty and needs to be recalculated. The layout
-	// might be required to do some complicated logic here, since it has to return the size based on
-	// the positioning of controls.
-	//
 	// Avoid calls to GetHintSize(), GetMinSize() and GetMaxSize(), as that would result in infinite
 	// recursion.
 	// 
@@ -70,7 +70,7 @@ Float2 FudgetStackLayout::RequestSize(FudgetSizeType type) const
 	// and call each child control's size request function:
 	//		Float2 size = slot->_control->GetRequestedSize(type);
 	// 
-	// Min sizes can be negative which should be handled like they were 0.
+	// Min sizes can be negative which should be handled like they were zero.
 	//
 	// Max sizes can be negative as well. In those cases the control should be able to grow "infinitely"
 	// large. The external MaximumFloatLimit will be used to replace it, but it's safe to replace the

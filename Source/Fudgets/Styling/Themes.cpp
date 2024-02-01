@@ -1,6 +1,8 @@
 #include "Themes.h"
 #include "Token.h"
 #include "../MarginStructs.h"
+#include "StyleStructs.h"
+
 // temp
 #include "ElementPainters/SimpleButtonPainter.h"
 
@@ -61,6 +63,7 @@ int FudgetThemes::_highest_token = 0;
 std::map<FudgetToken, FudgetElementPainter*> FudgetThemes::_element_map;
 std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
 std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
+std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
 bool FudgetThemes::_themes_initialized = false;
 
 const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("MainTheme"));
@@ -94,23 +97,6 @@ const FudgetToken FudgetThemes::ButtonBackgroundPainterToken = RegisterToken(TEX
 const FudgetToken FudgetThemes::ButtonBorderPainterToken = RegisterToken(TEXT("ButtonBorder"));
 
 
-//FudgetThemes::FudgetThemes() : Base(SpawnParams(Guid::New(), TypeInitializer))
-//{
-//	Init();
-//}
-
-//FudgetThemes::~FudgetThemes()
-//{
-//	for (const auto &ep : _element_map)
-//		Delete(ep.second);
-//	_element_map.clear();
-//
-//	_style_map.clear();
-//
-//	for (auto p : _theme_map)
-//		Delete(p.second);
-//	_theme_map.clear();
-//}
 
 void FudgetThemes::Initialize()
 {
@@ -118,6 +104,9 @@ void FudgetThemes::Initialize()
 		return;
 
 	_themes_initialized = true;
+
+	// TODO: Delete EVERYTHING here, and add the reasonable minimum style data. For example basic editor font,
+	// basic colors etc.
 
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_theme_map[MainThemeToken] = main_theme;
@@ -221,6 +210,8 @@ void FudgetThemes::Uninitialize()
 		if (p.second != nullptr)
 			Delete(p.second);
 	_theme_map.clear();
+
+	_font_asset_map.clear();
 }
 
 FudgetToken FudgetThemes::GetToken(String token_name)
@@ -272,6 +263,27 @@ API_FUNCTION() FudgetElementPainter* FudgetThemes::GetElementPainter(FudgetToken
 		return nullptr;
 	return it->second;
 }
+
+bool FudgetThemes::RegisterFontAsset(FudgetToken token, FontAsset *asset)
+{
+	if (!token.IsValid())
+		return false;
+	auto it = _font_asset_map.find(token);
+	if (it != _font_asset_map.end())
+		return false;
+	_font_asset_map[token] = asset;
+}
+
+FontAsset* FudgetThemes::GetFontAsset(FudgetToken token)
+{
+	if (!token.IsValid())
+		return nullptr;
+	auto it = _font_asset_map.find(token);
+	if (it == _font_asset_map.end())
+		return nullptr;
+	return it->second;
+}
+
 
 FudgetTheme* FudgetThemes::GetTheme(FudgetToken token)
 {

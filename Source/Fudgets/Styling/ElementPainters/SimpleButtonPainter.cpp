@@ -2,6 +2,7 @@
 #include "../../Control.h"
 #include "../Themes.h"
 #include "../Style.h"
+#include "../StyleStructs.h"
 #include "../../MarginStructs.h"
 
 #include "Engine/Core/Math/Vector2.h"
