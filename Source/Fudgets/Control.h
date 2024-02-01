@@ -1099,8 +1099,9 @@ protected:
 	/// <summary>
 	/// Called during control initialization to set some basic behavior of the control that will apply to all controls of
 	/// this type. It can be modified for individual controls with SetControlFlags later.
-	/// Controls with the creation flag of RegisterToUpdates will automatically call RegisterToUpdate in the constructor.
-	/// Include the result of the base control's GetCreationFlags to also return those flags for correct behavior.
+	/// Controls with the creation flag of RegisterToUpdates will automatically call RegisterToUpdate(true) during initialization,
+	/// and will update this value when changing the flags with SetControlFlags.
+	/// Include the result of the base control's GetCreationFlags to also return those flags if needed for correct behavior.
 	/// </summary>
 	/// <returns>The creation flags for this control.</returns>
 	API_FUNCTION() virtual FudgetControlFlags GetCreationFlags() const { return FudgetControlFlags::None; }

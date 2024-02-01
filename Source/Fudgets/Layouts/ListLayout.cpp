@@ -308,7 +308,8 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 FudgetLayoutFlag FudgetListLayout::GetCreationFlags() const
 {
 	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
-		FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | Base::GetCreationFlags();
+		FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | FudgetLayoutFlag::CanProvideSizes |
+		Base::GetCreationFlags();
 }
 
 Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const

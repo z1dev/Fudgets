@@ -142,9 +142,6 @@ public:
     /// </summary>
     API_FUNCTION() void DeleteAll();
 
-    /// <inheritdoc />
-    void SetHintSize(Float2 value) override;
-
     /// <summary>
     /// Gets the preferred size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred size, this is the preferred size of the container itself.
@@ -153,7 +150,7 @@ public:
     Float2 GetHintSize() const override;
 
     /// <inheritdoc />
-    void SetMinSize(Float2 value) override;
+    void SetHintSize(Float2 value) override;
 
     /// <summary>
     /// Gets the minimum size of this container with its contents depending on the layout. If the layout
@@ -163,7 +160,7 @@ public:
     Float2 GetMinSize() const override;
 
     /// <inheritdoc />
-    void SetMaxSize(Float2 value) override;
+    void SetMinSize(Float2 value) override;
 
     /// <summary>
     /// Gets the maximum size of this container with its contents depending on the layout. If the layout
@@ -172,30 +169,37 @@ public:
     /// <returns>The container's maximum size with the current layout</returns>
     Float2 GetMaxSize() const override;
 
+    /// <inheritdoc />
+    void SetMaxSize(Float2 value) override;
+
     /// <summary>
-    /// Determines if the width of the container is calculated by the layout or the preferred size is
-    /// based on the hint size.
+    /// Determines if the height of the container is calculated based on the layout or the preferred size is
+    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
+    /// width, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <returns>Using the layout's width or not</returns>
     API_PROPERTY() bool GetUsingLayoutWidth() const { return _width_from_layout; }
 
     /// <summary>
-    /// Determines if the width of the container is calculated by the layout or the preferred size is
-    /// based on the hint size.
+    /// Determines if the height of the container is calculated based on the layout or the preferred size is
+    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
+    /// width, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <param name="value">Use the layout's width or not</param>
     API_PROPERTY() void SetUsingLayoutWidth(bool value);
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the hint size.
+    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
+    /// height, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <returns>Using the layout's height or not</returns>
     API_PROPERTY() bool GetUsingLayoutHeight() const { return _height_from_layout; }
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the hint size.
+    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
+    /// height, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <param name="value">Use the layout's height or not</param>
     API_PROPERTY() void SetUsingLayoutHeight(bool value);

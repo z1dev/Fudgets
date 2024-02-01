@@ -284,7 +284,13 @@ FudgetControlFlags FudgetControl::GetControlFlags() const
 
 void FudgetControl::SetControlFlags(FudgetControlFlags flags)
 {
+	FudgetControlFlags tmp = _flags;
 	_flags = flags;
+
+	if ((_flags & FudgetControlFlags::RegisterToUpdates) != (tmp & FudgetControlFlags::RegisterToUpdates))
+	{
+		RegisterToUpdate((_flags & FudgetControlFlags::RegisterToUpdates) == FudgetControlFlags::RegisterToUpdates);
+	}
 
 	// Might not need recalculation but we can't be sure.
 	SizeOrPosModified(FudgetDirtType::All);

@@ -128,6 +128,7 @@ FudgetLayoutSlot* FudgetStackLayout::CreateSlot(FudgetControl *control)
 
 FudgetLayoutFlag FudgetStackLayout::GetCreationFlags() const
 {
-	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize | Base::GetCreationFlags();
+	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
+		FudgetLayoutFlag::CanProvideSizes | Base::GetCreationFlags();
 }
 

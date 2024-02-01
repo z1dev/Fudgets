@@ -62,32 +62,179 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 	_changing = false;
 }
 
-void FudgetLayout::MarkDirty(FudgetDirtType dirt_flags, bool content_changed)
+void FudgetLayout::MarkDirty(FudgetDirtType dirt_type, bool content_changed)
 {
-	if ((int)dirt_flags & (int)FudgetDirtType::Size)
+	if ((int)dirt_type & (int)FudgetDirtType::Size)
 	{
 		_layout_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize));
 		_size_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize));
 	}
-	if ((int)dirt_flags & (int)FudgetDirtType::Position)
+	if ((int)dirt_type & (int)FudgetDirtType::Position)
 	{
 		_layout_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentReposition));
 		_size_dirty |= (!content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition)) || (content_changed && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentReposition));
 	}
 }
 
-void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags)
+void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_type)
 {
-	if ((int)dirt_flags & (int)FudgetDirtType::Size)
+	if ((int)dirt_type & (int)FudgetDirtType::Size)
 	{
 		_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize);
 		_size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize);
 	}
-	if ((int)dirt_flags & (int)FudgetDirtType::Position)
+	if ((int)dirt_type & (int)FudgetDirtType::Position)
 	{
 		_layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition);
 		_size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition);
 	}
+}
+
+Float2 FudgetLayout::GetHintSize()
+{
+	if (!_size_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
+		return _cached_hint;
+	_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
+	return _cached_hint;
+}
+
+Float2 FudgetLayout::GetMinSize()
+{
+	if (!_size_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
+		return _cached_min;
+	_cached_min = GetRequestedSize(FudgetSizeType::Min);
+	return _cached_min;
+}
+
+Float2 FudgetLayout::GetMaxSize()
+{
+	if (!_size_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
+		return _cached_max;
+	_cached_max = GetRequestedSize(FudgetSizeType::Max);
+	return _cached_max;
+}
+
+void FudgetLayout::RequestLayoutChildren(bool forced)
+{
+	if (!_layout_dirty && !forced)
+		return;
+	if (_size_dirty)
+		RecalculateSizes();
+	if (LayoutChildren())
+		_layout_dirty = false;
+}
+
+void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
+{
+	SERIALIZE_GET_OTHER_OBJ(FudgetLayout);
+	stream.JKEY("TypeName");
+	stream.String(GetType().Fullname);
+	SERIALIZE_MEMBER(ID, GetID());
+
+	SERIALIZE_MEMBER(Flags, _flags);
+}
+
+void FudgetLayout::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
+{
+	DESERIALIZE_MEMBER(Flags, _flags);
+}
+
+bool FudgetLayout::GoodSlotIndex(int index) const
+{
+	if (_owner == nullptr)
+		return false;
+	return index >= 0 && index < _slots.Count();
+}
+
+void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
+{
+	if (_owner == nullptr)
+		return;
+	FudgetControl *control = _owner->ChildAt(index);
+	control->LayoutUpdate(pos, size);
+}
+
+FudgetLayoutSlot* FudgetLayout::GetSlot(int index) const
+{
+	if (!GoodSlotIndex(index))
+		return nullptr;
+	return _slots[index];
+}
+
+void FudgetLayout::CleanUp()
+{
+	for (auto s : _slots)
+		Delete(s);
+	_slots.Clear();
+}
+
+void FudgetLayout::FillSlots()
+{
+	if (_owner == nullptr)
+		return;
+
+	CleanUp();
+
+	for (int ix = 0, siz = _owner->GetChildCount(); ix < siz; ++ix)
+	{
+		ChildAdded(_owner->ChildAt(ix), ix);
+	}
+}
+
+Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type)
+{
+	if (_size_dirty)
+		RecalculateSizes();
+	switch (type)
+	{
+		case FudgetSizeType::Hint:
+			return _cached_hint;
+		case FudgetSizeType::Min:
+			return _cached_min;
+		case FudgetSizeType::Max:
+			return _cached_max;
+		default:
+			return Float2(0.f);
+	}
+}
+
+Float2 FudgetLayout::RequestSize(FudgetSizeType type) const
+{
+	Float2 result = Float2(-1.0f);
+
+	FudgetContainer *owner = GetOwner();
+	if (owner == nullptr)
+		return result;
+	int cnt = owner->GetChildCount();
+	if (cnt == 0)
+		return result;
+
+	for (int ix = 0; ix < cnt; ++ix)
+	{
+		FudgetLayoutSlot *slot = GetSlot(ix);
+		FudgetControl *control = slot->_control;
+
+		if (type != FudgetSizeType::Max)
+		{
+			Float2 size = control->GetRequestedSize(type);
+			size = Float2(Math::Max(size.X, 0.0f), Math::Max(size.Y, 0.0f));
+			if (type == FudgetSizeType::Hint)
+				slot->_hint_size = size;
+			else
+				slot->_min_size = size;
+		}
+		else
+		{
+			Float2 size = control->GetRequestedSize(type);
+			if (size.X < 0 || size.X > MaximumFloatLimit)
+				size.X = MaximumFloatLimit;
+			if (size.Y < 0 || size.Y > MaximumFloatLimit)
+				size.Y = MaximumFloatLimit;
+			slot->_max_size = size;
+		}
+	}
+
+	return result;
 }
 
 FudgetLayoutSlot* FudgetLayout::CreateSlot(FudgetControl *control)
@@ -172,114 +319,14 @@ bool FudgetLayout::HasAnyFlag(FudgetLayoutFlag flags) const
 	return ((int)flags & (int)_flags) != 0;
 }
 
-Float2 FudgetLayout::GetHintSize() const
+void FudgetLayout::RecalculateSizes(bool forced)
 {
-	if (!_size_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
-		return _cached_hint;
-	_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
-	return _cached_hint;
-}
-
-Float2 FudgetLayout::GetMinSize() const
-{
-	if (!_size_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
-		return _cached_min;
-	_cached_min = GetRequestedSize(FudgetSizeType::Min);
-	return _cached_min;
-}
-
-Float2 FudgetLayout::GetMaxSize() const
-{
-	if (!_size_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
-		return _cached_max;
-	_cached_max = GetRequestedSize(FudgetSizeType::Max);
-	return _cached_max;
-}
-
-void FudgetLayout::RequestLayoutChildren(bool forced)
-{
-	if (!_layout_dirty && !forced)
-		return;
-	if (LayoutChildren())
-		_layout_dirty = false;
-}
-
-void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
-{
-	SERIALIZE_GET_OTHER_OBJ(FudgetLayout);
-	stream.JKEY("TypeName");
-	stream.String(GetType().Fullname);
-	SERIALIZE_MEMBER(ID, GetID());
-
-	SERIALIZE_MEMBER(Flags, _flags);
-}
-
-void FudgetLayout::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
-{
-	DESERIALIZE_MEMBER(Flags, _flags);
-}
-
-bool FudgetLayout::GoodSlotIndex(int index) const
-{
-	if (_owner == nullptr)
-		return false;
-	return index >= 0 && index < _slots.Count();
-}
-
-void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
-{
-	if (_owner == nullptr)
-		return;
-	FudgetControl *control = _owner->ChildAt(index);
-	control->LayoutUpdate(pos, size);
-}
-
-FudgetLayoutSlot* FudgetLayout::GetSlot(int index) const
-{
-	if (!GoodSlotIndex(index))
-		return nullptr;
-	return _slots[index];
-}
-
-void FudgetLayout::CleanUp()
-{
-	for (auto s : _slots)
-		Delete(s);
-	_slots.Clear();
-}
-
-void FudgetLayout::FillSlots()
-{
-	if (_owner == nullptr)
-		return;
-
-	CleanUp();
-
-	for (int ix = 0, siz = _owner->GetChildCount(); ix < siz; ++ix)
-	{
-		ChildAdded(_owner->ChildAt(ix), ix);
-	}
-}
-
-Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type) const
-{
-	if (_size_dirty)
+	if (_size_dirty || forced)
 	{
 		_cached_hint = RequestSize(FudgetSizeType::Hint);
 		_cached_min = RequestSize(FudgetSizeType::Min);
 		_cached_max = RequestSize(FudgetSizeType::Max);
 		_size_dirty = false;
-	}
-	switch (type)
-	{
-		case FudgetSizeType::Hint:
-			return _cached_hint;
-		case FudgetSizeType::Min:
-			return _cached_min;
-		case FudgetSizeType::Max:
-			return _cached_max;
-		default:
-			return Float2(0.f);
 	}
 }
 

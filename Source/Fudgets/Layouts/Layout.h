@@ -113,7 +113,8 @@ enum class FudgetOrientation
 };
 
 /// <summary>
-/// Flags that indicate what change will result in dirty layouts and sizes.
+/// Flags that indicate what change will result in dirty layouts and sizes, and how the layout's size might
+/// influence the size of its container.
 /// </summary>
 API_ENUM(Attributes = "Flags")
 enum class FudgetLayoutFlag : uint16
@@ -139,7 +140,7 @@ enum class FudgetLayoutFlag : uint16
 	/// </summary>
 	LayoutOnContentReposition = 1 << 3,
 	/// <summary>
-	/// Size calculation is necessary if the owner container ws resized.
+	/// Size calculation is necessary if the owner container was resized.
 	/// </summary>
 	ResizeOnContainerResize = 1 << 4,
 	/// <summary>
@@ -163,6 +164,65 @@ enum class FudgetLayoutFlag : uint16
 	/// Size calculation is necessary if a child control's index changed.
 	/// </summary>
 	ResizeOnContentIndexChange = 1 << 9,
+
+	/// <summary>
+	/// The layout has a valid hint size width, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutWidth will still need to provide their own hint
+	/// width.
+	/// </summary>
+	CanProvideHintSizeWidth = 1 << 10,
+	/// <summary>
+	/// The layout has a valid hint size height, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutHeight will still need to provide their own hint
+	/// height.
+	/// </summary>
+	CanProvideHintSizeHeight = 1 << 11,
+
+	/// <summary>
+	/// The layout has valid hint sizes that containers can use.
+	/// </summary>
+	CanProvideHintSize = CanProvideHintSizeWidth | CanProvideHintSizeHeight,
+
+	/// <summary>
+	/// The layout has a valid hint size width, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutWidth will still need to provide their own hint
+	/// width.
+	/// </summary>
+	CanProvideMinSizeWidth = 1 << 12,
+	/// <summary>
+	/// The layout has a valid hint size height, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutHeight will still need to provide their own hint
+	/// height.
+	/// </summary>
+	CanProvideMinSizeHeight = 1 << 13,
+
+	/// <summary>
+	/// The layout has valid min sizes that containers can use.
+	/// </summary>
+	CanProvideMinSize = CanProvideMinSizeWidth | CanProvideMinSizeHeight,
+
+	/// <summary>
+	/// The layout has a valid hint size width, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutWidth will still need to provide their own hint
+	/// width.
+	/// </summary>
+	CanProvideMaxSizeWidth = 1 << 14,
+	/// <summary>
+	/// The layout has a valid hint size height, that containers can use. If this is not set,
+	/// containers that return GetUsingLayoutHeight will still need to provide their own hint
+	/// height.
+	/// </summary>
+	CanProvideMaxSizeHeight = 1 << 15,
+
+	/// <summary>
+	/// The layout has valid min sizes that containers can use.
+	/// </summary>
+	CanProvideMaxSize = CanProvideMaxSizeWidth | CanProvideMaxSizeHeight,
+
+	/// <summary>
+	/// The layout has valid min size of each type that containers can use.
+	/// </summary>
+	CanProvideSizes = CanProvideHintSize | CanProvideMinSize | CanProvideMaxSize
 };
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
@@ -249,42 +309,42 @@ public:
 	API_PROPERTY() bool IsSizeDirty() const { return _size_dirty; }
 
 	/// <summary>
-	/// Notifies the layout that its owner container could have changed since the last layout or measurement
-	/// calculations. This can mean that the layout itself needs to update the child controls inside the
-	/// container. Layouts that don't depend on the specific change are free to ignore this call.
+	/// Notifies the layout that either its owner container, or a child control changed since the last layout
+	/// or size measurement calculation. This can mean that the layout itself needs to update the child controls
+	/// inside the container. Layouts that don't depend on the specific change are free to ignore this call.
 	/// </summary>
-	/// <param name="dirt_flags">What changed in the container from the size, the position or both</param>
-	/// <param name="content_changed">True if the changed was caused by a child control or layout</param>
-	API_FUNCTION() virtual void MarkDirty(FudgetDirtType dirt_flags, bool content_changed);
+	/// <param name="dirt_type">What changed in the container or contents: size, position or both</param>
+	/// <param name="content_changed">True if the changed is caused by a child control's change, or this layout requests it</param>
+	API_FUNCTION() virtual void MarkDirty(FudgetDirtType dirt_type, bool content_changed);
 
 	/// <summary>
 	/// Sets the dirty flag for any change that happened during layout recalculation in a parent's layout. The
-	/// layout is calculated from the top, so when this function is called, this layout will be calculated on the
+	/// layout is calculated from the top, so when this function is called, this layout will be calculated in the
 	/// same frame.
 	/// </summary>
-	/// <param name="dirt_flags"></param>
-	API_FUNCTION() virtual void MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_flags);
+	/// <param name="dirt_type"></param>
+	API_FUNCTION() virtual void MarkDirtyOnLayoutUpdate(FudgetDirtType dirt_type);
 
 	/// <summary>
 	/// Returns the calculated preferred size of the layout with all the managed controls laid out at the ideal size.
 	/// This might require recalculation if the preferred size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's preferred size</returns>
-	API_PROPERTY() Float2 GetHintSize() const;
+	API_PROPERTY() Float2 GetHintSize();
 
 	/// <summary>
 	/// Returns the calculated minimum size of the layout with all the managed controls laid out with their smallest size.
 	/// This might require recalculation if the minimum size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's minimum size</returns>
-	API_PROPERTY() Float2 GetMinSize() const;
+	API_PROPERTY() Float2 GetMinSize();
 
 	/// <summary>
 	/// Returns the calculated maximum size of the layout with all the managed controls laid out with their largest size.
 	/// This might require recalculation if the maximum size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's maximum size</returns>
-	API_PROPERTY() Float2 GetMaxSize() const;
+	API_PROPERTY() Float2 GetMaxSize();
 
 	/// <summary>
 	/// Calculates the child controls position and size on the owner container if necessary or requested.
@@ -330,25 +390,29 @@ protected:
 	API_FUNCTION() virtual void FillSlots();
 
 	/// <summary>
-	/// Returns one of the sizes of the layout. If the size data is dirty, it first calls RequestSize to recalculate
+	/// Returns one of the sizes of the layout. If the size data is dirty, it first calls RecalculateSizes to recalculate
 	/// them, otherwise no calculation takes place.
 	/// </summary>
 	/// <param name="type">Which size to return</param>
 	/// <returns>The calculated size</returns>
-	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType type) const;
+	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType type);
 
 	/// <summary>
-	/// Calculates one of the size data, and then returns it. Always call GetRequestedSize() which first checks if
-	/// previously calculated values are still valid, to avoid recalculation when unnecessary.
+	/// Calculates all slots size data of the requested type (min, max or hint) and from that calculates that size for this
+	/// layout and then returns it. Always call GetRequestedSize instead, which first checks if the layout size is dirty, to
+	/// avoid unnecessary recalculation.
+	/// Derived classes that provide their own implementation should make sure to set the requested size of slots, and use
+	/// the slots sizes when performing a layout.
 	/// </summary>
 	/// <param name="type">Which size to calculate and return</param>
 	/// <returns>The calculated size</returns>
-	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const { return Float2(0.f); }
+	API_FUNCTION() virtual Float2 RequestSize(FudgetSizeType type) const;
 
 	/// <summary>
-	/// Calculates the child controls position and size on the owner container.
+	/// Calculates and sets the child controls' position and size on the owner container, using the available space, and
+	/// precalculated sizes in slots.
 	/// </summary>
-	/// <returns>Whether the layout was successful and the dirty flag can be cleared</returns>
+	/// <returns>Whether the layout was successful and the layout dirty flag can be cleared</returns>
 	API_FUNCTION() virtual bool LayoutChildren() { return false;  }
 
 	/// <summary>
@@ -425,11 +489,16 @@ protected:
 	/// <summary>
 	/// Called during layout initialization to set some basic behavior of the layout that will apply to all layouts of
 	/// this type. It can be modified for individual layouts with SetLayoutFlags later.
-	/// Include the result of the base control's GetCreationFlags to also return those flags for correct behavior.
+	/// Include the result of the base layout's GetCreationFlags to also return those flags if needed for correct behavior.
 	/// </summary>
 	/// <returns>The creation flags for this control.</returns>
 	API_FUNCTION() virtual FudgetLayoutFlag GetCreationFlags() const { return FudgetLayoutFlag::None; }
 
+	/// <summary>
+	/// Recalculates the min, max and hint sizes of all controls' slots on request. 
+	/// </summary>
+	/// <param name="forced">Recalculate even if the size is not dirty</param>
+	API_FUNCTION() void RecalculateSizes(bool forced = false);
 private:
 	/// <summary>
 	/// Sets the container that holds the controls this layout can reposition or resize. For internal use, it doesn't
@@ -437,6 +506,7 @@ private:
 	/// </summary>
 	/// <param name="value">The new container this layout will be assined to</param>
 	API_PROPERTY() void SetOwnerInternal(FudgetContainer *value);
+
 
 
 	FudgetContainer *_owner;
