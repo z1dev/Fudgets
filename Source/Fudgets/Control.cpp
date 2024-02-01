@@ -425,7 +425,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Recta
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = t->Size();
-	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
 	Draw9SlicingTexture(t, rect, border, borderUV);
@@ -436,7 +436,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const 
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = t->Size();
-	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
 	Draw9SlicingTexturePoint(t, rect, border, borderUV);
@@ -447,7 +447,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHa
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
-	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
 	Draw9SlicingSprite(spriteHandle, rect, border, borderUV);
@@ -458,7 +458,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spr
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
-	border = Float4(borderWidths.Left, siz.X - borderWidths.Right, borderWidths.Top, siz.Y - borderWidths.Bottom);
+	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
 	Draw9SlicingSpritePoint(spriteHandle, rect, border, borderUV);
@@ -715,26 +715,22 @@ void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, const Recta
 	if (area.AreaType == FudgetFillAreaType::Texture9)
 	{
 		Draw9SlicingPrecalculatedTexture(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
-		//Draw9SlicingTexture(area.Texture, rect, border, borderUV);
 		return;
 	}
 	if (area.AreaType == FudgetFillAreaType::Texture9Point)
 	{
 		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
-		//Draw9SlicingTexturePoint(area.Texture, rect, border, borderUV);
 		return;
 	}
 
 	if (area.AreaType == FudgetFillAreaType::Sprite9)
 	{
 		Draw9SlicingPrecalculatedSprite(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
-		//Draw9SlicingSprite(area.SpriteHandle, rect, border, borderUV);
 		return;
 	}
 	if (area.AreaType == FudgetFillAreaType::Texture9Point)
 	{
 		Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
-		//Draw9SlicingSpritePoint(area.SpriteHandle, rect, border, borderUV);
 		return;
 	}
 }
