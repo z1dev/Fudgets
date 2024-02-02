@@ -9,6 +9,8 @@
 #include "Engine/Input/Enums.h"
 #include "Engine/Core/Math/Rectangle.h"
 #include "Engine/Serialization/Serialization.h"
+#include "Engine/Input/Keyboard.h"
+#include "Engine/Input/KeyboardKeys.h"
 
 #include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
@@ -566,6 +568,22 @@ public:
 	/// <param name="button">Button that was just released</param>
 	/// <returns>Prevent OnMouseUp reaching other controls or not</returns>
 	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
+
+	/// <summary>
+	/// Called when a key is pressed while the control has the keyboard focus.
+	/// </summary>
+	/// <param name="key">The key</param>
+	API_FUNCTION() virtual void OnKeyDown(KeyboardKeys key) {}
+
+	/// <summary>
+	/// Called when a key is released that was pressed while this control had the keyboard focus, or the focus
+	/// shifts to a different control and the key up was not received yet by this control.
+	/// </summary>
+	/// <param name="key">The key</param>
+	API_FUNCTION() virtual void OnKeyUp(KeyboardKeys key) {}
+
+	API_FUNCTION() virtual void OnCharInput(Char ch) {}
+
 
 	/// <summary>
 	/// Called during mouse event handling to make sure this control wants to handle mouse events at

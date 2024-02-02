@@ -56,9 +56,7 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 	_parent->RemoveChild(_index);
 	if (value != nullptr)
 		value->AddChild(this, order);
-	if (_parent != nullptr)
-		RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
-	else
+	if (_parent == nullptr)
 		RegisterToUpdate(false);
 	_changing = false;
 }

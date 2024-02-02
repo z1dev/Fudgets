@@ -84,6 +84,9 @@ int FudgetGUIRoot::RemoveChild(FudgetControl *control)
 	if (control == nullptr || control->GetParent() != this)
 		return -1;
 
+	if (_focus_control == control)
+		SetFocusedControl(nullptr);
+
 	if (control->HasAnyFlag(FudgetControlFlags::AlwaysOnTop))
 		--_on_top_count;
 	return Base::RemoveChild(control);
@@ -210,6 +213,12 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 {
 	if (_focus_control == value)
 		return;
+	if (!_focus_control_keys.IsEmpty())
+	{
+		for (auto k : _focus_control_keys)
+			_focus_control->OnKeyUp(k.Item);
+		_focus_control_keys.Clear();
+	}
 	_focus_control = value;
 }
 
@@ -359,6 +368,10 @@ void FudgetGUIRoot::InitializeEvents()
 	Input::MouseMove.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseMove>(this);
 	Input::MouseLeave.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseLeave>(this);
 
+	Input::CharInput.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnCharInput>(this);
+	Input::KeyDown.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyDown>(this);
+	Input::KeyUp.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyUp>(this);
+
 	events_initialized = true;
 }
 
@@ -372,6 +385,10 @@ void FudgetGUIRoot::UninitializeEvents()
 	Input::MouseUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseUp>(this);
 	Input::MouseMove.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseMove>(this);
 	Input::MouseLeave.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseLeave>(this);
+
+	Input::CharInput.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnCharInput>(this);
+	Input::KeyDown.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyDown>(this);
+	Input::KeyUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyUp>(this);
 
 	events_initialized = false;
 }
@@ -753,4 +770,31 @@ void FudgetGUIRoot::OnMouseLeave()
 			old_mouse_control->OnMouseLeave();
 	}
 }
+
+void FudgetGUIRoot::OnKeyDown(KeyboardKeys key)
+{
+	if (_focus_control == nullptr)
+		return;
+
+	_focus_control_keys.Add(key);
+	_focus_control->OnKeyDown(key);
+}
+
+void FudgetGUIRoot::OnKeyUp(KeyboardKeys key)
+{
+	if (_focus_control == nullptr || !_focus_control_keys.Contains(key))
+		return;
+
+	_focus_control->OnKeyUp(key);
+	_focus_control_keys.Remove(key);
+}
+
+void FudgetGUIRoot::OnCharInput(Char ch)
+{
+	if (_focus_control == nullptr)
+		return;
+	_focus_control->OnCharInput(ch);
+}
+
+
 

@@ -69,9 +69,11 @@ bool FudgetThemes::_themes_initialized = false;
 const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("MainTheme"));
 const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("DefaultStyle"));
 
-const FudgetToken FudgetThemes::ButtonDownToken = FudgetThemes::RegisterToken(TEXT("ButtonDownToken"));
-const FudgetToken FudgetThemes::LeftButtonPressedToken = FudgetThemes::RegisterToken(TEXT("LeftButtonPressedToken"));
-const FudgetToken FudgetThemes::MouseHoverToken = FudgetThemes::RegisterToken(TEXT("MouseHoverToken"));
+const FudgetToken FudgetThemes::ButtonDownToken = FudgetThemes::RegisterToken(TEXT("ButtonDown"));
+const FudgetToken FudgetThemes::LeftButtonPressedToken = FudgetThemes::RegisterToken(TEXT("LeftButtonPressed"));
+const FudgetToken FudgetThemes::MouseHoverToken = FudgetThemes::RegisterToken(TEXT("MouseOverControl"));
+const FudgetToken FudgetThemes::ControlFocusedToken = FudgetThemes::RegisterToken(TEXT("ControlFocused"));
+const FudgetToken FudgetThemes::CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("CaretBlinkTime"));
 
 const FudgetToken FudgetThemes::ColorDarkToken = FudgetThemes::RegisterToken(TEXT("ColorDark"));
 const FudgetToken FudgetThemes::ColorLightToken = FudgetThemes::RegisterToken(TEXT("ColorLight"));
@@ -272,6 +274,7 @@ bool FudgetThemes::RegisterFontAsset(FudgetToken token, FontAsset *asset)
 	if (it != _font_asset_map.end())
 		return false;
 	_font_asset_map[token] = asset;
+	return true;
 }
 
 FontAsset* FudgetThemes::GetFontAsset(FudgetToken token)

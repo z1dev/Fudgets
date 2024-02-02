@@ -180,6 +180,10 @@ private:
     void OnMouseMove(const Float2 &pos);
     void OnMouseLeave();
 
+    void OnKeyDown(KeyboardKeys key);
+    void OnKeyUp(KeyboardKeys key);
+    void OnCharInput(Char ch);
+
     // Used for checking if this class has initialized events with Input.
     bool events_initialized;
 
@@ -209,6 +213,8 @@ private:
 
     // The control currently taking the keyboard input
     FudgetControl *_focus_control;
+    // The keys that were pressed over the _focus_control but not released yet with OnKeyUp.
+    HashSet<KeyboardKeys> _focus_control_keys;
 
     // Controls whose OnUpdate should be called
     Array<FudgetControl*> _updating_controls;

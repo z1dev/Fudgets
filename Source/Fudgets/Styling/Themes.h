@@ -214,18 +214,28 @@ public:
 
     // Tokens for getting paint properties:
 
+    // TODO: change tokens specific to Fudgets so users won't accidentally use them.
+
     /// <summary>
-    /// Token for the "ButtonDownToken" string.
+    /// Token for the "ButtonDown" string.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken ButtonDownToken;
     /// <summary>
-    /// Token for the "ButtonPressedToken" string.
+    /// Token for the "LeftButtonPressed" string.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken LeftButtonPressedToken;
     /// <summary>
-    /// Token for the "ButtonMouseOverToken" string.
+    /// Token for the "MouseHover" string.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken MouseHoverToken;
+    /// <summary>
+    /// Token for "ControlFocused" string
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlFocusedToken;
+    /// <summary>
+    /// Token for "CaretBlinkTime" string.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken CaretBlinkTimeToken;
 
     // Tokens of standard values that can be used to find style settings
 

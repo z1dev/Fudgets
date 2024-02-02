@@ -13,4 +13,13 @@ public partial struct FudgetPadding
         Right = right;
         Bottom = bottom;
     }
+    
+    /// <summary>
+    /// Left and right padding.
+    /// </summary>
+    public float Width => Left + Right;
+    /// <summary>
+    /// Top and bottom padding.
+    /// </summary>
+    public float Height => Top + Bottom;
 }
