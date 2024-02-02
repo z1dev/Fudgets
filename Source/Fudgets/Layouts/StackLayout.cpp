@@ -126,9 +126,9 @@ FudgetLayoutSlot* FudgetStackLayout::CreateSlot(FudgetControl *control)
 	return Base::CreateSlot(control);
 }
 
-FudgetLayoutFlag FudgetStackLayout::GetCreationFlags() const
+FudgetLayoutFlag FudgetStackLayout::GetInitFlags() const
 {
 	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
-		FudgetLayoutFlag::CanProvideSizes | Base::GetCreationFlags();
+		FudgetLayoutFlag::CanProvideSizes | Base::GetInitFlags();
 }
 

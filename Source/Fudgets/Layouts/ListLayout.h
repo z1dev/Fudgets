@@ -161,7 +161,7 @@ protected:
 	API_FUNCTION(new) FudgetListLayoutSlot* GetSlot(int index) const;
 
 	/// <inheritdoc />
-	FudgetLayoutFlag GetCreationFlags() const override;
+	FudgetLayoutFlag GetInitFlags() const override;
 
 private:
 	void PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size);

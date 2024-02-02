@@ -107,9 +107,9 @@ bool FudgetSimpleButton::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton bu
 	return true;
 }
 
-FudgetControlFlags FudgetSimpleButton::GetCreationFlags() const
+FudgetControlFlags FudgetSimpleButton::GetInitFlags() const
 {
 	return FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
-		FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates | Base::GetCreationFlags();
+		FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
 }
 

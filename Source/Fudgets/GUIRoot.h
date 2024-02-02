@@ -107,13 +107,13 @@ public:
 
     // Serialization
 
-    /// <summary>
-    /// Placeholder summary so the code gen doesn't complain.
-    /// </summary>
-    API_FUNCTION() String SerializationTester();
+    ///// <summary>
+    ///// Placeholder summary so the code gen doesn't complain.
+    ///// </summary>
+    //API_FUNCTION() String SerializationTester();
 
-    void Serialize(SerializeStream& stream, const void* otherObj) override;
-    void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
+    //void Serialize(SerializeStream& stream, const void* otherObj) override;
+    //void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
     enum class HookProcessingType
     {

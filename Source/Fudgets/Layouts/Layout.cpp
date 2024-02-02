@@ -40,7 +40,7 @@ FudgetLayout::~FudgetLayout()
 
 void FudgetLayout::Initialize()
 {
-	_flags = GetCreationFlags();
+	_flags = GetInitFlags();
 }
 
 void FudgetLayout::SetOwner(FudgetContainer *value)
@@ -55,9 +55,12 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
 	_size_dirty = true;
 
 	if (value != nullptr)
+	{
 		FillSlots();
 
-	value->SetLayout(this);
+		value->SetLayout(this);
+		Initialize();
+	}
 
 	_changing = false;
 }

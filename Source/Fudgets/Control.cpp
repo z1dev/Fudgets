@@ -17,14 +17,11 @@
 #include "Engine/Render2D/SpriteAtlas.h"
 
 
-FudgetGUIRoot* FudgetControl::_guiRoot = nullptr;
-
-
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-	_parent(nullptr), _index(-1), _flags(FudgetControlFlags::None), _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-	_max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f), _g2l_was_cached(false), _changing(false), _updating_registered(false),
-	/*_element_painter(nullptr),*/ _cached_painter(nullptr), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
-	_cached_theme(nullptr)
+	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::None), _pos(0.f), _size(0.0f),
+	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
+	_g2l_was_cached(false), _changing(false), _updating_registered(false), _cached_painter(nullptr), _style(nullptr),
+	_cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
 
@@ -35,9 +32,8 @@ FudgetControl::~FudgetControl()
 
 void FudgetControl::Initialize()
 {
-	_flags = GetCreationFlags();
-	if (HasAnyFlag(FudgetControlFlags::RegisterToUpdates))
-		RegisterToUpdate(true);
+	_flags = GetInitFlags();
+	RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
 }
 
 void FudgetControl::Draw()
@@ -66,15 +62,18 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 	if (_parent != nullptr)
 	{
 		_parent->RemoveChild(_index);
+		_guiRoot = nullptr;
 	}
 	_parent = value;
 	_index = -1;
 	if (_parent != nullptr)
 	{
+		_guiRoot = _parent->GetGUIRoot();
 		if (order >= _parent->GetChildCount())
 			order = -1;
 
 		_index = _parent->AddChild(this, order);
+		Initialize();
 	}
 	_changing = false;
 }

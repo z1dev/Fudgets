@@ -3,6 +3,7 @@
 #include "Control.h"
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Input/Enums.h"
+#include "Engine/Core/Log.h"
 
 class FudgetLayout;
 class Fudget;
@@ -52,7 +53,7 @@ API_CLASS()
 class FUDGETS_API FudgetContainer : public FudgetControl
 {
     using Base = FudgetControl;
-	DECLARE_SCRIPTING_TYPE(FudgetContainer);
+    DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
     ~FudgetContainer();
 
@@ -60,7 +61,6 @@ public:
     FORCE_INLINE T* CreateChild()
     {
         T* child = New<T>(SpawnParams(Guid::New(), TypeInitializer));
-        child->Initialize();
         AddChild(child);
         return child;
     }
@@ -68,8 +68,13 @@ public:
     template<typename T>
     FORCE_INLINE T* CreateLayout()
     {
+        if (GetGUIRoot() == this)
+        {
+            LOG(Error, "Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.");
+            return nullptr;
+        }
+
         T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
-        layout->Initialize();
         SetLayoutInternal(layout);
         return layout;
     }
@@ -339,8 +344,8 @@ public:
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
 protected:
-
-    FudgetControlFlags GetCreationFlags() const override;
+    /// <inheritdoc />
+    FudgetControlFlags GetInitFlags() const override;
 
     /// <summary>
     /// Sets the layout to the container and changes its owner

@@ -1,4 +1,5 @@
-﻿using FlaxEngine;
+﻿using System;
+using FlaxEngine;
 
 namespace Fudgets
 {
@@ -13,10 +14,12 @@ namespace Fudgets
         public T CreateChild<T>() where T : FudgetControl
         {
             if (typeof(T).IsAbstract)
+            {
+                Debug.LogError("Cannot create child control from an abstract type.");
                 return null;
+            }
 
             var child = New<T>();
-            child.Initialize();
             AddChild(child);
             return (T)child;
         }
@@ -26,15 +29,33 @@ namespace Fudgets
         /// </summary>
         /// <typeparam name="T">The type of the layout to create. Must derive from FudgetLayout</typeparam>
         /// <returns>The newly created and added layout</returns>
-        public T CreateLayout<T>() where T : FudgetLayout
+        public virtual T CreateLayout<T>() where T : FudgetLayout
         {
             if (typeof(T).IsAbstract)
+            {
+                Debug.LogError("Cannot create layout from an abstract type.");
                 return null;
+            }
+
+            if (GUIRoot == this)
+            {
+                Debug.LogError("Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.");
+                return null;
+            }
 
             var layout = New<T>(); //Activator.CreateInstance<T>();
-            layout.Initialize();
             SetLayoutInternal(layout);
             return (T)layout;
+        }
+    }
+
+    partial class FudgetGUIRoot
+    {
+        /// <inheritdoc />
+        [Obsolete("Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.", true)]
+        public override T CreateLayout<T>()
+        {
+            return base.CreateLayout<T>();
         }
     }
 }

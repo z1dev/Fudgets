@@ -217,7 +217,7 @@ public:
 	~FudgetControl();
 
 	/// <summary>
-	/// Always call after the control is created. Containers do this automatically in CreateChild.
+	/// Called each time the control's parent changes.
 	/// </summary>
 	API_FUNCTION() virtual void Initialize();
 
@@ -1126,20 +1126,24 @@ public:
 protected:
 
 	/// <summary>
-	/// Called during control initialization to set some basic behavior of the control that will apply to all controls of
-	/// this type. It can be modified for individual controls with SetControlFlags later.
-	/// Controls with the creation flag of RegisterToUpdates will automatically call RegisterToUpdate(true) during initialization,
-	/// and will update this value when changing the flags with SetControlFlags.
-	/// Include the result of the base control's GetCreationFlags to also return those flags if needed for correct behavior.
+	/// Called when the control is added to a parent to set some basic behavior for the control. It can be modified individually
+	/// for controls with SetControlFlags, but it might be reset each time the parent changes. Controls with the flag of
+	/// RegisterToUpdates will automatically call RegisterToUpdate(true) when the flags are set, and will update this value when
+	/// changing the flags with SetControlFlags.
+	/// Include the result of the base control's GetInitFlags if it's needed for correct behavior.
 	/// </summary>
-	/// <returns>The creation flags for this control.</returns>
-	API_FUNCTION() virtual FudgetControlFlags GetCreationFlags() const { return FudgetControlFlags::None; }
+	/// <returns>Control flags that should be set to the control.</returns>
+	API_FUNCTION() virtual FudgetControlFlags GetInitFlags() const { return FudgetControlFlags::None; }
 
 private:
 
 	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, const Rectangle& rect, const Color& color) const;
 
-	static FudgetGUIRoot *_guiRoot;
+	/// <summary>
+	/// The gui root is at the root of the control hierarchy. It forwards input and OnUpdate calls. It can be requested to
+	/// capture the mouse input and keeps track of the focused control.
+	/// </summary>
+	FudgetGUIRoot *_guiRoot;
 
 	/// <summary>
 	/// Controls in a layout usually can't be moved freely. This function determines if that's the case or not.

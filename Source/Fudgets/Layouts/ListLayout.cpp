@@ -305,11 +305,11 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 	return (FudgetListLayoutSlot*)Base::GetSlot(index);
 }
 
-FudgetLayoutFlag FudgetListLayout::GetCreationFlags() const
+FudgetLayoutFlag FudgetListLayout::GetInitFlags() const
 {
 	return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
 		FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | FudgetLayoutFlag::CanProvideSizes |
-		Base::GetCreationFlags();
+		Base::GetInitFlags();
 }
 
 Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const

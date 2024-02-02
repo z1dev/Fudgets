@@ -278,7 +278,7 @@ public:
 	~FudgetLayout();
 
 	/// <summary>
-	/// Always call after the layout is created. Containers do this automatically in CreateLayout.
+	/// Called each time the layout's owner changes.
 	/// </summary>
 	API_FUNCTION() virtual void Initialize();
 
@@ -487,12 +487,12 @@ protected:
 	API_FUNCTION() bool HasAnyFlag(FudgetLayoutFlag flags) const;
 
 	/// <summary>
-	/// Called during layout initialization to set some basic behavior of the layout that will apply to all layouts of
-	/// this type. It can be modified for individual layouts with SetLayoutFlags later.
-	/// Include the result of the base layout's GetCreationFlags to also return those flags if needed for correct behavior.
+	/// Called when the layout is added to a container owner, to set some basic behavior for the layout. It can be modified individually
+	/// for layouts with SetLayoutFlags, but it might be reset each time the owner container changes.
+	/// Include the result of the base layout's GetInitFlags if it's needed for correct behavior.
 	/// </summary>
-	/// <returns>The creation flags for this control.</returns>
-	API_FUNCTION() virtual FudgetLayoutFlag GetCreationFlags() const { return FudgetLayoutFlag::None; }
+	/// <returns>Layout flags that should be set to the layout.</returns>
+	API_FUNCTION() virtual FudgetLayoutFlag GetInitFlags() const { return FudgetLayoutFlag::None; }
 
 	/// <summary>
 	/// Recalculates the min, max and hint sizes of all controls' slots on request. 

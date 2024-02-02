@@ -118,7 +118,7 @@ public:
 	API_PROPERTY() bool IsHovered() { return _over; }
 protected:
 	/// <inheritdoc />
-	FudgetControlFlags GetCreationFlags() const override;
+	FudgetControlFlags GetInitFlags() const override;
 private:
 	Color _color;
 

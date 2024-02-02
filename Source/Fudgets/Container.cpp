@@ -489,9 +489,9 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 	}
 }
 
-FudgetControlFlags FudgetContainer::GetCreationFlags() const
+FudgetControlFlags FudgetContainer::GetInitFlags() const
 {
-	return Base::GetCreationFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
+	return Base::GetInitFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
 }
 
 void FudgetContainer::SetLayoutInternal(FudgetLayout *layout)
