@@ -83,3 +83,19 @@ void FudgetPainterPropertyProvider::SetStoredFloat(FudgetToken token, float valu
 {
 	_stored_values[token] = value;
 }
+
+bool FudgetPainterPropertyProvider::GetStoredInt(FudgetToken token, API_PARAM(Out) int &result) const
+{
+	auto it = _stored_values.find(token);
+	if (it == _stored_values.end())
+		return false;
+	if (it->second.Type.Type != VariantType::Int)
+		return false;
+	result = it->second.AsInt;
+	return true;
+}
+
+void FudgetPainterPropertyProvider::SetStoredInt(FudgetToken token, int value)
+{
+	_stored_values[token] = value;
+}
