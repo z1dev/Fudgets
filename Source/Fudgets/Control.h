@@ -140,10 +140,20 @@ enum class FudgetControlFlags
 	/// </summary>
 	CaptureReleaseMouseRight = 1 << 8,
 	/// <summary>
-	/// Controls with this flag will have their Update function called. This flag needs to be set in the
-	/// constructor. Controls can register to be updated at any time, by calling TODO.
+	/// Controls with this flag will have their OnUpdate function called, by registering them automatically with
+	/// RegisterToUpdate(true). Removing the flag with SetControlFlags will also unregister them from updates.
 	/// </summary>
 	RegisterToUpdates = 1 << 9,
+	/// <summary>
+	/// Set on the control before adding it to a parent to reset its flags from GetInitFlags.
+	/// </summary>
+	ResetFlags = 1 << 10,
+	/// <summary>
+	/// Only for top-level controls which are direct children of the gui root. It's ignored for others. Places
+	/// the top-level control above other top-level controls that don't have the AlwaysOnTop flag. Providing the
+	/// flag with GetInitFlags or changing it in SetControlFlags will change the control's position in the root.
+	/// </summary>
+	AlwaysOnTop = 1 << 11,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -180,8 +190,7 @@ enum class FudgetPointerInput
 };
 
 /// <summary>
-/// A set of options to decide what should happen when the mouse button was pressed over a
-/// control. 
+/// A set of options to decide what should happen when the mouse button was pressed over a control. 
 /// </summary>
 API_ENUM()
 enum class FudgetMouseButtonResult
@@ -213,13 +222,7 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 	using Base = ScriptingObject;
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
-	//FudgetControl(const SpawnParams &params, FudgetControlFlags flags);
 	~FudgetControl();
-
-	/// <summary>
-	/// Called each time the control's parent changes.
-	/// </summary>
-	API_FUNCTION() virtual void Initialize();
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -228,22 +231,22 @@ public:
 	API_FUNCTION() virtual void Draw();
 
 	/// <summary>
-	/// Fetches the parent who is managing this control. The parent is also responsible for destruction
-	/// and, in case it has a layout, to set the size and position of this control.
+	/// Fetches the parent who is managing this control. The parent is also responsible for its destruction.
+	/// In case the parent has a layout, it might set the size and position of this control as well.
 	/// </summary>
 	/// <returns>The parent managing this control's dimensions and lifetime.</returns>
 	API_PROPERTY() FudgetContainer* GetParent() const { return _parent; }
 
 	/// <summary>
-	/// Changes the parent who is managing this control. The parent is also responsible for destruction
-	/// and, in case it has a layout, to set the size and position of this control.
+	/// Changes the parent who is managing this control. The parent is also responsible for its destruction.
+	/// In case the parent has a layout, it might set the size and position of this control as well.
 	/// </summary>
 	/// <param name="value">The new parent or null</param>
 	API_PROPERTY() void SetParent(FudgetContainer *value);
 
 	/// <summary>
-	/// Changes the parent who is managing this control. The parent is also responsible for destruction
-	/// and, in case it has a layout, to set the size and position of this control.
+	/// Changes the parent who is managing this control. The parent is also responsible for its destruction.
+	/// In case the parent has a layout, it might set the size and position of this control as well.
 	/// </summary>
 	/// <param name="value">The new parent or null</param>
 	/// <param name="index">The order inside the parent that determines when drawing and callbacks are called.</param>
@@ -399,6 +402,18 @@ public:
 	/// </summary>
 	/// <param name="dirt_flags">Flags of what changed</param>
 	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
+
+	/// <summary>
+	/// Returns whether the control is a direct child control of the GUI root and is always placed above not
+	/// AlwaysOnTop controls.
+	/// </summary>
+	API_PROPERTY() bool GetAlwaysOnTop() const;
+	/// <summary>
+	/// For controls that are direct child to the GUI root, sets whether the control should always be placed
+	/// above not AlwaysOnTop controls.
+	/// </summary>
+	/// <param name="valuse"></param>
+	API_PROPERTY() void SetAlwaysOnTop(bool value);
 
 	// Update callback
 
@@ -1126,10 +1141,12 @@ public:
 protected:
 
 	/// <summary>
-	/// Called when the control is added to a parent to set some basic behavior for the control. It can be modified individually
-	/// for controls with SetControlFlags, but it might be reset each time the parent changes. Controls with the flag of
-	/// RegisterToUpdates will automatically call RegisterToUpdate(true) when the flags are set, and will update this value when
-	/// changing the flags with SetControlFlags.
+	/// Called when the control is added to a parent and the ResetFlags flag is present among the flags (which
+	/// is the default at control creation.) It can be modified individually later by calling SetControlFlags.
+	/// This function can be called multiple times, so relying on special behavior for initialization can have
+	/// unwanted side effects.
+	/// Setting the RegisterToUpdates flag either by this function or by calling SetControlFlags will automatically call
+	/// RegisterToUpdate(true) when added to a parent and RegisterToUpdate(false) when removed.
 	/// Include the result of the base control's GetInitFlags if it's needed for correct behavior.
 	/// </summary>
 	/// <returns>Control flags that should be set to the control.</returns>

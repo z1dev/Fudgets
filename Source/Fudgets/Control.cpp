@@ -18,7 +18,7 @@
 
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::None), _pos(0.f), _size(0.0f),
+	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
 	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
 	_g2l_was_cached(false), _changing(false), _updating_registered(false), _cached_painter(nullptr), _style(nullptr),
 	_cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
@@ -28,12 +28,6 @@ FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params
 FudgetControl::~FudgetControl()
 {
 	RegisterToUpdate(false);
-}
-
-void FudgetControl::Initialize()
-{
-	_flags = GetInitFlags();
-	RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
 }
 
 void FudgetControl::Draw()
@@ -59,22 +53,13 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 		return;
 
 	_changing = true;
+	_parent->RemoveChild(_index);
+	if (value != nullptr)
+		value->AddChild(this, order);
 	if (_parent != nullptr)
-	{
-		_parent->RemoveChild(_index);
-		_guiRoot = nullptr;
-	}
-	_parent = value;
-	_index = -1;
-	if (_parent != nullptr)
-	{
-		_guiRoot = _parent->GetGUIRoot();
-		if (order >= _parent->GetChildCount())
-			order = -1;
-
-		_index = _parent->AddChild(this, order);
-		Initialize();
-	}
+		RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
+	else
+		RegisterToUpdate(false);
 	_changing = false;
 }
 
@@ -83,8 +68,7 @@ void FudgetControl::SetIndexInParent(int value)
 	if (_changing || _parent == nullptr || value == _index || value < 0 || value >= _parent->GetChildCount())
 		return;
 	_changing = true;
-	if (_parent->MoveChildToIndex(_index, value))
-		_index = value;
+	_parent->MoveChildToIndex(_index, value);
 	_changing = false;
 }
 
@@ -159,7 +143,7 @@ void FudgetControl::SetPosition(Float2 value)
 
 void FudgetControl::RegisterToUpdate(bool value)
 {
-	if (value == _updating_registered)
+	if (value == _updating_registered || (_parent == nullptr && value))
 		return;
 
 	auto gui = GetGUIRoot();
@@ -291,7 +275,13 @@ void FudgetControl::SetControlFlags(FudgetControlFlags flags)
 
 	if ((_flags & FudgetControlFlags::RegisterToUpdates) != (tmp & FudgetControlFlags::RegisterToUpdates))
 	{
-		RegisterToUpdate((_flags & FudgetControlFlags::RegisterToUpdates) == FudgetControlFlags::RegisterToUpdates);
+		RegisterToUpdate(_parent != nullptr && ((_flags & FudgetControlFlags::RegisterToUpdates) == FudgetControlFlags::RegisterToUpdates));
+	}
+
+	if (_parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlags::AlwaysOnTop) != (tmp & FudgetControlFlags::AlwaysOnTop))
+	{
+		if (_guiRoot->ChangeControlAlwaysOnTop(this, (_flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop) == -1)
+			_flags |= (tmp & FudgetControlFlags::AlwaysOnTop);
 	}
 
 	// Might not need recalculation but we can't be sure.
@@ -312,6 +302,20 @@ void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
 {
 	if (_parent != nullptr)
 		_parent->MarkLayoutDirty(dirt_flags, true);
+}
+
+bool FudgetControl::GetAlwaysOnTop() const
+{
+	return _parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop;
+}
+
+void FudgetControl::SetAlwaysOnTop(bool value)
+{
+	if (_parent != _guiRoot || _parent == nullptr || GetAlwaysOnTop() == value)
+		return;
+	_changing = true;
+	_guiRoot->ChangeControlAlwaysOnTop(this, value);
+	_changing = false;
 }
 
 void FudgetControl::OnUpdate(float delta_time)

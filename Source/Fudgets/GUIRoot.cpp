@@ -23,7 +23,7 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params) : FudgetGUIRoot(params, 
 }
 
 FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params, Fudget* root) : Base(params),
-	events_initialized(false), _mouse_capture_control(nullptr), _mouse_capture_button(),
+	events_initialized(false), _on_top_count(0), _mouse_capture_control(nullptr), _mouse_capture_button(),
 	_mouse_over_control(nullptr), _focus_control(nullptr), _processing_updates(false)
 {
 	_root = root;
@@ -40,6 +40,106 @@ FudgetGUIRoot::~FudgetGUIRoot()
 {
 	UninitializeEvents();
 	UnregisterControlUpdates();
+}
+
+int FudgetGUIRoot::AddChild(FudgetControl *control, int index)
+{
+	FudgetControlFlags flags = control->_flags;
+
+	if ((flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
+		flags = control->GetInitFlags();
+
+	bool on_top = (flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop;
+	if (!on_top)
+	{
+		if (index < 0 || index > GetChildCount() - _on_top_count)
+			index = GetChildCount() - _on_top_count;
+	}
+	else
+	{
+		if (index >= 0)
+			index += GetChildCount() - _on_top_count;
+		if (index < 0 || index > GetChildCount())
+			index = GetChildCount();
+	}
+
+	int result = Base::AddChild(control, index);
+	if (result != -1)
+	{
+		if ((!on_top && result < GetChildCount() - _on_top_count) || result < GetChildCount() - _on_top_count - 1)
+		{
+			control->_flags &= ~(FudgetControlFlags::AlwaysOnTop);
+		}
+		else
+		{
+			++_on_top_count;
+			control->_flags |= FudgetControlFlags::AlwaysOnTop;
+		}
+	}
+	return result;
+}
+
+int FudgetGUIRoot::RemoveChild(FudgetControl *control)
+{
+	if (control == nullptr || control->GetParent() != this)
+		return -1;
+
+	if (control->HasAnyFlag(FudgetControlFlags::AlwaysOnTop))
+		--_on_top_count;
+	return Base::RemoveChild(control);
+}
+
+bool FudgetGUIRoot::MoveChildToIndex(int from, int to)
+{
+	int cnt = GetChildCount();
+	if (from < 0 || to < 0 || from >= cnt || to >= cnt)
+		return false;
+	if (from == to)
+		return true;
+
+	bool fromtop = from >= cnt - _on_top_count;
+	bool totop = to >= cnt - _on_top_count;
+
+	FudgetControl *control = ChildAt(from);
+
+	if (fromtop != totop)
+	{
+		LOG(Warning, "Moving a control from always-on-top to not always-on-top or the reverse is not supported.");
+		return false;
+	}
+
+	return Base::MoveChildToIndex(from, to);
+}
+
+int FudgetGUIRoot::FudgetGUIRoot::ChangeControlAlwaysOnTop(FudgetControl *control, bool set_always_on_top, int index)
+{
+	if (control == nullptr || control->_parent != this || control->HasAnyFlag(FudgetControlFlags::AlwaysOnTop) == set_always_on_top)
+		return -1;
+	int cnt = !set_always_on_top ? GetChildCount() - _on_top_count : _on_top_count;
+	if (index < 0 || index > cnt)
+		index = cnt;
+	int from = control->_index;
+	int to;
+	if (!set_always_on_top)
+		to = index;
+	else
+		to = GetChildCount() - 1 - _on_top_count + index;
+
+	int new_index = from != to ? Base::MoveChildToIndex(from, to) : control->_index;
+	if (new_index != -1)
+	{
+		if (set_always_on_top)
+		{
+			++_on_top_count;
+			control->_flags |= FudgetControlFlags::AlwaysOnTop;
+		}
+		else
+		{
+			--_on_top_count;
+			control->_flags &= ~FudgetControlFlags::AlwaysOnTop;
+		}
+	}
+	return new_index;
 }
 
 Float2 FudgetGUIRoot::GetSize() const

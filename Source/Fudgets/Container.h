@@ -90,22 +90,23 @@ public:
     API_FIELD() bool DrawFilledBackground;
 
     /// <summary>
-    /// Inserts a control into the layout of this container. If an index is provided, the controls with same or higher
-    /// index are moved into a higher index in the hierarchy. The control with the highest index is drawn last.
-    /// Control's drawing and events will be managed by the container. The control's lifetime is also controlled
+    /// Inserts a control into the layout of this container. If an index is provided, the controls with the same
+    /// or higher index are moved one index higher. The control with the highest index is drawn last.
+    /// A negative value means the top above other controls.
+    /// The control's drawing and events will be managed by the container. The control's lifetime is also controlled
     /// by the container, destroying the control when the container is destroyed.
     /// </summary>
     /// <param name="control">The control to insert</param>
-    /// <param name="index">The requested index of the control. -1 means add to end</param>
+    /// <param name="index">The requested index of the control</param>
     /// <returns>The new index position of the inserted control or -1 on failure.</returns>
-    API_FUNCTION() int AddChild(FudgetControl *control, int index = -1);
+    API_FUNCTION() virtual int AddChild(FudgetControl *control, int index = -1);
 
     /// <summary>
     /// Removes a child control from this container's layout, and changes the index of controls with higher indexes.
     /// </summary>
     /// <param name="control">The control to remove</param>
     /// <returns>The old index of the control</returns>
-    API_FUNCTION() int RemoveChild(FudgetControl *control);
+    API_FUNCTION() virtual int RemoveChild(FudgetControl *control);
 
     /// <summary>
     /// Removes a child control from this container's layout, and changes the index of controls with higher indexes.
@@ -120,7 +121,7 @@ public:
     /// <param name="from">The starting index of the control</param>
     /// <param name="to">The index to move the control to</param>
     /// <returns>Returns whether the control's index was set to the target value</returns>
-    API_FUNCTION() bool MoveChildToIndex(int from, int to);
+    API_FUNCTION() virtual bool MoveChildToIndex(int from, int to);
 
     /// <summary>
     /// Returns the control in the layout with the given index, if the index is valid.

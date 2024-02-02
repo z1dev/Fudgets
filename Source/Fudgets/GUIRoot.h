@@ -19,6 +19,48 @@ public:
 
     ~FudgetGUIRoot();
 
+    /// <summary>
+    /// Inserts a control into the layout of the gui root as a top-level control. If an index is provided,
+    /// the controls with the same or higher index are moved one index higher. The control with the highest
+    /// index is drawn last.
+    /// The value of index has a different meaning based on whether the control has the AlwaysOnTop flag set at
+    /// insertion or not. If it doesn't have the flag, it will be placed at most above the top not-AlwaysOnTop
+    /// control. With the flag, the index of 0 will place the control at the bottom of the AlwaysOnTop controls,
+    /// 1 as the second AlwaysOnTop control and so on. A negative value means the top of the corresponding group
+    /// of controls.
+    /// The AlwaysOnTop flag is added or removed to represent the control's current status, if the insertion
+    /// changes it.
+    /// The control's drawing and events will be managed by the container. The control's lifetime is also controlled
+    /// by the container, destroying the control when the container is destroyed.
+    /// </summary>
+    /// <param name="control">The control to insert</param>
+    /// <param name="index">The requested index of the control</param>
+    /// <returns>The new index position of the inserted control or -1 on failure.</returns>
+    int AddChild(FudgetControl *control, int index = -1) override;
+
+    /// <inheritdoc />
+    int RemoveChild(FudgetControl *control) override;
+
+    /// <summary>
+    /// Changes the index of a top-level control from one index position to the other, moving all
+    /// controls between to a new index. The indexes are absolute values, including not-AlwaysOnTop and
+    /// AlwaysOnTop controls.
+    /// It's invalid to move a control that would change its AlwaysOnTop status.
+    /// </summary>
+    /// <param name="from">The starting index of the control</param>
+    /// <param name="to">The index to move the control to</param>
+    /// <returns>Returns whether the control's index was set to the target value</returns>
+    bool MoveChildToIndex(int from, int to) override;
+
+    /// <summary>
+    /// Changes a top-level control's always on top status, moving it from its old group to the index position
+    /// in the new one. Set index to negative to place it above the rest of the group.
+    /// </summary>
+    /// <param name="control">The control to change to or from always-on-top status</param>
+    /// <param name="set_always_on_top">Whether the control should be added to the always on top group or removed from it</param>
+    /// <returns>The new absolute index of the control or -1 on failure</returns>
+    API_FUNCTION() int ChangeControlAlwaysOnTop(FudgetControl *control, bool set_always_on_top, int index = -1);
+
     /// <inheritdoc />
     Float2 GetSize() const override;
     /// <inheritdoc />
@@ -145,6 +187,11 @@ private:
     Fudget *_root;
     // The game window, needed to actually capture the mouse
     WindowBase *_window;
+
+    // The number of top-level controls that are always placed on top of all other top-level controls. (Top-level being direct child to this root.)
+    // Internally, they will work just like any other control apart from their placement. Controls that are added to the root which don't have
+    // the AlwaysOnTop flag, will be placed below these controls, even if the passed index to AddChild is greater.
+    int _on_top_count;
 
     // Control currently capturing th emouse.
     FudgetControl *_mouse_capture_control;
