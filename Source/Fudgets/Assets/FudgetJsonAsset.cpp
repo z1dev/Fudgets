@@ -28,7 +28,7 @@ Asset::LoadResult FudgetJsonAsset::loadAsset()
     if (result != LoadResult::Ok || IsInternalType())
         return result;
 
-    WidgetData = New<FudgetGUIRoot>();
+    WidgetData = New<FudgetAssetRoot>();
     WidgetData->Deserialize(*Data, new ISerializeModifier());
     WidgetData->Deleted.Bind<FudgetJsonAsset, &FudgetJsonAsset::ItemDeleted>(this);
     for (int i = 0; i < WidgetData->GetChildCount(); i++)

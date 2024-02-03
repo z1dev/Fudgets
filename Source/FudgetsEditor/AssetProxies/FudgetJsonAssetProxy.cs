@@ -76,9 +76,10 @@ namespace FlaxEditor.Content
         {
             // Create an empty fudget asset.
             FudgetJsonAsset asset = FlaxEngine.Content.CreateVirtualAsset<FudgetJsonAsset>();
-            asset.WidgetData = new FudgetGUIRoot();
+            asset.WidgetData = new FudgetAssetRoot();
+            FudgetAssetRoot root = asset.WidgetData;
+            root.SourceAsset = asset.ID;
 
-            FudgetGUIRoot root = asset.WidgetData;
             FudgetFilledBox box = new FudgetFilledBox();
             box.Color = Color.Blue;
             FudgetFilledBox box2 = new FudgetFilledBox();
@@ -112,8 +113,9 @@ namespace FlaxEditor.Content
             root.AddChild(containerTest);
 
             asset.Save(outputPath);
+            Object.Destroy(asset);
         }
-        
+
         /*
         /// <inheritdoc />
         public override void OnThumbnailDrawPrepare(ThumbnailRequest request)

@@ -5,6 +5,7 @@
 #include "Engine/Core/Collections/Dictionary.h"
 #include "Engine/Scripting/SoftObjectReference.h"
 #include "Fudgets/GUIRoot.h"
+#include "Fudgets/AssetRoot.h"
 
 /// <summary>
 /// Contains a Fudget widget.
@@ -18,7 +19,7 @@ public:
     /// <summary>
     /// TODO: write docs
     /// </summary>
-    API_FIELD() FudgetGUIRoot* WidgetData;
+    API_FIELD() FudgetAssetRoot* WidgetData;
 
     /// <summary>
     /// TODO: write docs

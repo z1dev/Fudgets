@@ -141,7 +141,7 @@ public partial class FudgetsEditorWindow
         private List<FudgetControl> GetControlsAtLocation(Float2 location)
         {
             location = ConvertFromControlLocation(location);
-            List<FudgetControl> controls = EditingWindow.GetAllControls(EditingWindow.RootObject);//_fudget.GUI);
+            List<FudgetControl> controls = EditingWindow.GetAllControls(EditingWindow.RootObject);
             List<FudgetControl> intersectingControls = new List<FudgetControl>();
 
             foreach (FudgetControl control in controls)

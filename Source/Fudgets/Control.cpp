@@ -1006,7 +1006,8 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 	if (parentId != Guid::Empty)
 	{
 		FudgetContainer* parent = Scripting::FindObject<FudgetContainer>(parentId);
-		SetParent(parent);
+		if (parent != nullptr)
+			SetParent(parent);
 	}
 }
 

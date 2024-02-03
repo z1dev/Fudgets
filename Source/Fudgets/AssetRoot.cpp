@@ -10,10 +10,10 @@
 FUDGET_FACTORY(FudgetControl, control);
 
 
-
-FudgetAssetRoot::FudgetAssetRoot(const SpawnParams &params) : Base(params)
+FudgetAssetRoot::FudgetAssetRoot(const SpawnParams &params)
+	: Base(params),
+	_isRoot(true)
 {
-
 }
 
 
@@ -33,29 +33,42 @@ String FudgetAssetRoot::SerializationTester()
 
 void FudgetAssetRoot::Serialize(SerializeStream& stream, const void* otherObj)
 {
-	Array<FudgetControl*> allControls;
-	GetAllControls(allControls);
-
-	Base::Serialize(stream, otherObj);
-	stream.JKEY("Controls");
-	stream.StartArray();
-	for (auto control : allControls)
+	if (_isRoot)
 	{
-		stream.StartObject();
-		control->Serialize(stream, nullptr);
-		stream.EndObject();
+		Array<FudgetControl*> allControls;
+		GetAllControls(allControls);
+
+		FudgetContainer* oldParent = GetParent();
+		SetParent(nullptr);
+		Base::Serialize(stream, otherObj);
+		SetParent(oldParent);
+
+		stream.JKEY("Controls");
+		stream.StartArray();
+		for (auto control : allControls)
+		{
+			stream.StartObject();
+			control->Serialize(stream, nullptr);
+			stream.EndObject();
+		}
+		stream.EndArray();
+
+		SERIALIZE_GET_OTHER_OBJ(FudgetAssetRoot);
+		SERIALIZE_MEMBER(SourceAsset, SourceAsset);
 	}
-	stream.EndArray();
+	else
+	{
+		// TODO: Serialize a new FudgetAssetPlaceholder
+	}
 }
 
 void FudgetAssetRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
 {
 	Base::Deserialize(stream, modifier);
+
 	// Once we have deserialized everything, register our object.
 	if (!IsRegistered())
 		RegisterObject();
-	/*if (!HasManagedInstance())
-		CreateManaged();*/
 
 	int32 controlsCount = 0;
 	const auto& controlsListMember = stream.FindMember("Controls");
@@ -83,11 +96,8 @@ void FudgetAssetRoot::Deserialize(DeserializeStream& stream, ISerializeModifier*
 			// Once we have data, register the object.
 			if (!control->IsRegistered())
 				control->RegisterObject();
-			/*if (!control->HasManagedInstance())
-				control->CreateManaged();*/
 		}
 	}
 
-	//MarkLayoutDirty(FudgetDirtType::All);
-	//RequestLayout();
+	DESERIALIZE_MEMBER(SourceAsset, SourceAsset);
 }

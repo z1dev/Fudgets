@@ -34,9 +34,14 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     private FudgetJsonAssetItem _assetItem;
 
     /// <summary>
+    /// The rendering root of the GUI.
+    /// </summary>
+    public FudgetGUIRoot RenderRoot = null;
+
+    /// <summary>
     /// The root of the GUI being edited by this window.
     /// </summary>
-    public FudgetGUIRoot RootObject = null;
+    public FudgetAssetRoot RootObject = null;
 
     private GPUTexture _texture = null;
     private RenderTask _renderTask = null;
@@ -76,8 +81,13 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
 
         if (_asset != null)
         {
+            RenderRoot = new FudgetGUIRoot();
             RootObject = _asset.WidgetData;
+
             RootObject.HintSize = _resolution;
+            RenderRoot.HintSize = _resolution;
+            RootObject.Parent = RenderRoot;
+
             _selectedControls = new List<FudgetControl>();
 
             _editor = editor;
@@ -237,7 +247,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
 
     private void ForceLayout()
     {
-        List<FudgetControl> controls = GetAllControls(RootObject);
+        List<FudgetControl> controls = GetAllControls(RenderRoot);
         foreach (FudgetControl control in controls)
         {
             if (control is FudgetContainer container)
@@ -247,7 +257,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
 
         }
 
-        RootObject.MarkLayoutDirty(FudgetDirtType.All);
+        RenderRoot.MarkLayoutDirty(FudgetDirtType.All);
     }
 
     private void RecalculateRenderSize()
@@ -259,16 +269,15 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         _texture.Resize((int)_resolution.X, (int)_resolution.Y);
 
         RootObject.HintSize = _resolution;
+        RenderRoot.HintSize = _resolution;
         ForceLayout();
     }
 
     private void RenderWindow(RenderTask task, GPUContext context)
     {
-        // TODO: Figure out weird behavior, like why does the Fudget also render in the editor/game view when I use the rendering method here?
-        // TODO: Test if moving controls around still draws as expected and layouts properly (this requires feeding update events to the FudgetGUIRoot)
         Render2D.Begin(context, _texture);
         Render2D.FillRectangle(new Rectangle(0, 0, _resolution), new Color(0, 0, 0, 255));
-        RootObject.Draw();
+        RenderRoot.Draw();
         Render2D.End();
     }
 
