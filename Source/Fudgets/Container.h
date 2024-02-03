@@ -287,6 +287,9 @@ public:
     /// <returns></returns>
     void Draw() override;
 
+    /// <inheritdoc />
+    void ClearStyleCache(bool inherited = true) override;
+
     /// <summary>
     /// Returns the current layout set for the container
     /// </summary>

@@ -6,9 +6,8 @@
 #include "Engine/Render2D/FontAsset.h"
 
 #include "Token.h"
-
-#include "ElementPainter.h"
 #include "Style.h"
+#include "StyleStructs.h"
 
 #include <map>
 
@@ -155,10 +154,6 @@ public:
 
     API_FUNCTION() bool GetResource(FudgetToken token, API_PARAM(Out) Variant &result) const;
     API_FUNCTION() void SetResource(FudgetToken token, Variant value);
-
-    API_FUNCTION() FudgetToken GetPainterId(FudgetToken token) const;
-    API_FUNCTION() void SetPainterId(FudgetToken token, FudgetToken value);
-
 private:
     /// <summary>
     /// Creates a theme that is a duplicate of this theme. All values and painter ids will be matching.
@@ -172,12 +167,6 @@ private:
     /// shouldn't be changed directly, because styles cache the values and they won't be refreshed.
     /// </summary>
     std::map<FudgetToken, Variant> _resources;
-
-    /// <summary>
-    /// Element painter tokens that can be set for controls based on their name. The tokens are used to retrieve
-    /// the painter from FudgetThemes::GetElementPainter
-    /// </summary>
-    std::map<FudgetToken, FudgetToken> _painter_ids;
 
     friend class FudgetThemes;
 };
@@ -217,68 +206,11 @@ public:
     // TODO: change tokens specific to Fudgets so users won't accidentally use them.
 
     /// <summary>
-    /// Token for the "ButtonDown" string.
-    /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken ButtonDownToken;
-    /// <summary>
-    /// Token for the "LeftButtonPressed" string.
-    /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken LeftButtonPressedToken;
-    /// <summary>
-    /// Token for the "MouseHover" string.
-    /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken MouseHoverToken;
-    /// <summary>
-    /// Token for "ControlFocused" string
-    /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken ControlFocusedToken;
-    /// <summary>
     /// Token for "CaretBlinkTime" string.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken CaretBlinkTimeToken;
 
     // Tokens of standard values that can be used to find style settings
-
-    /// <summary>
-    /// Token for the "ColorDark" string.
-    /// </summary>
-    static const FudgetToken ColorDarkToken;
-    /// <summary>
-    /// Token for the "ColorLight" string.
-    /// </summary>
-    static const FudgetToken ColorLightToken;
-    /// <summary>
-    /// Token for the "ColorNormal" string.
-    /// </summary>
-    static const FudgetToken ColorNormalToken;
-    /// <summary>
-    /// Token for the "HoverAnimationTime" string.
-    /// </summary>
-    static const FudgetToken HoverAnimationTimeToken;
-    /// <summary>
-    /// Token for "ColorAccent" string.
-    /// </summary>
-    static const FudgetToken ColorAccentToken;
-    /// <summary>
-    /// Token for "FocusRectangleWidth" string.
-    /// </summary>
-    static const FudgetToken FocusRectangleWidthToken;
-
-
-    static const FudgetToken ButtonBackgroundPaddingToken;
-    static const FudgetToken ButtonBackgroundNormalToken;
-    static const FudgetToken ButtonBackgroundPressedToken;
-    static const FudgetToken ButtonBackgroundHoverToken;
-    static const FudgetToken ButtonBorderNormalImageToken;
-    static const FudgetToken ButtonBorderPressedImageToken;
-    static const FudgetToken ButtonBorderHoverImageToken;
-    static const FudgetToken ButtonHoverAnimationTimeToken;
-    static const FudgetToken ButtonFocusRectangleColorToken;
-    static const FudgetToken ButtonFocusRectangleWidthToken;
-
-    static const FudgetToken SimpleButtonPainterToken;
-    static const FudgetToken ButtonBackgroundPainterToken;
-    static const FudgetToken ButtonBorderPainterToken;
 
 
     /// <summary>
@@ -303,55 +235,6 @@ public:
     /// <param name="duplicate_is_error">Whether it's an error to pass the same string a second time</param>
     /// <returns>The token if the call was valid, otherwise FudgetToken::Invalid</returns>
     API_FUNCTION() static FudgetToken RegisterToken(String token_name, bool duplicate_is_error = false);
-
-    /// <summary>
-    /// Tries to retrieve an element painter object for a token string.
-    /// </summary>
-    /// <param name="token_name">String of the token</param>
-    /// <returns>The element painter, or null if a painter with the token was not found</returns>
-    API_FUNCTION() static FudgetElementPainter* GetElementPainter(String token_name);
-
-    /// <summary>
-    /// Tries to retrieve an element painter object for a token
-    /// </summary>
-    /// <param name="token">Token associated with the element painter</param>
-    /// <returns>The element painter, or null if a painter with the token was not found</returns>
-    API_FUNCTION() static FudgetElementPainter* GetElementPainter(FudgetToken token);
-
-    /// <summary>
-    /// Creates a new painter object that can be referenced by a unique token in styles and other painters. The name in the
-    /// token must be unique among element painters
-    /// </summary>
-    /// <typeparam name="T">A type derived from FudgetElementPainter</typeparam>
-    /// <param name="token">Name that can be used to get the painter. Must be unique for painters</param>
-    /// <returns>The created element painter, or null if the token is already taken or invalid</returns>
-    template<typename T>
-    static T* CreateElementPainter(String name)
-    {
-        return CreateElementPainter(RegisterToken(name));
-    }
-
-    /// <summary>
-    /// Creates a new painter object that can be referenced by a unique token in styles and other painters. The name in the
-    /// token must be unique among element painters
-    /// </summary>
-    /// <typeparam name="T">A type derived from FudgetElementPainter</typeparam>
-    /// <param name="token">Name that can be used to get the painter. Must be unique for painters</param>
-    /// <returns>The created element painter, or null if the token is already taken or invalid</returns>
-    template<typename T>
-    static T* CreateElementPainter(FudgetToken token)
-    {
-        if (!token.IsValid())
-            return nullptr;
-        auto it = _element_map.find(token);
-        if (it != _element_map.end())
-            return nullptr;
-
-        T *painter = New<T>();
-
-        RegisterElementPainter(token, painter);
-        return painter;
-    }
 
     /// <summary>
     /// Stores a font asset, that can be retrieved with GetFontAsset using the same token. The token must be unique among
@@ -427,17 +310,9 @@ public:
     API_FUNCTION() static FudgetStyle* GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens);
 
 private:
-    /// <summary>
-    /// Used internally to register the element painter in both C++ and C# code. Adds the painter to the element map
-    /// </summary>
-    API_FUNCTION() static void RegisterElementPainter(FudgetToken token, FudgetElementPainter *painter);
-
     static std::map<String, FudgetToken> _token_map;
     static std::map<FudgetToken, String> _string_map;
     static int _highest_token;
-
-    // A collection of painters that can be used to draw a part of a control or a full control.
-    static std::map<FudgetToken, FudgetElementPainter*> _element_map;
 
     // A collection of styles that provide values, like colors or floats to an element painter.
     static std::map<FudgetToken, FudgetStyle*> _style_map;

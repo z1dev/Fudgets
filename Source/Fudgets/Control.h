@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Core/Math/Vector4.h"
@@ -14,7 +16,7 @@
 
 #include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
-#include "Styling/ElementPainter.h"
+#include "Styling/StyleStructs.h"
 
 
 class FudgetContainer;
@@ -1029,31 +1031,8 @@ public:
 	/// </summary>
 	/// <param name="inherited">For container controls, whether to clear the style cache for controls in the container</param>
 	/// <returns></returns>
-	API_FUNCTION() void ClearStyleCache(bool inherited = false);
+	API_FUNCTION() virtual void ClearStyleCache(bool inherited = true);
 	
-	/// <summary>
-	/// Tries to retrieve the painter for this control. The painter is choosen by the style from a value set in the theme.
-	/// </summary>
-	/// <param name="token">The token for accessing the painter</param>
-	/// <returns>The element painter associated with the token</returns>
-	API_FUNCTION() FudgetElementPainter* GetElementPainter();
-
-	/// <summary>
-	/// Returns an object that can provide properties while painting this control. For example a button might need to
-	/// provide whether it is pressed or down. Not every provider can give the required values, and usually zero defaults
-	/// are used in that case.
-	/// </summary>
-	/// <returns>An object that can provide properties to an ElementPainter</returns>
-	API_PROPERTY() FudgetPainterPropertyProvider* GetPainterPropertyProvider() { return _painter_provider; }
-
-	/// <summary>
-	/// Sets an object that can provide properties while painting this control. For example a button might need to
-	/// provide whether it is pressed or down. Not every provider can give the required values, and usually zero defaults
-	/// are used in that case.
-	/// </summary>
-	/// <param name="value">Property provider to set for the control</param>
-	API_PROPERTY() void SetPainterPropertyProvider(FudgetPainterPropertyProvider *value);
-
 	/// <summary>
 	/// Gets the style that was set explicitly, that decides the look of the control
 	/// </summary>
@@ -1220,15 +1199,6 @@ private:
 	// The control's Update function is called with a delta time if this is true.
 	bool _updating_registered;
 
-	// TODO: if it is requested, this can be made available. Warning: SetElementPainter function is not implemented yet.
-	//// The element painter set for this control to draw it. If not set, the painter is retrieved based on the class
-	//// hierarchy and stored in _cached_painter.
-	//FudgetElementPainter *_element_painter;
-
-	// The cached element painter used to draw the full control. This is set during first draw and is not changed until
-	// the cached style values are reset with ClearStyleCache, or invalidated by a change of theme or style.
-	FudgetElementPainter *_cached_painter;
-
 	// Null or the style used to decide the look of the control. When null, the style is decided based on class name.
 	FudgetStyle *_style;
 
@@ -1248,8 +1218,6 @@ private:
 	// chain, up to FudgetControl. It is mainly used to get a style appropriate for this control when drawing.
 	// The tokens might not be created until the control needs to access the active style.
 	Array<FudgetToken> _class_token;
-
-	UniquePtr<FudgetPainterPropertyProvider> _painter_provider;
 
 	std::map<FudgetToken, FudgetFont> _cached_fonts;
 

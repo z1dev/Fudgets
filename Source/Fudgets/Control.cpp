@@ -4,7 +4,6 @@
 #include "Fudget.h"
 #include "MarginStructs.h"
 #include "Styling/Themes.h"
-#include "Styling/ElementPainter.h"
 #include "Styling/StyleStructs.h"
 
 #include "Engine/Render2D/Render2D.h"
@@ -20,8 +19,8 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
 	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
 	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
-	_g2l_was_cached(false), _changing(false), _updating_registered(false), _cached_painter(nullptr), _style(nullptr),
-	_cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
+	_g2l_was_cached(false), _changing(false), _updating_registered(false), _style(nullptr), _cached_style(nullptr),
+	_theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
 
@@ -36,10 +35,6 @@ void FudgetControl::Draw()
 
 	if (!_updating_registered)
 		return;
-
-	auto provider = GetPainterPropertyProvider();
-	if (provider != nullptr)
-		provider->ResetDeltaTime();
 }
 
 void FudgetControl::SetParent(FudgetContainer *value)
@@ -53,7 +48,8 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 		return;
 
 	_changing = true;
-	_parent->RemoveChild(_index);
+	if (_parent != nullptr)
+		_parent->RemoveChild(_index);
 	if (value != nullptr)
 		value->AddChild(this, order);
 	if (_parent == nullptr)
@@ -149,25 +145,7 @@ void FudgetControl::RegisterToUpdate(bool value)
 		return;
 
 	if (gui->RegisterControlUpdate(this, value))
-	{
 		_updating_registered = value;
-
-		if (!value)
-		{
-			auto provider = GetPainterPropertyProvider();
-			if (provider != nullptr)
-			{
-				provider->ResetDeltaTime();
-				provider->AddDeltaTime(-1.0f);
-			}
-		}
-		else
-		{
-			auto provider = GetPainterPropertyProvider();
-			if (provider != nullptr)
-				provider->ResetDeltaTime();
-		}
-	}
 }
 
 Float2 FudgetControl::LocalToGlobal(Float2 local) const
@@ -318,9 +296,7 @@ void FudgetControl::SetAlwaysOnTop(bool value)
 
 void FudgetControl::OnUpdate(float delta_time)
 {
-	auto ppp = GetPainterPropertyProvider();
-	if (ppp != 0)
-		ppp->AddDeltaTime(delta_time);
+	;
 }
 
 void FudgetControl::CaptureMouseInput()
@@ -749,34 +725,7 @@ void FudgetControl::ClearStyleCache(bool inherited)
 {
 	_cached_theme = nullptr;
 	_cached_style = nullptr;
-	_cached_painter = nullptr;
 	ResetCreatedFonts();
-}
-
-FudgetElementPainter* FudgetControl::GetElementPainter()
-{
-	//if (_element_painter != nullptr)
-	//	return _element_painter;
-
-	if (_cached_painter != nullptr)
-		return _cached_painter;
-
-	FudgetStyle *style = GetActiveStyle();
-	if (style == nullptr)
-		return nullptr;
-
-	CreateClassTokens();
-	_cached_painter = style->GetControlPainter(GetActiveTheme(), _class_token);
-
-	return _cached_painter;
-}
-
-void FudgetControl::SetPainterPropertyProvider(FudgetPainterPropertyProvider *value)
-{
-	if (value == nullptr || value == _painter_provider)
-		return;
-
-	_painter_provider.reset(value);
 }
 
 void FudgetControl::SetStyle(FudgetStyle *value)

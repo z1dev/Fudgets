@@ -409,6 +409,16 @@ void FudgetContainer::Draw()
     Base::Draw();
 }
 
+void FudgetContainer::ClearStyleCache(bool inherited)
+{
+    Base::ClearStyleCache(inherited);
+    if (inherited)
+    {
+        for (FudgetControl *c : _children)
+            c->ClearStyleCache(true);
+    }
+}
+
 void FudgetContainer::SetLayout(FudgetLayout *value)
 {
     if (_layout == value || _changing)
