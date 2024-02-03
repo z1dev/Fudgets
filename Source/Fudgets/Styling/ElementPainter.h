@@ -75,6 +75,24 @@ public:
 	API_FUNCTION() virtual bool GetElementBoolProperty(FudgetToken token, API_PARAM(Out) bool &result) { return false; }
 
 	/// <summary>
+	/// Called by ElementPainter derived objects when drawing, to get int properties needed for showing the state of the control.
+	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
+	/// </summary>
+	/// <param name="token">The requested property's token</param>
+	/// <param name="result">The int value</param>
+	/// <returns>Whether the control supports this int property or not</returns>
+	API_FUNCTION() virtual bool GetElementIntProperty(FudgetToken token, API_PARAM(Out) int &result) { return false; }
+
+	/// <summary>
+	/// Called by ElementPainter derived objects when drawing, to get float properties needed for showing the state of the control.
+	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
+	/// </summary>
+	/// <param name="token">The requested property's token</param>
+	/// <param name="result">The float value</param>
+	/// <returns>Whether the control supports this int property or not</returns>
+	API_FUNCTION() virtual bool GetElementFloatProperty(FudgetToken token, API_PARAM(Out) float &result) { return false; }
+
+	/// <summary>
 	/// Called by ElementPainter derived objects when drawing, to get string properties needed for showing the state of the control.
 	/// The property provider might not support every property required by a painter, so the painter has to make sure to use sane defaults.
 	/// </summary>
@@ -141,6 +159,23 @@ public:
 	/// <param name="token">Token to the value to set</param>
 	/// <param name="value">The updated value</param>
 	API_FUNCTION() virtual void SetStoredFloat(FudgetToken token, float value);
+
+	/// <summary>
+	/// Allows element painters to store custom values in the control they need to draw. Returns the value associated
+	/// to the token if it has been stored.
+	/// </summary>
+	/// <param name="token">Token to the value to get</param>
+	/// <param name="result">The result on success</param>
+	/// <returns>Whether the call was successful and result was updated to the requested value</returns>
+	API_FUNCTION() virtual bool GetStoredInt(FudgetToken token, API_PARAM(Out) int &result) const;
+
+	/// <summary>
+	/// Allows element painters to store custom values in the control they need to draw. Sets or updates a value
+	/// associated to the token.
+	/// </summary>
+	/// <param name="token">Token to the value to set</param>
+	/// <param name="value">The updated value</param>
+	API_FUNCTION() virtual void SetStoredInt(FudgetToken token, int value);
 
 
 protected:
