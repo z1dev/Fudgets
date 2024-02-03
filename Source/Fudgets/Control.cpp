@@ -701,17 +701,17 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect) 
 			// Draw border in 4 parts, top, left, right, bottom
 
 			if (borders.Top > 0.0f)
-				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, Rectangle(r.GetUpperLeft(), Float2(r.GetWidth(), borders.Top)), area.Tint, stretch, point);
+				DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, Rectangle(r.GetUpperLeft(), Float2(r.GetWidth(), borders.Top)), area.Tint, stretch, point);
 			if (borders.Left > 0.0f)
-				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(0.0f, borders.Top), Rectangle(Float2(r.GetLeft(), r.GetTop() + borders.Top), Float2(borders.Left, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
+				DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, borders.Top), Rectangle(Float2(r.GetLeft(), r.GetTop() + borders.Top), Float2(borders.Left, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
 			if (borders.Right > 0.0f)
-				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(r.GetWidth() - borders.Right, borders.Top), Rectangle(Float2(r.GetRight() - borders.Right, r.GetTop() + borders.Top), Float2(borders.Right, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
+				DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(r.GetWidth() - borders.Right, borders.Top), Rectangle(Float2(r.GetRight() - borders.Right, r.GetTop() + borders.Top), Float2(borders.Right, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
 			if (borders.Bottom > 0.0f)
-				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(0.0f, r.GetHeight() - borders.Bottom), Rectangle(Float2(0.0f, r.GetBottom() - borders.Bottom), Float2(r.GetWidth(), borders.Bottom)), area.Tint, stretch, point);
+				DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, r.GetHeight() - borders.Bottom), Rectangle(Float2(0.0f, r.GetBottom() - borders.Bottom), Float2(r.GetWidth(), borders.Bottom)), area.Tint, stretch, point);
 			return;
 		}
 
-		DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, r, area.Tint, stretch, point);
+		DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, r, area.Tint, stretch, point);
 		return;
 	}
 
@@ -723,7 +723,7 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect) 
 
 	if ((area.AreaType & FudgetFillType::Sliced) != FudgetFillType::Sliced)
 	{
-		DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, rect, area.Tint, stretch, point);
+		DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, rect, area.Tint, stretch, point);
 		return;
 	}
 
@@ -738,14 +738,13 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect) 
 		return;
 	}
 
-	
 	if (!point)
 	{
-		Draw9SlicingPrecalculatedSprite(area.SpriteHandle, rect, borders);
+		Draw9SlicingPrecalculatedSprite(area.SpriteHandle.ToHandle(), rect, borders);
 		return;
 	}
 
-	Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle, rect, borders);
+	Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle.ToHandle(), rect, borders);
 }
 
 void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size) const

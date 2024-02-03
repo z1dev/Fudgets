@@ -9,6 +9,52 @@
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Render2D/FontAsset.h"
 
+
+/// <summary>
+/// Handle to sprite atlas slot with a single sprite texture.
+/// </summary>
+API_STRUCT() struct FUDGETS_API FudgetSpriteHandle
+{
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetSpriteHandle);
+
+	/// <summary>
+	/// The parent atlas.
+	/// </summary>
+	API_FIELD() AssetReference<SpriteAtlas> Atlas;
+
+	/// <summary>
+	/// The atlas sprites array index.
+	/// </summary>
+	API_FIELD() int32 Index;
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SpriteHandle"/> struct.
+	/// </summary>
+	FudgetSpriteHandle()
+	{
+		Index = -1;
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SpriteHandle"/> struct.
+	/// </summary>
+	/// <param name="atlas">The sprite atlas.</param>
+	/// <param name="index">The sprite slot index.</param>
+	FudgetSpriteHandle(const SpriteHandle &original)
+		: Atlas(original.Atlas)
+	{
+		Index = original.Index;
+	}
+
+	SpriteHandle ToHandle() const
+	{
+		return SpriteHandle(Atlas, Index);
+	}
+};
+
+
+
+
 API_ENUM(Attributes = "Flags")
 enum class FudgetFillType : uint8
 {
@@ -119,7 +165,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
 	FudgetDrawArea(TextureBase *texture, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Texture | (stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
+		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), Texture(texture), TextureOffset(tex_offset), TextureScale(tex_scale), SpriteHandle(), Borders(-1.0f)
 	{
 	}
@@ -135,7 +181,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
 	FudgetDrawArea(TextureBase *texture, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Texture | (stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None) |
+		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None) |
 		(border_type == FudgetFrameType::Inside ? FudgetFillType::BorderInside : border_type == FudgetFrameType::Outside ? FudgetFillType::BorderOutside :
 		FudgetFillType::BorderCentered)), Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(texture), SpriteHandle(), Borders(border_widths)
 	{
@@ -150,7 +196,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
 	FudgetDrawArea(TextureBase *texture, FudgetPadding borders_9p, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Texture | FudgetFillType::Sliced | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
+		AreaType(FudgetFillType::Sliced | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(texture), SpriteHandle(), Borders(borders_9p)
 	{
 	}
@@ -164,7 +210,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
 	FudgetDrawArea(const SpriteHandle &sprite_handle, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Sprite | (stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
+		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(-1.0f)
 	{
 	}
@@ -180,7 +226,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
 	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Sprite | (stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None) |
+		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None) |
 		(border_type == FudgetFrameType::Inside ? FudgetFillType::BorderInside : border_type == FudgetFrameType::Outside ? FudgetFillType::BorderOutside :
 		FudgetFillType::BorderCentered)), Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(border_widths)
 	{
@@ -195,7 +241,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
 	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding borders_9p, bool point_sprite, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
-		AreaType(FudgetFillType::Sprite | FudgetFillType::Sliced | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
+		AreaType(FudgetFillType::Sliced | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(borders_9p)
 	{
 	}
@@ -278,7 +324,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <summary>
 	/// Sprite information to draw in the area
 	/// </summary>
-	API_FIELD() SpriteHandle SpriteHandle;
+	API_FIELD() FudgetSpriteHandle SpriteHandle;
 
 	/// <summary>
 	/// Set when using 9-slicing images or drawing border.

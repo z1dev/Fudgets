@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Scripting/ScriptingObject.h"
+#include "Engine/Core/Math/Vector4.h"
 
 
 /// <summary>
