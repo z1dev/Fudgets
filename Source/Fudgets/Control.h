@@ -31,7 +31,7 @@ struct TextRange;
 class GPUTexture;
 class GPUTextureView;
 class Font;
-struct FudgetFillAreaSettings;
+struct FudgetDrawArea;
 struct FudgetPadding;
 struct FudgetFontSettings;
 struct FudgetFont;
@@ -849,18 +849,20 @@ public:
 	/// </summary>
 	/// <param name="spriteHandle">The sprite to draw.</param>
 	/// <param name="size">The size to use for the sprite</param>
+	/// <param name="offset">Offset the sprite with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
 	/// Draws a sprite in a rectangle with tiling or clipping as necessary. Uses point sampler.
 	/// </summary>
 	/// <param name="spriteHandle">The sprite to draw.</param>
 	/// <param name="size">The size to use for the sprite</param>
+	/// <param name="offset">Offset the sprite with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText
@@ -933,9 +935,10 @@ public:
 	/// </summary>
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="size">The size to use for the texture</param>
+	/// <param name="offset">Offset the texture with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTextureTiled(GPUTexture *t, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTextureTiled(GPUTexture *t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturePoint 
@@ -950,9 +953,10 @@ public:
 	/// </summary>
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="size">The size to use for the texture</param>
+	/// <param name="offset">Offset the texture with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexturePointTiled(GPUTexture* t, Float2 size, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexturePointTiled(GPUTexture* t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -1012,15 +1016,15 @@ public:
 	/// </summary>
 	/// <param name="area">Settings for filling the rectangle</param>
 	/// <param name="rect">Rectangle to fill</param>
-	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, const Rectangle &rect) const;
+	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect) const;
 
 	/// <summary>
 	/// Draws a rectangular area filled with color or texture, depending on the area settings
 	/// </summary>
 	/// <param name="area">Settings for filling the rectangle</param>
 	/// <param name="pos">Position of the rectangle</param>
-	/// <param name="siz">Size of the rectangle</param>
-	API_FUNCTION() void DrawFillArea(const FudgetFillAreaSettings &area, Float2 pos, Float2 siz) const;
+	/// <param name="size">Size of the rectangle</param>
+	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size) const;
 
 	// Styling
 
@@ -1092,16 +1096,16 @@ public:
 	/// <returns>Whether the token was found as a valid float token</returns>
 	API_FUNCTION() virtual bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
 
-	/// <summary>
-	/// Returns settings for filling a rectangular area for the control based on a theme token. The functions result is
-	/// valid both if the token refers to a simple color or if it refers to the FudgetFillAreaSettings structure. In the
-	/// first case, the area type will be set to Color.
-	/// The returned value depends on both the active style and the theme currently set for this control.
-	/// </summary>
-	/// <param name="token">Token associated with the FudgetFillAreaSettings value in the active style</param>
-	/// <param name="result">Variable that receives the settings</param>
-	/// <returns>Whether the token was found and references a valid fill area settings object</returns>
-	API_FUNCTION() bool GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetFillAreaSettings &result);
+	///// <summary>
+	///// Returns settings for filling a rectangular area for the control based on a theme token. The functions result is
+	///// valid both if the token refers to a simple color or if it refers to the FudgetDrawArea structure. In the
+	///// first case, the area type will be set to Color.
+	///// The returned value depends on both the active style and the theme currently set for this control.
+	///// </summary>
+	///// <param name="token">Token associated with the FudgetDrawArea value in the active style</param>
+	///// <param name="result">Variable that receives the settings</param>
+	///// <returns>Whether the token was found and references a valid fill area settings object</returns>
+	//API_FUNCTION() bool GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
 
 	/// <summary>
 	/// Use this function to check settings for a font in the style, when font creation is not necessary.
@@ -1150,8 +1154,8 @@ protected:
 	API_FUNCTION() virtual FudgetControlFlags GetInitFlags() const { return FudgetControlFlags::None; }
 
 private:
-
-	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, const Rectangle& rect, const Color& color) const;
+	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point) const;
+	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const;
 
 	/// <summary>
 	/// The gui root is at the root of the control hierarchy. It forwards input and OnUpdate calls. It can be requested to

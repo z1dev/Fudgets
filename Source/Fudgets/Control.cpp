@@ -532,25 +532,28 @@ void FudgetControl::DrawTexture(TextureBase* t, const Rectangle& rect, const Col
 	Render2D::DrawTexture(t, CachedLocalToGlobal(rect), color);
 }
 
-void FudgetControl::DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color) const
+void FudgetControl::DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const
 {
-	DrawTiled(nullptr, spriteHandle, false, size, rect, color);
+	CacheGlobalToLocal();
+	DrawTiled(nullptr, spriteHandle, false, size, offset, CachedLocalToGlobal(rect), color);
 }
 
-void FudgetControl::DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, const Rectangle& rect, const Color& color) const
+void FudgetControl::DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const
 {
-	DrawTiled(nullptr, spriteHandle, true, size, rect, color);
+	CacheGlobalToLocal();
+	DrawTiled(nullptr, spriteHandle, true, size, offset, CachedLocalToGlobal(rect), color);
 }
 
-void FudgetControl::DrawTextureTiled(GPUTexture *t, Float2 size, const Rectangle& rect, const Color& color) const
+void FudgetControl::DrawTextureTiled(GPUTexture *t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const
 {
-	DrawTiled(t, SpriteHandle(), false, size, rect, color);
+	CacheGlobalToLocal();
+	DrawTiled(t, SpriteHandle(), false, size, offset, CachedLocalToGlobal(rect), color);
 }
 
-
-void FudgetControl::DrawTexturePointTiled(GPUTexture *t, Float2 size, const Rectangle& rect, const Color& color) const
+void FudgetControl::DrawTexturePointTiled(GPUTexture *t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const
 {
-	DrawTiled(t, SpriteHandle(), true, size, rect, color);
+	CacheGlobalToLocal();
+	DrawTiled(t, SpriteHandle(), true, size, offset, CachedLocalToGlobal(rect), color);
 }
 
 void FudgetControl::DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color) const
@@ -625,99 +628,129 @@ void FudgetControl::FillTriangle(const Float2& p0, const Float2& p1, const Float
 	Render2D::FillTriangle(CachedLocalToGlobal(p0), CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color);
 }
 
-void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, const Rectangle &rect) const
+void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect) const
 {
-	if (area.AreaType == FudgetFillAreaType::Color)
+	CacheGlobalToLocal();
+	bool draw_color = (area.AreaType & FudgetFillType::Color) == FudgetFillType::Color;
+
+	FudgetPadding borders = FudgetPadding(Math::Max(0.0f, area.Borders.Left), Math::Max(0.0f, area.Borders.Right), Math::Max(0.0f, area.Borders.Top), Math::Max(0.0f, area.Borders.Bottom));
+	
+	bool stretch = (area.AreaType & FudgetFillType::Stretch) == FudgetFillType::Stretch;
+	bool point = (area.AreaType & FudgetFillType::Point) == FudgetFillType::Point;
+
+	if ((int)(area.AreaType & FudgetFillType::BorderCentered) != 0)
 	{
-		FillRectangle(rect, area.Color);
+		// Border drawing.
+		if (area.Borders.Left <= 0 && area.Borders.Top <= 0 && area.Borders.Right <= 0 && area.Borders.Bottom <= 0)
+			return;
+
+		if (draw_color)
+		{
+			Rectangle r;
+			if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderInside)
+			{
+				r = Rectangle(Float2(rect.GetLeft() + borders.Left * 0.5, rect.GetTop() + borders.Top * 0.5), Float2(rect.GetWidth() - (borders.Left + borders.Right) * 0.5, rect.GetHeight() - (borders.Top + borders.Bottom) * 0.5));
+			}
+			else if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderOutside)
+			{
+				r = Rectangle(Float2(rect.GetLeft() - borders.Left * 0.5, rect.GetTop() - borders.Top * 0.5), Float2(rect.GetWidth() + (borders.Left + borders.Right) * 0.5, rect.GetHeight() + (borders.Top + borders.Bottom) * 0.5));
+			}
+			else
+				r = rect;
+
+			if (r.GetWidth() < 0 || r.GetHeight() < 0)
+				return;
+			if (Math::NearEqual(borders.Left, borders.Right) && Math::NearEqual(borders.Left, borders.Top) && Math::NearEqual(borders.Top, borders.Bottom))
+			{
+				DrawRectangle(r, area.Tint, area.Borders.Left);
+				return;
+			}
+
+			// Draw borders normally with lines
+			if (borders.Left > 0)
+				DrawLine(r.GetUpperLeft() - borders.Top * 0.5f, r.GetBottomLeft() + borders.Bottom * 0.5f, area.Tint, borders.Left);
+			if (borders.Right > 0)
+				DrawLine(r.GetUpperRight() - borders.Top * 0.5f, r.GetBottomRight() + borders.Bottom * 0.5f, area.Tint, borders.Right);
+			if (borders.Top > 0)
+				DrawLine(r.GetUpperLeft() - borders.Left * 0.5f, r.GetUpperRight() + borders.Right * 0.5f, area.Tint, borders.Top);
+			if (borders.Bottom > 0)
+				DrawLine(r.GetBottomLeft() - borders.Left * 0.5f, r.GetBottomRight() + borders.Right * 0.5f, area.Tint, borders.Bottom);
+
+			return;
+		}
+
+		Rectangle r;
+		if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderInside)
+		{
+			r = rect;
+		}
+		else if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderOutside)
+		{
+			r = Rectangle(Float2(rect.GetLeft() - borders.Left, rect.GetTop() - borders.Top), Float2(rect.GetWidth() + (borders.Left + borders.Right), rect.GetHeight() + (borders.Top + borders.Bottom)));
+		}
+		else
+			r = Rectangle(Float2(rect.GetLeft() - borders.Left * 0.5f, rect.GetTop() - borders.Top * 0.5f), Float2(rect.GetWidth() + (borders.Left + borders.Right) * 0.5f, rect.GetHeight() + (borders.Top + borders.Bottom) * 0.5f));
+		if (r.GetWidth() < 0 || r.GetHeight() < 0)
+			return;
+
+		// Empty area to block out during drawing
+		if ((borders.Width() < r.GetWidth()) && (borders.Height() < r.GetHeight()))
+		{
+			Rectangle inner = Rectangle(Float2(r.GetLeft() + borders.Left, r.GetTop() + borders.Top), Float2(r.GetWidth() - borders.Width(), r.GetHeight() - borders.Height()));
+
+			// Draw border in 4 parts, top, left, right, bottom
+
+			if (borders.Top > 0.0f)
+				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, Rectangle(r.GetUpperLeft(), Float2(r.GetWidth(), borders.Top)), area.Tint, stretch, point);
+			if (borders.Left > 0.0f)
+				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(0.0f, borders.Top), Rectangle(Float2(r.GetLeft(), r.GetTop() + borders.Top), Float2(borders.Left, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
+			if (borders.Right > 0.0f)
+				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(r.GetWidth() - borders.Right, borders.Top), Rectangle(Float2(r.GetRight() - borders.Right, r.GetTop() + borders.Top), Float2(borders.Right, r.GetHeight() - borders.Height())), area.Tint, stretch, point);
+			if (borders.Bottom > 0.0f)
+				DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset - Float2(0.0f, r.GetHeight() - borders.Bottom), Rectangle(Float2(0.0f, r.GetBottom() - borders.Bottom), Float2(r.GetWidth(), borders.Bottom)), area.Tint, stretch, point);
+			return;
+		}
+
+		DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, r, area.Tint, stretch, point);
 		return;
 	}
 
-	//CacheGlobalToLocal();
-	//Rectangle r = LocalToGlobal(rect);
-
-
-	if (area.AreaType == FudgetFillAreaType::Texture)
+	if (draw_color)
 	{
-		DrawTextureTiled(area.Texture->GetTexture(), area.Texture->Size(), rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::TextureStretch)
-	{
-		DrawTexture(area.Texture, rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::TexturePoint)
-	{
-		DrawTexturePointTiled(area.Texture->GetTexture(), area.Texture->Size(), rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::TexturePointStretch)
-	{
-		DrawTexturePoint(area.Texture->GetTexture(), rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::Sprite)
-	{
-		Sprite sprite;
-		if (area.SpriteHandle.GetSprite(&sprite))
-			DrawSpriteTiled(area.SpriteHandle, sprite.Area.Size, rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::SpriteStretch)
-	{
-		DrawSprite(area.SpriteHandle, rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::SpritePoint)
-	{
-		Sprite sprite;
-		if (area.SpriteHandle.GetSprite(&sprite))
-			DrawSpritePointTiled(area.SpriteHandle, sprite.Area.Size, rect, area.Color);
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::SpritePointStretch)
-	{
-		DrawSpritePoint(area.SpriteHandle, rect, area.Color);
+		FillRectangle(rect, area.Tint);
 		return;
 	}
 
-	//Float4 border;
-	//Float4 borderUV;
-	//Float2 siz = 0.f;
-	//if (area.Texture.Get() != nullptr)
-	//	siz = area.Texture->Size();
-	//else
-	//	siz = area.SpriteHandle.Atlas->GetSprite(area.SpriteHandle.Index).Area.Size;
-	//border = Float4(area.Borders9P.X, siz.X - area.Borders9P.Y, area.Borders9P.Z, siz.Y - area.Borders9P.W);
-	//borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
-
-	if (area.AreaType == FudgetFillAreaType::Texture9)
+	if ((area.AreaType & FudgetFillType::Sliced) != FudgetFillType::Sliced)
 	{
-		Draw9SlicingPrecalculatedTexture(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
-		return;
-	}
-	if (area.AreaType == FudgetFillAreaType::Texture9Point)
-	{
-		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		DrawTextureInner(area.Texture, area.SpriteHandle, area.TextureScale, area.TextureOffset, rect, area.Tint, stretch, point);
 		return;
 	}
 
-	if (area.AreaType == FudgetFillAreaType::Sprite9)
+	if (area.Texture != nullptr)
 	{
-		Draw9SlicingPrecalculatedSprite(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		if (!point)
+		{
+			Draw9SlicingPrecalculatedTexture(area.Texture, rect, borders);
+			return;
+		}
+		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, borders);
 		return;
 	}
-	if (area.AreaType == FudgetFillAreaType::Texture9Point)
+
+	
+	if (!point)
 	{
-		Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle, rect, FudgetPadding(area.Borders9P.X, area.Borders9P.Y, area.Borders9P.Z, area.Borders9P.W));
+		Draw9SlicingPrecalculatedSprite(area.SpriteHandle, rect, borders);
 		return;
 	}
+
+	Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle, rect, borders);
 }
 
-void FudgetControl::DrawFillArea(const FudgetFillAreaSettings &area, Float2 pos, Float2 siz) const
+void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size) const
 {
-	DrawFillArea(area, Rectangle(pos, siz));
+	DrawArea(area, Rectangle(pos, size));
 }
 
 
@@ -828,31 +861,31 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 	return false;
 }
 
-bool FudgetControl::GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetFillAreaSettings &result)
-{
-	FudgetStyle *style = GetActiveStyle();
-	if (style == nullptr)
-		return false;
-	Variant var;
-	if (style->GetResourceValue(GetActiveTheme(), token, var))
-	{
-		if (var.Type.Type == VariantType::Color)
-		{
-			result.Color = var.AsColor();
-			result.AreaType = FudgetFillAreaType::Color;
-			return true;
-		}
-
-		const FudgetFillAreaSettings *ptr = var.AsStructure<FudgetFillAreaSettings>();
-		if (ptr == nullptr)
-			return false;
-
-		result = *ptr;
-		return true;
-		// TODO: cache if needed
-	}
-	return false;
-}
+//bool FudgetControl::GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
+//{
+//	FudgetStyle *style = GetActiveStyle();
+//	if (style == nullptr)
+//		return false;
+//	Variant var;
+//	if (style->GetResourceValue(GetActiveTheme(), token, var))
+//	{
+//		if (var.Type.Type == VariantType::Color)
+//		{
+//			result.Tint = var.AsColor();
+//			result.AreaType = FudgetFillType::Color;
+//			return true;
+//		}
+//
+//		const FudgetDrawArea *ptr = var.AsStructure<FudgetDrawArea>();
+//		if (ptr == nullptr)
+//			return false;
+//
+//		result = *ptr;
+//		return true;
+//		// TODO: cache if needed
+//	}
+//	return false;
+//}
 
 bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
 {
@@ -960,7 +993,48 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 	}
 }
 
-void FudgetControl::DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, const Rectangle& rect, const Color& color) const
+void FudgetControl::DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point) const
+{
+	if (t != nullptr)
+	{
+		if (!stretch)
+		{
+			if (!point)
+				DrawTextureTiled(t->GetTexture(), t->Size() * scale, offset, rect, tint);
+			else
+				DrawTexturePointTiled(t->GetTexture(), t->Size() * scale, offset, rect, tint);
+		}
+		else
+		{
+			if (!point)
+				DrawTexture(t->GetTexture(), rect, tint);
+			else
+				DrawTexturePoint(t->GetTexture(), rect, tint);
+		}
+		return;
+	}
+
+	if (!stretch)
+	{
+		Sprite sprite;
+		if (!sprite_handle.GetSprite(&sprite))
+			return;
+
+		if (!point)
+			DrawSpriteTiled(sprite_handle, sprite.Area.Size * scale, offset, rect, tint);
+		else
+			DrawSpritePointTiled(sprite_handle, sprite.Area.Size * scale, offset, rect, tint);
+	}
+	else
+	{
+		if (!point)
+			DrawSprite(sprite_handle, rect, tint);
+		else
+			DrawSpritePoint(sprite_handle, rect, tint);
+	}
+}
+
+void FudgetControl::DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const
 {
 	// Number of textures to draw along the x axis, including the half drawn one
 	float cnt_x_f = rect.Size.X / size.X;
@@ -979,11 +1053,10 @@ void FudgetControl::DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool po
 	if (Math::NotNearEqual(cnt_y_f, (float)cnt_y))
 		++cnt_y;
 
-	Rectangle r = LocalToGlobal(rect);
-	Render2D::PushClip(r);
+	Render2D::PushClip(rect);
 
-	float posx = r.Location.X;
-	float posy = r.Location.Y;
+	float posx = rect.Location.X;
+	float posy = rect.Location.Y;
 	for (int iy = 0; iy < cnt_y; ++iy)
 	{
 		for (int ix = 0; ix < cnt_x; ++ix)
@@ -1000,7 +1073,7 @@ void FudgetControl::DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool po
 			posx += size.X;
 		}
 		posy += size.Y;
-		posx = r.Location.X;
+		posx = rect.Location.X;
 	}
 
 	Render2D::PopClip();

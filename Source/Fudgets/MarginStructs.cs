@@ -1,4 +1,6 @@
 ﻿
+using FlaxEngine;
+
 namespace Fudgets;
 
 public partial struct FudgetPadding
@@ -17,9 +19,13 @@ public partial struct FudgetPadding
     /// <summary>
     /// Left and right padding.
     /// </summary>
-    public float Width => Left + Right;
+    public readonly float Width => Left + Right;
     /// <summary>
     /// Top and bottom padding.
     /// </summary>
-    public float Height => Top + Bottom;
+    public readonly float Height => Top + Bottom;
+    /// <summary>
+    /// Converts padding to a Float4 with left, right, top, bottom values in this order.
+    /// </summary>
+    public readonly Float4 AsFloat4 => new Float4(Left, Right, Top, Bottom);
 }

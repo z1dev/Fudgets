@@ -189,28 +189,279 @@ public:
     API_FUNCTION() static void Initialize();
     API_FUNCTION() static void Uninitialize();
 
-    // Token for the base theme that's guaranteed to be present.
+    // Token for the base theme that's guaranteed to be present. "FudgetThemes_MainTheme"
     API_FIELD(ReadOnly) static const FudgetToken MainThemeToken;
 
-    // Token to get the default style that holds basic values.
+    // Token to get the default style that holds basic values. "FudgetThemes_DefaultStyle"
     API_FIELD(ReadOnly) static const FudgetToken DefaultStyleToken;
 
-    // The static tokens below are probably all temporary here and will be removed:
 
-    // Standard tokens used by controls. New styles can register new tokens if they need them, and store them
-    // in any way. The same token can be retrieved from the FudgetThemes with GetToken, if the same string is
-    // passed to it.
 
-    // Tokens for getting paint properties:
+    // Tokens for values that are common in many UI systems.  These are here to make it unnecessary to register them every
+    // time a new style or theme is created from scratch, but they are not necessary to use and have no special meaning.
+    // All tokens start with "FudgetThemes_" and have the same string value following it as their name, but excluding "Token".
 
-    // TODO: change tokens specific to Fudgets so users won't accidentally use them.
+
+    // Tokens for colors:
 
     /// <summary>
-    /// Token for "CaretBlinkTime" string.
+    /// Background color for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BgColorToken;
+    /// <summary>
+    /// Background color for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBgColorToken;
+    /// <summary>
+    /// Background color for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgColorToken;
+    /// <summary>
+    /// Background color for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgColorToken;
+    /// <summary>
+    /// Border color for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderColorToken;
+    /// <summary>
+    /// Border color for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBorderColorToken;
+    /// <summary>
+    /// Border color for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderColorToken;
+    /// <summary>
+    /// Border color for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBorderColorToken;
+    /// <summary>
+    /// Dark color representing a theme.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DarkColorToken;
+    /// <summary>
+    /// Light color representing a theme.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken LightColorToken;
+    /// <summary>
+    /// Medium color representing a theme.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken MediumColorToken;
+    /// <summary>
+    /// Color representing a theme that has some special purpose. For example color of a special button.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken AccentColorToken;
+    /// <summary>
+    /// Background color  for selected items in controls with a neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectionColorToken;
+    /// <summary>
+    /// Background color for selected items in focused controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionColorToken;
+    /// <summary>
+    /// Background color  for selected items in disabled controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectionColorToken;
+    /// <summary>
+    /// Text color for controls in a neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken TextColorToken;
+    /// <summary>
+    /// Text color for disabled controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledTextColorToken;
+    /// <summary>
+    /// Text color for focused controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedTextColorToken;
+    /// <summary>
+    /// Text color in fields for controls in a neutral state. For example text box text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldTextColorToken;
+    /// <summary>
+    /// Text color in fields for disabled controls. For example text box text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldTextColorToken;
+    /// <summary>
+    /// Text color in fields for focused controls. For example text box text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldTextColorToken;
+    /// <summary>
+    /// Selected text color in fields for controls in a neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedTextColorToken;
+    /// <summary>
+    /// Selected text color in fields for focused controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedTextColorToken;
+    /// <summary>
+    /// Selected text color in fields for disabled controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedTextColorToken;
+
+
+
+    /// <summary>
+    /// Background image for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BgImageToken;
+    /// <summary>
+    /// Background image for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBgImageToken;
+    /// <summary>
+    /// Background image for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgImageToken;
+    /// <summary>
+    /// Background image for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgImageToken;
+    /// <summary>
+    /// Border image for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderImageToken;
+    /// <summary>
+    /// Border image for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBorderImageToken;
+    /// <summary>
+    /// Border image for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderImageToken;
+    /// <summary>
+    /// Border image for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBorderImageToken;
+    /// <summary>
+    /// Background image  for selected items in controls in a neutral sate.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectionImageToken;
+    /// <summary>
+    /// Background image for selected items in focused controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionImageToken;
+    /// <summary>
+    /// Background image  for selected items in disabled controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectionImageToken;
+
+
+    /// <summary>
+    /// Background for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BgDrawToken;
+    /// <summary>
+    /// Background for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBgDrawToken;
+    /// <summary>
+    /// Background for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgDrawToken;
+    /// <summary>
+    /// Background for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgDrawToken;
+    /// <summary>
+    /// Border for controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderDrawToken;
+    /// <summary>
+    /// Border for controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldBorderDrawToken;
+    /// <summary>
+    /// Border for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderDrawToken;
+    /// <summary>
+    /// Border for focused controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBorderDrawToken;
+    /// <summary>
+    /// Background  for selected items in controls in a neutral sate.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectionDrawToken;
+    /// <summary>
+    /// Background for selected items in focused controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionDrawToken;
+    /// <summary>
+    /// Background  for selected items in disabled controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectionDrawToken;
+
+
+    // Tokens for padding:
+
+    /// <summary>
+    /// Padding inside a control to restrict the space of the contents. Controls might choose to use both control padding and field padding.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control to restrict the space of field contents, like text. Controls might choose to use both control padding and field padding.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldPaddingToken;
+
+
+    // Tokens for general values:
+
+    /// <summary>
+    /// Time in seconds while a caret is shown or hidden.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken CaretBlinkTimeToken;
+    /// <summary>
+    /// Horizontal alignment for fields or controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HorizontalAlignmentToken;
+    /// <summary>
+    /// Vertical alignment for fields or controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken VerticalAlignmentToken;
+    /// <summary>
+    /// Generic value for left direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken LeftToken;
+    /// <summary>
+    /// Generic value for right direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken RightToken;
+    /// <summary>
+    /// Generic value for top direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken TopToken;
+    /// <summary>
+    /// Generic value for bottom direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BottomToken;
+    /// <summary>
+    /// Generic value for upwards direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken UpToken;
+    /// <summary>
+    /// Generic value for downwards direction or side.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownToken;
+    /// <summary>
+    /// Left padding value for fields or controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken LeftPaddingToken;
+    /// <summary>
+    /// Right padding value for fields or controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken RightPaddingToken;
+    /// <summary>
+    /// Top padding value for fields or controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken TopPaddingToken;
+    /// <summary>
+    /// Bottom padding value for fields or controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BottomPaddingToken;
 
-    // Tokens of standard values that can be used to find style settings
 
 
     /// <summary>

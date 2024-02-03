@@ -7,6 +7,90 @@
 #include "Engine/Content/Content.h"
 #include "Engine/Content/Assets/Texture.h"
 
+std::map<String, FudgetToken> FudgetThemes::_token_map;
+std::map<FudgetToken, String> FudgetThemes::_string_map;
+int FudgetThemes::_highest_token = 0;
+
+std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
+std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
+std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
+bool FudgetThemes::_themes_initialized = false;
+
+const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_MainTheme"));
+const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DefaultStyle"));
+
+const FudgetToken FudgetThemes::BgColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BgColor"));
+const FudgetToken FudgetThemes::FieldBgColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBgColor"));
+const FudgetToken FudgetThemes::DisabledFieldBgColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBgColor"));
+const FudgetToken FudgetThemes::FocusedFieldBgColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBgColor"));
+const FudgetToken FudgetThemes::BorderColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderColor"));
+const FudgetToken FudgetThemes::FieldBorderColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBorderColor"));
+const FudgetToken FudgetThemes::DisabledFieldBorderColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBorderColor"));
+const FudgetToken FudgetThemes::FocusedFieldBorderColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBorderColor"));
+const FudgetToken FudgetThemes::DarkColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DarkColor"));
+const FudgetToken FudgetThemes::LightColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_LightColor"));
+const FudgetToken FudgetThemes::MediumColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_MediumColor"));
+const FudgetToken FudgetThemes::AccentColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_AccentColor"));
+const FudgetToken FudgetThemes::SelectionColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectionColor"));
+const FudgetToken FudgetThemes::FocusedSelectionColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectionColor"));
+const FudgetToken FudgetThemes::DisabledSelectionColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectionColor"));
+
+const FudgetToken FudgetThemes::TextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_TextColor"));
+const FudgetToken FudgetThemes::DisabledTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledTextColor"));
+const FudgetToken FudgetThemes::FocusedTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedTextColor"));
+const FudgetToken FudgetThemes::FieldTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldTextColor"));
+const FudgetToken FudgetThemes::DisabledFieldTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldTextColor"));
+const FudgetToken FudgetThemes::FocusedFieldTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldTextColor"));
+const FudgetToken FudgetThemes::SelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedTextColor"));
+const FudgetToken FudgetThemes::FocusedSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedTextColor"));
+const FudgetToken FudgetThemes::DisabledSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedTextColor"));
+
+
+const FudgetToken FudgetThemes::BgImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BgImage"));
+const FudgetToken FudgetThemes::FieldBgImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBgImage"));
+const FudgetToken FudgetThemes::DisabledFieldBgImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBgImage"));
+const FudgetToken FudgetThemes::FocusedFieldBgImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBgImage"));
+const FudgetToken FudgetThemes::BorderImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderImage"));
+const FudgetToken FudgetThemes::FieldBorderImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBorderImage"));
+const FudgetToken FudgetThemes::DisabledFieldBorderImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBorderImage"));
+const FudgetToken FudgetThemes::FocusedFieldBorderImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBorderImage"));
+const FudgetToken FudgetThemes::SelectionImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectionImage"));
+const FudgetToken FudgetThemes::FocusedSelectionImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectionImage"));
+const FudgetToken FudgetThemes::DisabledSelectionImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectionImage"));
+
+const FudgetToken FudgetThemes::BgDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BgDraw"));
+const FudgetToken FudgetThemes::FieldBgDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBgDraw"));
+const FudgetToken FudgetThemes::DisabledFieldBgDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBgDraw"));
+const FudgetToken FudgetThemes::FocusedFieldBgDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBgDraw"));
+const FudgetToken FudgetThemes::BorderDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderDraw"));
+const FudgetToken FudgetThemes::FieldBorderDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldBorderDraw"));
+const FudgetToken FudgetThemes::DisabledFieldBorderDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldBorderDraw"));
+const FudgetToken FudgetThemes::FocusedFieldBorderDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldBorderDraw"));
+const FudgetToken FudgetThemes::SelectionDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectionDraw"));
+const FudgetToken FudgetThemes::FocusedSelectionDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectionDraw"));
+const FudgetToken FudgetThemes::DisabledSelectionDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectionDraw"));
+
+const FudgetToken FudgetThemes::ControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_ControlPadding"));
+const FudgetToken FudgetThemes::FieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldPadding"));
+
+const FudgetToken FudgetThemes::CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CaretBlinkTime"));
+const FudgetToken FudgetThemes::HorizontalAlignmentToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HorizontalAlignment"));
+const FudgetToken FudgetThemes::VerticalAlignmentToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_VerticalAlignment"));
+const FudgetToken FudgetThemes::LeftToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Left"));
+const FudgetToken FudgetThemes::RightToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Right"));
+const FudgetToken FudgetThemes::TopToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Top"));
+const FudgetToken FudgetThemes::BottomToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Bottom"));
+const FudgetToken FudgetThemes::UpToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Up"));
+const FudgetToken FudgetThemes::DownToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Down"));
+const FudgetToken FudgetThemes::LeftPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_LeftPadding"));
+const FudgetToken FudgetThemes::RightPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_RightPadding"));
+const FudgetToken FudgetThemes::TopPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_TopPadding"));
+const FudgetToken FudgetThemes::BottomPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BottomPadding"));
+
+
+// FudgetTheme
+
+
 FudgetTheme::FudgetTheme() : Base(SpawnParams(Guid::New(), TypeInitializer))
 {
 
@@ -38,19 +122,9 @@ FudgetTheme* FudgetTheme::Duplicate() const
 	return result;
 }
 
-std::map<String, FudgetToken> FudgetThemes::_token_map;
-std::map<FudgetToken, String> FudgetThemes::_string_map;
-int FudgetThemes::_highest_token = 0;
 
-std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
-std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
-std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
-bool FudgetThemes::_themes_initialized = false;
+// FudgetThemes
 
-const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("MainTheme"));
-const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("DefaultStyle"));
-
-const FudgetToken FudgetThemes::CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("CaretBlinkTime"));
 
 void FudgetThemes::Initialize()
 {
@@ -66,8 +140,8 @@ void FudgetThemes::Initialize()
 
 	FudgetStyle *_default_style = CreateStyle(TEXT("DefaultStyle")); //New<FudgetStyle>(TEXT("DefaultStyle"));
 
-	//FudgetFillAreaSettings texsettings(tex, false, false, Color::White);
-	//Variant texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetFillAreaSettings")), texsettings);
+	//FudgetDrawArea texsettings(tex, false, false, Color::White);
+	//Variant texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetDrawArea")), texsettings);
 	//_img_button_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
 }
 

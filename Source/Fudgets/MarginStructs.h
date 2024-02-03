@@ -23,6 +23,8 @@ struct FUDGETS_API FudgetPadding
 	{
 	}
 
+	Float4 AsFloat4() const { return Float4(Left, Right, Top, Bottom); }
+
 	float Width() const { return Left + Right; }
 	float Height() const { return Top + Bottom; }
 
