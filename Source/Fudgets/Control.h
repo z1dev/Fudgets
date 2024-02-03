@@ -1134,6 +1134,17 @@ public:
 	/// </summary>
 	API_FUNCTION() void ResetCreatedFonts();
 
+	// Drawing with styles
+
+	/// <summary>
+	/// Gets the value from the current style, and if it's a color or a FudgetDrawArea structure, uses that to
+	/// draw in the rectangle.
+	/// </summary>
+	/// <param name="token">Token to look for in the style for the area settings</param>
+	/// <param name="rect">Rectangle to draw int</param>
+	/// <param name="tint">Color to multiply the drawn pixels with</param>
+	API_FUNCTION() void DrawStyleArea(FudgetToken token, const Rectangle &rect, Color tint);
+
 	// Serialization
 
 	void Serialize(SerializeStream& stream, const void* otherObj) override;

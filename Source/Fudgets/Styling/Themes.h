@@ -446,21 +446,45 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken DownToken;
     /// <summary>
+    /// Padding width for fields or controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PaddingWidthToken;
+    /// <summary>
     /// Left padding value for fields or controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken LeftPaddingToken;
+    API_FIELD(ReadOnly) static const FudgetToken PaddingLeftToken;
     /// <summary>
     /// Right padding value for fields or controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken RightPaddingToken;
+    API_FIELD(ReadOnly) static const FudgetToken PaddingRightToken;
     /// <summary>
     /// Top padding value for fields or controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken TopPaddingToken;
+    API_FIELD(ReadOnly) static const FudgetToken PaddingTopToken;
     /// <summary>
     /// Bottom padding value for fields or controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken BottomPaddingToken;
+    API_FIELD(ReadOnly) static const FudgetToken PaddingBottomToken;
+    /// <summary>
+    /// Generic value for border width.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderWidthToken;
+    /// <summary>
+    /// Generic value for left side border width.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderWidthLeftToken;
+    /// <summary>
+    /// Generic value for right side border width.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderWidthRightToken;
+    /// <summary>
+    /// Generic value for top side border width.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderWidthTopToken;
+    /// <summary>
+    /// Generic value for bottom side border width.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderWidthBottomToken;
 
 
 

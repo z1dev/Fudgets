@@ -15,7 +15,33 @@ public partial struct FudgetPadding
         Right = right;
         Bottom = bottom;
     }
-    
+
+    /// <summary>
+    /// Initializes a new padding structure and sets its sizes
+    /// </summary>
+    /// <param name="horizontal">Set for left and right</param>
+    /// <param name="vertical">Set for top and bottom</param>
+    public FudgetPadding(float horizontal, float vertical)
+    {
+        Left = horizontal;
+        Top = vertical;
+        Right = horizontal;
+        Bottom = vertical;
+    }
+
+    /// <summary>
+    /// Initializes a new padding structure and sets its sizes
+    /// </summary>
+    /// <param name="value">Same value for each side</param>
+    public FudgetPadding(float value)
+    {
+        Left = value;
+        Top = value;
+        Right = value;
+        Bottom = value;
+    }
+
+
     /// <summary>
     /// Left and right padding.
     /// </summary>

@@ -649,11 +649,11 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect) 
 			Rectangle r;
 			if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderInside)
 			{
-				r = Rectangle(Float2(rect.GetLeft() + borders.Left * 0.5, rect.GetTop() + borders.Top * 0.5), Float2(rect.GetWidth() - (borders.Left + borders.Right) * 0.5, rect.GetHeight() - (borders.Top + borders.Bottom) * 0.5));
+				r = Rectangle(Float2(rect.GetLeft() + borders.Left * 0.5f, rect.GetTop() + borders.Top * 0.5f), Float2(rect.GetWidth() - (borders.Left + borders.Right) * 0.5f, rect.GetHeight() - (borders.Top + borders.Bottom) * 0.5f));
 			}
 			else if ((area.AreaType & FudgetFillType::BorderCentered) == FudgetFillType::BorderOutside)
 			{
-				r = Rectangle(Float2(rect.GetLeft() - borders.Left * 0.5, rect.GetTop() - borders.Top * 0.5), Float2(rect.GetWidth() + (borders.Left + borders.Right) * 0.5, rect.GetHeight() + (borders.Top + borders.Bottom) * 0.5));
+				r = Rectangle(Float2(rect.GetLeft() - borders.Left * 0.5f, rect.GetTop() - borders.Top * 0.5f), Float2(rect.GetWidth() + (borders.Left + borders.Right) * 0.5f, rect.GetHeight() + (borders.Top + borders.Bottom) * 0.5f));
 			}
 			else
 				r = rect;
@@ -941,6 +941,11 @@ bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(OUT) FudgetFont &r
 void FudgetControl::ResetCreatedFonts()
 {
 	_cached_fonts.clear();
+}
+
+void FudgetControl::DrawStyleArea(FudgetToken token, const Rectangle &rect, Color tint)
+{
+
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)

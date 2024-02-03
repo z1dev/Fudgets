@@ -46,6 +46,9 @@ API_STRUCT() struct FUDGETS_API FudgetSpriteHandle
 		Index = original.Index;
 	}
 
+	/// <summary>
+	/// Returns a sprite handle from this wrapper
+	/// </summary>
 	SpriteHandle ToHandle() const
 	{
 		return SpriteHandle(Atlas, Index);

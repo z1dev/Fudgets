@@ -82,10 +82,17 @@ const FudgetToken FudgetThemes::TopToken = FudgetThemes::RegisterToken(TEXT("Fud
 const FudgetToken FudgetThemes::BottomToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Bottom"));
 const FudgetToken FudgetThemes::UpToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Up"));
 const FudgetToken FudgetThemes::DownToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Down"));
-const FudgetToken FudgetThemes::LeftPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_LeftPadding"));
-const FudgetToken FudgetThemes::RightPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_RightPadding"));
-const FudgetToken FudgetThemes::TopPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_TopPadding"));
-const FudgetToken FudgetThemes::BottomPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BottomPadding"));
+const FudgetToken FudgetThemes::PaddingWidthToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PaddingWidth"));
+const FudgetToken FudgetThemes::PaddingLeftToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PaddingLeft"));
+const FudgetToken FudgetThemes::PaddingRightToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PaddingRight"));
+const FudgetToken FudgetThemes::PaddingTopToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PaddingTop"));
+const FudgetToken FudgetThemes::PaddingBottomToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PaddingBottom"));
+
+const FudgetToken FudgetThemes::BorderWidthToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthToken"));
+const FudgetToken FudgetThemes::BorderWidthLeftToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthLeftToken"));
+const FudgetToken FudgetThemes::BorderWidthRightToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthRightToken"));
+const FudgetToken FudgetThemes::BorderWidthTopToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthTopToken"));
+const FudgetToken FudgetThemes::BorderWidthBottomToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthBottomToken"));
 
 
 // FudgetTheme
