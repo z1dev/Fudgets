@@ -75,7 +75,7 @@ public:
         }
 
         T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
-        SetLayoutInternal(layout);
+        SetLayout(layout);
         return layout;
     }
 
@@ -350,13 +350,6 @@ public:
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
-
-    /// <summary>
-    /// Sets the layout to the container and changes its owner
-    /// </summary>
-    /// <param name="layout">The layout to set</param>
-    API_FUNCTION(Internal) void SetLayoutInternal(FudgetLayout *layout);
-
 private:
 
     /// <summary>

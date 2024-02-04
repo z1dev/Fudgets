@@ -44,7 +44,7 @@ namespace Fudgets
             }
 
             var layout = New<T>(); //Activator.CreateInstance<T>();
-            SetLayoutInternal(layout);
+            Layout = layout;
             return (T)layout;
         }
     }

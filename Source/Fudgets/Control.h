@@ -149,7 +149,8 @@ enum class FudgetControlFlags
 	/// </summary>
 	RegisterToUpdates = 1 << 9,
 	/// <summary>
-	/// Set on the control before adding it to a parent to reset its flags from GetInitFlags.
+	/// Set on the control before adding it to a parent to reset its flags from GetInitFlags. Makes the flags
+	/// reset the next time the control is added to a parent.
 	/// </summary>
 	ResetFlags = 1 << 10,
 	/// <summary>

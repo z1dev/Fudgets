@@ -426,7 +426,7 @@ void FudgetContainer::SetLayout(FudgetLayout *value)
     _changing = true;
     _layout = value;
     if (_layout != nullptr)
-        _layout->SetOwner(this);
+        _layout->SetOwnerInternal(this);
     _changing = false;
 }
 
@@ -507,23 +507,13 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
         if (!layout->IsRegistered())
             layout->RegisterObject();
 
-        SetLayoutInternal(layout);
-        //_layout = layout;
+        SetLayout(layout);
     }
 }
 
 FudgetControlFlags FudgetContainer::GetInitFlags() const
 {
     return Base::GetInitFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
-}
-
-void FudgetContainer::SetLayoutInternal(FudgetLayout *layout)
-{
-    if (_layout == layout)
-        return;
-    _layout = layout;
-    if (_layout != nullptr)
-        _layout->SetOwnerInternal(this);
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)

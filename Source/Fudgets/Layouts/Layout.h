@@ -222,7 +222,13 @@ enum class FudgetLayoutFlag : uint16
 	/// <summary>
 	/// The layout has valid min size of each type that containers can use.
 	/// </summary>
-	CanProvideSizes = CanProvideHintSize | CanProvideMinSize | CanProvideMaxSize
+	CanProvideSizes = CanProvideHintSize | CanProvideMinSize | CanProvideMaxSize,
+
+	/// <summary>
+	/// Set on the layout before assigning it to an owner container, to reset its flags from GetInitFlags. Makes the flags
+	/// reset the next time the layout owner changes to not null
+	/// </summary>
+	ResetFlags
 };
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
@@ -276,11 +282,6 @@ class FUDGETS_API FudgetLayout : public ScriptingObject, public ISerializable
 	DECLARE_SCRIPTING_TYPE(FudgetLayout);
 public:
 	~FudgetLayout();
-
-	/// <summary>
-	/// Called each time the layout's owner changes.
-	/// </summary>
-	API_FUNCTION() virtual void Initialize();
 
 	/// <summary>
 	/// Gets the container that holds the controls this layout can reposition or resize

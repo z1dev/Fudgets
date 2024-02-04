@@ -27,7 +27,7 @@ FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), _c
 
 
 FudgetLayout::FudgetLayout(const SpawnParams &params) : Base(params), _owner(nullptr),
-		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(FudgetLayoutFlag::None), _changing(false)
+		_layout_dirty(false), _size_dirty(false), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(FudgetLayoutFlag::ResetFlags), _changing(false)
 {
 
 }
@@ -38,30 +38,16 @@ FudgetLayout::~FudgetLayout()
 		CleanUp();
 }
 
-void FudgetLayout::Initialize()
-{
-	_flags = GetInitFlags();
-}
-
 void FudgetLayout::SetOwner(FudgetContainer *value)
 {
 	if (_changing || _owner == value)
 		return;
 
 	_changing = true;
-
-	_owner = value;
-	_layout_dirty = true;
-	_size_dirty = true;
-
+	if (_owner != nullptr)
+		_owner->SetLayout(nullptr);
 	if (value != nullptr)
-	{
-		FillSlots();
-
 		value->SetLayout(this);
-		Initialize();
-	}
-
 	_changing = false;
 }
 
@@ -343,6 +329,10 @@ void FudgetLayout::SetOwnerInternal(FudgetContainer *value)
 	_size_dirty = true;
 
 	if (value != nullptr)
+	{
 		FillSlots();
+		if ((_flags & FudgetLayoutFlag::ResetFlags) == FudgetLayoutFlag::ResetFlags)
+			_flags = GetInitFlags();
+	}
 }
 

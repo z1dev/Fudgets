@@ -176,6 +176,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     /// </summary>
     protected override void OnClose()
     {
+        FlaxEngine.Object.Destroy(RenderRoot);
         base.OnClose();
         _tree?.Deinitialize();
     }
