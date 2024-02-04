@@ -179,6 +179,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     {
         _asset.WidgetData.Parent = null;
         FlaxEngine.Object.Destroy(RenderRoot);
+        _asset.Reload();
         base.OnClose();
         _tree?.Deinitialize();
     }
