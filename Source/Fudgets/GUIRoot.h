@@ -157,6 +157,9 @@ public:
     //void Serialize(SerializeStream& stream, const void* otherObj) override;
     //void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
+    // Called once from the Fudget to initialize during gameplay
+    void Initialize();
+
     enum class HookProcessingType
     {
         MouseDown,
@@ -226,5 +229,6 @@ private:
     // should be avoided. It will log a warning if it happens.
     bool _processing_updates;
 
+    friend class Fudget;
 };
 

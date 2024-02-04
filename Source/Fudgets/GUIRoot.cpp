@@ -22,18 +22,16 @@ FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params) : FudgetGUIRoot(params, 
 {
 }
 
-FudgetGUIRoot::FudgetGUIRoot(const SpawnParams& params, Fudget* root) : Base(params),
-	events_initialized(false), _on_top_count(0), _mouse_capture_control(nullptr), _mouse_capture_button(),
-	_mouse_over_control(nullptr), _focus_control(nullptr), _processing_updates(false)
-{
-	_root = root;
-	_window = (WindowBase*)Screen::GetMainWindow();
-	_guiRoot = this;
-	InitializeEvents();
-}
-
 FudgetGUIRoot::FudgetGUIRoot(Fudget* root) : FudgetGUIRoot(SpawnParams(Guid::New(), TypeInitializer), root)
 {
+}
+
+FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) : Base(params),
+	events_initialized(false), _root(root), _window((WindowBase*)Screen::GetMainWindow()), _on_top_count(0),
+	_mouse_capture_control(nullptr), _mouse_capture_button(), _mouse_over_control(nullptr), _focus_control(nullptr),
+	_processing_updates(false)
+{
+	_guiRoot = this;
 }
 
 FudgetGUIRoot::~FudgetGUIRoot()
@@ -409,6 +407,12 @@ void FudgetGUIRoot::ControlUpdates()
 		c->RegisterToUpdate(false);
 	_controls_to_add_to_updating.Clear();
 	_controls_to_remove_from_updating.Clear();
+}
+
+void FudgetGUIRoot::Initialize()
+{
+	if (IsInRunningGame())
+		InitializeEvents();
 }
 
 FudgetMouseHookResult FudgetGUIRoot::ProcessLocalMouseHooks(HookProcessingType type, FudgetControl *control, Float2 pos, Float2 global_pos, MouseButton button, bool double_click)

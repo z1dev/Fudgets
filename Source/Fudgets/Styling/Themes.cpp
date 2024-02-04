@@ -6,15 +6,24 @@
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
 #include "Engine/Content/Assets/Texture.h"
+#include "Engine/Core/Log.h"
 
 std::map<String, FudgetToken> FudgetThemes::_token_map;
 std::map<FudgetToken, String> FudgetThemes::_string_map;
 int FudgetThemes::_highest_token = 0;
 
-std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
-std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
-std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
-bool FudgetThemes::_themes_initialized = false;
+//std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
+//std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
+//std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
+
+#if USE_EDITOR
+bool FudgetThemes::_runtime_use = false;
+FudgetThemes::Data* FudgetThemes::_edittime_data = nullptr;
+FudgetThemes::Data* FudgetThemes::_runtime_data = nullptr;
+bool FudgetThemes::_edittime_initialized = false;
+#endif
+bool FudgetThemes::_initialized = false;
+FudgetThemes::Data* FudgetThemes::_data = nullptr;
 
 const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_MainTheme"));
 const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DefaultStyle"));
@@ -133,17 +142,43 @@ FudgetTheme* FudgetTheme::Duplicate() const
 // FudgetThemes
 
 
-void FudgetThemes::Initialize()
+void FudgetThemes::Initialize(bool in_game)
 {
-	if (_themes_initialized)
-		return;
+	if (in_game)
+	{
+		if (_initialized)
+		{
+			LOG(Error, "Initializing FudgetThemes twice.");
+			return;
+		}
 
-	_themes_initialized = true;
+		_initialized = true;
+		_data = new Data;
+#if USE_EDITOR
+		_runtime_use = true;
+		_runtime_data = _data;
+#endif
+	}
+
+#if USE_EDITOR
+	if (!in_game)
+	{
+		if (_edittime_initialized)
+		{
+			LOG(Error, "Initializing FudgetThemes twice in editor.");
+			return;
+		}
+		_edittime_initialized = true;
+		_runtime_use = false;
+		_data = _edittime_data = new Data;
+	}
+#endif
+
 
 	// TODO: Add the reasonable minimum style data. For example basic editor font, basic colors etc.
 
 	FudgetTheme *main_theme = New<FudgetTheme>();
-	_theme_map[MainThemeToken] = main_theme;
+	_data->_theme_map[MainThemeToken] = main_theme;
 
 	FudgetStyle *_default_style = CreateStyle(TEXT("DefaultStyle")); //New<FudgetStyle>(TEXT("DefaultStyle"));
 
@@ -152,23 +187,69 @@ void FudgetThemes::Initialize()
 	//_img_button_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
 }
 
-void FudgetThemes::Uninitialize()
+void FudgetThemes::Uninitialize(bool in_game)
 {
-	if (!_themes_initialized)
-		return;
-	_themes_initialized = false;
+#if USE_EDITOR
+	if (!in_game)
+	{
+		if (!_edittime_initialized)
+		{
+			LOG(Error, "Trying to uninitialize FudgetThemes in editor when it wasn't initialized.");
+			return;
+		}
 
-	for (const auto &st : _style_map)
+		_runtime_use = false;
+		_data = _edittime_data;
+		_edittime_initialized = false;
+	}
+	else
+	{
+		_runtime_use = true;
+		_data = _runtime_data;
+	}
+#endif
+	if (in_game)
+	{
+		if (!_initialized)
+		{
+			LOG(Error, "Trying to uninitialize FudgetThemes when it wasn't initialized.");
+			return;
+		}
+		_initialized = false;
+	}
+
+
+	for (const auto &st : _data->_style_map)
 		if (st.second != nullptr)
 			Delete(st.second);
-	_style_map.clear();
+	_data->_style_map.clear();
 	
-	for (auto p : _theme_map)
+	for (auto p : _data->_theme_map)
 		if (p.second != nullptr)
 			Delete(p.second);
-	_theme_map.clear();
+	_data->_theme_map.clear();
 
-	_font_asset_map.clear();
+	_data->_font_asset_map.clear();
+
+#if USE_EDITOR
+	if (!in_game)
+	{
+		delete(_edittime_data);
+		_edittime_data = nullptr;
+		_runtime_use = true;
+		_data = _runtime_data;
+	}
+	else
+	{
+		delete(_runtime_data);
+		_runtime_data = nullptr;
+		_runtime_use = false;
+		_data = _edittime_data;
+	}
+#else
+	delete(_data);
+	_data = nullptr;
+#endif
 }
 
 FudgetToken FudgetThemes::GetToken(String token_name)
@@ -209,10 +290,10 @@ bool FudgetThemes::RegisterFontAsset(FudgetToken token, FontAsset *asset)
 {
 	if (!token.IsValid())
 		return false;
-	auto it = _font_asset_map.find(token);
-	if (it != _font_asset_map.end())
+	auto it = _data->_font_asset_map.find(token);
+	if (it != _data->_font_asset_map.end())
 		return false;
-	_font_asset_map[token] = asset;
+	_data->_font_asset_map[token] = asset;
 	return true;
 }
 
@@ -220,8 +301,8 @@ FontAsset* FudgetThemes::GetFontAsset(FudgetToken token)
 {
 	if (!token.IsValid())
 		return nullptr;
-	auto it = _font_asset_map.find(token);
-	if (it == _font_asset_map.end())
+	auto it = _data->_font_asset_map.find(token);
+	if (it == _data->_font_asset_map.end())
 		return nullptr;
 	return it->second;
 }
@@ -231,8 +312,8 @@ FudgetTheme* FudgetThemes::GetTheme(FudgetToken token)
 {
 	if (!token.IsValid())
 		return nullptr;
-	auto it = _theme_map.find(token);
-	if (it == _theme_map.end())
+	auto it = _data->_theme_map.find(token);
+	if (it == _data->_theme_map.end())
 		return nullptr;
 	return it->second;
 }
@@ -241,13 +322,13 @@ FudgetTheme* FudgetThemes::DuplicateTheme(FudgetToken source_token, FudgetToken 
 {
 	if (!source_token.IsValid() || !dest_token.IsValid())
 		return nullptr;
-	auto it_src = _theme_map.find(source_token);
-	auto it_dst = _theme_map.find(dest_token);
-	if (it_src == _theme_map.end() || it_dst != _theme_map.end())
+	auto it_src = _data->_theme_map.find(source_token);
+	auto it_dst = _data->_theme_map.find(dest_token);
+	if (it_src == _data->_theme_map.end() || it_dst != _data->_theme_map.end())
 		return nullptr;
 
 	FudgetTheme *theme = it_src->second->Duplicate();
-	_theme_map[dest_token] = theme;
+	_data->_theme_map[dest_token] = theme;
 	return theme;
 }
 
@@ -262,7 +343,7 @@ FudgetStyle* FudgetThemes::CreateStyle(FudgetToken token)
 		return nullptr;
 
 	FudgetStyle *style = New<FudgetStyle>();
-	_style_map[token] = style;
+	_data->_style_map[token] = style;
 	return style;
 
 }
@@ -276,8 +357,8 @@ FudgetStyle* FudgetThemes::GetStyle(FudgetToken token)
 {
 	if (!token.IsValid())
 		return nullptr;
-	auto it = _style_map.find(token);
-	if (it == _style_map.end())
+	auto it = _data->_style_map.find(token);
+	if (it == _data->_style_map.end())
 		return nullptr;
 	return it->second;
 }
@@ -292,4 +373,17 @@ FudgetStyle* FudgetThemes::GetControlStyleOrDefault(const Array<FudgetToken> &cl
 	}
 	return GetStyle(DefaultStyleToken);
 }
+
+#if USE_EDITOR
+
+void FudgetThemes::SetRuntimeUse(bool value)
+{
+	if (value)
+		_data = _runtime_data;
+	else
+		_data = _edittime_data;
+	_runtime_use = value;
+}
+
+#endif
 

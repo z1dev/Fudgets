@@ -156,7 +156,8 @@ public:
     API_FUNCTION() void SetResource(FudgetToken token, Variant value);
 private:
     /// <summary>
-    /// Creates a theme that is a duplicate of this theme. All values and painter ids will be matching.
+    /// Creates a theme that is a duplicate of this theme. All values will be matching. This also means that if an object
+    /// is stored as a pointer, changes on its properties will change the same object in other themes.
     /// </summary>
     /// <returns></returns>
     FudgetTheme* Duplicate() const;
@@ -186,8 +187,18 @@ public:
     //FudgetThemes();
     //~FudgetThemes();
 
-    API_FUNCTION() static void Initialize();
-    API_FUNCTION() static void Uninitialize();
+    /// <summary>
+    /// Initializes main themes and styles if they haven't been initializeds
+    /// </summary>
+    /// <param name="in_game">Whether called by the game plugin instead of the editor plugin</param>
+    API_FUNCTION() static void Initialize(bool in_game);
+    /// <summary>
+    /// Uninitializes main themes and styles if they were initialized by a call to Initialize. Depending on
+    /// whether this was called from the game plugin or not, might remove all objects that were created during
+    /// gameplay.
+    /// </summary>
+    /// <param name="in_game">Whether called by the game plugin instead of the editor plugin</param>
+    API_FUNCTION() static void Uninitialize(bool in_game);
 
     // Token for the base theme that's guaranteed to be present. "FudgetThemes_MainTheme"
     API_FIELD(ReadOnly) static const FudgetToken MainThemeToken;
@@ -487,7 +498,6 @@ public:
     API_FIELD(ReadOnly) static const FudgetToken BorderWidthBottomToken;
 
 
-
     /// <summary>
     /// Returns a token from the string that was used to create it. (Only the character sequence matters, not the
     /// actual variable) The same string always returns the same or equivalent token. To make a token use RegisterToken.
@@ -584,19 +594,41 @@ public:
     /// <returns>The style that matches one of the tokens or the default style of the theme</returns>
     API_FUNCTION() static FudgetStyle* GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens);
 
+#ifdef USE_EDITOR
+    API_PROPERTY() static bool GetRuntimeUse() { return _runtime_use; }
+    API_PROPERTY() static void SetRuntimeUse(bool value);
+#endif
+
 private:
     static std::map<String, FudgetToken> _token_map;
     static std::map<FudgetToken, String> _string_map;
     static int _highest_token;
 
-    // A collection of styles that provide values, like colors or floats to an element painter.
-    static std::map<FudgetToken, FudgetStyle*> _style_map;
+    struct Data
+    {
+        // A collection of styles that provide values, like colors or floats to an element painter.
+        std::map<FudgetToken, FudgetStyle*> _style_map;
 
-    // A collection of themes. Each theme is a collection of data in itself to provide values that can be used by
-    // styles and element painters.
-    static std::map<FudgetToken, FudgetTheme*> _theme_map;
+        // A collection of themes. Each theme is a collection of data in itself to provide values that can be used by
+        // styles and element painters.
+        std::map<FudgetToken, FudgetTheme*> _theme_map;
 
-    static std::map<FudgetToken, FontAsset*> _font_asset_map;
+        std::map<FudgetToken, FontAsset*> _font_asset_map;
+    };
 
-    static bool _themes_initialized;
+#if USE_EDITOR
+    // Whether the themes is currently using the runtime data.
+    static bool _runtime_use;
+
+    // Theme data used while the game is not running, both in the scene and in the style editor
+    static Data* _edittime_data;
+
+    // Theme data used by UI objects that are in the root gui hierarchy under a Fudget while the game is running.
+    static Data* _runtime_data;
+
+    static bool _edittime_initialized;
+#endif
+
+    static bool _initialized;
+    static Data *_data;
 };

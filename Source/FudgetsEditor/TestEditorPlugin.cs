@@ -4,6 +4,7 @@ using FlaxEngine;
 using FlaxEditor;
 using FlaxEditor.Content;
 using static FlaxEditor.GUI.Docking.DockHintWindow;
+using Fudgets;
 
 namespace FudgetsEditor;
 
@@ -35,11 +36,19 @@ public class TestEditorPlugin : EditorPlugin
 
         _proxy = new FudgetJsonAssetProxy();
         Editor.ContentDatabase.AddProxy(_proxy, true);
+
+        FudgetThemes.Initialize(false);
+        FudgetThemes.InitializeManaged(false);
+
     }
 
     /// <inheritdoc />
     public override void DeinitializeEditor()
     {
+        FudgetThemes.RuntimeUse = false;
+        FudgetThemes.UninitializeManaged(false);
+        FudgetThemes.Uninitialize(false);
+
         Editor.ContentDatabase.RemoveProxy(_proxy, true);
         _proxy = null;
 

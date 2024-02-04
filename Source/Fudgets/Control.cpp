@@ -72,6 +72,17 @@ void FudgetControl::SetName(String value)
 	_name = value;
 }
 
+bool FudgetControl::IsInRunningGame() const
+{
+	FudgetGUIRoot *gui_root = GetGUIRoot();
+	if (gui_root == nullptr)
+		return false;
+	Fudget *root = gui_root->GetRoot();
+	if (root == nullptr)
+		return false;
+	return root->IsInRunningGame();
+}
+
 void FudgetControl::SetHintSize(Float2 value)
 {
 	if (Float2::NearEqual(_hint_size, value))
@@ -402,6 +413,8 @@ void FudgetControl::Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, co
 
 void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
 {
+	if (t == nullptr)
+		return;
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = t->Size();
@@ -413,6 +426,8 @@ void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Recta
 
 void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
 {
+	if (t == nullptr)
+		return;
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = t->Size();
@@ -424,6 +439,8 @@ void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const 
 
 void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
 {
+	if (!spriteHandle.IsValid())
+		return;
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
@@ -435,6 +452,8 @@ void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHa
 
 void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color) const
 {
+	if (!spriteHandle.IsValid())
+		return;
 	Float4 border;
 	Float4 borderUV;
 	Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
@@ -778,6 +797,9 @@ FudgetStyle* FudgetControl::GetActiveStyle()
 	// No style was found, let's resolve one and save it to cached.
 
 	CreateClassTokens();
+#if USE_EDITOR
+	FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 	_cached_style = FudgetThemes::GetControlStyleOrDefault(_class_token);
 
 	return _cached_style;
@@ -785,6 +807,9 @@ FudgetStyle* FudgetControl::GetActiveStyle()
 
 void FudgetControl::SetThemeId(FudgetToken value)
 {
+#if USE_EDITOR
+	FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 	if (_theme_id == value || FudgetThemes::GetTheme(value) == nullptr)
 		return;
 
@@ -797,6 +822,9 @@ FudgetTheme* FudgetControl::GetActiveTheme()
 	if (_cached_theme != nullptr)
 		return _cached_theme;
 
+#if USE_EDITOR
+	FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 	if (_theme_id.IsValid())
 		_cached_theme = FudgetThemes::GetTheme(_theme_id);
 	else if (_parent != nullptr)
@@ -811,7 +839,10 @@ bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &res
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
+	{
+		result = Variant();
 		return false;
+	}
 
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
@@ -821,6 +852,7 @@ bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &res
 		// TODO: cache if needed
 	}
 
+	result = Variant();
 	return false;
 }
 
@@ -828,7 +860,10 @@ bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &resul
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
+	{
+		result = Color();
 		return false;
+	}
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
 	{
@@ -839,6 +874,7 @@ bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &resul
 		}
 		// TODO: cache if needed
 	}
+	result = Color();
 	return false;
 }
 
@@ -846,7 +882,10 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
+	{
+		result = 0.0f;
 		return false;
+	}
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
 	{
@@ -857,6 +896,7 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 		}
 		// TODO: cache if needed
 	}
+	result = 0.0f;
 	return false;
 }
 
@@ -889,29 +929,42 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
 {
 	if (!token.IsValid())
+	{
+		result = FudgetFontSettings();
 		return false;
+	}
 
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
+	{
+		result = FudgetFontSettings();
 		return false;
+	}
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
 	{
 		const FudgetFontSettings *ptr = var.AsStructure<FudgetFontSettings>();
 		if (ptr == nullptr)
+		{
+			result = FudgetFontSettings();
 			return false;
+		}
 
 		result = *ptr;
 		return true;
 		// TODO: cache if needed
 	}
+	result = FudgetFontSettings();
 	return false;
 }
 
-bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(OUT) FudgetFont &result)
+bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &result)
 {
 	if (!token.IsValid())
+	{
+		result = FudgetFont();
 		return false;
+	}
 
 	auto it = _cached_fonts.find(token);
 	if (it != _cached_fonts.end())
@@ -921,11 +974,20 @@ bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(OUT) FudgetFont &r
 	}
 
 	if (!GetStyleFontSettings(token, result.Settings))
+	{
+		result = FudgetFont();
 		return false;
+	}
 
+#if USE_EDITOR
+	FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 	FontAsset *asset = FudgetThemes::GetFontAsset(result.Settings.FontToken);
 	if (asset == nullptr)
-		return nullptr;
+	{
+		result = FudgetFont();
+		return false;
+	}
 
 	if (result.Settings.Bold)
 		asset = asset->GetBold();
@@ -943,9 +1005,61 @@ void FudgetControl::ResetCreatedFonts()
 	_cached_fonts.clear();
 }
 
+bool FudgetControl::GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
+{
+	Variant var;
+	if (!GetStyleValue(token, var))
+	{
+		result = FudgetDrawArea();
+		return false;
+	}
+
+	if (var.Type.Type == VariantType::Color)
+	{
+		result = FudgetDrawArea(var.AsColor());
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Asset)
+	{
+		AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
+		if (asset.Get() == nullptr)
+		{
+			result = FudgetDrawArea();
+			return false;
+		}
+
+		result = FudgetDrawArea(asset.Get(), true, false);
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Structure)
+	{
+		const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
+		if (area == nullptr)
+		{
+			result = FudgetDrawArea();
+			return false;
+		}
+		result = *area;
+		return true;
+	}
+
+
+
+
+	result = FudgetDrawArea();
+	return false;
+}
+
 void FudgetControl::DrawStyleArea(FudgetToken token, const Rectangle &rect, Color tint)
 {
+	FudgetDrawArea areaVar;
+	if (!GetStyleDrawArea(token, areaVar))
+		return;
 
+	areaVar.Tint *= tint;
+	DrawArea(areaVar, rect);
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
@@ -1105,6 +1219,9 @@ void FudgetControl::CreateClassTokens()
 	StringAnsiView class_name = thisclass->GetName();
 	while (thisclass != nullptr && class_name != "Object")
 	{
+#if USE_EDITOR
+		FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 		_class_token.Add(FudgetThemes::RegisterToken(class_name.ToString()));
 		thisclass = thisclass->GetBaseClass();
 		if (thisclass != nullptr)

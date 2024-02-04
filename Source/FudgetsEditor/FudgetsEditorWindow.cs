@@ -12,6 +12,7 @@ using FlaxEditor.Viewport;
 using FlaxEditor.Windows;
 using FlaxEditor.Windows.Assets;
 using FlaxEngine;
+using FlaxEngine.Assertions;
 using FlaxEngine.GUI;
 using FlaxEngine.Json;
 using Fudgets;
@@ -176,6 +177,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     /// </summary>
     protected override void OnClose()
     {
+        _asset.WidgetData.Parent = null;
         FlaxEngine.Object.Destroy(RenderRoot);
         base.OnClose();
         _tree?.Deinitialize();

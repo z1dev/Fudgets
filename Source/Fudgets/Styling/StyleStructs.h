@@ -135,7 +135,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <summary>
 	/// Necessary empty constructor. For filling area with white color
 	/// </summary>
-	FudgetDrawArea() : AreaType(FudgetFillType::Color), Tint(Color::White), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.0f)
+	FudgetDrawArea() : AreaType(FudgetFillType::None), Tint(Color::White), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.0f)
 	{
 	}
 
@@ -350,6 +350,42 @@ struct FUDGETS_API FudgetFontSettings
 	{
 	}
 
+	FudgetFontSettings(const FudgetFontSettings &other)
+	{
+		FontToken = other.FontToken;
+		Size = other.Size;
+		Bold = other.Bold;
+		Italics = other.Italics;
+	}
+
+	FudgetFontSettings& operator=(const FudgetFontSettings &other)
+	{
+		FontToken = other.FontToken;
+		Size = other.Size;
+		Bold = other.Bold;
+		Italics = other.Italics;
+		return *this;
+	}
+
+	FudgetFontSettings(FudgetFontSettings &&other) noexcept
+	{
+		FontToken = other.FontToken;
+		other.FontToken = FudgetToken::Invalid;
+		Size = other.Size;
+		Bold = other.Bold;
+		Italics = other.Italics;
+	}
+
+	FudgetFontSettings& operator=(FudgetFontSettings &&other) noexcept
+	{
+		FontToken = other.FontToken;
+		other.FontToken = FudgetToken::Invalid;
+		Size = other.Size;
+		Bold = other.Bold;
+		Italics = other.Italics;
+		return *this;
+	}
+
 	/// <summary>
 	/// Token for the font asset in FudgetThemes.
 	/// </summary>
@@ -372,6 +408,37 @@ API_STRUCT()
 struct FUDGETS_API FudgetFont
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFont);
+
+	FudgetFont() : Font(nullptr), Settings()
+	{}
+
+	FudgetFont(const FudgetFont &other)
+	{
+		Font = other.Font;
+		Settings = other.Settings;
+	}
+
+	FudgetFont& operator=(const FudgetFont &other)
+	{
+		Font = other.Font;
+		Settings = other.Settings;
+		return *this;
+	}
+
+	FudgetFont(FudgetFont &&other) noexcept
+	{
+		Font = other.Font;
+		Settings = std::move(other.Settings);
+		other.Font = nullptr;
+	}
+
+	FudgetFont& operator=(FudgetFont &&other) noexcept
+	{
+		Font = other.Font;
+		Settings = std::move(other.Settings);
+		other.Font = nullptr;
+		return *this;
+	}
 
 	/// <summary>
 	/// A font object created from the Settings

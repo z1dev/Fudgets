@@ -104,6 +104,25 @@ public:
 };
 
 /// <summary>
+/// Class with the only function to be internal to Fudgets, so only the gameplay plugin can access it and set the Fudget's
+/// static __game_plugin_was_initialized to true. Totally unnecessary bloat if the users can avoid calling documented restricted functions.
+/// </summary>
+API_CLASS(Sealed, Internal)
+class FUDGETS_API FudgetInitializer : public ScriptingObject
+{
+    using Base = ScriptingObject;
+    DECLARE_SCRIPTING_TYPE(FudgetInitializer);
+public:
+    ;
+private:
+
+    /// <summary>
+    /// Only called from the game plugin Initialize code. Makes the IsInRunningGame return true or false based on the argument
+    /// </summary>
+    API_FUNCTION() void SetGamePluginInitialized(bool init);
+};
+
+/// <summary>
 /// The Actor that represents the UI system in the scene tree. It initializes renderers to draw the controls and handles
 /// input and other event forwarding
 /// </summary>
@@ -123,6 +142,11 @@ public:
     /// Finalizes an instance of the <see cref="UICanvas"/> class.
     /// </summary>
     ~Fudget();
+
+    /// <summary>
+    /// True if the game is currently running either in editor or cooked game.
+    /// </summary>
+    API_PROPERTY() bool IsInRunningGame() const { return _game_plugin_was_initialized; }
 
     //// TODO: work around the shortcoming of unsupported delegate marshalling with return value or refs
     ///// <summary>
@@ -403,6 +427,9 @@ public:
     /*internal*/ void EndPlay() override;
     void OnDeleteObject() override;
 private:
+    // Set to true when the game plugin initializes and false when it uninitializes.
+    static bool _game_plugin_was_initialized;
+
     void Setup();
     void OnUpdate();
 
@@ -468,6 +495,7 @@ private:
     mutable Float2 _saved_size = Float2(500.f);
 
 
+    friend class FudgetInitializer;
     friend class FudgetRenderer;
     friend class FudgetRenderer2D;
 

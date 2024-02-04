@@ -177,6 +177,22 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
 }
 
 
+// FudgetInitializer
+
+
+bool Fudget::_game_plugin_was_initialized = false;
+
+void FudgetInitializer::SetGamePluginInitialized(bool init)
+{
+    Fudget::_game_plugin_was_initialized = init;
+}
+
+FudgetInitializer::FudgetInitializer(const SpawnParams &params) : Base(params)
+{
+}
+
+// Fudget
+
 
 Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetGUIRoot>(this))
 {
@@ -464,6 +480,8 @@ void Fudget::Setup()
 {
     if (_isLoading)
         return;
+
+    _guiRoot->Initialize();
 
     switch (_renderMode)
     {

@@ -3,12 +3,26 @@ using FlaxEngine;
 
 namespace Fudgets
 {
+    internal partial class FudgetInitializer
+    {
+        public void Initialize()
+        {
+            SetGamePluginInitialized(true);
+        }
+        public void Uninitialize()
+        {
+            SetGamePluginInitialized(false);
+        }
+    }
+
     /// <summary>
     /// The sample game plugin.
     /// </summary>
     /// <seealso cref="FlaxEngine.GamePlugin" />
     public class FudgetsPlugin : GamePlugin
     {
+        private FudgetInitializer fudgetInitializer = null;
+
         /// <inheritdoc />
         public FudgetsPlugin()
         {
@@ -32,9 +46,11 @@ namespace Fudgets
         {
             base.Initialize();
 
-            Debug.Log("Hello from plugin code!");
+            fudgetInitializer = new FudgetInitializer();
+            fudgetInitializer.Initialize();
 
-            FudgetThemes.Initialize();
+            FudgetThemes.Initialize(true);
+            FudgetThemes.InitializeManaged(true);
         }
 
         /// <inheritdoc />
@@ -42,8 +58,12 @@ namespace Fudgets
         {
             // Use it to cleanup data
 
-            FudgetThemes.UninitializeManaged();
-            FudgetThemes.Uninitialize();
+            FudgetThemes.RuntimeUse = true;
+            FudgetThemes.UninitializeManaged(true);
+            FudgetThemes.Uninitialize(true);
+
+            fudgetInitializer.Uninitialize();
+            fudgetInitializer = null;
 
             base.Deinitialize();
         }

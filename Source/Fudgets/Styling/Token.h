@@ -9,7 +9,6 @@
 API_STRUCT() struct FUDGETS_API FudgetToken
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetToken)
-	//static FUDGETS_API struct ScriptingTypeInitializer TypeInitializer;
 
 	FORCE_INLINE FudgetToken(int32 val)
 	{

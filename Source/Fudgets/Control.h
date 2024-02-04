@@ -283,6 +283,11 @@ public:
 	/// <param name="value">The control's new name</param>
 	API_PROPERTY() void SetName(String value);
 
+	/// <summary>
+	/// True if the control is in a UI hierarchy, created in the game scene and the game is currently running.
+	/// </summary>
+	API_PROPERTY() bool IsInRunningGame() const;
+
 	// Size and position
 
 	/// <summary>
@@ -1071,8 +1076,8 @@ public:
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
 	/// <summary>
-	/// Returns a value for the control based on a theme token. The returned value depends on both the active style and
-	/// the theme currently set for this control.
+	/// Returns a value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token associated with the value in the active style</param>
 	/// <param name="result">Variable that receives the value</param>
@@ -1080,8 +1085,8 @@ public:
 	API_FUNCTION() virtual bool GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result);
 
 	/// <summary>
-	/// Returns a color for the control based on a theme token. The returned value depends on both the active style and
-	/// the theme currently set for this control.
+	/// Returns a color for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token associated with the color in the active style</param>
 	/// <param name="result">Variable that receives the color</param>
@@ -1089,57 +1094,56 @@ public:
 	API_FUNCTION() virtual bool GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result);
 
 	/// <summary>
-	/// Returns a float value for the control based on a theme token. The returned value depends on both the active style
-	/// and the theme currently set for this control.
+	/// Returns a float value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token associated with the float value in the active style</param>
 	/// <param name="result">Variable that receives the float</param>
 	/// <returns>Whether the token was found as a valid float token</returns>
 	API_FUNCTION() virtual bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
 
-	///// <summary>
-	///// Returns settings for filling a rectangular area for the control based on a theme token. The functions result is
-	///// valid both if the token refers to a simple color or if it refers to the FudgetDrawArea structure. In the
-	///// first case, the area type will be set to Color.
-	///// The returned value depends on both the active style and the theme currently set for this control.
-	///// </summary>
-	///// <param name="token">Token associated with the FudgetDrawArea value in the active style</param>
-	///// <param name="result">Variable that receives the settings</param>
-	///// <returns>Whether the token was found and references a valid fill area settings object</returns>
-	//API_FUNCTION() bool GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
-
 	/// <summary>
 	/// Use this function to check settings for a font in the style, when font creation is not necessary.
 	/// To create the font and get its cached value directly, call GetStyleFont instead.
 	/// Returns settings for a font asset, which includes its type token, size and styles. 
-	/// The returned value depends on both the active style and the theme currently set for this control.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token for the FudgetFontSettings value in the active style</param>
 	/// <param name="result">Structure with font creation settings</param>
-	/// <returns>Whether the token was found and references a valid font settings object</returns>
+	/// <returns>Whether the token with the correct type was found and the result references a valid font settings object</returns>
 	API_FUNCTION() bool GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result);
 
 	/// <summary>
-	/// Returns a struct with a font object and the settings that were used to create it. The control might have
-	/// to create the font the first time this function is called. In case/ any font data should be updated, call
-	/// ResetCreatedFonts.
-	/// The returned value depends on both the active style and the theme currently set for this control.
+	/// Sets result to a font object and the settings that were used to create it. The control might have
+	/// to create the font the first time this function is called. In case any font data should be updated,
+	/// call ResetCreatedFonts.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token for a FudgetFontSettings value in the active style</param>
 	/// <param name="result">Structure with font object and its settings</param>
-	/// <returns></returns>
-	API_FUNCTION() bool GetStyleFont(FudgetToken token, API_PARAM(OUT) FudgetFont &result);
+	/// <returns>Whether the token was found and the result references a valid font object</returns>
+	API_FUNCTION() bool GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &result);
 
 	/// <summary>
 	/// Clears cached font data that was generated by calls to GetStyleFont.
 	/// </summary>
 	API_FUNCTION() void ResetCreatedFonts();
 
+	/// <summary>
+	/// Tries to get a draw area settings for the passed token. The result will be a valid draw area
+	/// whether the original value is a draw area, a color, a texture or a struct holding these values.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token"></param>
+	/// <param name="result"></param>
+	/// <returns></returns>
+	API_FUNCTION() bool GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
+
 	// Drawing with styles
 
 	/// <summary>
-	/// Gets the value from the current style, and if it's a color or a FudgetDrawArea structure, uses that to
-	/// draw in the rectangle.
+	/// Tries to draw the rectangular area with a draw area setting found for the token. The value referenced
+	/// by the token can be anything that GetStyleDrawArea returns a valid result for.
 	/// </summary>
 	/// <param name="token">Token to look for in the style for the area settings</param>
 	/// <param name="rect">Rectangle to draw int</param>
