@@ -19,7 +19,7 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
 	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
 	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
-	_g2l_was_cached(false), _changing(false), _updating_registered(false), _style(nullptr), _cached_style(nullptr),
+	_g2l_was_cached(false), _clipping_count(0), _changing(false), _updating_registered(false), _style(nullptr), _cached_style(nullptr),
 	_theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
@@ -771,6 +771,21 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size
 	DrawArea(area, Rectangle(pos, size));
 }
 
+void FudgetControl::PushClip(const Rectangle &rect)
+{
+	CacheGlobalToLocal();
+	Render2D::PushClip(CachedLocalToGlobal(rect));
+
+	++_clipping_count;
+}
+
+void FudgetControl::PopClip()
+{
+	if (_clipping_count == 0)
+		return;
+	--_clipping_count;
+	Render2D::PopClip();
+}
 
 void FudgetControl::ClearStyleCache(bool inherited)
 {
@@ -900,31 +915,55 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 	return false;
 }
 
-//bool FudgetControl::GetStyleFillSettings(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
-//{
-//	FudgetStyle *style = GetActiveStyle();
-//	if (style == nullptr)
-//		return false;
-//	Variant var;
-//	if (style->GetResourceValue(GetActiveTheme(), token, var))
-//	{
-//		if (var.Type.Type == VariantType::Color)
-//		{
-//			result.Tint = var.AsColor();
-//			result.AreaType = FudgetFillType::Color;
-//			return true;
-//		}
-//
-//		const FudgetDrawArea *ptr = var.AsStructure<FudgetDrawArea>();
-//		if (ptr == nullptr)
-//			return false;
-//
-//		result = *ptr;
-//		return true;
-//		// TODO: cache if needed
-//	}
-//	return false;
-//}
+bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = 0;
+		return false;
+	}
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		if (var.Type.Type == VariantType::Int)
+		{
+			result = var.AsInt;
+			return true;
+		}
+		// TODO: cache if needed
+	}
+	result = 0;
+	return false;
+}
+
+bool FudgetControl::GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadding &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = FudgetPadding();
+		return false;
+	}
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		if (var.Type.Type == VariantType::Structure)
+		{
+			const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+			if (padding == nullptr)
+			{
+				result = FudgetPadding();
+				return false;
+			}
+			result = *padding;
+			return true;
+		}
+		// TODO: cache if needed
+	}
+	result = FudgetPadding();
+	return false;
+}
 
 bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
 {

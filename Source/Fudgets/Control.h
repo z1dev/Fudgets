@@ -1032,6 +1032,17 @@ public:
 	/// <param name="size">Size of the rectangle</param>
 	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size) const;
 
+	/// <summary>
+	/// Wrapper to Render2D's PushClip
+	/// </summary>
+	/// <param name="rect">Clipping rectangle in local coordinates</param>
+	API_FUNCTION() void PushClip(const Rectangle &rect);
+
+	/// <summary>
+	/// Wrapper to Render2D's PopClip. Prevents calling more times than the number of times PushClip was called.
+	/// </summary>
+	API_FUNCTION() void PopClip();
+
 	// Styling
 
 	/// <summary>
@@ -1082,7 +1093,7 @@ public:
 	/// <param name="token">Token associated with the value in the active style</param>
 	/// <param name="result">Variable that receives the value</param>
 	/// <returns>Whether the token was found as a valid value token</returns>
-	API_FUNCTION() virtual bool GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result);
+	API_FUNCTION() bool GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result);
 
 	/// <summary>
 	/// Returns a color for the control based on a theme token.
@@ -1091,16 +1102,34 @@ public:
 	/// <param name="token">Token associated with the color in the active style</param>
 	/// <param name="result">Variable that receives the color</param>
 	/// <returns>Whether the token was found as a valid color token</returns>
-	API_FUNCTION() virtual bool GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result);
+	API_FUNCTION() bool GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result);
 
 	/// <summary>
 	/// Returns a float value for the control based on a theme token.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
-	/// <param name="token">Token associated with the float value in the active style</param>
-	/// <param name="result">Variable that receives the float</param>
+	/// <param name="token">Token associated with the float in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
 	/// <returns>Whether the token was found as a valid float token</returns>
-	API_FUNCTION() virtual bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
+	API_FUNCTION() bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
+
+	/// <summary>
+	/// Returns an int value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the int in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether the token was found as a valid int token</returns>
+	API_FUNCTION() bool GetStyleInt(FudgetToken token, API_PARAM(Out) int &result);
+
+	/// <summary>
+	/// Returns a padding value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the padding value in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether the token was found as a valid padding token</returns>
+	API_FUNCTION() bool GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadding &result);
 
 	/// <summary>
 	/// Use this function to check settings for a font in the style, when font creation is not necessary.
@@ -1212,6 +1241,8 @@ private:
 	mutable Float2 _cached_global_to_local_translation;
 	// True when _cached_global_to_local_translation is valid.
 	mutable bool _g2l_was_cached;
+
+	int _clipping_count;
 
 	// Used locally to avoid double calling functions from the parent.
 	bool _changing;

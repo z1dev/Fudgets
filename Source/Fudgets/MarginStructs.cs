@@ -41,13 +41,22 @@ public partial struct FudgetPadding
         Bottom = value;
     }
 
+    /// <summary>
+    /// Returns a rectangle that results in padding the passed value
+    /// </summary>
+    /// <param name="rect">Rectangle to pad</param>
+    public Rectangle Padded(in Rectangle rect)
+    {
+        return new Rectangle(rect.Location + new Float2(Left, Top), rect.Size - new Float2(Width, Height) );
+    }
+
 
     /// <summary>
-    /// Left and right padding.
+    /// Left and right padding added together.
     /// </summary>
     public readonly float Width => Left + Right;
     /// <summary>
-    /// Top and bottom padding.
+    /// Top and bottom padding added together.
     /// </summary>
     public readonly float Height => Top + Bottom;
     /// <summary>

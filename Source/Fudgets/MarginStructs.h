@@ -2,7 +2,7 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector4.h"
-
+#include "Engine/Core/Math/Rectangle.h"
 
 /// <summary>
 /// Padding inside any element that contains others, like a slot in a layout or a drawn border in a style.
@@ -24,10 +24,54 @@ struct FUDGETS_API FudgetPadding
 	{
 	}
 
+	FudgetPadding(const FudgetPadding &other) : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
+	{
+	}
+
+	FudgetPadding(FudgetPadding &&other) noexcept : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
+	{
+	}
+
+	FudgetPadding& operator=(const FudgetPadding &other)
+	{
+		Left = other.Left;
+		Right = other.Right;
+		Top = other.Top;
+		Bottom = other.Bottom;
+		return *this;
+	}
+
+	FudgetPadding& operator=(FudgetPadding &&other) noexcept
+	{
+		Left = other.Left;
+		Right = other.Right;
+		Top = other.Top;
+		Bottom = other.Bottom;
+		return *this;
+	}
+
+	/// <summary>
+	/// Converts padding to a Float4 with left, right, top, bottom values in this order.
+	/// </summary>
 	Float4 AsFloat4() const { return Float4(Left, Right, Top, Bottom); }
 
-	float Width() const { return Left + Right; }
-	float Height() const { return Top + Bottom; }
+	/// <summary>
+	/// Returns a rectangle that results in padding the passed value
+	/// </summary>
+	/// <param name="rect">Rectangle to pad</param>
+	Rectangle Padded(const Rectangle &rect) const
+	{
+		return Rectangle(rect.Location + Float2(Left, Top), rect.Size - Float2(Width(), Height()) );
+	}
+
+	/// <summary>
+	/// Left and right padding added together.
+	/// </summary>
+	FORCE_INLINE float Width() const { return Left + Right; }
+	/// <summary>
+	/// Top and bottom padding added together.
+	/// </summary>
+	FORCE_INLINE float Height() const { return Top + Bottom; }
 
 	/// <summary>
 	/// Padding to the left
