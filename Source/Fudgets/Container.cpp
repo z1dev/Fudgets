@@ -61,6 +61,7 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
     control->_parent = this;
     control->_index = index;
     control->_guiRoot = GetGUIRoot();
+    control->_parent_disabled = _parent_disabled || !_enabled;
     if ((control->_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
         control->_flags = control->GetInitFlags() & ~(FudgetControlFlags::AlwaysOnTop);
 
@@ -86,6 +87,7 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
     control->_parent = nullptr;
     control->_index = -1;
     control->_guiRoot = nullptr;
+    control->_parent_disabled = false;
     if (!control->_changing)
         control->RegisterToUpdate(false);
 
@@ -176,6 +178,14 @@ void FudgetContainer::DeleteAll()
     }
     if (_layout != nullptr)
         _layout->AllDeleted();
+}
+
+void FudgetContainer::SetEnabled(bool value)
+{
+    Base::SetEnabled(value);
+    if (!_parent_disabled)
+        SetParentDisabledRecursive();
+    // TODO: when implementing events, make sure the enabled event is only sent out after this recursive call
 }
 
 Float2 FudgetContainer::GetHintSize() const
@@ -514,6 +524,20 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 FudgetControlFlags FudgetContainer::GetInitFlags() const
 {
     return Base::GetInitFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
+}
+
+void FudgetContainer::SetParentDisabled(bool value)
+{
+    bool enabled = IsVirtuallyEnabled();
+    Base::SetParentDisabled(value);
+    if (enabled != value)
+        SetParentDisabledRecursive();
+}
+
+void FudgetContainer::SetParentDisabledRecursive()
+{
+    for (FudgetControl *c : _children)
+        c->SetParentDisabled(!IsVirtuallyEnabled());
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)

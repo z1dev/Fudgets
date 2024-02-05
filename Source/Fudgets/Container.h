@@ -148,6 +148,10 @@ public:
     /// </summary>
     API_FUNCTION() void DeleteAll();
 
+    /// <inheritdoc />
+    void SetEnabled(bool value) override;
+
+
     /// <summary>
     /// Gets the preferred size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred size, this is the preferred size of the container itself.
@@ -350,7 +354,11 @@ public:
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
+
+    /// <inheritdoc />
+    void SetParentDisabled(bool value) override;
 private:
+    void SetParentDisabledRecursive();
 
     /// <summary>
     /// Directly changes the position and size of the control. Only to be called by FudgetLayout. This derived

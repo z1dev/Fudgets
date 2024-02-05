@@ -19,8 +19,8 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
 	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
 	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
-	_g2l_was_cached(false), _clipping_count(0), _changing(false), _updating_registered(false), _style(nullptr), _cached_style(nullptr),
-	_theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
+	_g2l_was_cached(false), _clipping_count(0), _changing(false), _updating_registered(false), _enabled(true), _parent_disabled(false),
+	_style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
 
@@ -345,6 +345,16 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(this);
 	if (!value && root->GetFocusedControl() == this)
 		root->SetFocusedControl(nullptr);
+}
+
+void FudgetControl::SetEnabled(bool value)
+{
+	_enabled = value;
+}
+
+bool FudgetControl::IsVirtuallyEnabled() const
+{
+	return _enabled && !_parent_disabled;
 }
 
 void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color) const
@@ -871,6 +881,28 @@ bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &res
 	return false;
 }
 
+bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Variant();
+		return false;
+	}
+
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			result = var;
+			return true;
+		}
+	}
+	result = Variant();
+	return false;
+}
+
 bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result)
 {
 	FudgetStyle *style = GetActiveStyle();
@@ -888,6 +920,31 @@ bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &resul
 			return true;
 		}
 		// TODO: cache if needed
+	}
+	result = Color();
+	return false;
+}
+
+bool FudgetControl::GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out) Color &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Color();
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Color)
+			{
+				result = var.AsColor();
+				return true;
+			}
+			// TODO: cache if needed
+		}
 	}
 	result = Color();
 	return false;
@@ -915,6 +972,31 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
 	return false;
 }
 
+bool FudgetControl::GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out) float &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = 0.0f;
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Float)
+			{
+				result = var.AsFloat;
+				return true;
+			}
+			// TODO: cache if needed
+		}
+	}
+	result = 0.0f;
+	return false;
+}
+
 bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
 {
 	FudgetStyle *style = GetActiveStyle();
@@ -932,6 +1014,31 @@ bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
 			return true;
 		}
 		// TODO: cache if needed
+	}
+	result = 0;
+	return false;
+}
+
+bool FudgetControl::GetStyleInt(const Span<FudgetToken> &tokens, API_PARAM(Out) int &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = 0;
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Int)
+			{
+				result = var.AsInt;
+				return true;
+			}
+			// TODO: cache if needed
+		}
 	}
 	result = 0;
 	return false;
@@ -965,6 +1072,37 @@ bool FudgetControl::GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadd
 	return false;
 }
 
+bool FudgetControl::GetStylePadding(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetPadding &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = FudgetPadding();
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Structure)
+			{
+				const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+				if (padding == nullptr)
+				{
+					result = FudgetPadding();
+					return false;
+				}
+				result = *padding;
+				return true;
+			}
+			// TODO: cache if needed
+		}
+	}
+	result = FudgetPadding();
+	return false;
+}
+
 bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
 {
 	if (!token.IsValid())
@@ -992,6 +1130,35 @@ bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) Fudge
 		result = *ptr;
 		return true;
 		// TODO: cache if needed
+	}
+	result = FudgetFontSettings();
+	return false;
+}
+
+bool FudgetControl::GetStyleFontSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFontSettings &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = FudgetFontSettings();
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			const FudgetFontSettings *ptr = var.AsStructure<FudgetFontSettings>();
+			if (ptr == nullptr)
+			{
+				result = FudgetFontSettings();
+				return false;
+			}
+
+			result = *ptr;
+			return true;
+			// TODO: cache if needed
+		}
 	}
 	result = FudgetFontSettings();
 	return false;
@@ -1039,6 +1206,45 @@ bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &r
 	return true;
 }
 
+bool FudgetControl::GetStyleFont(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFont &result)
+{
+	Variant var;
+
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		auto it = _cached_fonts.find(tokens[ix]);
+		if (it != _cached_fonts.end())
+		{
+			result = it->second;
+			return true;
+		}
+
+		if (!GetStyleFontSettings(tokens[ix], result.Settings))
+			continue;
+
+#if USE_EDITOR
+		FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
+
+		FontAsset *asset = FudgetThemes::GetFontAsset(result.Settings.FontToken);
+		if (asset == nullptr)
+			continue;
+
+		if (result.Settings.Bold)
+			asset = asset->GetBold();
+		else if (result.Settings.Italics)
+			asset = asset->GetItalic();
+		// TODO: No bold and italic at the same time? asset doesn't seem to support it.
+		result.Font = asset->CreateFont(result.Settings.Size);
+		_cached_fonts[tokens[ix]] = result;
+
+		return true;
+	}
+
+	result = FudgetFont();
+	return false;
+}
+
 void FudgetControl::ResetCreatedFonts()
 {
 	_cached_fonts.clear();
@@ -1084,8 +1290,44 @@ bool FudgetControl::GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDra
 		return true;
 	}
 
+	result = FudgetDrawArea();
+	return false;
+}
 
+bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result)
+{
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (!GetStyleValue(tokens[ix], var))
+			continue;
 
+		if (var.Type.Type == VariantType::Color)
+		{
+			result = FudgetDrawArea(var.AsColor());
+			return true;
+		}
+
+		if (var.Type.Type == VariantType::Asset)
+		{
+			AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
+			if (asset.Get() == nullptr)
+				continue;
+
+			result = FudgetDrawArea(asset.Get(), true, false);
+			return true;
+		}
+
+		if (var.Type.Type == VariantType::Structure)
+		{
+			const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
+			if (area == nullptr)
+				continue;
+
+			result = *area;
+			return true;
+		}
+	}
 
 	result = FudgetDrawArea();
 	return false;
@@ -1095,6 +1337,16 @@ void FudgetControl::DrawStyleArea(FudgetToken token, const Rectangle &rect, Colo
 {
 	FudgetDrawArea areaVar;
 	if (!GetStyleDrawArea(token, areaVar))
+		return;
+
+	areaVar.Tint *= tint;
+	DrawArea(areaVar, rect);
+}
+
+void FudgetControl::DrawStyleArea(const Span<FudgetToken> &tokens, const Rectangle &rect, Color tint)
+{
+	FudgetDrawArea areaVar;
+	if (!GetStyleDrawArea(tokens, areaVar))
 		return;
 
 	areaVar.Tint *= tint;
@@ -1148,6 +1400,11 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 		if (parent != nullptr)
 			SetParent(parent);
 	}
+}
+
+void FudgetControl::SetParentDisabled(bool value)
+{
+	_parent_disabled = value;
 }
 
 void FudgetControl::DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point) const
