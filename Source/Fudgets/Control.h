@@ -99,67 +99,85 @@ enum class FudgetControlFlags
 	/// </summary>
 	None = 0,
 	/// <summary>
-	/// FudgetContainers will add this flag themselves for derived classes, while other classes should
-	/// never set this
+	/// Controls with this flag will refresh their flags from GetInitFlags when added to a parent. By default,
+	/// controls start with this flag and nothing else. Make sure to override GetInitFlags to set the proper flags.
 	/// </summary>
-	ContainerControl = 1 << 0,
+	ResetFlags = 1 << 0,
+	/// <summary>
+	/// FudgetContainers will add this flag themselves for derived classes, while other classes should
+	/// never set this. Don't change this flag in a running game.
+	/// </summary>
+	ContainerControl = 1 << 1,
+	/// <summary>
+	/// For containers that hold other controls that together behave like a single control. The main container is
+	/// the face of the control, and should expose every property that can be changed on it and its contents.
+	/// Ignored for non-container controls.
+	/// </summary>
+	CompoundControl = 1 << 2,
 	/// <summary>
 	/// Supports mouse button up and down inputs. This should be set for any control that might not react
 	/// to mouse events by default but is not transparent. Controls can decide to handle the events per call.
 	/// </summary>
-	CanHandleMouseUpDown = 1 << 1,
+	CanHandleMouseUpDown = 1 << 3,
 	/// <summary>
 	/// Supports mouse move inputs. This can be set for any control that might not react to mouse events by
 	/// default, but is not transparent. The top control with this flag will be the only one receiving the
 	/// event if it's under the mouse.
 	/// </summary>
-	CanHandleMouseMove = 1 << 2,
+	CanHandleMouseMove = 1 << 4,
 	/// <summary>
 	/// Supports mouse enter and mouse leave events, but only while CanHandleMouseMove is also set.
 	/// </summary>
-	CanHandleMouseEnterLeave = 1 << 3,
+	CanHandleMouseEnterLeave = 1 << 5,
 	/// <summary>
 	/// Makes control "eat" all mouse messages if the mouse is over it, even if it does not have any of the
 	/// other flags for mouse events. Ignored while the mouse is captured by another control. This doesn't
 	/// prevent parents peeking at the message early (when it's implemented)
 	/// </summary>
-	BlockMouseEvents = 1 << 4,
+	BlockMouseEvents = 1 << 6,
 	/// <summary>
 	/// Set the input focus for keyboard on the control when pressing the left mouse button over it. Ignored
 	/// while another control is capturing the mouse input.
 	/// </summary>
-	FocusOnMouseLeft = 1 << 5,
+	FocusOnMouseLeft = 1 << 7,
 	/// <summary>
 	/// Set the input focus for keyboard on the control when pressing the right mouse button over it. Ignored
 	/// while another control is capturing the mouse input.
 	/// </summary>
-	FocusOnMouseRight = 1 << 6,
+	FocusOnMouseRight = 1 << 8,
 	/// <summary>
 	/// Set the mouse capture on the control when the left button is pressed down, and release it when the
 	/// same button is released.
 	/// </summary>
-	CaptureReleaseMouseLeft = 1 << 7,
+	CaptureReleaseMouseLeft = 1 << 9,
 	/// <summary>
 	/// Set the mouse capture on the control when the right button is pressed down, and release it when the
 	/// same button is released.
 	/// </summary>
-	CaptureReleaseMouseRight = 1 << 8,
+	CaptureReleaseMouseRight = 1 << 10,
 	/// <summary>
 	/// Controls with this flag will have their OnUpdate function called, by registering them automatically with
 	/// RegisterToUpdate(true). Removing the flag with SetControlFlags will also unregister them from updates.
 	/// </summary>
-	RegisterToUpdates = 1 << 9,
-	/// <summary>
-	/// Set on the control before adding it to a parent to reset its flags from GetInitFlags. Makes the flags
-	/// reset the next time the control is added to a parent.
-	/// </summary>
-	ResetFlags = 1 << 10,
+	RegisterToUpdates = 1 << 11,
 	/// <summary>
 	/// Only for top-level controls which are direct children of the gui root. It's ignored for others. Places
 	/// the top-level control above other top-level controls that don't have the AlwaysOnTop flag. Providing the
-	/// flag with GetInitFlags or changing it in SetControlFlags will change the control's position in the root.
+	/// flag in GetInitFlags or changing it in SetControlFlags will change the control's position in the root.
 	/// </summary>
-	AlwaysOnTop = 1 << 11,
+	AlwaysOnTop = 1 << 12,
+	/// <summary>
+	/// Supports key presses and releases, and character input. Normally the focused control receives these events,
+	/// if it has this flag set. Without this flag, the nearest parent will be notified of the event that has the flag.
+	/// </summary>
+	CanHandleKeyEvents = 1 << 13,
+	/// <summary>
+	/// Only considered if CanHandleKeyEvents is also set. If not set, the control won't receive key down and up events
+	/// on navigation key (usually arrow and tab key) presses, and instead let the UI use them to change which
+	/// control has the focus. If set, the control's WantsNavigationKey function is called first to decide if it wants to
+	/// get the key up and down events.
+	/// </summary>
+	CanHandleNavigationKeys = 1 << 14,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -199,21 +217,24 @@ enum class FudgetPointerInput
 /// A set of options to decide what should happen when the mouse button was pressed over a control. 
 /// </summary>
 API_ENUM()
-enum class FudgetMouseButtonResult
+enum class FudgetInputResult
 {
 	/// <summary>
-	/// The mouse button press event should be ignored. This won't let the event pass through to the control
-	/// below, but will prevent any automatic handling, like focusing the control.
+	/// The mouse or key press event should be ignored. For mouse events, this won't let the event pass through
+	/// to the control below, but will prevent any automatic handling, like changing the focused the control.
+	/// For key events, this will let the system handle the input as if no control received it.
 	/// </summary>
 	Ignore,
 	/// <summary>
-	/// The mouse button press event should be ignored for the control. The event processing will continue
-	/// and the event will be posted to the control below that expects mouse events.
+	/// The mouse or key press event should be ignored for the control. The event processing will continue
+	/// like the control didn't have the right flag to handle the event, and the event will be posted to the
+	/// control below that expects the input event.
 	/// </summary>
 	PassThrough,
 	/// <summary>
-	/// The control used the mouse event, preventing it to be sent to controls below it. Automatic handling, like
-	/// setting focus on the control is allowed, if the control has the right flags.
+	/// The control used the mouse or key event, preventing it to be sent to controls below it. For mouse events this
+	/// will let the control take focus if it has the right flag. For key events, the control takes the responsibility
+	/// of dealing with the input, preventing the system to handle it.
 	/// </summary>
 	Consume
 };
@@ -229,6 +250,13 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 	DECLARE_SCRIPTING_TYPE(FudgetControl);
 public:
 	~FudgetControl();
+
+	/// <summary>
+	/// Returns whether the Initialize function has been called once on this control. By default, the main Fudget
+	/// initializes controls after deserialization is over. During manual control creation, Initialize is called
+	/// once the control has been added oo a parent that is in the gui hierarchy
+	/// </summary>
+	API_FUNCTION() bool IsInitialized() const { return _initialized; }
 
 	/// <summary>
 	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
@@ -477,9 +505,9 @@ public:
 
 	/// <summary>
 	/// Calculates and saves the difference between global to local and stores it. This is necessary before the first
-	/// CachedGlobalToLocal or CachedLocalToGlobal call on each draw frame, but calling it once is enough. Does nothing if this
-	/// value has already been saved. The calculated value is invalidated at the start of each Draw but it can also be invalidated
-	/// with InvalidateGlobalToLocalCache
+	/// CachedGlobalToLocal or CachedLocalToGlobal call on each draw frame, but calling it once per frame is enough. Does
+	/// nothing if this value has already been saved. The calculated value is invalidated at the start of each Draw but
+	/// it can also be invalidated with InvalidateGlobalToLocalCache
 	/// </summary>
 	API_FUNCTION() void CacheGlobalToLocal() const;
 
@@ -492,32 +520,32 @@ public:
 	API_FUNCTION() void InvalidateGlobalToLocalCache() const;
 
 	/// <summary>
-	/// Converts a coordinate from local control space to global UI space. Can be used multiple times after CacheGlobalToLocal was
-	/// called once on the current draw frame.
+	/// Converts a coordinate from local control space to global UI space. Can be used multiple times after
+	/// CacheGlobalToLocal was called once on the current draw frame.
 	/// </summary>
 	/// <param name="local">The coordinate relative to the top-left corner of the control</param>
 	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
 	API_FUNCTION() virtual Float2 CachedLocalToGlobal(Float2 local) const;
 
 	/// <summary>
-	/// Converts a coordinate from global UI space to local control space. Can be used multiple times after CacheGlobalToLocal was
-	/// called once on the current draw frame.
+	/// Converts a coordinate from global UI space to local control space. Can be used multiple times after
+	/// CacheGlobalToLocal was called once on the current draw frame.
 	/// </summary>
 	/// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
 	/// <returns>The coordinate relative to the top-left corner of the control</returns>
 	API_FUNCTION() virtual Float2 CachedGlobalToLocal(Float2 global) const;
 
 	/// <summary>
-	/// Converts a rectangle from local control space to global UI space. Can be used multiple times after CacheGlobalToLocal was
-	/// called once on the current draw frame.
+	/// Converts a rectangle from local control space to global UI space. Can be used multiple times after
+	/// CacheGlobalToLocal was called once on the current draw frame.
 	/// </summary>
 	/// <param name="local">The rectangle with a location relative to the top-left corner of the control</param>
 	/// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
 	API_FUNCTION() virtual Rectangle CachedLocalToGlobal(const Rectangle &local) const;
 
 	/// <summary>
-	/// Converts a rectangle from global UI space to local control space. Can be used multiple times after CacheGlobalToLocal was
-	/// called once on the current draw frame.
+	/// Converts a rectangle from global UI space to local control space. Can be used multiple times after
+	/// CacheGlobalToLocal was called once on the current draw frame.
 	/// </summary>
 	/// <param name="global">TThe rectangle with a location relative to the top-left corner of the UI screen</param>
 	/// <returns>The coordinate relative to the top-left corner of the control</returns>
@@ -554,45 +582,32 @@ public:
 	// Input:
 
 	/// <summary>
-	/// Called when a mouse button was pressed over this control. The control can start capturing
-	/// the mouse with StartMouseCapture to be sure to receive OnMouseUp and OnMouseMove even when the
-	/// mouse pointer is not over it.
-	/// Return true if the control wants to prevent other controls below to get the mouse event.
+	/// Called when a mouse button was pressed over this control. The control can start capturing the mouse
+	/// with StartMouseCapture to be sure to receive OnMouseUp and OnMouseMove even when the mouse pointer is
+	/// not over it.
+	/// The control needs to have the CanHandleMouseUpDown flag. If CaptureReleaseMouse* flags are set, the
+	/// mouse will be automatically captured on the corresponding mouse input.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
 	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just pressed</param>
 	/// <param name="double_click">Whether the call is the result of double clicking</param>
 	/// <returns>One of the result options that decide how to deal with the mouse event</returns>
-	API_FUNCTION() virtual FudgetMouseButtonResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) { return FudgetMouseButtonResult::Consume; }
+	API_FUNCTION() virtual FudgetInputResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) { return FudgetInputResult::Consume; }
 
 	/// <summary>
-	/// Called when a mouse button was released over this control. The control should stop capturing
-	/// the mouse with StopMouseCapture if it started capturing it on OnMouseDown for the same button.
-	/// Return true if the control wants to prevent other controls below to get the mouse event. This
-	/// should mirror the result of OnMouseDown.
+	/// Called when a mouse button was released over this control. The control should stop capturing the mouse
+	/// with StopMouseCapture if it started capturing it on OnMouseDown for the same button. Return true if the
+	/// control wants to prevent other controls below to get the mouse event. This should mirror the result of
+	/// OnMouseDown.
+	/// The control needs to have the CanHandleMouseUpDown flag. If CaptureReleaseMouse* flags are
+	/// set, the mouse will be automatically released on the corresponding mouse input.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
 	/// <param name="global_pos">Global mouse position</param>
 	/// <param name="button">Button that was just released</param>
 	/// <returns>Prevent OnMouseUp reaching other controls or not</returns>
 	API_FUNCTION() virtual bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) { return true; }
-
-	/// <summary>
-	/// Called when a key is pressed while the control has the keyboard focus.
-	/// </summary>
-	/// <param name="key">The key</param>
-	API_FUNCTION() virtual void OnKeyDown(KeyboardKeys key) {}
-
-	/// <summary>
-	/// Called when a key is released that was pressed while this control had the keyboard focus, or the focus
-	/// shifts to a different control and the key up was not received yet by this control.
-	/// </summary>
-	/// <param name="key">The key</param>
-	API_FUNCTION() virtual void OnKeyUp(KeyboardKeys key) {}
-
-	API_FUNCTION() virtual void OnCharInput(Char ch) {}
-
 
 	/// <summary>
 	/// Called during mouse event handling to make sure this control wants to handle mouse events at
@@ -605,14 +620,18 @@ public:
 	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) { return true; }
 
 	/// <summary>
-	/// Notification that the mouse just moved over this control
+	/// Notification that the mouse moved while over this control, or while the control was capturing
+	/// the mouse. The control needs to have the CanHandleMouseMove flag. This function is not called
+	/// if the mouse is currently captured by a different control.
 	/// </summary>
 	/// <param name="pos">Local mouse position</param>
 	/// <param name="global_pos">Global mouse position</param>
 	API_FUNCTION() virtual void OnMouseMove(Float2 pos, Float2 global_pos) { }
 
 	/// <summary>
-	/// Notification that the mouse just moved over this control somewhere
+	/// Notification that the mouse just moved over this control or before it starts receiving mouse
+	/// move events. The control needs the CanHandleMouseEnterLeave flag. This function is not called
+	/// if the mouse is currently captured by a different control.
 	/// </summary>
 	/// <param name="pos">Local mouse position></param>
 	/// <param name="global_pos">Global mouse position</param>
@@ -621,14 +640,9 @@ public:
 	/// <summary>
 	/// Notification that the mouse just left this control while it wasn't capturing it. It's also
 	/// called if the control was capturing the mouse but released it, and the mouse wasn't over it.
+	/// The control needs the CanHandleMouseEnterLeave flag.
 	/// </summary>
 	API_FUNCTION() virtual void OnMouseLeave() {}
-
-	/// <summary>
-	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
-	/// </summary>
-	/// <returns>The root UI container</returns>
-	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
 
 	/// <summary>
 	/// Call in OnMouseDown to direct future mouse events to this control until ReleaseMouseCapture is called.
@@ -646,6 +660,42 @@ public:
 	API_FUNCTION() virtual void ReleaseMouseInput();
 
 	/// <summary>
+	/// Called if the control has the CanHandleKeyEvents and CanHandleNavigationKeys flags, to decide if it wants
+	/// to use the key or lets the UI system use it. Returning true here and Ignore from the key down event will also
+	/// allow the UI to handle the navigation event.
+	/// </summary>
+	/// <param name="key">The navigation key</param>
+	/// <returns>Whether the control wants to get OnKeyDown and OnKeyUp events for the given navigation key</returns>
+	API_FUNCTION() virtual bool WantsNavigationKey(KeyboardKeys key) { return false; }
+
+	/// <summary>
+	/// Called when a key is pressed while the control has the keyboard focus. The control needs to have the
+	/// CanHandleKeyEvents flag.
+	/// </summary>
+	/// <param name="key">The key that was pressed</param>
+	/// <returns>How the UI should continue processing the key input</returns>
+	API_FUNCTION() virtual FudgetInputResult OnKeyDown(KeyboardKeys key) { return FudgetInputResult::Consume; }
+
+	/// <summary>
+	/// Called when a key is released that was pressed while this control had the keyboard focus, or the focus
+	/// shifts to a different control and the key up was not received by this control yet. Return true if the
+	/// control wants to prevent other controls below to get the key event. This should mirror the result of
+	/// OnKeyDown.
+	/// The control needs to have the CanHandleKeyEvents flag.
+	/// </summary>
+	/// <param name="key">The key that was released</param>
+	/// <returns>How the UI should continue processing the key input</returns>
+	API_FUNCTION() virtual bool OnKeyUp(KeyboardKeys key) { return true; }
+
+	/// <summary>
+	/// A key was pressed over this control while it had the keyboard focus, which could be translated to a character.
+	/// The control needs to have the CanHandleKeyEvents flag.
+	/// </summary>
+	/// <param name="ch">The character resulting from the key press</param>
+	/// <returns>How the UI should continue processing the key input</returns>
+	API_FUNCTION() virtual FudgetInputResult OnCharInput(Char ch) { return FudgetInputResult::Consume; }
+
+	/// <summary>
 	/// Returns whether this control has the keyboard input focus or not. Focused controls can have a distinct
 	/// appearance to make it easy to distinguish between their focused and unfocused states.
 	/// </summary>
@@ -658,10 +708,16 @@ public:
 	API_PROPERTY() virtual void SetFocused(bool value);
 
 	/// <summary>
+	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
+	/// </summary>
+	/// <returns>The root UI container</returns>
+	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
+
+	/// <summary>
 	/// For controls that can handle input or be focused, indicates whether this control wants to get keyboard focus
-	/// or is ready to handle other input. For containers, only enabled containers' child controls can behave like
+	/// or is ready to handle other input. For containers, only enabled containers' child controls should  behave like
 	/// they are enabled.
-	/// Check IsParentEnabled() to see if this control is enabled and all its parents in the hierarchy are also
+	/// Check IsVirtuallyEnabled() to see if this control is enabled and all its parents in the hierarchy are also
 	/// enabled.
 	/// </summary>
 	API_PROPERTY() bool GetEnabled() const { return _enabled; }
@@ -1302,6 +1358,9 @@ public:
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
 protected:
+	// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
+	// the base Initialize if it is overriden.
+	API_FUNCTION() virtual void Initialize();
 
 	/// <summary>
 	/// Called when the control is added to a parent and the ResetFlags flag is present among the flags (which
@@ -1350,6 +1409,9 @@ private:
 	int _index;
 	String _name;
 
+	// Will be set to true after the Initialize function ran once
+	bool _initialized;
+	
 	FudgetControlFlags _flags;
 
 	Float2 _pos;

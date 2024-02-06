@@ -11,40 +11,6 @@ class Fudget;
 
 enum class FudgetDirtType : uint8;
 
-// TODO: use these
-
-///// <summary>
-///// Vertical alignment of a layout inside a container if the container's size is independent of the layout
-///// </summary>
-//API_ENUM()
-//enum class FudgetLayoutVertAlign
-//{
-//    /// <summary>
-//    /// The layout is attached to the top of the container.
-//    /// </summary>
-//    Top,
-//    /// <summary>
-//    /// The layout is attached to the bottom of the container.
-//    /// </summary>
-//    Bottom,
-//};
-//
-///// <summary>
-///// Horizontal alignment of a layout inside a container if the container's size is independent of the layout
-///// </summary>
-//API_ENUM()
-//enum class FudgetLayoutHorzAlign
-//{
-//    /// <summary>
-//    /// The layout is attached to the left of the container.
-//    /// </summary>
-//    Left,
-//    /// <summary>
-//    /// The layout is attached to the right of the container.
-//    /// </summary>
-//    Right,
-//};
-
 
 /// <summary>
 /// Container class that can have child controls and a layout to position the controls
@@ -188,7 +154,7 @@ public:
     /// width, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <returns>Using the layout's width or not</returns>
-    API_PROPERTY() bool GetUsingLayoutWidth() const { return _width_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutHintWidth() const { return _hint_width_from_layout; }
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
@@ -196,7 +162,7 @@ public:
     /// width, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <param name="value">Use the layout's width or not</param>
-    API_PROPERTY() void SetUsingLayoutWidth(bool value);
+    API_PROPERTY() void SetUsingLayoutHintWidth(bool value);
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
@@ -204,7 +170,7 @@ public:
     /// height, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <returns>Using the layout's height or not</returns>
-    API_PROPERTY() bool GetUsingLayoutHeight() const { return _height_from_layout; }
+    API_PROPERTY() bool GetUsingLayoutHintHeight() const { return _hint_height_from_layout; }
 
     /// <summary>
     /// Determines if the height of the container is calculated based on the layout or the preferred size is
@@ -212,7 +178,7 @@ public:
     /// height, this setting will be ignored, and the container will have to rely on its own hint size.
     /// </summary>
     /// <param name="value">Use the layout's height or not</param>
-    API_PROPERTY() void SetUsingLayoutHeight(bool value);
+    API_PROPERTY() void SetUsingLayoutHintHeight(bool value);
 
     /// <summary>
     /// Determines if the minimum width of the container is calculated by the layout or it is set directly on
@@ -282,8 +248,10 @@ public:
     /// <summary>
     /// Requests the immediate recalculation of the controls and their sizes inside the container's layout. Only those sizes are
     /// recalculated that are made dirty by calling MarkLayoutDirty directly or that have changed.
+    /// In the container's implementation, if no layout is present, the controls are moved to their requested size and position.
+    /// Compound controls can use this function to layout their children.
     /// </summary>
-    API_FUNCTION() void RequestLayout();
+    API_FUNCTION() virtual void RequestLayout();
 
     /// <summary>
     /// Called by the parent containers for all controls in the tree of controls to draw the control when rendering.
@@ -312,6 +280,9 @@ public:
     /// </summary>
     /// <param name="dirt_flags">Flags of what changed</param>
     void SizeOrPosModified(FudgetDirtType dirt_flags) override final;
+
+    /// <inheritdoc />
+    void SetControlFlags(FudgetControlFlags flags) override;
 
     /// <summary>
     /// Determines if the control is allowed to update its position directly, instead of being positioned
@@ -353,6 +324,9 @@ public:
 
 protected:
     /// <inheritdoc />
+    void Initialize() override;
+
+    /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
 
     /// <inheritdoc />
@@ -371,8 +345,8 @@ private:
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;
 
-    bool _width_from_layout;
-    bool _height_from_layout;
+    bool _hint_width_from_layout;
+    bool _hint_height_from_layout;
 
     bool _min_width_from_layout;
     bool _max_width_from_layout;

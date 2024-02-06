@@ -17,7 +17,7 @@
 
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-	_guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
+	_guiRoot(nullptr), _parent(nullptr), _index(-1), _initialized(false), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
 	_hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _cached_global_to_local_translation(0.f),
 	_g2l_was_cached(false), _clipping_count(0), _changing(false), _updating_registered(false), _enabled(true), _parent_disabled(false),
 	_style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
@@ -1400,6 +1400,14 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 		if (parent != nullptr)
 			SetParent(parent);
 	}
+}
+
+void FudgetControl::Initialize()
+{
+	if (_guiRoot == nullptr)
+		return;
+
+	_initialized = true;
 }
 
 void FudgetControl::SetParentDisabled(bool value)

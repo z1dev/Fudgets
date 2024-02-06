@@ -421,9 +421,17 @@ public:
     // Tokens for general values:
 
     /// <summary>
-    /// Time in seconds while a caret is shown or hidden.
+    /// Time in seconds while a caret in text controls is shown or hidden.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken CaretBlinkTimeToken;
+    /// <summary>
+    /// Width of the caret used in text controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken CaretPixelWidthToken;
+    /// <summary>
+    /// Number of characters to scroll in view when a text box' caret is moved outside its rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken CharacterScrollCountToken;
     /// <summary>
     /// Horizontal alignment for fields or controls
     /// </summary>

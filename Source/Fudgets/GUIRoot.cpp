@@ -213,8 +213,12 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 		return;
 	if (!_focus_control_keys.IsEmpty())
 	{
-		for (auto k : _focus_control_keys)
-			_focus_control->OnKeyUp(k.Item);
+		HashSet<KeyboardKeys> tmp = _focus_control_keys;
+		for (auto k : tmp)
+		{
+			OnKeyUp(k.Item);
+		}
+
 		_focus_control_keys.Clear();
 	}
 	_focus_control = value;
@@ -280,95 +284,27 @@ void FudgetGUIRoot::UnregisterControlUpdates()
 		c->RegisterToUpdate(false);
 }
 
-//String FudgetGUIRoot::SerializationTester()
-//{
-//	String output;
-//	rapidjson_flax::StringBuffer buffer;
-//	PrettyJsonWriter writerObj(buffer);
-//	JsonWriter& writer = writerObj;
-//	writer.StartObject();
-//	Serialize(writer, nullptr);
-//	writer.EndObject();
-//
-//	output = buffer.GetString();
-//	return output;
-//}
-//
-//void FudgetGUIRoot::Serialize(SerializeStream& stream, const void* otherObj)
-//{
-//	Array<FudgetControl*> allControls;
-//	GetAllControls(allControls);
-//
-//	Base::Serialize(stream, otherObj);
-//	stream.JKEY("Controls");
-//	stream.StartArray();
-//	for (auto control : allControls)
-//	{
-//		stream.StartObject();
-//		control->Serialize(stream, nullptr);
-//		stream.EndObject();
-//	}
-//	stream.EndArray();
-//}
-//
-//void FudgetGUIRoot::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
-//{
-//	Base::Deserialize(stream, modifier);
-//	// Once we have deserialized everything, register our object.
-//	if (!IsRegistered())
-//		RegisterObject();
-//	/*if (!HasManagedInstance())
-//		CreateManaged();*/
-//
-//	int32 controlsCount = 0;
-//	const auto& controlsListMember = stream.FindMember("Controls");
-//	if (controlsListMember != stream.MemberEnd() && controlsListMember->value.IsArray())
-//	{
-//		controlsCount = controlsListMember->value.Size();
-//	}
-//
-//	Array<FudgetControl*> controls;
-//	if (controlsCount)
-//	{
-//		const DeserializeStream& items = controlsListMember->value;
-//		controls.Resize(controlsCount, false);
-//		for (int32 i = 0; i < controlsCount; i++)
-//		{
-//			FudgetControl* control = FudgetControlFactory((DeserializeStream&)items[i], modifier);
-//			if (control == nullptr)
-//			{
-//				// Skip
-//				continue;
-//			}
-//
-//			control->Deserialize((DeserializeStream&)items[i], modifier);
-//
-//			// Once we have data, register the object.
-//			if (!control->IsRegistered())
-//				control->RegisterObject();
-//			/*if (!control->HasManagedInstance())
-//				control->CreateManaged();*/
-//		}
-//	}
-//
-//	//MarkLayoutDirty(FudgetDirtType::All);
-//	//RequestLayout();
-//}
+bool FudgetGUIRoot::IsNavigationKey(KeyboardKeys key) const
+{
+	// TODO: use the current input mapping instead of built in arrow keys
+
+	return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown || key == KeyboardKeys::Tab;
+}
 
 void FudgetGUIRoot::InitializeEvents()
 {
 	if (events_initialized)
 		return;
 
-	Input::MouseDoubleClick.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseDoubleClick>(this);
-	Input::MouseDown.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseDown>(this);
-	Input::MouseUp.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseUp>(this);
-	Input::MouseMove.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseMove>(this);
-	Input::MouseLeave.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseLeave>(this);
+	Input::MouseDoubleClick.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseDoubleClick>(this);
+	Input::MouseDown.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseDown>(this);
+	Input::MouseUp.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseUp>(this);
+	Input::MouseMove.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseMove>(this);
+	Input::MouseLeave.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseLeave>(this);
 
-	Input::CharInput.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnCharInput>(this);
-	Input::KeyDown.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyDown>(this);
-	Input::KeyUp.Bind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyUp>(this);
+	Input::CharInput.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleCharInput>(this);
+	Input::KeyDown.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleKeyDown>(this);
+	Input::KeyUp.Bind<FudgetGUIRoot, &FudgetGUIRoot::HandleKeyUp>(this);
 
 	events_initialized = true;
 }
@@ -378,15 +314,15 @@ void FudgetGUIRoot::UninitializeEvents()
 	if (!events_initialized)
 		return;
 
-	Input::MouseDoubleClick.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseDoubleClick>(this);
-	Input::MouseDown.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseDown>(this);
-	Input::MouseUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseUp>(this);
-	Input::MouseMove.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseMove>(this);
-	Input::MouseLeave.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnMouseLeave>(this);
+	Input::MouseDoubleClick.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseDoubleClick>(this);
+	Input::MouseDown.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseDown>(this);
+	Input::MouseUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseUp>(this);
+	Input::MouseMove.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseMove>(this);
+	Input::MouseLeave.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleMouseLeave>(this);
 
-	Input::CharInput.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnCharInput>(this);
-	Input::KeyDown.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyDown>(this);
-	Input::KeyUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::OnKeyUp>(this);
+	Input::CharInput.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleCharInput>(this);
+	Input::KeyDown.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleKeyDown>(this);
+	Input::KeyUp.Unbind<FudgetGUIRoot, &FudgetGUIRoot::HandleKeyUp>(this);
 
 	events_initialized = false;
 }
@@ -413,6 +349,7 @@ void FudgetGUIRoot::Initialize()
 {
 	if (IsInRunningGame())
 		InitializeEvents();
+	Base::Initialize();
 }
 
 FudgetMouseHookResult FudgetGUIRoot::ProcessLocalMouseHooks(HookProcessingType type, FudgetControl *control, Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
@@ -444,7 +381,7 @@ FudgetMouseHookResult FudgetGUIRoot::ProcessLocalMouseHooks(HookProcessingType t
 	return result;
 }
 
-void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
+void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
 
@@ -468,8 +405,8 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 			return;
 		if (result != FudgetMouseHookResult::SkipControl)
 		{
-			FudgetMouseButtonResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, false);
-			if (result == FudgetMouseButtonResult::Consume)
+			FudgetInputResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, false);
+			if (result == FudgetInputResult::Consume)
 			{
 				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
 					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
@@ -498,8 +435,8 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 						continue;
 				}
 
-				FudgetMouseButtonResult result = c->OnMouseDown(cpos, pos, button, false);
-				if (result == FudgetMouseButtonResult::Consume)
+				FudgetInputResult result = c->OnMouseDown(cpos, pos, button, false);
+				if (result == FudgetInputResult::Consume)
 				{
 					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseLeft)) ||
 						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseRight)))
@@ -509,7 +446,7 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 						c->SetFocused(true);
 				}
 
-				if (result != FudgetMouseButtonResult::PassThrough || _mouse_capture_control != nullptr)
+				if (result != FudgetInputResult::PassThrough || _mouse_capture_control != nullptr)
 					break;
 			}
 		}
@@ -518,7 +455,7 @@ void FudgetGUIRoot::OnMouseDown(const Float2 &__pos, MouseButton button)
 	}
 }
 
-void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
+void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
 
@@ -546,7 +483,7 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 					ReleaseMouseCapture();
 				}
 
-				OnMouseMove(pos);
+				HandleMouseMove(pos);
 			}
 		}
 		return;
@@ -570,7 +507,7 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 
 				if (c->OnMouseUp(cpos, pos, button))
 				{
-					OnMouseMove(pos);
+					HandleMouseMove(pos);
 					break;
 				}
 			}
@@ -580,7 +517,7 @@ void FudgetGUIRoot::OnMouseUp(const Float2 &__pos, MouseButton button)
 	}
 }
 
-void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
+void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton button)
 {
 	Float2 pos = Input::GetMousePosition();
 
@@ -611,8 +548,8 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 			return;
 		if (result != FudgetMouseHookResult::SkipControl)
 		{
-			FudgetMouseButtonResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, true);
-			if (result == FudgetMouseButtonResult::Consume)
+			FudgetInputResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, true);
+			if (result == FudgetInputResult::Consume)
 			{
 				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
 					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
@@ -639,8 +576,8 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 				if (hook_result == FudgetMouseHookResult::SkipControl)
 					continue;
 
-				FudgetMouseButtonResult result = c->OnMouseDown(cpos, pos, button, true);
-				if (result == FudgetMouseButtonResult::Consume)
+				FudgetInputResult result = c->OnMouseDown(cpos, pos, button, true);
+				if (result == FudgetInputResult::Consume)
 				{
 					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseLeft)) ||
 						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseRight)))
@@ -650,9 +587,9 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 						c->SetFocused(true);
 				}
 
-				if (result != FudgetMouseButtonResult::PassThrough || _mouse_capture_control != nullptr)
+				if (result != FudgetInputResult::PassThrough || _mouse_capture_control != nullptr)
 				{
-					OnMouseMove(pos);
+					HandleMouseMove(pos);
 					break;
 				}
 			}
@@ -662,7 +599,7 @@ void FudgetGUIRoot::OnMouseDoubleClick(const Float2 &__pos, MouseButton button)
 	}
 }
 
-void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
+void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 {
 	Float2 pos = Input::GetMousePosition();
 
@@ -691,7 +628,7 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
+		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseMove))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
 			if (c->WantsMouseEventAtPos(cpos, pos))
@@ -747,7 +684,7 @@ void FudgetGUIRoot::OnMouseMove(const Float2 &__pos)
 	}
 }
 
-void FudgetGUIRoot::OnMouseLeave()
+void FudgetGUIRoot::HandleMouseLeave()
 {
 	if (!_global_mouse_hooks.IsEmpty())
 	{
@@ -775,29 +712,86 @@ void FudgetGUIRoot::OnMouseLeave()
 	}
 }
 
-void FudgetGUIRoot::OnKeyDown(KeyboardKeys key)
+void FudgetGUIRoot::HandleKeyDown(KeyboardKeys key)
 {
-	if (_focus_control == nullptr)
-		return;
+	FudgetControl *c = FindKeyboardInputControl(key);
+	while (c != nullptr)
+	{
+		if (IsNavigationKey(key) && (!c->HasAnyFlag(FudgetControlFlags::CanHandleNavigationKeys) || !c->WantsNavigationKey(key) ))
+		{
+			NavigateWithKey(key);
+			break;
+		}
 
-	_focus_control_keys.Add(key);
-	_focus_control->OnKeyDown(key);
+		_focus_control_keys.Add(key);
+		FudgetInputResult result = c->OnKeyDown(key);
+		if (result == FudgetInputResult::PassThrough)
+		{
+			c = c->GetParent();
+			_focus_control_keys.Remove(key);
+		}
+		else
+		{
+			if (result == FudgetInputResult::Ignore && IsNavigationKey(key))
+				NavigateWithKey(key);
+			break;
+		}
+	}
 }
 
-void FudgetGUIRoot::OnKeyUp(KeyboardKeys key)
+void FudgetGUIRoot::HandleKeyUp(KeyboardKeys key)
 {
-	if (_focus_control == nullptr || !_focus_control_keys.Contains(key))
+	if (!_focus_control_keys.Contains(key))
 		return;
 
-	_focus_control->OnKeyUp(key);
+	FudgetControl *c = FindKeyboardInputControl(key);
+	while (c != nullptr)
+	{
+		if (!c->OnKeyUp(key))
+			c = c->GetParent();
+		else
+			break;
+	}
 	_focus_control_keys.Remove(key);
 }
 
-void FudgetGUIRoot::OnCharInput(Char ch)
+void FudgetGUIRoot::HandleCharInput(Char ch)
 {
-	if (_focus_control == nullptr)
-		return;
-	_focus_control->OnCharInput(ch);
+	FudgetControl *c = FindKeyboardInputControl(KeyboardKeys::None);
+	while (c != nullptr)
+	{
+		FudgetInputResult result = c->OnCharInput(ch);
+		if (result == FudgetInputResult::PassThrough)
+		{
+			c = c->GetParent();
+		}
+		else
+		{
+			if (result == FudgetInputResult::Ignore)
+			{
+				// TODO: forward the input to the game
+			}
+			break;
+		}
+	}
+}
+
+FudgetControl* FudgetGUIRoot::FindKeyboardInputControl(KeyboardKeys key) const
+{
+	FudgetControl *c = _focus_control;
+	while (c != nullptr)
+	{
+		if (!c->HasAnyFlag(FudgetControlFlags::CanHandleKeyEvents))
+		{
+			c = c->GetParent();
+			continue;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return c;
 }
 
 

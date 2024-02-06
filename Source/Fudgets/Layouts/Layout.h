@@ -225,6 +225,16 @@ enum class FudgetLayoutFlag : uint16
 	CanProvideSizes = CanProvideHintSize | CanProvideMinSize | CanProvideMaxSize,
 
 	/// <summary>
+	/// The layout has valid hint, min and max width size
+	/// </summary>
+	CanProvideSizeWidth = CanProvideHintSizeWidth | CanProvideMinSizeWidth | CanProvideMaxSizeWidth,
+
+	/// <summary>
+	/// The layout has valid hint, min and max height size
+	/// </summary>
+	CanProvideSizeHeight = CanProvideHintSizeHeight | CanProvideMinSizeHeight | CanProvideMaxSizeHeight,
+
+	/// <summary>
 	/// Set on the layout before assigning it to an owner container, to reset its flags from GetInitFlags. Makes the flags
 	/// reset the next time the layout owner changes to not null
 	/// </summary>
@@ -232,7 +242,7 @@ enum class FudgetLayoutFlag : uint16
 };
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
-//API_CLASS(NoSpawn)
+
 
 /// <summary>
 /// Base class for "slots" in a layout that can be used to assign properties for controls for layouting
@@ -241,7 +251,6 @@ API_CLASS()
 class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
 {
 	using Base = ScriptingObject;
-	//DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetLayoutSlot);
 	DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
 public:
@@ -249,24 +258,24 @@ public:
 	/// Fetches the control that is positioned and sized by the values in this slot
 	/// </summary>
 	/// <returns>The control in this slot</returns>
-	API_PROPERTY() FudgetControl* GetControl() const { return _control; }
+	API_PROPERTY(Attributes="HideInEditor") FudgetControl* GetControl() const { return _control; }
 
 	/// <summary>
 	/// The control placed in the slot. The attributes affect its position and size 
 	/// </summary>
-	API_FIELD() FudgetControl *_control;
+	API_FIELD(Attributes = "HideInEditor") FudgetControl *_control;
 	/// <summary>
 	/// The calculated hint size for caching
 	/// </summary>
-	API_FIELD() Float2 _hint_size;
+	API_FIELD(Attributes="HideInEditor") Float2 _hint_size;
 	/// <summary>
 	/// The calculated min size for caching
 	/// </summary>
-	API_FIELD() Float2 _min_size;
+	API_FIELD(Attributes="HideInEditor") Float2 _min_size;
 	/// <summary>
 	/// The calculated max size for caching
 	/// </summary>
-	API_FIELD() Float2 _max_size;
+	API_FIELD(Attributes="HideInEditor") Float2 _max_size;
 };
 
 
@@ -287,27 +296,27 @@ public:
 	/// Gets the container that holds the controls this layout can reposition or resize
 	/// </summary>
 	/// <returns>The container the layout is attached to</returns>
-	API_PROPERTY() FudgetContainer* GetOwner() const { return _owner; }
+	API_PROPERTY(Attributes="HideInEditor") FudgetContainer* GetOwner() const { return _owner; }
 
 	/// <summary>
 	/// Sets the container that holds the controls this layout can reposition or resize
 	/// </summary>
 	/// <param name="value">The new container this layout will be assined to</param>
-	API_PROPERTY() void SetOwner(FudgetContainer *value);
+	API_PROPERTY(Attributes="HideInEditor") void SetOwner(FudgetContainer *value);
 
 	/// <summary>
 	/// Dirty layout means that due to changes of the owner container or its children, the layout of
 	/// the child controls need to be recalculated. This is done on the next frame.
 	/// </summary>
 	/// <returns>Whether layout recalculation is necessary</returns>
-	API_PROPERTY() bool IsLayoutDirty() const { return _layout_dirty; }
+	API_PROPERTY(Attributes="HideInEditor") bool IsLayoutDirty() const { return _layout_dirty; }
 
 	/// <summary>
 	/// Dirty size means that due to changes of the owner container or its children, the stored size
 	/// values are out of date and need to be recalculated. This is done on the next frame.
 	/// </summary>
 	/// <returns>Whether size recalculation is necessary</returns>
-	API_PROPERTY() bool IsSizeDirty() const { return _size_dirty; }
+	API_PROPERTY(Attributes="HideInEditor") bool IsSizeDirty() const { return _size_dirty; }
 
 	/// <summary>
 	/// Notifies the layout that either its owner container, or a child control changed since the last layout
@@ -331,21 +340,21 @@ public:
 	/// This might require recalculation if the preferred size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's preferred size</returns>
-	API_PROPERTY() Float2 GetHintSize();
+	API_PROPERTY(Attributes="HideInEditor") Float2 GetHintSize();
 
 	/// <summary>
 	/// Returns the calculated minimum size of the layout with all the managed controls laid out with their smallest size.
 	/// This might require recalculation if the minimum size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's minimum size</returns>
-	API_PROPERTY() Float2 GetMinSize();
+	API_PROPERTY(Attributes="HideInEditor") Float2 GetMinSize();
 
 	/// <summary>
 	/// Returns the calculated maximum size of the layout with all the managed controls laid out with their largest size.
 	/// This might require recalculation if the maximum size of any control changed or a new control was added.
 	/// </summary>
 	/// <returns>The layout's maximum size</returns>
-	API_PROPERTY() Float2 GetMaxSize();
+	API_PROPERTY(Attributes="HideInEditor") Float2 GetMaxSize();
 
 	/// <summary>
 	/// Calculates the child controls position and size on the owner container if necessary or requested.
@@ -465,13 +474,13 @@ protected:
 	/// Describes what changes will cause a layout to mark itself dirty.
 	/// </summary>
 	/// <returns>The flags set for the layout</returns>
-	API_PROPERTY() FudgetLayoutFlag GetLayoutFlags() const;
+	API_PROPERTY(Attributes="HideInEditor") FudgetLayoutFlag GetLayoutFlags() const;
 
 	/// <summary>
 	/// Describes what changes will cause a layout to mark itself dirty.
 	/// </summary>
 	/// <param name="flags">The new flags</param>
-	API_PROPERTY() void SetLayoutFlags(FudgetLayoutFlag flags);
+	API_PROPERTY(Attributes="HideInEditor") void SetLayoutFlags(FudgetLayoutFlag flags);
 
 	/// <summary>
 	/// Matches the given flags with those of the layout, returning true only if all the flags were found.
@@ -506,7 +515,7 @@ private:
 	/// notify the container of the changes. Use SetOwner for normal use.
 	/// </summary>
 	/// <param name="value">The new container this layout will be assined to</param>
-	API_PROPERTY() void SetOwnerInternal(FudgetContainer *value);
+	API_PROPERTY(Attributes="HideInEditor") void SetOwnerInternal(FudgetContainer *value);
 
 
 

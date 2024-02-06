@@ -147,18 +147,14 @@ public:
     /// </summary>
     API_FUNCTION() void UnregisterControlUpdates();
 
-    // Serialization
+    /// <summary>
+    /// Returns whether the passed key is used for navigation (usually the arrows and tab)
+    /// </summary>
+    API_FUNCTION() bool IsNavigationKey(KeyboardKeys key) const;
 
-    ///// <summary>
-    ///// Placeholder summary so the code gen doesn't complain.
-    ///// </summary>
-    //API_FUNCTION() String SerializationTester();
-
-    //void Serialize(SerializeStream& stream, const void* otherObj) override;
-    //void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
     // Called once from the Fudget to initialize during gameplay
-    void Initialize();
+    void Initialize() override;
 
     enum class HookProcessingType
     {
@@ -177,15 +173,19 @@ private:
 
     // Mouse and Touch input:
 
-    void OnMouseDown(const Float2 &pos, MouseButton button);
-    void OnMouseUp(const Float2 &pos, MouseButton button);
-    void OnMouseDoubleClick(const Float2 &pos, MouseButton button);
-    void OnMouseMove(const Float2 &pos);
-    void OnMouseLeave();
+    void HandleMouseDown(const Float2 &pos, MouseButton button);
+    void HandleMouseUp(const Float2 &pos, MouseButton button);
+    void HandleMouseDoubleClick(const Float2 &pos, MouseButton button);
+    void HandleMouseMove(const Float2 &pos);
+    void HandleMouseLeave();
 
-    void OnKeyDown(KeyboardKeys key);
-    void OnKeyUp(KeyboardKeys key);
-    void OnCharInput(Char ch);
+    void HandleKeyDown(KeyboardKeys key);
+    void HandleKeyUp(KeyboardKeys key);
+    void HandleCharInput(Char ch);
+
+    FudgetControl* FindKeyboardInputControl(KeyboardKeys key) const;
+
+    void NavigateWithKey(KeyboardKeys key) const {}
 
     // Used for checking if this class has initialized events with Input.
     bool events_initialized;

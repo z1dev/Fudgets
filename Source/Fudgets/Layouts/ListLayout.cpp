@@ -322,55 +322,46 @@ Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
 		return Float2(0.f);
 
 	Float2 result(0.0f);
-	// The extent of the largest control in the unrelated direction.
-	float extent = 0.0f;
 
 	for (int ix = 0, siz = count; ix < siz; ++ix)
 	{
 		auto slot = GetSlot(ix);
-		auto &pad = slot->_padding;
-		result.X += pad.Left + pad.Right;
-		result.Y += pad.Top + pad.Bottom;
+		Float2 pad = Float2(slot->_padding.Width(), slot->_padding.Height());
 		Float2 size = slot->_control->GetRequestedSize(type);
-		Float2 fixed_size = size;
+		Float2 corrected_size = size;
 
-		if (Relevant(fixed_size) < 0)
-			RelevantRef(fixed_size) = 0;
-		if (Opposite(fixed_size) < 0)
-			OppositeRef(fixed_size) = 0;
+		if (type != FudgetSizeType::Max)
+		{
+			if (Relevant(corrected_size) < 0)
+				RelevantRef(corrected_size) = 0;
+			if (Opposite(corrected_size) < 0)
+				OppositeRef(corrected_size) = 0;
+		}
+		else
+		{
+			if (Relevant(corrected_size) < 0 || Relevant(corrected_size) > MaximumFloatLimit)
+				RelevantRef(corrected_size) = MaximumFloatLimit;
+			if (Opposite(corrected_size) < 0 || Opposite(corrected_size) > MaximumFloatLimit)
+				OppositeRef(corrected_size) = MaximumFloatLimit;
+		}
 
-		// Overflow checking replacement of RelevantRef(result) += Relevant(fixed_size)
-		RelevantRef(result) = AddBigFloats(Relevant(result), Relevant(fixed_size));
-
-		extent = Math::Max(extent, Opposite(fixed_size));
+		// Overflow checking replacement of RelevantRef(result) += Relevant(corrected_size)
+		RelevantRef(result) = AddBigFloats(Relevant(pad), AddBigFloats(Relevant(result), Relevant(corrected_size)));
+		OppositeRef(result) = Math::Max(Opposite(result), AddBigFloats(Opposite(pad), Opposite(corrected_size)));
 
 		switch (type)
 		{
 			case FudgetSizeType::Hint:
-				slot->_hint_size = fixed_size;
-				extent = Math::Max(extent, Opposite(slot->_hint_size));
+				slot->_hint_size = corrected_size;
 				break;
 			case FudgetSizeType::Min:
-				slot->_min_size = fixed_size;
+				slot->_min_size = corrected_size;
 				break;
 			case FudgetSizeType::Max:
-				if (Relevant(size) < 0)
-				{
-					RelevantRef(size) = MaximumFloatLimit;
-					RelevantRef(result) = MaximumFloatLimit;
-				}
-				if (Opposite(size) < 0)
-				{
-					OppositeRef(size) = MaximumFloatLimit;
-					extent = MaximumFloatLimit;
-				}
-
-				slot->_max_size = size;
+				slot->_max_size = corrected_size;
 				break;
 		}
 	}
-
-	OppositeRef(result) = AddBigFloats(Opposite(result), extent);
 
 	return result;
 }

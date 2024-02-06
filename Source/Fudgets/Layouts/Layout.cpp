@@ -211,6 +211,8 @@ Float2 FudgetLayout::RequestSize(FudgetSizeType type) const
 				slot->_hint_size = size;
 			else
 				slot->_min_size = size;
+
+			result = Float2(Math::Max(size.X, result.X), Math::Max(size.Y, result.Y));
 		}
 		else
 		{
@@ -220,6 +222,8 @@ Float2 FudgetLayout::RequestSize(FudgetSizeType type) const
 			if (size.Y < 0 || size.Y > MaximumFloatLimit)
 				size.Y = MaximumFloatLimit;
 			slot->_max_size = size;
+
+			result = Float2(Math::Max(size.X, result.X), Math::Max(size.Y, result.Y));
 		}
 	}
 
@@ -300,7 +304,7 @@ void FudgetLayout::SetLayoutFlags(FudgetLayoutFlag flags)
 
 bool FudgetLayout::HasAllFlags(FudgetLayoutFlag flags) const
 {
-	return ((int)flags & (int)_flags) == (int)flags;
+	return (flags & _flags) == flags;
 }
 
 bool FudgetLayout::HasAnyFlag(FudgetLayoutFlag flags) const

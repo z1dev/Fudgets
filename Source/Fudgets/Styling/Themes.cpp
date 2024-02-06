@@ -83,6 +83,8 @@ const FudgetToken FudgetThemes::ControlPaddingToken = FudgetThemes::RegisterToke
 const FudgetToken FudgetThemes::FieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldPadding"));
 
 const FudgetToken FudgetThemes::CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CaretBlinkTime"));
+const FudgetToken FudgetThemes::CaretPixelWidthToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CaretPixelWidth"));
+const FudgetToken FudgetThemes::CharacterScrollCountToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CharacterScrollCount"));
 const FudgetToken FudgetThemes::HorizontalAlignmentToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HorizontalAlignment"));
 const FudgetToken FudgetThemes::VerticalAlignmentToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_VerticalAlignment"));
 const FudgetToken FudgetThemes::LeftToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_Left"));
