@@ -85,13 +85,53 @@ enum class FudgetDirtType : uint8
 	/// </summary>
 	All = Size | Position
 };
-
 DECLARE_ENUM_OPERATORS(FudgetDirtType);
+
+/// <summary>
+/// Flags describing a control's current state
+/// </summary>
+API_ENUM(Attributes="Flags")
+enum class FudgetControlState : uint8
+{
+	None = 0,
+	/// <summary>
+	/// Set to true after the Initialize function ran once
+	/// </summary>
+	Initialized = 1 << 0,
+	/// <summary>
+	/// The control gets update notifies by having its Update function called
+	/// </summary>
+	Updating = 1 << 1,
+	/// <summary>
+	/// Enabled controls can be interacted with, they can get focus and might be drawn different to disabled. For a
+	/// control to be enabled, it needs to be set to enabled and must not have a disabled parent in the hierarchy.
+	/// </summary>
+	Enabled = 1 << 2,
+	/// <summary>
+	/// Whether one of the parents of this control in the hierarchy are disabled.
+	/// </summary>
+	ParentDisabled = 1 << 3,
+	/// <summary>
+	/// The control has the appearance like it is focused. This can be different from being focused when the control is
+	/// the child of a compound container
+	/// </summary>
+	ShowFocused = 1 << 4,
+	/// <summary>
+	/// True when _cached_global_to_local_translation is valid.
+	/// </summary>
+	Global2LocalCached = 1 << 5,
+	/// <summary>
+	/// Whether the mouse input is currently captured by this control
+	/// </summary>
+	MouseIsCaptured = 1 << 6,
+};
+DECLARE_ENUM_OPERATORS(FudgetControlState);
+
 
 /// <summary>
 /// Flags for controls that describe their behavior
 /// </summary>
-API_ENUM(Attributes = "Flags")
+API_ENUM(Attributes="Flags")
 enum class FudgetControlFlags
 {
 	/// <summary>
@@ -251,18 +291,39 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 public:
 	~FudgetControl();
 
-	/// <summary>
-	/// Returns whether the Initialize function has been called once on this control. By default, the main Fudget
-	/// initializes controls after deserialization is over. During manual control creation, Initialize is called
-	/// once the control has been added oo a parent that is in the gui hierarchy
-	/// </summary>
-	API_FUNCTION() bool IsInitialized() const { return _initialized; }
+	API_FUNCTION() virtual void OnInitialize() {}
 
 	/// <summary>
-	/// Called when redrawing the control. Inherited controls can call Render2D methods here.
-	/// Always call the derived Draw in the overriden method for styled controls.
+	/// Draws the control's surface. Derived controls can call Render2D methods here.
 	/// </summary>
-	API_FUNCTION() virtual void Draw();
+	API_FUNCTION() virtual void OnDraw() {}
+
+	/// <summary>
+	/// Called when the keyboard input focus changes from one control to another. It is called both on the
+	/// control losing focus and the control gaining focus before the change happens.
+	/// Make sure to call the base implementation upon receiving this event.
+	/// </summary>
+	/// <param name="focused">Whether this control gains the focus or not</param>
+	/// <param name="other">The control which loses or gains the focus. Can be null</param>
+	API_FUNCTION() virtual void OnFocusChanging(bool focused, FudgetControl *other) {}
+
+	/// <summary>
+	/// Called when the keyboard input focus changes from one control to another. It is called both on the
+	/// control losing focus and the control gaining focus after the change happened.
+	/// Make sure to call the base implementation upon receiving this event.
+	/// </summary>
+	/// <param name="focused">Whether this control gained the focus or not</param>
+	/// <param name="other">The control which lost or gained the focus. Can be null</param>
+	API_FUNCTION() virtual void OnFocusChanged(bool focused, FudgetControl *other);
+
+	/// <summary>
+	/// Called when the control starts capturing the mouse input.
+	/// </summary>
+	API_FUNCTION() virtual void OnMouseCaptured();
+	/// <summary>
+	/// Called when the control stops capturing the mouse input.
+	/// </summary>
+	API_FUNCTION() virtual void OnMouseReleased();
 
 	/// <summary>
 	/// Fetches the parent who is managing this control. The parent is also responsible for its destruction.
@@ -471,7 +532,7 @@ public:
 	/// <summary>
 	/// Whether the control is executing its OnUpdate after registering it with RegisterToUpdate.
 	/// </summary>
-	API_PROPERTY() bool IsUpdateRegistered() const { return _updating_registered; }
+	API_PROPERTY() bool IsUpdateRegistered() const { return (_state_flags & FudgetControlState::Updating) == FudgetControlState::Updating; }
 
 	// Point transformation
 
@@ -509,7 +570,7 @@ public:
 	/// nothing if this value has already been saved. The calculated value is invalidated at the start of each Draw but
 	/// it can also be invalidated with InvalidateGlobalToLocalCache
 	/// </summary>
-	API_FUNCTION() void CacheGlobalToLocal() const;
+	API_FUNCTION() void CacheGlobalToLocal();
 
 	/// <summary>
 	/// Discards the result of the precalculated global to local difference, that was calculated in CacheGlobalToLocal.
@@ -517,7 +578,7 @@ public:
 	/// CachedGlobalToLocal or CachedLocalToGlobal.
 	/// Avoid calling this function if unnecessary, because it will force recalculation of the cached difference. 
 	/// </summary>
-	API_FUNCTION() void InvalidateGlobalToLocalCache() const;
+	API_FUNCTION() void InvalidateGlobalToLocalCache();
 
 	/// <summary>
 	/// Converts a coordinate from local control space to global UI space. Can be used multiple times after
@@ -660,6 +721,11 @@ public:
 	API_FUNCTION() virtual void ReleaseMouseInput();
 
 	/// <summary>
+	/// Whether the mouse input is currently captured by this control
+	/// </summary>
+	API_PROPERTY() bool MouseIsCaptured() const;
+
+	/// <summary>
 	/// Called if the control has the CanHandleKeyEvents and CanHandleNavigationKeys flags, to decide if it wants
 	/// to use the key or lets the UI system use it. Returning true here and Ignore from the key down event will also
 	/// allow the UI to handle the navigation event.
@@ -702,6 +768,12 @@ public:
 	API_PROPERTY() virtual bool GetFocused() const;
 
 	/// <summary>
+	/// Returns whether this control should appear in the focused state when drawing. Doesn't affect whether the control
+	/// is focused or not.
+	/// </summary>
+	API_PROPERTY() virtual bool GetVirtuallyFocused() const;
+
+	/// <summary>
 	/// Sets the keyboard input focus to this control or removes focus from it. Focused controls can have a distinct
 	/// appearance to make it easy to distinguish between their focused and unfocused states.
 	/// </summary>
@@ -714,13 +786,19 @@ public:
 	API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
 
 	/// <summary>
+	/// Returns whether this control has the compound control flag. Compound controls hold other controls but behave
+	/// like a single unit.
+	/// </summary>
+	API_PROPERTY() bool IsCompoundControl() const { return HasAnyFlag(FudgetControlFlags::CompoundControl); }
+
+	/// <summary>
 	/// For controls that can handle input or be focused, indicates whether this control wants to get keyboard focus
 	/// or is ready to handle other input. For containers, only enabled containers' child controls should  behave like
 	/// they are enabled.
 	/// Check IsVirtuallyEnabled() to see if this control is enabled and all its parents in the hierarchy are also
 	/// enabled.
 	/// </summary>
-	API_PROPERTY() bool GetEnabled() const { return _enabled; }
+	API_PROPERTY() bool GetEnabled() const { return (_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled; }
 	/// <summary>
 	/// Makes the control enabled or disabled. Only enabled controls can accept input or focus.
 	/// Setting a control to enabled only takes effect if all parents in the hierarchy are also enabled.
@@ -741,14 +819,14 @@ public:
 	/// <param name="pos">Position relative to the control</param>
 	/// <param name="size">Size of control</param>
 	/// <param name="color">Color to use for filling</param>
-	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color) const;
+	API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color);
 
 	/// <summary>
 	/// Wrapper to Render2D's FillRectangle.
 	/// </summary>
 	/// <param name="rect">The rectangle to fill.</param>
 	/// <param name="color">Color to use for filling</param>
-	API_FUNCTION() void FillRectangle(const Rectangle &rect, Color color) const;
+	API_FUNCTION() void FillRectangle(const Rectangle &rect, Color color);
 
 	/// <summary>
 	/// Wrapper to Render2D's FillRectangle.
@@ -758,7 +836,7 @@ public:
 	/// <param name="color2">The color to use for upper right vertex.</param>
 	/// <param name="color3">The color to use for bottom right vertex.</param>
 	/// <param name="color4">The color to use for bottom left vertex.</param>
-	API_FUNCTION() void FillRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4) const;
+	API_FUNCTION() void FillRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawRectangle.
@@ -767,7 +845,7 @@ public:
 	/// <param name="size">Size of control</param>
 	/// <param name="color">Color to use for filling</param>
 	/// <param name="thickness">Thickness of the rectangle's lines</param>
-	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f) const;
+	API_FUNCTION() void DrawRectangle(Float2 pos, Float2 size, Color color, float thickness = 1.2f);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawRectangle.
@@ -775,7 +853,7 @@ public:
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">Color to use for filling</param>
 	/// <param name="thickness">Thickness of the rectangle's lines</param>
-	API_FUNCTION() void DrawRectangle(const Rectangle &rect, Color color, float thickness = 1.2f) const;
+	API_FUNCTION() void DrawRectangle(const Rectangle &rect, Color color, float thickness = 1.2f);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawRectangle.
@@ -786,7 +864,7 @@ public:
 	/// <param name="color3">The color to use for bottom right vertex.</param>
 	/// <param name="color4">The color to use for bottom left vertex.</param>
 	/// <param name="thickness">The line thickness.</param>
-	API_FUNCTION() void DrawRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4, float thickness = 1.0f) const;
+	API_FUNCTION() void DrawRectangle(const Rectangle& rect, const Color& color1, const Color& color2, const Color& color3, const Color& color4, float thickness = 1.0f);
 
 	/// <summary>
 	/// Wrapper to Render2D's Draw9SlicingTexture.
@@ -797,7 +875,7 @@ public:
 	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom)</param>
 	/// <param name="color">The color to multiply all texture pixels</param>
 	/// <returns></returns>
-	API_FUNCTION() void Draw9SlicingTexture(TextureBase *t, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingTexture(TextureBase *t, const Rectangle &rect, const Float4 &border, const Float4 &borderUVs, const Color &color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's Draw9SlicingTexturePoint.
@@ -808,7 +886,7 @@ public:
 	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom)</param>
 	/// <param name="color">The color to multiply all texture pixels</param>
 	/// <returns></returns>
-	API_FUNCTION() void Draw9SlicingTexturePoint(TextureBase* t, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingTexturePoint(TextureBase* t, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's Draw9SlicingSprite
@@ -818,7 +896,7 @@ public:
 	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom).</param>
 	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom).</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void Draw9SlicingSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's Draw9SlicingSpritePoint
@@ -828,7 +906,7 @@ public:
 	/// <param name="border">The borders for 9-slicing (inside rectangle, ordered: left, right, top, bottom).</param>
 	/// <param name="borderUVs">The borders UVs for 9-slicing (inside rectangle UVs, ordered: left, right, top, bottom).</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Float4& border, const Float4& borderUVs, const Color& color = Color::White);
 
 	/// <summary>
 	/// Draws 9-slicing texture by calling Draw9SlicingTexture, using borderWidths to calculate the border and UV parameters.
@@ -837,7 +915,7 @@ public:
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
-	API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
 
 	/// <summary>
 	/// Draws 9-slicing texture by calling Draw9SlicingTexturePoint, using borderWidths to calculate the border and UV parameters.
@@ -846,7 +924,7 @@ public:
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
-	API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
 
 	/// <summary>
 	/// Draws 9-slicing sprite by calling Draw9SlicingSprite, using borderWidths to calculate the border and UV parameters.
@@ -855,7 +933,7 @@ public:
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
-	API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
 
 	/// <summary>
 	/// Draws 9-slicing sprite by calling Draw9SlicingSpritePoint, using borderWidths to calculate the border and UV parameters.
@@ -864,7 +942,7 @@ public:
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
-	API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White) const;
+	API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawBezier
@@ -875,14 +953,14 @@ public:
 	/// <param name="p4">The end point.</param>
 	/// <param name="color">The line color</param>
 	/// <param name="thickness">The line thickness.</param>
-	API_FUNCTION() void DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness = 1.0f) const;
+	API_FUNCTION() void DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness = 1.0f);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawBlur
 	/// </summary>
 	/// <param name="rect">The target rectangle to draw (blurs its background).</param>
 	/// <param name="blurStrength">The blur strength defines how blurry the background is. Larger numbers increase blur, resulting in a larger runtime cost on the GPU.</param>
-	API_FUNCTION() void DrawBlur(const Rectangle& rect, float blurStrength) const;
+	API_FUNCTION() void DrawBlur(const Rectangle& rect, float blurStrength);
 
 	/// <summary>
     /// Wrapper to Render2D's DrawLine
@@ -891,7 +969,7 @@ public:
     /// <param name="p2">The end point.</param>
     /// <param name="color">The line color.</param>
     /// <param name="thickness">The line thickness.</param>
-	API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color, float thickness = 1.0f) const;
+	API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color, float thickness = 1.0f);
 
     /// <summary>
     /// Wrapper to Render2D's DrawLine
@@ -901,7 +979,7 @@ public:
     /// <param name="color1">The line start color.</param>
     /// <param name="color2">The line end color.</param>
     /// <param name="thickness">The line thickness.</param>
-    API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color1, const Color& color2, float thickness = 1.0f) const;
+    API_FUNCTION() void DrawLine(const Float2& p1, const Float2& p2, const Color& color1, const Color& color2, float thickness = 1.0f);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawMaterial
@@ -909,7 +987,7 @@ public:
 	/// <param name="material">The material to render. Must be a GUI material type.</param>
 	/// <param name="rect">The target rectangle to draw.</param>
 	/// <param name="color">The color to use.</param>
-	API_FUNCTION() void DrawMaterial(MaterialBase* material, const Rectangle& rect, const Color& color) const;
+	API_FUNCTION() void DrawMaterial(MaterialBase* material, const Rectangle& rect, const Color& color);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawSprite
@@ -917,7 +995,7 @@ public:
 	/// <param name="spriteHandle">The sprite to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSprite(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawSpritePoint
@@ -925,7 +1003,7 @@ public:
 	/// <param name="spriteHandle">The sprite to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSpritePoint(const SpriteHandle& spriteHandle, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Draws a sprite in a rectangle with tiling or clipping as necessary.
@@ -935,7 +1013,7 @@ public:
 	/// <param name="offset">Offset the sprite with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSpriteTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Draws a sprite in a rectangle with tiling or clipping as necessary. Uses point sampler.
@@ -945,7 +1023,7 @@ public:
 	/// <param name="offset">Offset the sprite with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawSpritePointTiled(const SpriteHandle& spriteHandle, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText
@@ -955,7 +1033,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="location">The text location.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr) const;
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText
@@ -966,7 +1044,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="location">The text location.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr) const;
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText
@@ -976,7 +1054,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="layout">The text layout properties.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr) const;
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText 
@@ -987,7 +1065,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="layout">The text layout properties.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, API_PARAM(Ref) const TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr) const;
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexture 
@@ -995,7 +1073,7 @@ public:
 	/// <param name="rt">The render target handle to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexture(GPUTextureView* rt, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexture(GPUTextureView* rt, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexture 
@@ -1003,7 +1081,7 @@ public:
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexture(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexture(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexture 
@@ -1011,7 +1089,7 @@ public:
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Draws a texture in a rectangle with tiling or clipping as necessary.
@@ -1021,7 +1099,7 @@ public:
 	/// <param name="offset">Offset the texture with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTextureTiled(GPUTexture *t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTextureTiled(GPUTexture *t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturePoint 
@@ -1029,7 +1107,7 @@ public:
 	/// <param name="t">The texture to draw.</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexturePoint(GPUTexture* t, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Draws a texture in a rectangle with tiling or clipping as necessary. Uses point sampler.
@@ -1039,7 +1117,7 @@ public:
 	/// <param name="offset">Offset the texture with some amount</param>
 	/// <param name="rect">The rectangle to draw.</param>
 	/// <param name="color">The color to multiply all texture pixels.</param>
-	API_FUNCTION() void DrawTexturePointTiled(GPUTexture* t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White) const;
+	API_FUNCTION() void DrawTexturePointTiled(GPUTexture* t, Float2 size, Float2 offset, const Rectangle& rect, const Color& color = Color::White);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -1047,7 +1125,7 @@ public:
 	/// <param name="t">The texture.</param>
 	/// <param name="vertices">The vertices array.</param>
 	/// <param name="uvs">The uvs array.</param>
-	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs) const;
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -1056,7 +1134,7 @@ public:
 	/// <param name="vertices">The vertices array.</param>
 	/// <param name="uvs">The uvs array.</param>
 	/// <param name="color">The color.</param>
-	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Color& color) const;
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Color& color);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -1065,7 +1143,7 @@ public:
 	/// <param name="vertices">The vertices array.</param>
 	/// <param name="uvs">The uvs array.</param>
 	/// <param name="colors">The colors array.</param>
-	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const;
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexturedTriangles 
@@ -1075,7 +1153,7 @@ public:
 	/// <param name="vertices">The vertices array.</param>
 	/// <param name="uvs">The uvs array.</param>
 	/// <param name="colors">The colors array.</param>
-	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<uint16>& indices, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors) const;
+	API_FUNCTION() void DrawTexturedTriangles(GPUTexture* t, const Span<uint16>& indices, const Span<Float2>& vertices, const Span<Float2>& uvs, const Span<Color>& colors);
 
 	/// <summary>
 	/// Wrapper to Render2D's FillTriangles
@@ -1083,7 +1161,7 @@ public:
 	/// <param name="vertices">The vertices array.</param>
 	/// <param name="colors">The colors array.</param>
 	/// <param name="useAlpha">If true alpha blending will be enabled.</param>
-	API_FUNCTION() void FillTriangles(const Span<Float2>& vertices, const Span<Color>& colors, bool useAlpha) const;
+	API_FUNCTION() void FillTriangles(const Span<Float2>& vertices, const Span<Color>& colors, bool useAlpha);
 
 	/// <summary>
 	/// Wrapper to Render2D's FillTriangle
@@ -1092,14 +1170,14 @@ public:
 	/// <param name="p1">The second point.</param>
 	/// <param name="p2">The third point.</param>
 	/// <param name="color">The color.</param>
-	API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color) const;
+	API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color);
 
 	/// <summary>
 	/// Draws a rectangular area filled with color or texture, depending on the area settings
 	/// </summary>
 	/// <param name="area">Settings for filling the rectangle</param>
 	/// <param name="rect">Rectangle to fill</param>
-	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect) const;
+	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect);
 
 	/// <summary>
 	/// Draws a rectangular area filled with color or texture, depending on the area settings
@@ -1107,7 +1185,7 @@ public:
 	/// <param name="area">Settings for filling the rectangle</param>
 	/// <param name="pos">Position of the rectangle</param>
 	/// <param name="size">Size of the rectangle</param>
-	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size) const;
+	API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size);
 
 	/// <summary>
 	/// Wrapper to Render2D's PushClip
@@ -1357,7 +1435,40 @@ public:
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
+	// Initialization
+
+	/// <summary>
+	/// Returns whether the Initialize function has been called once on this control. By default, the main Fudget
+	/// initializes controls after deserialization is over. During manual control creation, Initialize is called
+	/// once the control has been added oo a parent that is in the gui hierarchy
+	/// </summary>
+	API_FUNCTION() bool IsInitialized() const { return (_state_flags & FudgetControlState::Initialized) == FudgetControlState::Initialized; }
+
+	/// <summary>
+	/// Called when redrawing the control. Derived controls should override OnDraw instead. 
+	/// </summary>
+	API_FUNCTION() virtual void Draw();
+
+	/// <summary>
+	/// Checks if the control has any of the passed flags in its state
+	/// </summary>
+	/// <param name="states">State flags to check</param>
+	/// <returns>Whether any of the flags match the current state of the control</returns>
+	API_FUNCTION() virtual bool HasAnyState(FudgetControlState states) const;
+	/// <summary>
+	/// Checks if the control has every passed flags in its state
+	/// </summary>
+	/// <param name="states">State flags to check</param>
+	/// <returns>Whether every flag is found in the current state of the control</returns>
+	API_FUNCTION() virtual bool HasAllStates(FudgetControlState states) const;
 protected:
+	/// <summary>
+	/// Adds or removes the passed state flag or flags depending on the value.
+	/// </summary>
+	/// <param name="states">The flag or flags to set or unset</param>
+	/// <param name="value">True if the flag should be set, false if it should be unset </param>
+	API_FUNCTION() virtual void SetState(FudgetControlState states, bool value);
+
 	// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
 	// the base Initialize if it is overriden.
 	API_FUNCTION() virtual void Initialize();
@@ -1381,8 +1492,8 @@ protected:
 	API_FUNCTION() virtual void SetParentDisabled(bool value);
 private:
 
-	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point) const;
-	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color) const;
+	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
+	void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
 
 	/// <summary>
 	/// The gui root is at the root of the control hierarchy. It forwards input and OnUpdate calls. It can be requested to
@@ -1403,15 +1514,13 @@ private:
 	/// <param name="size">The new size</param>
 	virtual void LayoutUpdate(Float2 pos, Float2 size);
 
+	// Creates an array of tokens based on the control's and its ancestor classes' type names, starting with the most derived class.
 	void CreateClassTokens();
 
 	FudgetContainer *_parent;
 	int _index;
 	String _name;
 
-	// Will be set to true after the Initialize function ran once
-	bool _initialized;
-	
 	FudgetControlFlags _flags;
 
 	Float2 _pos;
@@ -1421,25 +1530,17 @@ private:
 	Float2 _min_size;
 	Float2 _max_size;
 
+	FudgetControlState _state_flags;
+
 	// This is reset on each Draw and calculated when needed to simplify GlobalToLocal and LocalToGlobal in draw calls.
 	// It's only used during the drawing functions. It can be manually reset when needed
-	mutable Float2 _cached_global_to_local_translation;
-	// True when _cached_global_to_local_translation is valid.
-	mutable bool _g2l_was_cached;
+	Float2 _cached_global_to_local_translation;
 
+	// Number of times PushClip was called without a PopClip
 	int _clipping_count;
 
 	// Used locally to avoid double calling functions from the parent.
 	bool _changing;
-
-	// The control's Update function is called with a delta time if this is true.
-	bool _updating_registered;
-
-	// Enabled controls can be interacted with, they can get focus and might be drawn different to disabled. For a
-	// control to be enabled, it needs to be set to enabled and must not have a disabled parent in the hierarchy.
-	bool _enabled;
-	// Whether one of the parents of this control in the hierarchy are disabled.
-	bool _parent_disabled; 
 
 	// Null or the style used to decide the look of the control. When null, the style is decided based on class name.
 	FudgetStyle *_style;

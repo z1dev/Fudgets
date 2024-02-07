@@ -74,6 +74,28 @@ struct FUDGETS_API FudgetPadding
 	FORCE_INLINE float Height() const { return Top + Bottom; }
 
 	/// <summary>
+	/// Horizontal and vertical padding as a size
+	/// </summary>
+	FORCE_INLINE Float2 Size() const { return Float2(Left + Right, Top + Bottom);  }
+
+	/// <summary>
+	/// Padding to the upper left
+	/// </summary>
+	FORCE_INLINE Float2 TopLeft() const { return Float2(Left, Top);  }
+	/// <summary>
+	/// Padding to the upper left
+	/// </summary>
+	FORCE_INLINE Float2 UpperLeft() const { return Float2(Left, Top); }
+	/// <summary>
+	/// Padding to the lower right
+	/// </summary>
+	FORCE_INLINE Float2 BottomRight() const { return Float2(Right, Bottom); }
+	/// <summary>
+	/// Padding to the lower right
+	/// </summary>
+	FORCE_INLINE Float2 LowerRight() const { return Float2(Right, Bottom); }
+
+	/// <summary>
 	/// Padding to the left
 	/// </summary>
 	API_FIELD() float Left;

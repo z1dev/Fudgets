@@ -334,9 +334,9 @@ void FudgetLayout::SetOwnerInternal(FudgetContainer *value)
 
 	if (value != nullptr)
 	{
-		FillSlots();
 		if ((_flags & FudgetLayoutFlag::ResetFlags) == FudgetLayoutFlag::ResetFlags)
 			_flags = GetInitFlags();
+		FillSlots();
 	}
 }
 

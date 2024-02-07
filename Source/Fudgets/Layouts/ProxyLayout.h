@@ -65,4 +65,7 @@ public:
 	/// <inheritdoc />
 	FudgetLayoutFlag GetInitFlags() const override;
 
+	/// <inheritdoc />
+	void SetControlDimensions(int index, Float2 pos, Float2 size) override;
+
 };

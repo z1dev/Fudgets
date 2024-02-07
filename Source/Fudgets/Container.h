@@ -117,7 +117,6 @@ public:
     /// <inheritdoc />
     void SetEnabled(bool value) override;
 
-
     /// <summary>
     /// Gets the preferred size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred size, this is the preferred size of the container itself.
@@ -253,13 +252,13 @@ public:
     /// </summary>
     API_FUNCTION() virtual void RequestLayout();
 
-    /// <summary>
-    /// Called by the parent containers for all controls in the tree of controls to draw the control when rendering.
-    /// </summary>
-    /// <returns></returns>
-    void Draw() override;
+    /// <inheritdoc />
+    void OnDraw() override;
 
     /// <inheritdoc />
+    void OnFocusChanged(bool focused, FudgetControl *other) override;
+
+        /// <inheritdoc />
     void ClearStyleCache(bool inherited = true) override;
 
     /// <summary>
@@ -308,19 +307,27 @@ public:
     // Input:
 
     /// <summary>
-    /// Lists every control under the mouse from bottom to top that has the flag to handle the monitored mouse event.
-    /// Every container will also have this function called to fill the array and find everything.
+    /// Lists every control under the given position from bottom to top that has the matching flags.
+    /// Containers call this function recursively to find all child controls that match as well.
     /// </summary>
-    /// <param name="pos">Mouse position relative to this container</param>
-    /// <param name="request">The flag that's related to inputs</param>
-    /// <param name="result">Controls that can handle the event from top to bottom</param>
-    /// <returns>List of controls </returns>
-    API_FUNCTION() virtual void ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(Ref) Array<FudgetControl*> &result);
+    /// <param name="pos">Position relative to the container's top left corner</param>
+    /// <param name="request">Flags that the control must match with HasAnyFlag</param>
+    /// <param name="reject">Flags that shouldn't be found on the controls. This takes priority over requested flags.</param>
+    /// <param name="block">Stops checking child controls in the container which has one of these flags.</param>
+    /// <param name="result">Receives the controls that match the flags</param>
+    /// <returns>List of controls matching at least one request flag and none of the reject flags</returns>
+    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlags request, FudgetControlFlags reject, FudgetControlFlags block, API_PARAM(Ref) Array<FudgetControl*> &result);
 
     // Serialization
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
+
+    /// <summary>
+    /// Requests layouting, draws itself and then asks the child controls to draw themselves. Derived containers
+    /// should instead override OnDraw for drawing themselves.
+    /// </summary>
+    void Draw() override;
 
 protected:
     /// <inheritdoc />
@@ -331,6 +338,7 @@ protected:
 
     /// <inheritdoc />
     void SetParentDisabled(bool value) override;
+
 private:
     void SetParentDisabledRecursive();
 

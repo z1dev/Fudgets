@@ -325,6 +325,9 @@ public:
         return _guiRoot;
     }
 
+    API_FUNCTION()
+    FORCE_INLINE void DrawGUI() const;
+
     /// <summary>
     /// The delay (in seconds) before a navigation input event starts repeating if input control is held down (Input Action mode is set to Pressing).
     /// </summary>

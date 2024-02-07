@@ -73,7 +73,7 @@ void FudgetRenderer::Render(GPUContext* context, API_PARAM(Ref) RenderContext& r
         // TODO: check if we can get around the try/catch, since it's bad for peformance.
         try
         {
-            Canvas->GetGUI()->Draw();
+            Canvas->DrawGUI();
         }
         catch (...)
         {
@@ -275,6 +275,11 @@ void Fudget::SetSize(Float2 value)
         _saved_size = value;
         _guiRoot->SetHintSize(value);
     }
+}
+
+void Fudget::DrawGUI() const
+{
+    _guiRoot->Draw();
 }
 
 OrientedBoundingBox Fudget::GetBounds() const

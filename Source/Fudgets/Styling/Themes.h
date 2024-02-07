@@ -213,40 +213,60 @@ public:
     // All tokens start with "FudgetThemes_" and have the same string value following it as their name, but excluding "Token".
 
 
-    // Tokens for colors:
+    // Tokens for colors and images:
 
     /// <summary>
     /// Background color for controls that hold other controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken BgColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken BackgroundColorToken;
     /// <summary>
     /// Background color for controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FieldBgColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken FieldColorToken;
     /// <summary>
-    /// Background color for disabled controls that show field values like text.
+    /// Background color for hovered controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldColorToken;
     /// <summary>
     /// Background color for focused controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldColorToken;
+    /// <summary>
+    /// Background color for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldColorToken;
     /// <summary>
     /// Border color for controls that hold other controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BorderColorToken;
     /// <summary>
-    /// Border color for controls that show field values like text.
+    /// Border color for hovered controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBorderColorToken;
+    /// <summary>
+    /// Border color for focused controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBorderColorToken;
+    /// <summary>
+    /// Border color for disabled controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBorderColorToken;
+    /// <summary>
+    /// Border color for controls that have a separate outer border and show field values, like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FieldBorderColorToken;
     /// <summary>
-    /// Border color for disabled controls that show field values like text.
+    /// Border color for hovered controls that have a separate outer border and show field values, like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldBorderColorToken;
     /// <summary>
-    /// Border color for focused controls that show field values like text.
+    /// Border color for focused controls that have a separate outer border and show field values, like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBorderColorToken;
+    /// <summary>
+    /// Border color for disabled controls that have a separate outer border and show field values, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderColorToken;
     /// <summary>
     /// Dark color representing a theme.
     /// </summary>
@@ -268,6 +288,10 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken SelectionColorToken;
     /// <summary>
+    /// Background hovered for selected items in focused controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectionColorToken;
+    /// <summary>
     /// Background color for selected items in focused controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionColorToken;
@@ -280,29 +304,41 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken TextColorToken;
     /// <summary>
-    /// Text color for disabled controls
+    /// Text color for hovered controls
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledTextColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredTextColorToken;
     /// <summary>
     /// Text color for focused controls
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedTextColorToken;
     /// <summary>
+    /// Text color for disabled controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledTextColorToken;
+    /// <summary>
     /// Text color in fields for controls in a neutral state. For example text box text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FieldTextColorToken;
     /// <summary>
-    /// Text color in fields for disabled controls. For example text box text.
+    /// Text color in fields for hovered controls. For example text box text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldTextColorToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldTextColorToken;
     /// <summary>
     /// Text color in fields for focused controls. For example text box text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedFieldTextColorToken;
     /// <summary>
+    /// Text color in fields for disabled controls. For example text box text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldTextColorToken;
+    /// <summary>
     /// Selected text color in fields for controls in a neutral state.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken SelectedTextColorToken;
+    /// <summary>
+    /// Selected text color in fields for hovered controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectedTextColorToken;
     /// <summary>
     /// Selected text color in fields for focused controls.
     /// </summary>
@@ -312,36 +348,133 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedTextColorToken;
 
+    /// <summary>
+    /// Color of the main area of the control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its hovered selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectedControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its disabled down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledDownControlColorToken;
+    /// <summary>
+    /// Color of the main area of the control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedControlColorToken;
+
+    /// <summary>
+    /// Color of the main area of a button control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledButtonColorToken;
+    /// <summary>
+    /// Color of the main area of a button control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedButtonColorToken;
 
 
     /// <summary>
     /// Background image for controls that hold other controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken BgImageToken;
+    API_FIELD(ReadOnly) static const FudgetToken BackgroundImageToken;
     /// <summary>
     /// Background image for controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FieldBgImageToken;
+    API_FIELD(ReadOnly) static const FudgetToken FieldImageToken;
     /// <summary>
-    /// Background image for disabled controls that show field values like text.
+    /// Background image for hovered controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgImageToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldImageToken;
     /// <summary>
     /// Background image for focused controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgImageToken;
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldImageToken;
+    /// <summary>
+    /// Background image for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldImageToken;
     /// <summary>
     /// Border image for controls that hold other controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BorderImageToken;
     /// <summary>
+    /// Border image for hovered controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBorderImageToken;
+    /// <summary>
+    /// Border image for focused controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBorderImageToken;
+    /// <summary>
+    /// Border image for disabled controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBorderImageToken;
+    /// <summary>
     /// Border image for controls that show field values like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FieldBorderImageToken;
     /// <summary>
-    /// Border image for disabled controls that show field values like text.
+    /// Border image for hovered controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderImageToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldBorderImageToken;
     /// <summary>
     /// Border image for focused controls that show field values like text.
     /// </summary>
@@ -351,59 +484,281 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken SelectionImageToken;
     /// <summary>
+    /// Background image for selected items in hovered controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectionImageToken;
+    /// <summary>
     /// Background image for selected items in focused controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionImageToken;
+    /// <summary>
+    /// Border image for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderImageToken;
     /// <summary>
     /// Background image  for selected items in disabled controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken DisabledSelectionImageToken;
 
+    /// <summary>
+    /// Image of the main area of the control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its hovered selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectedControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its disabled down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledDownControlImageToken;
+    /// <summary>
+    /// Image of the main area of the control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedControlImageToken;
+
+    /// <summary>
+    /// Image of the main area of a button control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledButtonImageToken;
+    /// <summary>
+    /// Image of the main area of a button control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedButtonImageToken;
+
+
 
     /// <summary>
     /// Background for controls that hold other controls.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken BgDrawToken;
+    API_FIELD(ReadOnly) static const FudgetToken BackgroundDrawToken;
     /// <summary>
     /// Background for controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FieldBgDrawToken;
+    API_FIELD(ReadOnly) static const FudgetToken FieldDrawToken;
     /// <summary>
-    /// Background for disabled controls that show field values like text.
+    /// Background for hovered controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBgDrawToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldDrawToken;
     /// <summary>
     /// Background for focused controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBgDrawToken;
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldDrawToken;
+    /// <summary>
+    /// Background for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldDrawToken;
     /// <summary>
     /// Border for controls that hold other controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BorderDrawToken;
     /// <summary>
+    /// Border draw area for hovered controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBorderDrawToken;
+    /// <summary>
+    /// Border draw area for focused controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBorderDrawToken;
+    /// <summary>
+    /// Border draw area for disabled controls that hold other controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBorderDrawToken;
+    /// <summary>
     /// Border for controls that show field values like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FieldBorderDrawToken;
     /// <summary>
-    /// Border for disabled controls that show field values like text.
+    /// Border for hovered controls that show field values like text.
     /// </summary>
-    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderDrawToken;
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldBorderDrawToken;
     /// <summary>
     /// Border for focused controls that show field values like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedFieldBorderDrawToken;
     /// <summary>
+    /// Border for disabled controls that show field values like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldBorderDrawToken;
+    /// <summary>
     /// Background  for selected items in controls in a neutral sate.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken SelectionDrawToken;
+    /// <summary>
+    /// Background for selected items in hovered controls.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectionDrawToken;
     /// <summary>
     /// Background for selected items in focused controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FocusedSelectionDrawToken;
     /// <summary>
-    /// Background  for selected items in disabled controls.
+    /// Background for selected items in disabled controls.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken DisabledSelectionDrawToken;
+
+    /// <summary>
+    /// Draw area of the main area of the control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its hovered selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredSelectedControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its disabled down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledDownControlDrawToken;
+    /// <summary>
+    /// Draw area of the main area of the control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedControlDrawToken;
+
+
+    /// <summary>
+    /// Draw area of the main area of a button control in its neutral state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledButtonDrawToken;
+    /// <summary>
+    /// Draw area of the main area of a button control in its disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedButtonDrawToken;
+
+
+    // Tokens for fonts:
+
+    /// <summary>
+    /// Standard font used on control surfaces
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ControlFontToken;
+    /// <summary>
+    /// Small font used on control surfaces
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SmallControlFontToken;
+    /// <summary>
+    /// Large font used on control surfaces
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken LargeControlFontToken;
+    /// <summary>
+    /// Font used in headers
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HeaderFontToken;
+    /// <summary>
+    /// Standard font used in input fields
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FieldFontToken;
 
 
     // Tokens for padding:
@@ -412,6 +767,14 @@ public:
     /// Padding inside a control to restrict the space of the contents. Controls might choose to use both control padding and field padding.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken ControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control to restrict a border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken BorderPaddingToken;
     /// <summary>
     /// Padding inside a control to restrict the space of field contents, like text. Controls might choose to use both control padding and field padding.
     /// </summary>

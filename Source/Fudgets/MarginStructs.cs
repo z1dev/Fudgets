@@ -59,8 +59,37 @@ public partial struct FudgetPadding
     /// Top and bottom padding added together.
     /// </summary>
     public readonly float Height => Top + Bottom;
+
+    /// <summary>
+    /// Horizontal and vertical padding as a size
+    /// </summary>
+    public readonly Float2 Size => new Float2(Left + Right, Top + Bottom);
+
+    /// <summary>
+    /// Padding to the upper left
+    /// </summary>
+    public readonly Float2 TopLeft => new Float2(Left, Top);
+    /// <summary>
+    /// Padding to the upper left
+    /// </summary>
+    public readonly Float2 UpperLeft => new Float2(Left, Top);
+
+    /// <summary>
+    /// Padding to the lower right
+    /// </summary>
+    public readonly Float2 LowerRight => new Float2(Right, Bottom);
+    /// <summary>
+    /// Padding to the lower right
+    /// </summary>
+    public readonly Float2 BottomRight => new Float2(Right, Bottom);
+
     /// <summary>
     /// Converts padding to a Float4 with left, right, top, bottom values in this order.
     /// </summary>
     public readonly Float4 AsFloat4 => new Float4(Left, Right, Top, Bottom);
+
+    /// <summary>
+    /// Sum of the corresponding sides' padding.
+    /// </summary>
+    public static FudgetPadding operator+(FudgetPadding a, FudgetPadding b) => new FudgetPadding(a.Left + b.Left, a.Top + b.Top, a.Right + b.Right, a.Bottom + b.Bottom);
 }

@@ -61,7 +61,7 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
     control->_parent = this;
     control->_index = index;
     control->_guiRoot = GetGUIRoot();
-    control->_parent_disabled = _parent_disabled || !_enabled;
+    control->SetState(FudgetControlState::ParentDisabled, !IsVirtuallyEnabled());
     if ((control->_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
         control->_flags = control->GetInitFlags() & ~(FudgetControlFlags::AlwaysOnTop);
 
@@ -70,10 +70,10 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
     if (_layout != nullptr)
         _layout->ChildAdded(control, index);
 
-    if (_guiRoot != nullptr && !control->_initialized)
+    if (_guiRoot != nullptr && !control->HasAnyState(FudgetControlState::Initialized))
     {
         control->Initialize();
-        control->_initialized = true;
+        control->SetState(FudgetControlState::Initialized, true);
     }
 
     _changing = false;
@@ -93,7 +93,7 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
     control->_parent = nullptr;
     control->_index = -1;
     control->_guiRoot = nullptr;
-    control->_parent_disabled = false;
+    control->SetState(FudgetControlState::ParentDisabled, false);
     if (!control->_changing)
         control->RegisterToUpdate(false);
 
@@ -189,7 +189,7 @@ void FudgetContainer::DeleteAll()
 void FudgetContainer::SetEnabled(bool value)
 {
     Base::SetEnabled(value);
-    if (!_parent_disabled)
+    if (!HasAnyState(FudgetControlState::ParentDisabled))
         SetParentDisabledRecursive();
     // TODO: when implementing events, make sure the enabled event is only sent out after this recursive call
 }
@@ -410,19 +410,47 @@ void FudgetContainer::RequestLayout()
     }
 }
 
-void FudgetContainer::Draw()
+void FudgetContainer::OnDraw()
 {
-    RequestLayout();
-
     if (DrawFilledBackground)
     {
         FillRectangle(Float2(0.0f), GetSize(), FillColor);
     }
+}
 
-    for (FudgetControl *c : _children)
-        c->Draw();
+void FudgetContainer::OnFocusChanged(bool focused, FudgetControl *other)
+{
+    Base::OnFocusChanged(focused, other);
 
-    Base::Draw();
+    if (IsCompoundControl())
+    {
+        Array<int> indexes;
+        FudgetContainer *pos = this;
+        indexes.Add(0);
+        int ix = 0;
+        while (pos != nullptr && indexes.Count() != 0)
+        {
+            ix = indexes.Pop();
+            for (int siz = pos->_children.Count(); ix < siz; ++ix)
+            {
+                FudgetControl *c = pos->_children[ix];
+                c->SetState(FudgetControlState::ShowFocused, focused);
+                if (c->HasAnyFlag(FudgetControlFlags::ContainerControl))
+                {
+                    FudgetContainer *container = dynamic_cast<FudgetContainer*>(c);
+                    if (container == nullptr || container->GetChildCount() == 0)
+                        continue;
+                    indexes.Push(ix + 1);
+                    pos = container;
+                    ix = -1;
+                    siz = pos->_children.Count();
+                }
+            }
+            pos = pos->GetParent();
+        } 
+
+        return;
+    }
 }
 
 void FudgetContainer::ClearStyleCache(bool inherited)
@@ -486,7 +514,7 @@ void FudgetContainer::GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &resul
     FudgetContainer::GetAllControls(this, result);
 }
 
-void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request, API_PARAM(Ref) Array<FudgetControl*> &result)
+void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlags request, FudgetControlFlags reject, FudgetControlFlags block, API_PARAM(Ref) Array<FudgetControl*> &result)
 {
     for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
     {
@@ -494,10 +522,10 @@ void FudgetContainer::ControlsUnderMouse(Float2 pos, FudgetControlFlags request,
         if (!control->GetBoundsInParent().Contains(pos))
             continue;
 
-        if (request == FudgetControlFlags::None || control->HasAnyFlag(request))
+        if ((request == FudgetControlFlags::None || control->HasAnyFlag(request)) && (reject == FudgetControlFlags::None || !control->HasAnyFlag(reject)))
             result.Add(control);
-        if (control->HasAnyFlag(FudgetControlFlags::ContainerControl))
-            dynamic_cast<FudgetContainer*>(control)->ControlsUnderMouse(pos - control->_pos, request, result);
+        if (control->HasAnyFlag(FudgetControlFlags::ContainerControl) && (block == FudgetControlFlags::None || !control->HasAnyFlag(block)))
+            dynamic_cast<FudgetContainer*>(control)->ControlsAtPosition(pos - control->_pos, request, reject, block, result);
     }
 }
 
@@ -536,6 +564,17 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
     }
 }
 
+void FudgetContainer::Draw()
+{
+    RequestLayout();
+
+    Base::Draw();
+
+    for (FudgetControl *c : _children)
+        c->Draw();
+
+}
+
 void FudgetContainer::Initialize()
 {
     if (_guiRoot == nullptr)
@@ -546,7 +585,7 @@ void FudgetContainer::Initialize()
         if (!c->IsInitialized())
         {
             c->Initialize();
-            c->_initialized = true;
+            c->SetState(FudgetControlState::Initialized, true);
         }
     }
     Base::Initialize();

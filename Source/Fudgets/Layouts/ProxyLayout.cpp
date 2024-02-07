@@ -43,3 +43,9 @@ FudgetLayoutFlag FudgetProxyLayout::GetInitFlags() const
         return Base::GetInitFlags();
     return owner->ProxyInterfaceGetInitFlags();
 }
+
+void FudgetProxyLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
+{
+    Base::SetControlDimensions(index, pos, size);
+}
+

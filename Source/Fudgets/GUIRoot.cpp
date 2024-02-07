@@ -196,15 +196,20 @@ void FudgetGUIRoot::StartMouseCapture(FudgetControl *control)
 		ReleaseMouseCapture();
 	_mouse_capture_control = control;
 	if (_mouse_capture_control != nullptr && _window != nullptr)
+	{
 		_window->StartTrackingMouse(false);
+		_mouse_capture_control->OnMouseCaptured();
+	}
 }
 
 void FudgetGUIRoot::ReleaseMouseCapture()
 {
 	if (_mouse_capture_control == nullptr)
 		return;
+	FudgetControl *tmp = _mouse_capture_control;
 	_mouse_capture_control = nullptr;
 	_window->EndTrackingMouse();
+	tmp->OnMouseReleased();
 }
 
 void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
@@ -221,7 +226,17 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 
 		_focus_control_keys.Clear();
 	}
-	_focus_control = value;
+
+	if (_focus_control != nullptr)
+		_focus_control->OnFocusChanging(false, value);
+	if (value != nullptr)
+		value->OnFocusChanging(true, _focus_control);
+
+	std::swap(_focus_control, value);
+	if (value != nullptr)
+		value->OnFocusChanged(false, _focus_control);
+	if (_focus_control != nullptr)
+		_focus_control->OnFocusChanged(true, value);
 }
 
 bool FudgetGUIRoot::RegisterControlUpdate(FudgetControl *control, bool value)
@@ -417,7 +432,7 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
@@ -490,7 +505,7 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
@@ -560,7 +575,7 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
 
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
@@ -622,7 +637,8 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsUnderMouse(pos, FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::BlockMouseEvents, controls_for_input);
+
+	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
 
 	bool post_leave = _mouse_over_control != nullptr;
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
