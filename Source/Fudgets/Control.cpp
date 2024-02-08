@@ -1014,6 +1014,141 @@ bool FudgetControl::GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out
 	return false;
 }
 
+bool FudgetControl::GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float2(0.0f);
+		return false;
+	}
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		if (var.Type.Type == VariantType::Float2)
+		{
+			result = var.AsFloat2();
+			return true;
+		}
+	}
+	result = Float2(0.0f);
+	return false;
+}
+
+bool FudgetControl::GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Out) Float2 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float2(0.0f);
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Float2)
+			{
+				result = var.AsFloat2();
+				return true;
+			}
+		}
+	}
+	result = Float2(0.0f);
+	return false;
+}
+
+bool FudgetControl::GetStyleFloat3(FudgetToken token, API_PARAM(Out) Float3 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float3(0.0f);
+		return false;
+	}
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		if (var.Type.Type == VariantType::Float3)
+		{
+			result = var.AsFloat3();
+			return true;
+		}
+	}
+	result = Float3(0.0f);
+	return false;
+}
+
+bool FudgetControl::GetStyleFloat3(const Span<FudgetToken> &tokens, API_PARAM(Out) Float3 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float3(0.0f);
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Float3)
+			{
+				result = var.AsFloat3();
+				return true;
+			}
+		}
+	}
+	result = Float3(0.0f);
+	return false;
+}
+
+bool FudgetControl::GetStyleFloat4(FudgetToken token, API_PARAM(Out) Float4 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float4(0.0f);
+		return false;
+	}
+	Variant var;
+	if (style->GetResourceValue(GetActiveTheme(), token, var))
+	{
+		if (var.Type.Type == VariantType::Float4)
+		{
+			result = var.AsFloat4();
+			return true;
+		}
+	}
+	result = Float4(0.0f);
+	return false;
+}
+
+bool FudgetControl::GetStyleFloat4(const Span<FudgetToken> &tokens, API_PARAM(Out) Float4 &result)
+{
+	FudgetStyle *style = GetActiveStyle();
+	if (style == nullptr)
+	{
+		result = Float4(0.0f);
+		return false;
+	}
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
+		{
+			if (var.Type.Type == VariantType::Float4)
+			{
+				result = var.AsFloat4();
+				return true;
+			}
+		}
+	}
+	result = Float4(0.0f);
+	return false;
+}
+
 bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
 {
 	FudgetStyle *style = GetActiveStyle();

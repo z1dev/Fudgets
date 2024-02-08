@@ -1299,6 +1299,63 @@ public:
 	API_FUNCTION() bool GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out) float &result);
 
 	/// <summary>
+	/// Returns a Float2 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the Float2 in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &result);
+
+	/// <summary>
+	/// Returns a Float2 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Out) Float2 &result);
+
+	/// <summary>
+	/// Returns a Float3 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the Float3 in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleFloat3(FudgetToken token, API_PARAM(Out) Float3 &result);
+
+	/// <summary>
+	/// Returns a Float3 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleFloat3(const Span<FudgetToken> &tokens, API_PARAM(Out) Float3 &result);
+
+	/// <summary>
+	/// Returns a Float4 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the Float4 in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleFloat4(FudgetToken token, API_PARAM(Out) Float4 &result);
+
+	/// <summary>
+	/// Returns a Float4 value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleFloat4(const Span<FudgetToken> &tokens, API_PARAM(Out) Float4 &result);
+
+	/// <summary>
 	/// Returns an int value for the control based on a theme token.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>

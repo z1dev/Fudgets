@@ -764,21 +764,152 @@ public:
     // Tokens for padding:
 
     /// <summary>
-    /// Padding inside a control to restrict the space of the contents. Controls might choose to use both control padding and field padding.
+    /// Padding inside a control to restrict the space of the contents.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken ControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the pressed state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the down state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the hovered state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused selected state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the selected state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledControlPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled selected state to restrict the space of the contents.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedControlPaddingToken;
+
     /// <summary>
     /// Padding inside a control to restrict the background's draw rectangle.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BackgroundPaddingToken;
     /// <summary>
+    /// Padding inside a control in the pressed state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the down state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the hovered state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused selected state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the selected state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBackgroundPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled selected state to restrict the background's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedBackgroundPaddingToken;
+
+    /// <summary>
     /// Padding inside a control to restrict a border's draw rectangle.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BorderPaddingToken;
     /// <summary>
-    /// Padding inside a control to restrict the space of field contents, like text. Controls might choose to use both control padding and field padding.
+    /// Padding inside a control in the pressed state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the down state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the hovered state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused selected state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the selected state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBorderPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled selected state to restrict the border's draw rectangle.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedBorderPaddingToken;
+
+    /// <summary>
+    /// Padding inside a control to restrict the space of field contents, like text.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken FieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the pressed state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the down state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the hovered state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the focused selected state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the selected state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledFieldPaddingToken;
+    /// <summary>
+    /// Padding inside a control in the disabled selected state to restrict the space of field contents, like text.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedFieldPaddingToken;
 
 
     // Tokens for general values:
@@ -867,6 +998,81 @@ public:
     /// Generic value for bottom side border width.
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BorderWidthBottomToken;
+
+
+    /// <summary>
+    /// An offset for drawing an image in a control.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken ImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledImageOffsetToken;
+    /// <summary>
+    /// An offset for drawing an image in a control in the disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedImageOffsetToken;
+
+    /// <summary>
+    /// An offset for drawing an area in a control.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the pressed state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken PressedDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the down state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DownDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the hovered state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken SelectedDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the focused state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the focused selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedSelectedDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the disabled state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledDrawOffsetToken;
+    /// <summary>
+    /// An offset for drawing an area in a control in the disabled selected state.
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledSelectedDrawOffsetToken;
 
 
     /// <summary>

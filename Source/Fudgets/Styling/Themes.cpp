@@ -173,9 +173,44 @@ const FudgetToken FudgetThemes::HeaderFontToken = FudgetThemes::RegisterToken(TE
 const FudgetToken FudgetThemes::FieldFontToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldFont"));
 
 const FudgetToken FudgetThemes::ControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_ControlPadding"));
+const FudgetToken FudgetThemes::PressedControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedControlPadding"));
+const FudgetToken FudgetThemes::DownControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownControlPadding"));
+const FudgetToken FudgetThemes::HoveredControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredControlPadding"));
+const FudgetToken FudgetThemes::FocusedControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedControlPadding"));
+const FudgetToken FudgetThemes::FocusedSelectedControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedControlPadding"));
+const FudgetToken FudgetThemes::SelectedControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedControlPadding"));
+const FudgetToken FudgetThemes::DisabledControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledControlPadding"));
+const FudgetToken FudgetThemes::DisabledSelectedControlPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedControlPadding"));
+
 const FudgetToken FudgetThemes::BackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BackgroundPadding"));
+const FudgetToken FudgetThemes::PressedBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedBackgroundPadding"));
+const FudgetToken FudgetThemes::DownBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownBackgroundPadding"));
+const FudgetToken FudgetThemes::HoveredBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredBackgroundPadding"));
+const FudgetToken FudgetThemes::FocusedBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedBackgroundPadding"));
+const FudgetToken FudgetThemes::FocusedSelectedBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedBackgroundPadding"));
+const FudgetToken FudgetThemes::SelectedBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedBackgroundPadding"));
+const FudgetToken FudgetThemes::DisabledBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledBackgroundPadding"));
+const FudgetToken FudgetThemes::DisabledSelectedBackgroundPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedBackgroundPadding"));
+
 const FudgetToken FudgetThemes::BorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderPadding"));
+const FudgetToken FudgetThemes::PressedBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedBorderPadding"));
+const FudgetToken FudgetThemes::DownBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownBorderPadding"));
+const FudgetToken FudgetThemes::HoveredBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredBorderPadding"));
+const FudgetToken FudgetThemes::FocusedBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedBorderPadding"));
+const FudgetToken FudgetThemes::FocusedSelectedBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedBorderPadding"));
+const FudgetToken FudgetThemes::SelectedBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedBorderPadding"));
+const FudgetToken FudgetThemes::DisabledBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledBorderPadding"));
+const FudgetToken FudgetThemes::DisabledSelectedBorderPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedBorderPadding"));
+
 const FudgetToken FudgetThemes::FieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldPadding"));
+const FudgetToken FudgetThemes::PressedFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedFieldPadding"));
+const FudgetToken FudgetThemes::DownFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownFieldPadding"));
+const FudgetToken FudgetThemes::HoveredFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredFieldPadding"));
+const FudgetToken FudgetThemes::FocusedFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldPadding"));
+const FudgetToken FudgetThemes::FocusedSelectedFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedFieldPadding"));
+const FudgetToken FudgetThemes::SelectedFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedFieldPadding"));
+const FudgetToken FudgetThemes::DisabledFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledFieldPadding"));
+const FudgetToken FudgetThemes::DisabledSelectedFieldPaddingToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedFieldPadding"));
 
 const FudgetToken FudgetThemes::CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CaretBlinkTime"));
 const FudgetToken FudgetThemes::CaretPixelWidthToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_CaretPixelWidth"));
@@ -199,6 +234,26 @@ const FudgetToken FudgetThemes::BorderWidthLeftToken = FudgetThemes::RegisterTok
 const FudgetToken FudgetThemes::BorderWidthRightToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthRight"));
 const FudgetToken FudgetThemes::BorderWidthTopToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthTop"));
 const FudgetToken FudgetThemes::BorderWidthBottomToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BorderWidthBottom"));
+
+const FudgetToken FudgetThemes::ImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_ImageOffset"));
+const FudgetToken FudgetThemes::PressedImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedImageOffset"));
+const FudgetToken FudgetThemes::DownImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownImageOffset"));
+const FudgetToken FudgetThemes::HoveredImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredImageOffset"));
+const FudgetToken FudgetThemes::SelectedImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedImageOffset"));
+const FudgetToken FudgetThemes::FocusedImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedImageOffset"));
+const FudgetToken FudgetThemes::FocusedSelectedImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedImageOffset"));
+const FudgetToken FudgetThemes::DisabledImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledImageOffset"));
+const FudgetToken FudgetThemes::DisabledSelectedImageOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedImageOffset"));
+
+const FudgetToken FudgetThemes::DrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DrawOffset"));
+const FudgetToken FudgetThemes::PressedDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_PressedDrawOffset"));
+const FudgetToken FudgetThemes::DownDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DownDrawOffset"));
+const FudgetToken FudgetThemes::HoveredDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredDrawOffset"));
+const FudgetToken FudgetThemes::SelectedDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_SelectedDrawOffset"));
+const FudgetToken FudgetThemes::FocusedDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedDrawOffset"));
+const FudgetToken FudgetThemes::FocusedSelectedDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedSelectedDrawOffset"));
+const FudgetToken FudgetThemes::DisabledDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledDrawOffset"));
+const FudgetToken FudgetThemes::DisabledSelectedDrawOffsetToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedDrawOffset"));
 
 
 // FudgetTheme
