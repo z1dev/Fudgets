@@ -256,7 +256,7 @@ public:
     void OnDraw() override;
 
     /// <inheritdoc />
-    void OnFocusChanged(bool focused, FudgetControl *other) override;
+    void DoFocusChanged(bool focused, FudgetControl *other) override;
 
         /// <inheritdoc />
     void ClearStyleCache(bool inherited = true) override;
@@ -327,7 +327,7 @@ public:
     /// Requests layouting, draws itself and then asks the child controls to draw themselves. Derived containers
     /// should instead override OnDraw for drawing themselves.
     /// </summary>
-    void Draw() override;
+    void DoDraw() override;
 
 protected:
     /// <inheritdoc />

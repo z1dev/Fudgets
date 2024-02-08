@@ -29,6 +29,9 @@ const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEX
 const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DefaultStyle"));
 
 const FudgetToken FudgetThemes::BackgroundColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BackgroundColor"));
+const FudgetToken FudgetThemes::HoveredBackgroundColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredBackgroundColor"));
+const FudgetToken FudgetThemes::FocusedBackgroundColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedBackgroundColor"));
+const FudgetToken FudgetThemes::DisabledBackgroundColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledBackgroundColor"));
 const FudgetToken FudgetThemes::FieldColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldColor"));
 const FudgetToken FudgetThemes::HoveredFieldColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredFieldColor"));
 const FudgetToken FudgetThemes::FocusedFieldColorToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldColor"));
@@ -87,6 +90,9 @@ const FudgetToken FudgetThemes::DisabledSelectedButtonColorToken = FudgetThemes:
 
 
 const FudgetToken FudgetThemes::BackgroundImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BackgroundImage"));
+const FudgetToken FudgetThemes::HoveredBackgroundImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredBackgroundImage"));
+const FudgetToken FudgetThemes::FocusedBackgroundImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedBackgroundImage"));
+const FudgetToken FudgetThemes::DisabledBackgroundImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledBackgroundImage"));
 const FudgetToken FudgetThemes::FieldImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldImage"));
 const FudgetToken FudgetThemes::HoveredFieldImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredFieldImage"));
 const FudgetToken FudgetThemes::FocusedFieldImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldImage"));
@@ -127,6 +133,9 @@ const FudgetToken FudgetThemes::DisabledButtonImageToken = FudgetThemes::Registe
 const FudgetToken FudgetThemes::DisabledSelectedButtonImageToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledSelectedButtonImage"));
 
 const FudgetToken FudgetThemes::BackgroundDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_BackgroundDraw"));
+const FudgetToken FudgetThemes::HoveredBackgroundDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredBackgroundDraw"));
+const FudgetToken FudgetThemes::FocusedBackgroundDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedBackgroundDraw"));
+const FudgetToken FudgetThemes::DisabledBackgroundDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DisabledBackgroundDraw"));
 const FudgetToken FudgetThemes::FieldDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FieldDraw"));
 const FudgetToken FudgetThemes::HoveredFieldDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_HoveredFieldDraw"));
 const FudgetToken FudgetThemes::FocusedFieldDrawToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_FocusedFieldDraw"));

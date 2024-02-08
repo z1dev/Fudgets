@@ -126,6 +126,11 @@ public:
     API_PROPERTY() void SetFocusedControl(FudgetControl *value);
 
     /// <summary>
+    /// Returns the control under the mouse pointer during the last mouse event
+    /// </summary>
+    API_PROPERTY() FudgetControl* GetHoveredControl() const { return _mouse_over_control; }
+
+    /// <summary>
     /// Registers or unregisters the control to receive the global update tick. Its OnUpdate will be called by the root.
     /// </summary>
     /// <param name="control">The control to register its update</param>

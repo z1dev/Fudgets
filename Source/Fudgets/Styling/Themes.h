@@ -216,9 +216,21 @@ public:
     // Tokens for colors and images:
 
     /// <summary>
-    /// Background color for controls that hold other controls.
+    /// Background color for controls
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BackgroundColorToken;
+    /// <summary>
+    /// Background color for hovered controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBackgroundColorToken;
+    /// <summary>
+    /// Background color for focused controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBackgroundColorToken;
+    /// <summary>
+    /// Background color for disabled controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBackgroundColorToken;
     /// <summary>
     /// Background color for controls that show field values like text.
     /// </summary>
@@ -432,9 +444,21 @@ public:
 
 
     /// <summary>
-    /// Background image for controls that hold other controls.
+    /// Background image for controls
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BackgroundImageToken;
+    /// <summary>
+    /// Background image for hovered controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBackgroundImageToken;
+    /// <summary>
+    /// Background image for focused controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBackgroundImageToken;
+    /// <summary>
+    /// Background image for disabled controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBackgroundImageToken;
     /// <summary>
     /// Background image for controls that show field values like text.
     /// </summary>
@@ -585,9 +609,21 @@ public:
 
 
     /// <summary>
-    /// Background for controls that hold other controls.
+    /// Background for controls
     /// </summary>
     API_FIELD(ReadOnly) static const FudgetToken BackgroundDrawToken;
+    /// <summary>
+    /// Background for hovered controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken HoveredBackgroundDrawToken;
+    /// <summary>
+    /// Background for focused controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken FocusedBackgroundDrawToken;
+    /// <summary>
+    /// Background for disabled controls
+    /// </summary>
+    API_FIELD(ReadOnly) static const FudgetToken DisabledBackgroundDrawToken;
     /// <summary>
     /// Background for controls that show field values like text.
     /// </summary>

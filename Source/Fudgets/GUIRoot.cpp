@@ -198,7 +198,7 @@ void FudgetGUIRoot::StartMouseCapture(FudgetControl *control)
 	if (_mouse_capture_control != nullptr && _window != nullptr)
 	{
 		_window->StartTrackingMouse(false);
-		_mouse_capture_control->OnMouseCaptured();
+		_mouse_capture_control->DoMouseCaptured();
 	}
 }
 
@@ -209,7 +209,7 @@ void FudgetGUIRoot::ReleaseMouseCapture()
 	FudgetControl *tmp = _mouse_capture_control;
 	_mouse_capture_control = nullptr;
 	_window->EndTrackingMouse();
-	tmp->OnMouseReleased();
+	tmp->DoMouseReleased();
 }
 
 void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
@@ -228,15 +228,15 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 	}
 
 	if (_focus_control != nullptr)
-		_focus_control->OnFocusChanging(false, value);
+		_focus_control->DoFocusChanging(false, value);
 	if (value != nullptr)
-		value->OnFocusChanging(true, _focus_control);
+		value->DoFocusChanging(true, _focus_control);
 
 	std::swap(_focus_control, value);
 	if (value != nullptr)
-		value->OnFocusChanged(false, _focus_control);
+		value->DoFocusChanged(false, _focus_control);
 	if (_focus_control != nullptr)
-		_focus_control->OnFocusChanged(true, value);
+		_focus_control->DoFocusChanged(true, value);
 }
 
 bool FudgetGUIRoot::RegisterControlUpdate(FudgetControl *control, bool value)
@@ -660,7 +660,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 					{
 						FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseLeave, c, Float2(), Float2(), MouseButton::None, false);
 						if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
-							old_mouse_control->OnMouseLeave();
+							old_mouse_control->DoMouseLeave();
 					}
 
 					if (wants_enterleave)
@@ -670,7 +670,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 
 						FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseEnter, c, cpos, pos, MouseButton::None, false);
 						if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
-							c->OnMouseEnter(cpos, pos);
+							c->DoMouseEnter(cpos, pos);
 						_mouse_over_control = c;
 					}
 				}
@@ -696,7 +696,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 
 		FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseLeave, old_mouse_control, Float2(), Float2(), MouseButton::None, false);
 		if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
-			old_mouse_control->OnMouseLeave();
+			old_mouse_control->DoMouseLeave();
 	}
 }
 
@@ -711,7 +711,7 @@ void FudgetGUIRoot::HandleMouseLeave()
 
 	if (_mouse_capture_control != nullptr)
 	{
-		LOG(Error, "MouseCapture not null on OnMouseLeave");
+		LOG(Error, "MouseCapture not null on DoMouseLeave");
 		ReleaseMouseCapture();
 		return;
 	}
@@ -724,7 +724,7 @@ void FudgetGUIRoot::HandleMouseLeave()
 
 		FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseLeave, old_mouse_control, Float2(), Float2(), MouseButton::None, false);
 		if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
-			old_mouse_control->OnMouseLeave();
+			old_mouse_control->DoMouseLeave();
 	}
 }
 

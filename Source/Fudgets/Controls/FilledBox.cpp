@@ -8,7 +8,7 @@ FudgetFilledBox::~FudgetFilledBox()
 {
 }
 
-void FudgetFilledBox::Draw()
+void FudgetFilledBox::OnDraw()
 {
 	FillRectangle(Float2(0.f), GetSize(), _color);
 
@@ -16,8 +16,6 @@ void FudgetFilledBox::Draw()
 		DrawRectangle(Float2(0.f), GetSize(), BorderColor);
 
 	//Render2D::FillRectangle(Rectangle(GetPosition(), GetSize()), _color);
-
-	Base::Draw();
 }
 
 void FudgetFilledBox::Serialize(SerializeStream& stream, const void* otherObj)

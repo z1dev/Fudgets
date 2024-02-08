@@ -29,21 +29,6 @@ FudgetControl::~FudgetControl()
 	RegisterToUpdate(false);
 }
 
-void FudgetControl::OnFocusChanged(bool focused, FudgetControl *other)
-{
-	SetState(FudgetControlState::ShowFocused, focused);
-}
-
-void FudgetControl::OnMouseCaptured()
-{
-	SetState(FudgetControlState::MouseIsCaptured, true);
-}
-
-void FudgetControl::OnMouseReleased()
-{
-	SetState(FudgetControlState::MouseIsCaptured, false);
-}
-
 void FudgetControl::SetParent(FudgetContainer *value)
 {
 	SetParent(value, -1);
@@ -364,12 +349,30 @@ void FudgetControl::SetFocused(bool value)
 		root->SetFocusedControl(nullptr);
 }
 
+bool FudgetControl::GetHovered() const
+{
+	auto root = GetGUIRoot();
+	if (root == nullptr)
+		return false;
+	return root->GetHoveredControl() == this;
+}
+
+bool FudgetControl::GetVirtuallyHovered() const
+{
+	return HasAnyState(FudgetControlState::ShowHovered);
+}
+
+bool FudgetControl::GetEnabled() const
+{
+	return (_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled;
+}
+
 void FudgetControl::SetEnabled(bool value)
 {
 	SetState(FudgetControlState::Enabled, value);
 }
 
-bool FudgetControl::IsVirtuallyEnabled() const
+bool FudgetControl::VirtuallyEnabled() const
 {
 	return ((_state_flags & (FudgetControlState::Enabled | FudgetControlState::ParentDisabled)) == FudgetControlState::Enabled);
 }
@@ -1554,10 +1557,45 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 	}
 }
 
-void FudgetControl::Draw()
+void FudgetControl::DoDraw()
 {
 	SetState(FudgetControlState::Global2LocalCached, false);
 	OnDraw();
+}
+
+void FudgetControl::DoFocusChanging(bool focused, FudgetControl *other)
+{
+	OnFocusChanging(focused, other);
+}
+
+void FudgetControl::DoFocusChanged(bool focused, FudgetControl *other)
+{
+	SetState(FudgetControlState::ShowFocused, focused);
+	OnFocusChanged(focused, other);
+}
+
+void FudgetControl::DoMouseCaptured()
+{
+	SetState(FudgetControlState::MouseIsCaptured, true);
+	OnMouseCaptured();
+}
+
+void FudgetControl::DoMouseReleased()
+{
+	SetState(FudgetControlState::MouseIsCaptured, false);
+	OnMouseReleased();
+}
+
+void FudgetControl::DoMouseEnter(Float2 pos, Float2 global_pos)
+{
+	SetState(FudgetControlState::ShowHovered, true);
+	OnMouseEnter(pos, global_pos);
+}
+
+void FudgetControl::FudgetControl::DoMouseLeave()
+{
+	SetState(FudgetControlState::ShowHovered, false);
+	OnMouseLeave();
 }
 
 bool FudgetControl::HasAnyState(FudgetControlState states) const

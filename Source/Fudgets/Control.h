@@ -124,6 +124,11 @@ enum class FudgetControlState : uint8
 	/// Whether the mouse input is currently captured by this control
 	/// </summary>
 	MouseIsCaptured = 1 << 6,
+	/// <summary>
+	/// The control has the appearance like the mouse pointer is over it. This can be different from the real state of the
+	/// mouse pointer, when the control is a compound container or the child of a compound container. 
+	/// </summary>
+	ShowHovered = 1 << 7,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
@@ -314,16 +319,16 @@ public:
 	/// </summary>
 	/// <param name="focused">Whether this control gained the focus or not</param>
 	/// <param name="other">The control which lost or gained the focus. Can be null</param>
-	API_FUNCTION() virtual void OnFocusChanged(bool focused, FudgetControl *other);
+	API_FUNCTION() virtual void OnFocusChanged(bool focused, FudgetControl *other) {}
 
 	/// <summary>
 	/// Called when the control starts capturing the mouse input.
 	/// </summary>
-	API_FUNCTION() virtual void OnMouseCaptured();
+	API_FUNCTION() virtual void OnMouseCaptured() {}
 	/// <summary>
 	/// Called when the control stops capturing the mouse input.
 	/// </summary>
-	API_FUNCTION() virtual void OnMouseReleased();
+	API_FUNCTION() virtual void OnMouseReleased() {}
 
 	/// <summary>
 	/// Fetches the parent who is managing this control. The parent is also responsible for its destruction.
@@ -780,6 +785,19 @@ public:
 	API_PROPERTY() virtual void SetFocused(bool value);
 
 	/// <summary>
+	/// Returns whether this control has the mouse pointer over an uncovered part of its surface. For compound controls, this
+	/// can be true if the mouse pointer is over a child control of the compound control. The control needs to have the
+	/// CanHandleMouseMove and CanHandleMouseEnterLeave flags.
+	/// </summary>
+	API_PROPERTY() virtual bool GetHovered() const;
+
+	/// <summary>
+	/// Returns whether this control should appear like it is in the hovered state when drawing. Usually true when the control
+	/// is hovered, or it is the child of a compound control which is hovered.
+	/// </summary>
+	API_PROPERTY() virtual bool GetVirtuallyHovered() const;
+
+	/// <summary>
 	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
 	/// </summary>
 	/// <returns>The root UI container</returns>
@@ -795,10 +813,10 @@ public:
 	/// For controls that can handle input or be focused, indicates whether this control wants to get keyboard focus
 	/// or is ready to handle other input. For containers, only enabled containers' child controls should  behave like
 	/// they are enabled.
-	/// Check IsVirtuallyEnabled() to see if this control is enabled and all its parents in the hierarchy are also
+	/// Check VirtuallyEnabled() to see if this control is enabled and all its parents in the hierarchy are also
 	/// enabled.
 	/// </summary>
-	API_PROPERTY() bool GetEnabled() const { return (_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled; }
+	API_PROPERTY() bool GetEnabled() const;
 	/// <summary>
 	/// Makes the control enabled or disabled. Only enabled controls can accept input or focus.
 	/// Setting a control to enabled only takes effect if all parents in the hierarchy are also enabled.
@@ -809,7 +827,7 @@ public:
 	/// <summary>
 	/// Returns whether the control is set to be enabled and all its parents in the hierarchy are also enabled.
 	/// </summary>
-	API_PROPERTY() bool IsVirtuallyEnabled() const;
+	API_PROPERTY() bool VirtuallyEnabled() const;
 
 	// Render2D wrapper:
 
@@ -1504,7 +1522,50 @@ public:
 	/// <summary>
 	/// Called when redrawing the control. Derived controls should override OnDraw instead. 
 	/// </summary>
-	API_FUNCTION() virtual void Draw();
+	API_FUNCTION() virtual void DoDraw();
+
+	/// <summary>
+	/// Called when the keyboard input focus changes from one control to another. It is called both on the
+	/// control losing focus and the control gaining focus before the change happens.
+	/// Make sure to call the base implementation upon receiving this event.
+	/// </summary>
+	/// <param name="focused">Whether this control gains the focus or not</param>
+	/// <param name="other">The control which loses or gains the focus. Can be null</param>
+	API_FUNCTION() virtual void DoFocusChanging(bool focused, FudgetControl *other);
+
+	/// <summary>
+	/// Called when the keyboard input focus changes from one control to another. It is called both on the
+	/// control losing focus and the control gaining focus after the change happened.
+	/// Make sure to call the base implementation upon receiving this event.
+	/// </summary>
+	/// <param name="focused">Whether this control gained the focus or not</param>
+	/// <param name="other">The control which lost or gained the focus. Can be null</param>
+	API_FUNCTION() virtual void DoFocusChanged(bool focused, FudgetControl *other);
+
+	/// <summary>
+	/// Called when the control starts capturing the mouse input.
+	/// </summary>
+	API_FUNCTION() virtual void DoMouseCaptured();
+	/// <summary>
+	/// Called when the control stops capturing the mouse input.
+	/// </summary>
+	API_FUNCTION() virtual void DoMouseReleased();
+
+	/// <summary>
+	/// Notification that the mouse just moved over this control or before it starts receiving mouse
+	/// move events. The control needs the CanHandleMouseEnterLeave flag. This function is not called
+	/// if the mouse is currently captured by a different control.
+	/// </summary>
+	/// <param name="pos">Local mouse position></param>
+	/// <param name="global_pos">Global mouse position</param>
+	API_FUNCTION() virtual void DoMouseEnter(Float2 pos, Float2 global_pos);
+
+	/// <summary>
+	/// Notification that the mouse just left this control while it wasn't capturing it. It's also
+	/// called if the control was capturing the mouse but released it, and the mouse wasn't over it.
+	/// The control needs the CanHandleMouseEnterLeave flag.
+	/// </summary>
+	API_FUNCTION() virtual void DoMouseLeave();
 
 	/// <summary>
 	/// Checks if the control has any of the passed flags in its state

@@ -61,7 +61,7 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
     control->_parent = this;
     control->_index = index;
     control->_guiRoot = GetGUIRoot();
-    control->SetState(FudgetControlState::ParentDisabled, !IsVirtuallyEnabled());
+    control->SetState(FudgetControlState::ParentDisabled, !VirtuallyEnabled());
     if ((control->_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
         control->_flags = control->GetInitFlags() & ~(FudgetControlFlags::AlwaysOnTop);
 
@@ -418,9 +418,9 @@ void FudgetContainer::OnDraw()
     }
 }
 
-void FudgetContainer::OnFocusChanged(bool focused, FudgetControl *other)
+void FudgetContainer::DoFocusChanged(bool focused, FudgetControl *other)
 {
-    Base::OnFocusChanged(focused, other);
+    Base::DoFocusChanged(focused, other);
 
     if (IsCompoundControl())
     {
@@ -564,15 +564,14 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
     }
 }
 
-void FudgetContainer::Draw()
+void FudgetContainer::DoDraw()
 {
     RequestLayout();
 
-    Base::Draw();
+    Base::DoDraw();
 
     for (FudgetControl *c : _children)
-        c->Draw();
-
+        c->DoDraw();
 }
 
 void FudgetContainer::Initialize()
@@ -598,7 +597,7 @@ FudgetControlFlags FudgetContainer::GetInitFlags() const
 
 void FudgetContainer::SetParentDisabled(bool value)
 {
-    bool enabled = IsVirtuallyEnabled();
+    bool enabled = VirtuallyEnabled();
     Base::SetParentDisabled(value);
     if (enabled != value)
         SetParentDisabledRecursive();
@@ -607,7 +606,7 @@ void FudgetContainer::SetParentDisabled(bool value)
 void FudgetContainer::SetParentDisabledRecursive()
 {
     for (FudgetControl *c : _children)
-        c->SetParentDisabled(!IsVirtuallyEnabled());
+        c->SetParentDisabled(!VirtuallyEnabled());
 }
 
 void FudgetContainer::LayoutUpdate(Float2 pos, Float2 size)

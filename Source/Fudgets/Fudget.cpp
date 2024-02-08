@@ -126,7 +126,7 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
                 //Canvas->_guiRoot->SetHintSize(v.Size);
             //}
 
-            Canvas->GetGUI()->Draw();
+            Canvas->GetGUI()->DoDraw();
         }
         catch (...)
         {
@@ -279,7 +279,7 @@ void Fudget::SetSize(Float2 value)
 
 void Fudget::DrawGUI() const
 {
-    _guiRoot->Draw();
+    _guiRoot->DoDraw();
 }
 
 OrientedBoundingBox Fudget::GetBounds() const
