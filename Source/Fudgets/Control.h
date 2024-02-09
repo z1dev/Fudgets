@@ -526,7 +526,7 @@ public:
 	/// Called on each frame if the control is registered to receive events
 	/// </summary>
 	/// <param name="delta_time">The time passed since the last update</param>
-	API_FUNCTION() virtual void OnUpdate(float delta_time);
+	API_FUNCTION() virtual void OnUpdate(float delta_time) {}
 
 	/// <summary>
 	/// Registers or unregisters the control to receive the global update tick.
@@ -1468,7 +1468,7 @@ public:
 	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
 	/// <param name="token">Token for a draw area value in the active style</param>
-	/// <param name="result">The draw area that can be passed to DrawStyleArea</param>
+	/// <param name="result">The draw area that can be passed to DrawArea</param>
 	/// <returns>Whether a valid value was found for the token</returns>
 	API_FUNCTION() bool GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
 
@@ -1479,31 +1479,30 @@ public:
 	/// This version of the function accepts an array, and returns the value for the first token found.
 	/// </summary>
 	/// <param name="tokens">An array of tokens that are checked in order</param>
-	/// <param name="result">The draw area that can be passed to DrawStyleArea</param>
+	/// <param name="result">The draw area that can be passed to Drawrea</param>
 	/// <returns>Whether a valid value was found for a token</returns>
 	API_FUNCTION() bool GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result);
 
-	// Drawing with styles
-
 	/// <summary>
-	/// A shorthand for GetStyleDrawArea and DrawArea calls.
-	/// Tries to draw the rectangular area with a draw area setting found for the token. The value referenced
-	/// by the token can be anything that GetStyleDrawArea returns a valid result for.
+	/// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
+	/// whether the original value is a draw setting, a Float2, a color or a token of a material.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
-	/// <param name="token">Token to look for in the style for the area settings</param>
-	/// <param name="rect">Rectangle to draw in</param>
-	/// <param name="tint">Color to multiply the drawn pixels with</param>
-	API_FUNCTION() void DrawStyleArea(FudgetToken token, const Rectangle &rect, Color tint);
+	/// <param name="token">Token for a font draw settings value in the active style</param>
+	/// <param name="result">The settings for font drawing</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleFontDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
 
 	/// <summary>
-	/// Tries to draw the rectangular area with a draw area setting found for the token. The value referenced
-	/// by the tokens can be anything that GetStyleDrawArea returns a valid result for.
-	/// This version of the function accepts an array, and uses the value for the first token found.
+	/// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
+	/// whether the original value is a draw setting, a Float2, a color or a token of a material.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
 	/// </summary>
 	/// <param name="tokens">An array of tokens that are checked in order</param>
-	/// <param name="rect">Rectangle to draw in</param>
-	/// <param name="tint">Color to multiply the drawn pixels with</param>
-	API_FUNCTION() void DrawStyleArea(const Span<FudgetToken> &tokens, const Rectangle &rect, Color tint);
+	/// <param name="result">The settings for font drawing</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleFontDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result);
 
 	// Serialization
 
@@ -1634,6 +1633,14 @@ private:
 
 	// Creates an array of tokens based on the control's and its ancestor classes' type names, starting with the most derived class.
 	void CreateClassTokens();
+
+	// Functions to get style values
+
+	bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
+	bool FontSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
+	bool PaddingFromVariant(const Variant &var, FudgetPadding &result) const;
+	bool Float2FromVariant(const Variant &var, Float2 &result) const;
+	bool ColorFromVariant(const Variant &var, Color &result) const;
 
 	FudgetContainer *_parent;
 	int _index;

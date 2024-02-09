@@ -297,11 +297,6 @@ void FudgetControl::SetAlwaysOnTop(bool value)
 	_changing = false;
 }
 
-void FudgetControl::OnUpdate(float delta_time)
-{
-	;
-}
-
 void FudgetControl::CaptureMouseInput()
 {
 	auto root = GetGUIRoot();
@@ -451,7 +446,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Recta
 	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
-	Draw9SlicingTexture(t, rect, border, borderUV);
+	Draw9SlicingTexture(t, rect, border, borderUV, color);
 }
 
 void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color)
@@ -464,7 +459,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const 
 	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
-	Draw9SlicingTexturePoint(t, rect, border, borderUV);
+	Draw9SlicingTexturePoint(t, rect, border, borderUV, color);
 }
 
 void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color)
@@ -477,7 +472,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHa
 	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
-	Draw9SlicingSprite(spriteHandle, rect, border, borderUV);
+	Draw9SlicingSprite(spriteHandle, rect, border, borderUV, color);
 }
 
 void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color)
@@ -490,7 +485,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spr
 	border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
 	borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
-	Draw9SlicingSpritePoint(spriteHandle, rect, border, borderUV);
+	Draw9SlicingSpritePoint(spriteHandle, rect, border, borderUV, color);
 }
 
 void FudgetControl::DrawBezier(const Float2& p1, const Float2& p2, const Float2& p3, const Float2& p4, const Color& color, float thickness)
@@ -780,20 +775,20 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
 	{
 		if (!point)
 		{
-			Draw9SlicingPrecalculatedTexture(area.Texture, rect, borders);
+			Draw9SlicingPrecalculatedTexture(area.Texture, rect, borders, area.Tint);
 			return;
 		}
-		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, borders);
+		Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, borders, area.Tint);
 		return;
 	}
 
 	if (!point)
 	{
-		Draw9SlicingPrecalculatedSprite(area.SpriteHandle.ToHandle(), rect, borders);
+		Draw9SlicingPrecalculatedSprite(area.SpriteHandle.ToHandle(), rect, borders, area.Tint);
 		return;
 	}
 
-	Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle.ToHandle(), rect, borders);
+	Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle.ToHandle(), rect, borders, area.Tint);
 }
 
 void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size)
@@ -931,14 +926,12 @@ bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &resul
 		result = Color();
 		return false;
 	}
+
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
 	{
-		if (var.Type.Type == VariantType::Color)
-		{
-			result = var.AsColor();
+		if (ColorFromVariant(var, result))
 			return true;
-		}
 		// TODO: cache if needed
 	}
 	result = Color();
@@ -953,17 +946,14 @@ bool FudgetControl::GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out
 		result = Color();
 		return false;
 	}
+
 	Variant var;
 	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
 	{
 		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
 		{
-			if (var.Type.Type == VariantType::Color)
-			{
-				result = var.AsColor();
+			if (ColorFromVariant(var, result))
 				return true;
-			}
-			// TODO: cache if needed
 		}
 	}
 	result = Color();
@@ -1027,13 +1017,9 @@ bool FudgetControl::GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &res
 	}
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
-	{
-		if (var.Type.Type == VariantType::Float2)
-		{
-			result = var.AsFloat2();
+		if (Float2FromVariant(var, result))
 			return true;
-		}
-	}
+
 	result = Float2(0.0f);
 	return false;
 }
@@ -1051,11 +1037,8 @@ bool FudgetControl::GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Ou
 	{
 		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
 		{
-			if (var.Type.Type == VariantType::Float2)
-			{
-				result = var.AsFloat2();
+			if (Float2FromVariant(var, result))
 				return true;
-			}
 		}
 	}
 	result = Float2(0.0f);
@@ -1203,27 +1186,15 @@ bool FudgetControl::GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadd
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
-	{
-		result = FudgetPadding();
 		return false;
-	}
+
+	result = FudgetPadding();
 	Variant var;
 	if (style->GetResourceValue(GetActiveTheme(), token, var))
 	{
-		if (var.Type.Type == VariantType::Structure)
-		{
-			const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
-			if (padding == nullptr)
-			{
-				result = FudgetPadding();
-				return false;
-			}
-			result = *padding;
+		if (PaddingFromVariant(var, result))
 			return true;
-		}
-		// TODO: cache if needed
 	}
-	result = FudgetPadding();
 	return false;
 }
 
@@ -1231,27 +1202,16 @@ bool FudgetControl::GetStylePadding(const Span<FudgetToken> &tokens, API_PARAM(O
 {
 	FudgetStyle *style = GetActiveStyle();
 	if (style == nullptr)
-	{
-		result = FudgetPadding();
 		return false;
-	}
+
+	result = FudgetPadding();
 	Variant var;
 	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
 	{
 		if (style->GetResourceValue(GetActiveTheme(), tokens[ix], var))
 		{
-			if (var.Type.Type == VariantType::Structure)
-			{
-				const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
-				if (padding == nullptr)
-				{
-					result = FudgetPadding();
-					return false;
-				}
-				result = *padding;
+			if (PaddingFromVariant(var, result))
 				return true;
-			}
-			// TODO: cache if needed
 		}
 	}
 	result = FudgetPadding();
@@ -1414,39 +1374,7 @@ bool FudgetControl::GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDra
 		return false;
 	}
 
-	if (var.Type.Type == VariantType::Color)
-	{
-		result = FudgetDrawArea(var.AsColor());
-		return true;
-	}
-
-	if (var.Type.Type == VariantType::Asset)
-	{
-		AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
-		if (asset.Get() == nullptr)
-		{
-			result = FudgetDrawArea();
-			return false;
-		}
-
-		result = FudgetDrawArea(asset.Get(), true, false);
-		return true;
-	}
-
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
-		if (area == nullptr)
-		{
-			result = FudgetDrawArea();
-			return false;
-		}
-		result = *area;
-		return true;
-	}
-
-	result = FudgetDrawArea();
-	return false;
+	return AreaFromVariant(var, result);
 }
 
 bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result)
@@ -1457,55 +1385,40 @@ bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(
 		if (!GetStyleValue(tokens[ix], var))
 			continue;
 
-		if (var.Type.Type == VariantType::Color)
-		{
-			result = FudgetDrawArea(var.AsColor());
+		if (AreaFromVariant(var, result))
 			return true;
-		}
-
-		if (var.Type.Type == VariantType::Asset)
-		{
-			AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
-			if (asset.Get() == nullptr)
-				continue;
-
-			result = FudgetDrawArea(asset.Get(), true, false);
-			return true;
-		}
-
-		if (var.Type.Type == VariantType::Structure)
-		{
-			const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
-			if (area == nullptr)
-				continue;
-
-			result = *area;
-			return true;
-		}
 	}
 
 	result = FudgetDrawArea();
 	return false;
 }
 
-void FudgetControl::DrawStyleArea(FudgetToken token, const Rectangle &rect, Color tint)
+bool FudgetControl::GetStyleFontDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	FudgetDrawArea areaVar;
-	if (!GetStyleDrawArea(token, areaVar))
-		return;
+	Variant var;
+	if (!GetStyleValue(token, var))
+	{
+		result = FudgetTextDrawSettings();
+		return false;
+	}
 
-	areaVar.Tint *= tint;
-	DrawArea(areaVar, rect);
+	return FontSettingsFromVariant(var, result);
 }
 
-void FudgetControl::DrawStyleArea(const Span<FudgetToken> &tokens, const Rectangle &rect, Color tint)
+bool FudgetControl::GetStyleFontDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	FudgetDrawArea areaVar;
-	if (!GetStyleDrawArea(tokens, areaVar))
-		return;
+	Variant var;
+	for (int ix = 0, siz = tokens.Length(); ix < siz; ++ix)
+	{
+		if (!GetStyleValue(tokens[ix], var))
+			continue;
 
-	areaVar.Tint *= tint;
-	DrawArea(areaVar, rect);
+		if (FontSettingsFromVariant(var, result))
+			return true;
+	}
+
+	result = FudgetTextDrawSettings();
+	return false;
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
@@ -1748,3 +1661,111 @@ void FudgetControl::CreateClassTokens()
 	}
 }
 
+bool FudgetControl::AreaFromVariant(const Variant &var, FudgetDrawArea &result) const
+{
+	if (var.Type.Type == VariantType::Color)
+	{
+		result = FudgetDrawArea(var.AsColor());
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Asset)
+	{
+		AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
+		if (asset.Get() == nullptr)
+			return false;
+
+		result = FudgetDrawArea(asset.Get(), true, false);
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Structure)
+	{
+		const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
+		if (area == nullptr)
+			return false;
+		result = *area;
+		return true;
+	}
+
+	return false;
+}
+
+bool FudgetControl::FontSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const
+{
+	if (var.Type.Type == VariantType::Color)
+	{
+		result = FudgetTextDrawSettings(var.AsColor());
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Float2)
+	{
+		result = FudgetTextDrawSettings(var.AsFloat2());
+		return true;
+	}
+
+	if (var.Type.Type == VariantType::Structure)
+	{
+		const FudgetTextDrawSettings *settings = var.AsStructure<FudgetTextDrawSettings>();
+		if (settings != nullptr)
+		{
+			result = *settings;
+			return true;
+		}
+
+		const FudgetToken *material_token = var.AsStructure<FudgetToken>();
+		if (material_token != nullptr)
+		{
+			result = FudgetTextDrawSettings();
+			result.MaterialToken = *material_token;
+			return true;
+		}
+
+		const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+		if (padding != nullptr)
+		{ 
+			result = FudgetTextDrawSettings();
+			result.Padding = *padding;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool FudgetControl::PaddingFromVariant(const Variant &var, FudgetPadding &result) const
+{
+	if (var.Type.Type == VariantType::Structure)
+	{
+		const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+		if (padding == nullptr)
+		{
+			result = FudgetPadding();
+			return false;
+		}
+		result = *padding;
+		return true;
+	}
+	return false;
+}
+
+bool FudgetControl::Float2FromVariant(const Variant &var, Float2 &result) const
+{
+	if (var.Type.Type == VariantType::Float2)
+	{
+		result = var.AsFloat2();
+		return true;
+	}
+	return false;
+}
+
+bool FudgetControl::ColorFromVariant(const Variant &var, Color &result) const
+{
+	if (var.Type.Type == VariantType::Color)
+	{
+		result = var.AsColor();
+		return true;
+	}
+	return false;
+}

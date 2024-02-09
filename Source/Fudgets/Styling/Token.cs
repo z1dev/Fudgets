@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using FlaxEngine;
 
 namespace Fudgets
@@ -39,6 +40,20 @@ namespace Fudgets
         /// </summary>
         public static bool operator <=(FudgetToken left, FudgetToken right) => left.Token <= right.Token;
 
+        /// <summary>
+        /// Constructs a token from an integer.
+        /// </summary>
+        /// <param name="value">The integer that sets the token's value</param>
+        public static implicit operator FudgetToken(int value) => new FudgetToken(value);
+
+        /// <summary>
+        /// Constructs a token from an integer.
+        /// </summary>
+        /// <param name="value">The integer that sets the token's value</param>
+        public FudgetToken(int value)
+        {
+            Token = value;
+        }
 
         bool IsValid()
         {

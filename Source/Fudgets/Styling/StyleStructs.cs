@@ -1,5 +1,4 @@
-﻿using FlaxEditor.Surface.Archetypes;
-using FlaxEngine;
+﻿using FlaxEngine;
 
 namespace Fudgets;
 
@@ -66,6 +65,57 @@ public partial struct FudgetFontSettings
         Size = size;
         Bold = bold;
         Italics = italics;
+    }
+}
+
+public partial struct FudgetTextDrawSettings
+{
+    /// <summary>
+    /// Initialize structure with white font and no other influencing setting
+    /// </summary>
+    public FudgetTextDrawSettings() : this(new Float2(0.0f), Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    {
+    }
+
+    /// <summary>
+    /// Initialize structure with every setting
+    /// </summary>
+    public FudgetTextDrawSettings(Float2 offset, Color color, TextAlignment horzAlign, TextAlignment vertAlign, FudgetPadding padding, FudgetToken material_token)
+    {
+        Offset = offset;
+        Color = color;
+        HorizontalAlignment = horzAlign;
+        VerticalAlignment = vertAlign;
+        Padding = padding;
+        MaterialToken = material_token;
+    }
+
+    /// <summary>
+    /// Initialize structure with text color
+    /// </summary>
+    public FudgetTextDrawSettings(Color color) : this(new Float2(0.0f), color, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    {
+    }
+
+    /// <summary>
+    /// Initialize structure with draw offset
+    /// </summary>
+    public FudgetTextDrawSettings(Float2 offset) : this(offset, Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    {
+    }
+
+    /// <summary>
+    /// Initialize structure with padding
+    /// </summary>
+    public FudgetTextDrawSettings(FudgetPadding padding) : this(new Float2(0.0f), Color.White, TextAlignment.Near, TextAlignment.Center, padding, -1)
+    {
+    }
+
+    /// <summary>
+    /// Initialize structure with text alignment
+    /// </summary>
+    public FudgetTextDrawSettings(TextAlignment horzAlign, TextAlignment vertAlign) : this(new Float2(0.0f), Color.White, horzAlign, vertAlign, new FudgetPadding(0.0f), -1)
+    {
     }
 }
 

@@ -4,35 +4,36 @@
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Core/Math/Rectangle.h"
 
+
 /// <summary>
 /// Padding inside any element that contains others, like a slot in a layout or a drawn border in a style.
 /// </summary>
-API_STRUCT()
+API_STRUCT(NoDefault)
 struct FUDGETS_API FudgetPadding
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPadding)
 
-	FudgetPadding() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f)
+	FORCE_INLINE FudgetPadding() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f)
 	{
 	}
 
-	FudgetPadding(float left, float right, float top, float bottom) : Left(left), Right(right), Top(top), Bottom(bottom)
+	FORCE_INLINE FudgetPadding(float left, float right, float top, float bottom) : Left(left), Right(right), Top(top), Bottom(bottom)
 	{
 	}
 
-	FudgetPadding(float padding) : Left(padding), Right(padding), Top(padding), Bottom(padding)
+	FORCE_INLINE FudgetPadding(float padding) : Left(padding), Right(padding), Top(padding), Bottom(padding)
 	{
 	}
 
-	FudgetPadding(const FudgetPadding &other) : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
+	FORCE_INLINE FudgetPadding(const FudgetPadding &other) : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
 	{
 	}
 
-	FudgetPadding(FudgetPadding &&other) noexcept : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
+	FORCE_INLINE FudgetPadding(FudgetPadding &&other) noexcept : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
 	{
 	}
 
-	FudgetPadding& operator=(const FudgetPadding &other)
+	FORCE_INLINE FudgetPadding& operator=(const FudgetPadding &other)
 	{
 		Left = other.Left;
 		Right = other.Right;
@@ -41,7 +42,7 @@ struct FUDGETS_API FudgetPadding
 		return *this;
 	}
 
-	FudgetPadding& operator=(FudgetPadding &&other) noexcept
+	FORCE_INLINE FudgetPadding& operator=(FudgetPadding &&other) noexcept
 	{
 		Left = other.Left;
 		Right = other.Right;
@@ -53,13 +54,13 @@ struct FUDGETS_API FudgetPadding
 	/// <summary>
 	/// Converts padding to a Float4 with left, right, top, bottom values in this order.
 	/// </summary>
-	Float4 AsFloat4() const { return Float4(Left, Right, Top, Bottom); }
+	FORCE_INLINE Float4 AsFloat4() const { return Float4(Left, Right, Top, Bottom); }
 
 	/// <summary>
 	/// Returns a rectangle that results in padding the passed value
 	/// </summary>
 	/// <param name="rect">Rectangle to pad</param>
-	Rectangle Padded(const Rectangle &rect) const
+	FORCE_INLINE Rectangle Padded(const Rectangle &rect) const
 	{
 		return Rectangle(rect.Location + Float2(Left, Top), rect.Size - Float2(Width(), Height()) );
 	}

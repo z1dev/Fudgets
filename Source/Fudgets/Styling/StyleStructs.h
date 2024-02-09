@@ -8,6 +8,8 @@
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Render2D/FontAsset.h"
+#include "Engine/Render2D/TextLayoutOptions.h"
+
 
 
 /// <summary>
@@ -330,12 +332,10 @@ struct FUDGETS_API FudgetDrawArea
 	API_FIELD() FudgetSpriteHandle SpriteHandle;
 
 	/// <summary>
-	/// Set when using 9-slicing images or drawing border.
+	/// Set when the area is for a 9-slicing image or it is for drawing a border.
 	/// </summary>
 	API_FIELD() FudgetPadding Borders;
 };
-
-
 
 
 API_STRUCT()
@@ -343,9 +343,15 @@ struct FUDGETS_API FudgetFontSettings
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFontSettings)
 
+	/// <summary>
+	/// Default empty constructor that sets invalid settings
+	/// </summary>
 	FudgetFontSettings() : FontToken(FudgetToken::Invalid), Size(12.f), Bold(false), Italics(false)
 	{}
 
+	/// <summary>
+	/// Initializer for every member of the struct
+	/// </summary>
 	FudgetFontSettings(FudgetToken fontToken, float size, bool bold = false, bool italics = false) : FontToken(fontToken), Size(size), Bold(bold), Italics(italics)
 	{
 	}
@@ -402,6 +408,100 @@ struct FUDGETS_API FudgetFontSettings
 	/// Write text with italics font.
 	/// </summary>
 	API_FIELD() bool Italics;
+};
+
+API_STRUCT()
+struct FUDGETS_API FudgetTextDrawSettings
+{
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextDrawSettings)
+
+	FudgetTextDrawSettings() : FudgetTextDrawSettings(0.f, Color::White, TextAlignment::Near, TextAlignment::Center, 0.0f, FudgetToken::Invalid)
+	{
+	}
+
+	FudgetTextDrawSettings(Color color, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), FudgetToken material_token = FudgetToken::Invalid) :
+		FudgetTextDrawSettings(0.f, color, horz_align, vert_align, padding, material_token)
+	{
+
+	}
+
+	FudgetTextDrawSettings(FudgetPadding padding, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetToken material_token = FudgetToken::Invalid) :
+		FudgetTextDrawSettings(0.f, Color::White, horz_align, vert_align, padding, material_token)
+	{
+
+	}
+
+	FudgetTextDrawSettings(Float2 offset, Color color = Color::White, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), FudgetToken material_token = FudgetToken::Invalid) :
+		Offset(offset), Color(color), HorizontalAlignment(horz_align), VerticalAlignment(vert_align), Padding(padding), MaterialToken(material_token)
+	{
+
+	}
+
+	FudgetTextDrawSettings(const FudgetTextDrawSettings &other)
+	{
+		Offset = other.Offset;
+		Color = other.Color;
+		MaterialToken = other.MaterialToken;
+		HorizontalAlignment = other.HorizontalAlignment;
+		VerticalAlignment = other.VerticalAlignment;
+		Padding = other.Padding;
+	}
+
+	FudgetTextDrawSettings(FudgetTextDrawSettings &&other) noexcept
+	{
+		Offset = other.Offset;
+		Color = other.Color;
+		MaterialToken = other.MaterialToken;
+		HorizontalAlignment = other.HorizontalAlignment;
+		VerticalAlignment = other.VerticalAlignment;
+		Padding = other.Padding;
+	}
+
+	FudgetTextDrawSettings& operator=(const FudgetTextDrawSettings &other)
+	{
+		Offset = other.Offset;
+		Color = other.Color;
+		MaterialToken = other.MaterialToken;
+		HorizontalAlignment = other.HorizontalAlignment;
+		VerticalAlignment = other.VerticalAlignment;
+		Padding = other.Padding;
+		return *this;
+	}
+	FudgetTextDrawSettings& operator=(FudgetTextDrawSettings &&other) noexcept
+	{
+		Offset = other.Offset;
+		Color = other.Color;
+		MaterialToken = other.MaterialToken;
+		HorizontalAlignment = other.HorizontalAlignment;
+		VerticalAlignment = other.VerticalAlignment;
+		Padding = other.Padding;
+		return *this;
+	}
+
+	/// <summary>
+	/// Offset of the text bounds when drawing.
+	/// </summary>
+	API_FIELD() Float2 Offset;
+	/// <summary>
+	/// Color of the text to draw
+	/// </summary>
+	API_FIELD() Color Color;
+	/// <summary>
+	/// How to align the text horizontally within the bounds of the font drawing. Not applicable when not drawing in bounds.
+	/// </summary>
+	API_FIELD() TextAlignment HorizontalAlignment;
+	/// <summary>
+	/// How to align the text vertically within the bounds of the font drawing. Not applicable when not drawing in bounds.
+	/// </summary>
+	API_FIELD() TextAlignment VerticalAlignment;
+	/// <summary>
+	/// Padding to use on the font drawing bounds. Not applicable when not drawing in bounds.
+	/// </summary>
+	API_FIELD() FudgetPadding Padding;
+	/// <summary>
+	/// Material on the text. Must be a material made for UI
+	/// </summary>
+	API_FIELD() FudgetToken MaterialToken;
 };
 
 API_STRUCT()

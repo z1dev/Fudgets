@@ -19,7 +19,7 @@ struct FudgetStyleResource
 	// when the resource of a style doesn't have overrides.
 	FudgetStyleResource *_inherited_resource = nullptr;
 
-	// The resource id to look for in a theme's Resources dictionary.
+	// The resource id to look for in a theme's resources.
 	FudgetToken _resource_id = FudgetToken::Invalid;
 
 	// The direct value of the resource set for this style, overriding inherited values or ids.
