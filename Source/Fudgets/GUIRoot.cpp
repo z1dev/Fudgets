@@ -348,7 +348,7 @@ void FudgetGUIRoot::ControlUpdates()
 	float time = Time::GetUnscaledDeltaTime();
 	for (FudgetControl *c : _updating_controls)
 	{
-		c->OnUpdate(time);
+		c->DoUpdate(time);
 	}
 	_processing_updates = false;
 

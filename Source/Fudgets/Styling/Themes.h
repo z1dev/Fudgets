@@ -11,6 +11,7 @@
 
 #include <map>
 
+class FudgetPartPainter;
 
 // DOCUMENTATION CURRENTLY INVALID, IT DESCRIBES A PREVIOUS STATE WHERE PAINTER OBJECTS EXISTED.
 
@@ -304,6 +305,8 @@ public:
     /// <param name="class_tokens">A chain of tokens that are looked up one by one until one matches a style</param>
     /// <returns>The style that matches one of the tokens or the default style of the theme</returns>
     API_FUNCTION() static FudgetStyle* GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens);
+
+    API_FUNCTION() static FudgetPartPainter* CreatePainter(FudgetToken token);
 
 #ifdef USE_EDITOR
     API_PROPERTY() static bool GetRuntimeUse() { return _runtime_use; }

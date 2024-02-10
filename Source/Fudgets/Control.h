@@ -4,6 +4,7 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector2.h"
+#include "Engine/Core/Math/Vector3.h"
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Types/BaseTypes.h"
@@ -36,6 +37,7 @@ struct FudgetDrawArea;
 struct FudgetPadding;
 struct FudgetFontSettings;
 struct FudgetFont;
+class FudgetPartPainter;
 
 
 /// <summary>
@@ -776,7 +778,7 @@ public:
 	/// Returns whether this control should appear in the focused state when drawing. Doesn't affect whether the control
 	/// is focused or not.
 	/// </summary>
-	API_PROPERTY() virtual bool GetVirtuallyFocused() const;
+	API_PROPERTY() virtual bool VirtuallyFocused() const;
 
 	/// <summary>
 	/// Sets the keyboard input focus to this control or removes focus from it. Focused controls can have a distinct
@@ -795,7 +797,7 @@ public:
 	/// Returns whether this control should appear like it is in the hovered state when drawing. Usually true when the control
 	/// is hovered, or it is the child of a compound control which is hovered.
 	/// </summary>
-	API_PROPERTY() virtual bool GetVirtuallyHovered() const;
+	API_PROPERTY() virtual bool VirtuallyHovered() const;
 
 	/// <summary>
 	/// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
@@ -1259,6 +1261,9 @@ public:
 	/// </summary>
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
+	template<typename T>
+	T* CreateStylePainter(FudgetToken token);
+
 	/// <summary>
 	/// Returns a value for the control based on a theme token.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
@@ -1491,7 +1496,7 @@ public:
 	/// <param name="token">Token for a font draw settings value in the active style</param>
 	/// <param name="result">The settings for font drawing</param>
 	/// <returns>Whether a valid value was found for the token</returns>
-	API_FUNCTION() bool GetStyleFontDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
+	API_FUNCTION() bool GetStyleTextDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
 
 	/// <summary>
 	/// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
@@ -1502,7 +1507,7 @@ public:
 	/// <param name="tokens">An array of tokens that are checked in order</param>
 	/// <param name="result">The settings for font drawing</param>
 	/// <returns>Whether a valid value was found for a token</returns>
-	API_FUNCTION() bool GetStyleFontDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result);
+	API_FUNCTION() bool GetStyleTextDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result);
 
 	// Serialization
 
@@ -1522,6 +1527,12 @@ public:
 	/// Called when redrawing the control. Derived controls should override OnDraw instead. 
 	/// </summary>
 	API_FUNCTION() virtual void DoDraw();
+
+	/// Called on each frame if the control is registered to receive events. Derived controls should override OnUpdate instead.
+	/// </summary>
+	/// <param name="delta_time">The time passed since the last update</param>
+	API_FUNCTION() virtual void DoUpdate(float delta_time);
+
 
 	/// <summary>
 	/// Called when the keyboard input focus changes from one control to another. It is called both on the
@@ -1607,6 +1618,12 @@ protected:
 	/// </summary>
 	/// <param name="value">Whether the parent was disabled</param>
 	API_FUNCTION() virtual void SetParentDisabled(bool value);
+
+	/// <summary>
+	/// Don't call. Exposed for C# use to make CreateStylePainter possible. Saves painter to the list of painters that
+	/// will be freed once the control is destroyed.
+	/// </summary>
+	API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
 private:
 
 	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
@@ -1635,12 +1652,6 @@ private:
 	void CreateClassTokens();
 
 	// Functions to get style values
-
-	bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
-	bool FontSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
-	bool PaddingFromVariant(const Variant &var, FudgetPadding &result) const;
-	bool Float2FromVariant(const Variant &var, Float2 &result) const;
-	bool ColorFromVariant(const Variant &var, Color &result) const;
 
 	FudgetContainer *_parent;
 	int _index;
@@ -1688,6 +1699,8 @@ private:
 	Array<FudgetToken> _class_token;
 
 	std::map<FudgetToken, FudgetFont> _cached_fonts;
+
+	Array<FudgetPartPainter*> _painters;
 
 	friend class FudgetLayout;
 	friend class FudgetContainer;

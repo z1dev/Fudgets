@@ -2,11 +2,13 @@
 #include "Token.h"
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
+#include "PartPainters.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
 #include "Engine/Content/Assets/Texture.h"
 #include "Engine/Core/Log.h"
+#include "Engine/Scripting/Scripting.h"
 
 std::map<String, FudgetToken> FudgetThemes::_token_map;
 std::map<FudgetToken, String> FudgetThemes::_string_map;
@@ -100,16 +102,8 @@ void FudgetThemes::Initialize(bool in_game)
 #endif
 
 
-	// TODO: Add the reasonable minimum style data. For example basic editor font, basic colors etc.
-
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_data->_theme_map[MainThemeToken] = main_theme;
-
-	FudgetStyle *_default_style = CreateStyle(TEXT("DefaultStyle")); //New<FudgetStyle>(TEXT("DefaultStyle"));
-
-	//FudgetDrawArea texsettings(tex, false, false, Color::White);
-	//Variant texvar = Variant::Structure(VariantType(VariantType::Structure, TEXT("Fudgets.FudgetDrawArea")), texsettings);
-	//_img_button_style->SetValueOverride(ButtonBackgroundNormalToken, texvar);
 }
 
 void FudgetThemes::Uninitialize(bool in_game)
@@ -297,6 +291,25 @@ FudgetStyle* FudgetThemes::GetControlStyleOrDefault(const Array<FudgetToken> &cl
 			return style;
 	}
 	return GetStyle(DefaultStyleToken);
+}
+
+FudgetPartPainter* FudgetThemes::CreatePainter(FudgetToken token)
+{
+	if (!token.IsValid())
+		return nullptr;
+
+	auto it = _string_map.find(token);
+	if (it == _string_map.end())
+		return nullptr;
+	StringAnsi painter_name = it->second.ToStringAnsi();
+	const ScriptingTypeHandle type = Scripting::FindScriptingType(painter_name);
+	if (!type)
+		return nullptr;
+
+	if (!FudgetPartPainter::TypeInitializer.IsAssignableFrom(type))
+		return nullptr;
+
+	return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
 }
 
 #if USE_EDITOR

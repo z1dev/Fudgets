@@ -11,7 +11,12 @@
 class FudgetThemes;
 class FudgetTheme;
 class FudgetElementPainter;
-
+struct FudgetDrawArea;
+struct FudgetTextDrawSettings;
+struct FudgetPadding;
+struct Color;
+struct FudgetFontSettings;
+struct FudgetFont;
 
 struct FudgetStyleResource
 {
@@ -53,6 +58,9 @@ public:
 	/// <returns></returns>
 	API_FUNCTION() FudgetStyle* CreateInheritedStyle(FudgetToken name_token);
 
+	template<typename T>
+	T* CreatePainter(FudgetTheme *theme, FudgetToken painter_token);
+
 	/// <summary>
 	/// Mainly for internal use.
 	/// Retrieves the resource associated with a token. If the resource in this style is not overriden, the one
@@ -76,6 +84,19 @@ public:
 	API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Variant &result);
 
 	/// <summary>
+	/// Retrieves the resource's value associated with a token in this style. If this style has no override for the token,
+	/// the parent style is checked, up to the topmost ancestor. The result is either a value directly set with SetValueOverride,
+	/// or a value looked up in the theme with a token set with SetResourceOverride. The result can also be null if no overrides
+	/// were set.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">The theme to check for values if no direct value override was set</param>
+	/// <param name="token">The token to look up in this style for overrides</param>
+	/// <param name="result">The retrieved value associated with the token</param>
+	/// <returns>Whether a value with the token was found and stored in result</returns>
+	API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result);
+
+	/// <summary>
 	/// Sets value as the override for the passed token. Calling GetResourceValue will return this value directly, unless
 	/// an inherited style is queried which has a different override for it.
 	/// </summary>
@@ -97,12 +118,362 @@ public:
 	/// <param name="token">Token associated with the resource</param>
 	API_FUNCTION() void ResetResourceOverride(FudgetToken token);
 
+	/// <summary>
+	/// Looks up a token resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTokenResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetToken &result);
+	/// <summary>
+	/// Looks up a token resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTokenResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetToken &result);
+
+	/// <summary>
+	/// Looks up a color resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetColorResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Color &result);
+
+	/// <summary>
+	/// Looks up a color resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetColorResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Color &result);
+
+	/// <summary>
+	/// Looks up a float resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloatResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) float &result);
+
+	/// <summary>
+	/// Looks up a float resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloatResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) float &result);
+
+	/// <summary>
+	/// Looks up a Float2 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float2 &result);
+
+	/// <summary>
+	/// Looks up a Float2 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat2Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Float2 &result); 
+
+	/// <summary>
+	/// Looks up a Float3 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float3 &result);
+
+	/// <summary>
+	/// Looks up a Float3 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat3Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Float3 &result); 
+
+	/// <summary>
+	/// Looks up a Float4 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float4 &result);
+
+	/// <summary>
+	/// Looks up a Float4 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFloat4Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Float4 &result);
+
+	/// <summary>
+	/// Looks up a int resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetIntResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) int &result);
+
+	/// <summary>
+	/// Looks up a int resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetIntResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) int &result);
+
+	/// <summary>
+	/// Looks up a Int2 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int2 &result);
+
+	/// <summary>
+	/// Looks up a Int2 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt2Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Int2 &result);
+
+	/// <summary>
+	/// Looks up a Int3 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int3 &result);
+
+	/// <summary>
+	/// Looks up a Int3 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt3Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Int3 &result);
+
+	/// <summary>
+	/// Looks up a Int4 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int4 &result);
+
+	/// <summary>
+	/// Looks up a Int4 resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetInt4Resource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Int4 &result);
+
+	/// <summary>
+	/// Looks up a FudgetPadding resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetPaddingResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetPadding &result);
+
+	/// <summary>
+	/// Looks up a FudgetPadding resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetPaddingResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetPadding &result);
+
+	/// <summary>
+	/// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextDrawResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
+
+	/// <summary>
+	/// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextDrawResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetTextDrawSettings &result);
+
+	/// <summary>
+	/// Looks up a FudgetFontSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFontSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFontSettings &result);
+
+	/// <summary>
+	/// Looks up a FudgetFontSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFontSettingsResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetFontSettings &result);
+
+	/// <summary>
+	/// Looks up a FudgetFont resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFontResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFont &result);
+
+	/// <summary>
+	/// Looks up a FudgetFont resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetFontResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetFont &result);
+
+	/// <summary>
+	/// Looks up a FudgetDrawArea resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetDrawAreaResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
+
+	/// <summary>
+	/// Looks up a FudgetDrawArea resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetDrawArea &result);
+
+	/// <summary>
+	/// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextDrawSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
+
+	/// <summary>
+	/// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextDrawSettingsResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetTextDrawSettings &result);
 private:
 	// Called from a parent style when a resource override was changed, but not when it was set to null.
 	void ParentResourceChanged(FudgetToken token, FudgetStyleResource *resource);
 
 	// Called from a parent style when a resource override was reset or set to null.
 	void ParentResourceWasReset(FudgetToken token, FudgetStyleResource *resource);
+
+	bool TokenFromVariant(const Variant &var, FudgetToken &result) const;
+	bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
+	bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
+	bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const;
+	bool FontFromVariant(const Variant &var, FudgetFont &result) const;
+	bool PaddingFromVariant(const Variant &var, FudgetPadding &result) const;
+	bool FloatFromVariant(const Variant &var, float &result) const;
+	bool Float2FromVariant(const Variant &var, Float2 &result) const;
+	bool Float3FromVariant(const Variant &var, Float3 &result) const;
+	bool Float4FromVariant(const Variant &var, Float4 &result) const;
+	bool IntFromVariant(const Variant &var, int &result) const;
+	bool Int2FromVariant(const Variant &var, Int2 &result) const;
+	bool Int3FromVariant(const Variant &var, Int3 &result) const;
+	bool Int4FromVariant(const Variant &var, Int4 &result) const;
+	bool ColorFromVariant(const Variant &var, Color &result) const;
 
 	FudgetStyle *_parent;
 	Array<FudgetStyle*> _derived;
@@ -113,3 +484,4 @@ private:
 
 	friend class FudgetThemes;
 };
+

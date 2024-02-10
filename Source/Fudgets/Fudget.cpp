@@ -622,7 +622,8 @@ void Fudget::OnUpdate()
             // check what this update is for when the UI is not in screen space.
 
             ProfilerCPU::BeginEvent(*GetName());
-            _guiRoot->OnUpdate(Time::GetUnscaledDeltaTime());
+
+            //_guiRoot->DoUpdate(Time::GetUnscaledDeltaTime());
         }
         catch (...)
         {
