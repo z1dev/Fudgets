@@ -34,6 +34,11 @@ FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
 // FudgetPainterStateHelper
 
 
+FudgetPainterStateHelper::FudgetPainterStateHelper() : State(FudgetFramedFieldState::Normal)
+{
+
+}
+
 void FudgetPainterStateHelper::SetState(FudgetFramedFieldState value, bool set)
 {
     if (set)

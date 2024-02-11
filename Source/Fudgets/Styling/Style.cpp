@@ -45,28 +45,6 @@ FudgetStyle* FudgetStyle::CreateInheritedStyle(FudgetToken name_token)
 	return result;
 }
 
-template<typename T>
-T* FudgetStyle::CreatePainter(FudgetTheme *theme, FudgetToken painter_token)
-{
-	if (!painter_token.IsValid())
-		return nullptr;
-	
-	FudgetToken token;
-	if (!GetTokenResource(theme, painter_token, token))
-		return nullptr;
-	if (!token.IsValid())
-		return nullptr;
-
-	FudgetPartPainter *painter = FudgetThemes::CreatePainter(token);
-	T *result = dynamic_cast<T*>(painter);
-	if (result == nullptr)
-	{
-		Delete(result);
-		return nullptr;
-	}
-	return result;
-}
-
 FudgetStyleResource* FudgetStyle::GetResource(FudgetToken token)
 {
 	if (!token.IsValid())

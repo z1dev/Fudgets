@@ -1276,7 +1276,20 @@ public:
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
 	template<typename T>
-	T* CreateStylePainter(FudgetToken token, FudgetToken style_token);
+	T* CreateStylePainter(FudgetToken token, FudgetToken style_token)
+	{
+		FudgetStyle *style = GetActiveStyle();
+		if (style == nullptr)
+			return nullptr;
+
+		T *painter = style->CreatePainter<T>(GetActiveTheme(), token);
+
+		if (painter != nullptr)
+			RegisterStylePainterInternal(painter, style_token);
+
+		return painter;
+	}
+
 
 	/// <summary>
 	/// Returns a value for the control based on a theme token.

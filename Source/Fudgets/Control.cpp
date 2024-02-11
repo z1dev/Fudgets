@@ -883,20 +883,6 @@ FudgetTheme* FudgetControl::GetActiveTheme()
     return _cached_theme;
 }
 
-template<typename T>
-T* FudgetControl::CreateStylePainter(FudgetToken token, FudgetToken style_token)
-{
-    FudgetStyle *style = GetActiveStyle();
-    if (style == nullptr)
-        return nullptr;
-
-    T *painter = style->CreatePainter<T>(GetActiveTheme(), token);
-
-    RegisterStylePainterInternal(painter, style_token);
-
-    return painter;
-}
-
 bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result)
 {
     FudgetStyle *style = GetActiveStyle();

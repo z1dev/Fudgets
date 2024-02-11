@@ -83,6 +83,8 @@ struct FUDGETS_API FudgetPainterStateHelper
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterStateHelper);
 public:
+    FudgetPainterStateHelper();
+
     void SetState(FudgetFramedFieldState value, bool set = true);
     FORCE_INLINE bool HasState(FudgetFramedFieldState value) const { return (State & value) == value; }
 
@@ -95,6 +97,11 @@ public:
     API_FIELD() FudgetFramedFieldState State;
 };
 
+template<>
+struct TIsPODType<FudgetPainterStateHelper>
+{
+    enum { Value = true };
+};
 
 API_CLASS()
 class FUDGETS_API FudgetStatePainter : public FudgetPartPainter
