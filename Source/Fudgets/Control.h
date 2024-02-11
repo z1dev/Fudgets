@@ -1262,7 +1262,7 @@ public:
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
 	template<typename T>
-	T* CreateStylePainter(FudgetToken token);
+	T* CreateStylePainter(FudgetToken token, FudgetToken style_token);
 
 	/// <summary>
 	/// Returns a value for the control based on a theme token.
@@ -1282,6 +1282,25 @@ public:
 	/// <param name="result">Variable that receives the value</param>
 	/// <returns>Whether a valid value was found for a token</returns>
 	API_FUNCTION() bool GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result);
+
+	/// <summary>
+	/// Returns a token for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the token in the active style</param>
+	/// <param name="result">Variable that receives the token</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleToken(FudgetToken token, API_PARAM(Out) FudgetToken &result);
+
+	/// <summary>
+	/// Returns a token for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the token</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleToken(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetToken &result);
 
 	/// <summary>
 	/// Returns a color for the control based on a theme token.
@@ -1620,10 +1639,10 @@ protected:
 	API_FUNCTION() virtual void SetParentDisabled(bool value);
 
 	/// <summary>
-	/// Don't call. Exposed for C# use to make CreateStylePainter possible. Saves painter to the list of painters that
+	/// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
 	/// will be freed once the control is destroyed.
 	/// </summary>
-	API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
+	API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token);
 private:
 
 	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);

@@ -878,7 +878,7 @@ FudgetTheme* FudgetControl::GetActiveTheme()
 }
 
 template<typename T>
-T* FudgetControl::CreateStylePainter(FudgetToken token)
+T* FudgetControl::CreateStylePainter(FudgetToken token, FudgetToken style_token)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -886,7 +886,7 @@ T* FudgetControl::CreateStylePainter(FudgetToken token)
 
     T *painter = style->CreatePainter<T>(GetActiveTheme(), token);
 
-    RegisterStylePainterInternal(painter);
+    RegisterStylePainterInternal(painter, style_token);
 
     return painter;
 }
@@ -913,6 +913,30 @@ bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out
     }
 
     return style->GetResourceValue(GetActiveTheme(), tokens, result);
+}
+
+bool FudgetControl::GetStyleToken(FudgetToken token, API_PARAM(Out) FudgetToken &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = FudgetToken::Invalid;
+        return false;
+    }
+
+    return style->GetTokenResource(GetActiveTheme(), token, result);
+}
+
+bool FudgetControl::GetStyleToken(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetToken &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = FudgetToken::Invalid;
+        return false;
+    }
+
+    return style->GetTokenResource(GetActiveTheme(), tokens, result);
 }
 
 bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result)
@@ -1336,9 +1360,9 @@ void FudgetControl::SetParentDisabled(bool value)
     SetState(FudgetControlState::ParentDisabled, value);
 }
 
-void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter)
+void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token)
 {
-    painter->Initialize(GetActiveTheme());
+    painter->Initialize(GetActiveTheme(), FudgetThemes::GetStyle(style_token));
     _painters.Add(painter);
 }
 

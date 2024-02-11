@@ -8,7 +8,7 @@ namespace Fudgets
 {
     public partial class FudgetControl
     {
-        public T CreateStylePainter<T>(FudgetToken token) where T : FudgetPartPainter
+        public T CreateStylePainter<T>(FudgetToken token, FudgetToken style_token) where T : FudgetPartPainter
         {
             FudgetStyle style = ActiveStyle;
             if (style == null)
@@ -17,7 +17,7 @@ namespace Fudgets
             T painter = style.CreatePainter<T>(ActiveTheme, token);
 
             if (painter != null)
-                RegisterStylePainterInternal(painter);
+                RegisterStylePainterInternal(painter, style_token);
 
             return painter;
         }
