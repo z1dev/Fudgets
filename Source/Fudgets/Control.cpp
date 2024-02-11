@@ -366,7 +366,13 @@ bool FudgetControl::GetEnabled() const
 
 void FudgetControl::SetEnabled(bool value)
 {
+    if (((_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled) == value)
+        return;
     SetState(FudgetControlState::Enabled, value);
+    DoEnabledChanged();
+    if ((_state_flags & FudgetControlState::ParentDisabled) != FudgetControlState::ParentDisabled)
+        DoVirtuallyEnabledChanged();
+
 }
 
 bool FudgetControl::VirtuallyEnabled() const
@@ -1289,6 +1295,16 @@ void FudgetControl::DoUpdate(float delta_time)
     OnUpdate(delta_time);
 }
 
+void FudgetControl::DoEnabledChanged()
+{
+    OnEnabledChanged();
+}
+
+void FudgetControl::DoVirtuallyEnabledChanged()
+{
+    OnVirtuallyEnabledChanged();
+}
+
 void FudgetControl::DoFocusChanging(bool focused, FudgetControl *other)
 {
     OnFocusChanging(focused, other);
@@ -1357,7 +1373,11 @@ void FudgetControl::Initialize()
 
 void FudgetControl::SetParentDisabled(bool value)
 {
+    if (((_state_flags & FudgetControlState::ParentDisabled) == FudgetControlState::ParentDisabled) == value)
+        return;
     SetState(FudgetControlState::ParentDisabled, value);
+    if ((_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled)
+        DoVirtuallyEnabledChanged();
 }
 
 void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token)

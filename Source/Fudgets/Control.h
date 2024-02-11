@@ -306,6 +306,20 @@ public:
 	API_FUNCTION() virtual void OnDraw() {}
 
 	/// <summary>
+	/// Called when the control's enabled state changed. Not called when a parent container became enabled/disabled, and might not cause
+	/// a change in the appearance and behavior of the control. If the appearance changes as well due to this change, OnVirtuallyEnabledChanged
+	/// is called after this function returns.
+	/// </summary>
+	API_FUNCTION() virtual void OnEnabledChanged() {}
+
+	/// <summary>
+	/// Called when the control's virtual enabled state changed. This can mean a parent became enabled/disabled that might make this control
+	/// appear enabled/disabled as well.
+	/// </summary>
+	API_FUNCTION() virtual void OnVirtuallyEnabledChanged() {}
+
+
+	/// <summary>
 	/// Called when the keyboard input focus changes from one control to another. It is called both on the
 	/// control losing focus and the control gaining focus before the change happens.
 	/// Make sure to call the base implementation upon receiving this event.
@@ -685,7 +699,7 @@ public:
 	/// <param name="pos">Local mouse position</param>
 	/// <param name="global_pos">Global mouse position</param>
 	/// <returns>Whether the control wants to handle mouse events at pos or not</returns>
-	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) { return true; }
+	API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) { return GetBounds().Contains(pos); }
 
 	/// <summary>
 	/// Notification that the mouse moved while over this control, or while the control was capturing
@@ -1547,11 +1561,24 @@ public:
 	/// </summary>
 	API_FUNCTION() virtual void DoDraw();
 
+	/// <summary>
 	/// Called on each frame if the control is registered to receive events. Derived controls should override OnUpdate instead.
 	/// </summary>
 	/// <param name="delta_time">The time passed since the last update</param>
 	API_FUNCTION() virtual void DoUpdate(float delta_time);
 
+	/// <summary>
+	/// Called when the control's enabled state changed. Not called when a parent container became enabled/disabled, and might not cause
+	/// a change in the appearance and behavior of the control. If the appearance changes as well due to this change, DoVirtuallyEnabledChanged
+	/// is called after this function returns. Derived controls should override OnEnabledChanged instead. 
+	/// </summary>
+	API_FUNCTION() virtual void DoEnabledChanged();
+
+	/// <summary>
+	/// Called when the control's virtual enabled state changed. This can mean a parent became enabled/disabled that might make this control
+	/// appear enabled/disabled as well. Derived controls should override OnVirtuallyEnabledChanged instead. 
+	/// </summary>
+	API_FUNCTION() virtual void DoVirtuallyEnabledChanged();
 
 	/// <summary>
 	/// Called when the keyboard input focus changes from one control to another. It is called both on the
