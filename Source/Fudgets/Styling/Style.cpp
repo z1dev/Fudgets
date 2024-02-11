@@ -578,6 +578,29 @@ bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken
 	return false;
 }
 
+bool FudgetStyle::GetTextureResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) TextureBase* &result)
+{
+	Variant var;
+	if (GetResourceValue(theme, token, var))
+	{
+		if (TextureFromVariant(var, result))
+			return true;
+	}
+	result = nullptr;
+	return false;
+}
+
+bool FudgetStyle::GetTextureResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result)
+{
+	for (auto t : tokens)
+	{
+		if (GetTextureResource(theme, t, result))
+			return true;
+	}
+	result = nullptr;
+	return false;
+}
+
 bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
 	Variant var;
@@ -685,6 +708,17 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result) co
 		return true;
 	}
 
+	return false;
+}
+
+bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result) const
+{
+	if (var.Type.Type == VariantType::Asset)
+	{
+		AssetReference<TextureBase> asset = dynamic_cast<TextureBase*>(var.AsAsset);
+		result = asset.Get();
+		return result != nullptr;
+	}
 	return false;
 }
 

@@ -306,6 +306,9 @@ public:
     /// <returns>The style that matches one of the tokens or the default style of the theme</returns>
     API_FUNCTION() static FudgetStyle* GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens);
 
+    /// <summary>
+    /// Returns a new painter object if its token's original string value represents a painter.
+    /// </summary>
     API_FUNCTION() static FudgetPartPainter* CreatePainter(FudgetToken token);
 
 #ifdef USE_EDITOR

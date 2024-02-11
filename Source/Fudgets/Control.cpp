@@ -1209,6 +1209,30 @@ bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(
     return style->GetDrawAreaResource(GetActiveTheme(), tokens, result);
 }
 
+bool FudgetControl::GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBase* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr;
+        return false;
+    }
+
+    return style->GetTextureResource(GetActiveTheme(), token, result);
+}
+
+bool FudgetControl::GetStyleTexture(const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr;
+        return false;
+    }
+
+    return style->GetTextureResource(GetActiveTheme(), tokens, result);
+}
+
 bool FudgetControl::GetStyleTextDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     FudgetStyle *style = GetActiveStyle();

@@ -5,6 +5,7 @@
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Core/Types/Variant.h"
+#include "Engine/Graphics/Textures/TextureBase.h"
 
 #include "Token.h"
 
@@ -433,6 +434,27 @@ public:
 	API_FUNCTION() bool GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetDrawArea &result);
 
 	/// <summary>
+	/// Looks up a texture resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextureResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) TextureBase* &result);
+
+	/// <summary>
+	/// Looks up a texture resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetTextureResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) TextureBase* &result);
+
+	/// <summary>
 	/// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
 	/// value to it on success.
 	/// </summary>
@@ -452,6 +474,32 @@ public:
 	/// <param name="result">Receives the resource's value if it is found.</param>
 	/// <returns>Whether the token was associated with a value of the requested type</returns>
 	API_FUNCTION() bool GetTextDrawSettingsResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) FudgetTextDrawSettings &result);
+
+	template<typename T>
+	bool GetEnumResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) T &result)
+	{
+		Variant var;
+		if (GetResourceValue(theme, token, var))
+		{
+			if (EnumFromVariant<T>(var, result))
+				return true;
+		}
+		result = T();
+		return false;
+	}
+
+	template<typename T>
+	bool GetEnumResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) T &result)
+	{
+		for (auto t : tokens)
+		{
+			if (GetEnumResource(theme, t, result))
+				return true;
+		}
+		result = T();
+		return false;
+	}
+
 private:
 	// Called from a parent style when a resource override was changed, but not when it was set to null.
 	void ParentResourceChanged(FudgetToken token, FudgetStyleResource *resource);
@@ -461,6 +509,7 @@ private:
 
 	bool TokenFromVariant(const Variant &var, FudgetToken &result) const;
 	bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
+	bool TextureFromVariant(const Variant &var, TextureBase* &result) const;
 	bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
 	bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const;
 	bool FontFromVariant(const Variant &var, FudgetFont &result) const;
@@ -474,6 +523,17 @@ private:
 	bool Int3FromVariant(const Variant &var, Int3 &result) const;
 	bool Int4FromVariant(const Variant &var, Int4 &result) const;
 	bool ColorFromVariant(const Variant &var, Color &result) const;
+
+	template<typename T>
+	bool EnumFromVariant(const Variant &var, T &result) const
+	{
+		if (var.Type.Type == VariantType::Enum)
+		{
+			result = (T)var.AsInt;
+			return true;
+		}
+		return false;
+	}
 
 	FudgetStyle *_parent;
 	Array<FudgetStyle*> _derived;

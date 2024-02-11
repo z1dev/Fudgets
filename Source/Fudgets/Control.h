@@ -1522,6 +1522,25 @@ public:
 	API_FUNCTION() bool GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result);
 
 	/// <summary>
+	/// Tries to get a texture for the passed token. The result will be a valid 
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token for a draw area value in the active style</param>
+	/// <param name="result">The texture asset reference to receive the result</param>
+	/// <returns>Whether a texture was found for the token</returns>
+	API_FUNCTION() bool GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBase* &result);
+
+	/// <summary>
+	/// Tries to get a texture for the passed token. The result will be a valid 
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">The texture asset reference to receive the result</param>
+	/// <returns>Whether a texture was found for a token</returns>
+	API_FUNCTION() bool GetStyleTexture(const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result);
+
+	/// <summary>
 	/// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
 	/// whether the original value is a draw setting, a Float2, a color or a token of a material.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
