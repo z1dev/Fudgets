@@ -55,9 +55,16 @@ namespace Fudgets
             Token = value;
         }
 
-        bool IsValid()
-        {
-            return Token != -1;
-        }
+        /// <summary>
+        /// Returns whether the value of the token is registered with the themes
+        /// </summary>
+        public readonly bool IsValid => Token != -1;
+
+        /// <summary>
+        /// A token that is null. Null tokens should be used where a valid token is required, but it must indicate
+        /// that it represents nothing. For example a style resource must be valid. Setting it to invalid would mean
+        /// that the style doesn't override a value. Instead, null might be used to hide a value of an inherited style.
+        /// </summary>
+        public readonly bool IsNull => Token == -2;
     }
 }

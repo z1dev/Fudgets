@@ -36,6 +36,7 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	operator int32() const { return Token; }
 
 	bool IsValid() const { return Token != -1; }
+	bool IsNull() const { return Token == -2; }
 
 	/// <summary>
 	/// The inner data used as the identifier of this token
@@ -47,4 +48,10 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	/// </summary>
 	API_FIELD(ReadOnly) static const FudgetToken Invalid;
 
+	/// <summary>
+	/// A token that is null. Null tokens should be used where a valid token is required, but it must indicate
+	/// that it represents nothing. For example a style resource must be valid. Setting it to invalid would mean
+	/// that the style doesn't override a value. Instead, null might be used to hide a value of an inherited style.
+	/// </summary>
+	API_FIELD(ReadOnly) static const FudgetToken Null;
 };

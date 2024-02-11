@@ -2,6 +2,7 @@
 
 
 const FudgetToken FudgetToken::Invalid = -1;
+const FudgetToken FudgetToken::Null = -2;
 
 bool FudgetToken::operator==(int32 val) const
 {

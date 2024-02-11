@@ -58,14 +58,14 @@ private:
 };
 
 /// <summary>
-/// Painter for controls that have a background and a border around a field. For text editors
+/// Painter for controls that have a background and a frame around a field. For text editors
 /// list boxes, drop down menus.
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetControlFieldPainter : public FudgetPartPainter
+class FUDGETS_API FudgetFramedFieldPainter : public FudgetPartPainter
 {
     using Base = FudgetPartPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetControlFieldPainter);
+    DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
 public:
     /// <summary>
     /// Creates the style for drawing, filling the resources to use that will be looked up in the current theme.
@@ -78,14 +78,15 @@ public:
     API_FIELD(ReadOnly) static FudgetToken SelfToken;
 
     API_FIELD(ReadOnly) static FudgetToken FieldBackgroundToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedFieldBackgroundToken;
     API_FIELD(ReadOnly) static FudgetToken DisabledFieldBackgroundToken;
     API_FIELD(ReadOnly) static FudgetToken FieldPaddingToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedFieldPaddingToken;
     API_FIELD(ReadOnly) static FudgetToken DisabledFieldPaddingToken;
 
     API_FIELD(ReadOnly) static FudgetToken BorderDrawToken;
     API_FIELD(ReadOnly) static FudgetToken FocusedBorderDrawToken;
     API_FIELD(ReadOnly) static FudgetToken DisabledBorderDrawToken;
-
     API_FIELD(ReadOnly) static FudgetToken BorderPaddingToken;
     API_FIELD(ReadOnly) static FudgetToken FocusedBorderPaddingToken;
     API_FIELD(ReadOnly) static FudgetToken DisabledBorderPaddingToken;
@@ -97,8 +98,67 @@ protected:
     FudgetToken GetStyleToken() const override { return SelfToken; }
 private:
     FudgetDrawArea _field_bg;
+    FudgetDrawArea _focused_field_bg;
     FudgetDrawArea _disabled_field_bg;
     FudgetPadding _field_padding;
+    FudgetPadding _focused_field_padding;
+    FudgetPadding _disabled_field_padding;
+
+    FudgetDrawArea _border_area;
+    FudgetDrawArea _focused_border_area;
+    FudgetDrawArea _disabled_border_area;
+    FudgetPadding _border_padding;
+    FudgetPadding _focused_border_padding;
+    FudgetPadding _disabled_border_padding;
+
+    FudgetPadding _inner_padding;
+};
+
+/// <summary>
+/// Painter for combo-box controls that have a background and a border around a field, that look like a
+/// combo box
+/// </summary>
+API_CLASS()
+class FUDGETS_API FudgetComboBoxFieldPainter : public FudgetPartPainter
+{
+    using Base = FudgetPartPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetComboBoxFieldPainter);
+public:
+    /// <summary>
+    /// Creates the style for drawing, filling the resources to use that will be looked up in the current theme.
+    /// </summary>
+    API_FUNCTION() static void CreateStyle();
+
+    void Initialize(FudgetTheme *theme) override;
+    void Draw(FudgetControl *control) override;
+
+    API_FIELD(ReadOnly) static FudgetToken SelfToken;
+
+    API_FIELD(ReadOnly) static FudgetToken FieldBackgroundToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedFieldBackgroundToken;
+    API_FIELD(ReadOnly) static FudgetToken DisabledFieldBackgroundToken;
+    API_FIELD(ReadOnly) static FudgetToken FieldPaddingToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedFieldPaddingToken;
+    API_FIELD(ReadOnly) static FudgetToken DisabledFieldPaddingToken;
+
+    API_FIELD(ReadOnly) static FudgetToken BorderDrawToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedBorderDrawToken;
+    API_FIELD(ReadOnly) static FudgetToken DisabledBorderDrawToken;
+    API_FIELD(ReadOnly) static FudgetToken BorderPaddingToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedBorderPaddingToken;
+    API_FIELD(ReadOnly) static FudgetToken DisabledBorderPaddingToken;
+
+    API_FIELD(ReadOnly) static FudgetToken ContentPaddingToken;
+
+    API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _inner_padding; }
+protected:
+    FudgetToken GetStyleToken() const override { return SelfToken; }
+private:
+    FudgetDrawArea _field_bg;
+    FudgetDrawArea _focused_field_bg;
+    FudgetDrawArea _disabled_field_bg;
+    FudgetPadding _field_padding;
+    FudgetPadding _focused_field_padding;
     FudgetPadding _disabled_field_padding;
 
     FudgetDrawArea _border_area;
