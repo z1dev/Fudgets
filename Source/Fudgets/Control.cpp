@@ -451,7 +451,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexture(TextureBase *t, const Recta
     Float4 border;
     Float4 borderUV;
     Float2 siz = t->Size();
-    border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
+    border = borderWidths.AsFloat4();
     borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
     Draw9SlicingTexture(t, rect, border, borderUV, color);
@@ -464,7 +464,7 @@ void FudgetControl::Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const 
     Float4 border;
     Float4 borderUV;
     Float2 siz = t->Size();
-    border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
+    border = borderWidths.AsFloat4();
     borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
     Draw9SlicingTexturePoint(t, rect, border, borderUV, color);
@@ -477,7 +477,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHa
     Float4 border;
     Float4 borderUV;
     Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
-    border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
+    border = borderWidths.AsFloat4();
     borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
     Draw9SlicingSprite(spriteHandle, rect, border, borderUV, color);
@@ -490,7 +490,7 @@ void FudgetControl::Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spr
     Float4 border;
     Float4 borderUV;
     Float2 siz = spriteHandle.Atlas->GetSprite(spriteHandle.Index).Area.Size;
-    border = Float4(borderWidths.Left, borderWidths.Right, borderWidths.Top, borderWidths.Bottom);
+    border = borderWidths.AsFloat4();
     borderUV = Float4(border.X / siz.X, border.Y / siz.X, border.Z / siz.Y, border.W / siz.Y);
 
     Draw9SlicingSpritePoint(spriteHandle, rect, border, borderUV, color);
@@ -685,7 +685,7 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
     CacheGlobalToLocal();
     bool draw_color = (area.AreaType & FudgetFillType::Color) == FudgetFillType::Color;
 
-    FudgetPadding borders = FudgetPadding(Math::Max(0.0f, area.Borders.Left), Math::Max(0.0f, area.Borders.Right), Math::Max(0.0f, area.Borders.Top), Math::Max(0.0f, area.Borders.Bottom));
+    FudgetPadding borders = FudgetPadding::Max(area.Borders, 0.f);
     
     bool stretch = (area.AreaType & FudgetFillType::Stretch) == FudgetFillType::Stretch;
     bool point = (area.AreaType & FudgetFillType::Point) == FudgetFillType::Point;

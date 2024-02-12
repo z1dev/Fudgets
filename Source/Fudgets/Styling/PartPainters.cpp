@@ -450,8 +450,7 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
         _disabled_field_padding = _field_padding;
 
     if (!style->GetDrawAreaResource(theme, FrameDrawToken, _frame_area))
-        _frame_area = FudgetDrawArea(FudgetPadding( Math::Max(1.0f, _field_padding.Left), Math::Max(1.0f, _field_padding.Top),
-            Math::Max(1.0f, _field_padding.Right), Math::Max(1.0f, _field_padding.Bottom)), Color::Gray, FudgetFrameType::Inside);
+        _frame_area = FudgetDrawArea(FudgetPadding::Max(_field_padding, 1.0f), Color::Gray, FudgetFrameType::Inside);
     if (!style->GetDrawAreaResource(theme, HoveredFrameDrawToken, _hovered_frame_area))
         _hovered_frame_area = _frame_area;
     if (!style->GetDrawAreaResource(theme, PressedFrameDrawToken, _pressed_frame_area))

@@ -50,6 +50,37 @@ public partial struct FudgetPadding
         return new Rectangle(rect.Location + new Float2(Left, Top), rect.Size - new Float2(Width, Height) );
     }
 
+    /// <summary>
+    /// Returns a padding with each side individually set to the bigger value.
+    /// </summary>
+    static FudgetPadding Max(in FudgetPadding a, float value)
+    {
+        return new FudgetPadding(Mathf.Max(a.Left, value), Mathf.Max(a.Top, value), Mathf.Max(a.Right, value), Mathf.Max(a.Bottom, value));
+    }
+
+    /// <summary>
+    /// Returns a padding with each side individually set to the bigger value.
+    /// </summary>
+    static FudgetPadding Max(in FudgetPadding a, in FudgetPadding b)
+    {
+        return new FudgetPadding(Mathf.Max(a.Left, b.Left), Mathf.Max(a.Top, b.Top), Mathf.Max(a.Right, b.Right), Mathf.Max(a.Bottom, b.Bottom));
+    }
+
+    /// <summary>
+	/// Returns a padding with each side individually set to the lower value.
+	/// </summary>
+    static FudgetPadding Min(in FudgetPadding a, float value)
+    {
+        return new FudgetPadding(Mathf.Min(a.Left, value), Mathf.Min(a.Top, value), Mathf.Min(a.Right, value), Mathf.Min(a.Bottom, value));
+    }
+
+    /// <summary>
+	/// Returns a padding with each side individually set to the lower value.
+	/// </summary>
+    static FudgetPadding Min(in FudgetPadding a, in FudgetPadding b)
+    {
+        return new FudgetPadding(Mathf.Min(a.Left, b.Left), Mathf.Min(a.Top, b.Top), Mathf.Min(a.Right, b.Right), Mathf.Min(a.Bottom, b.Bottom));
+    }
 
     /// <summary>
     /// Left and right padding added together.
