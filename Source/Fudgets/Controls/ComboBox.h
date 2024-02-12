@@ -61,6 +61,7 @@ public:
 
     bool WantsNavigationKey(KeyboardKeys key) override;
 protected:
+    FudgetControlFlags GetInitFlags() const override;
 private:
     static void InitializeTokens();
 

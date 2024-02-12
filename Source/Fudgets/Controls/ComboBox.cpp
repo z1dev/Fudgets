@@ -229,6 +229,13 @@ bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
     return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown;
 }
 
+FudgetControlFlags FudgetComboBox::GetInitFlags() const
+{
+    return FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave |
+        FudgetControlFlags::BlockMouseEvents | FudgetControlFlags::FocusOnMouseLeft | FudgetControlFlags::CaptureReleaseMouseLeft |
+        FudgetControlFlags::CanHandleKeyEvents | FudgetControlFlags::CanHandleNavigationKeys | FudgetControlFlags::CompoundControl | Base::GetInitFlags();
+}
+
 FudgetPadding FudgetComboBox::GetInnerPadding() const
 {
     return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
