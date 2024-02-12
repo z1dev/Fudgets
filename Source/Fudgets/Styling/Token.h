@@ -10,6 +10,11 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetToken)
 
+	FORCE_INLINE FudgetToken()
+	{
+		Token = -1;
+	}
+
 	FORCE_INLINE FudgetToken(int32 val)
 	{
 		Token = val;
@@ -17,7 +22,6 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 
 	// All of these need to be default or Flax won't generate the required code in virtual functions.
 
-	FudgetToken() = default;
 	FudgetToken(const FudgetToken &other) = default;
 	FudgetToken(FudgetToken &&other) noexcept = default;
 
@@ -54,4 +58,10 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	/// that the style doesn't override a value. Instead, null might be used to hide a value of an inherited style.
 	/// </summary>
 	API_FIELD(ReadOnly) static const FudgetToken Null;
+};
+
+template<>
+struct TIsPODType<FudgetToken>
+{
+	enum { Value = true };
 };

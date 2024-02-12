@@ -134,7 +134,7 @@ public:
     /// the caret's position
     /// </summary>
     /// <param name="ch">The replacement character</param>
-    API_FUNCTION() void ReplaceSelected(char ch);
+    API_FUNCTION() void ReplaceSelected(Char ch);
 
 protected:
     /// <inheritdoc />

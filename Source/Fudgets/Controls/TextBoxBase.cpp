@@ -291,7 +291,7 @@ void FudgetTextBoxBase::ReplaceSelected(const String &with)
         DoPosChanged(old_caret_pos, old_sel_pos);
 }
 
-void FudgetTextBoxBase::ReplaceSelected(char ch)
+void FudgetTextBoxBase::ReplaceSelected(Char ch)
 {
     if (GetSelLength() == 0)
         return;
