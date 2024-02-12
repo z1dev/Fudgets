@@ -270,6 +270,11 @@ void FudgetLineEdit::OnDraw()
         _blink_passed -= _caret_blink_time * 2.0f;
 }
 
+void FudgetLineEdit::OnSizeChanged()
+{
+    ScrollToPos();
+}
+
 FudgetPadding FudgetLineEdit::GetInnerPadding() const
 {
     return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
@@ -345,7 +350,7 @@ void FudgetLineEdit::ScrollToPos()
 
     Float2 textSize = _font.Font->MeasureText(GetText().Substring(0, GetCaretPos()), opt);
 
-    if (_scroll_pos > 0 && textSize.X - _scroll_pos < 0.0f)
+    if (_scroll_pos > 0.f && textSize.X - _scroll_pos < 0.f)
     {
         // Caret out towards the start of the text.
         _scroll_pos = _font.Font->MeasureText(GetText().Substring(0, Math::Max(GetCaretPos() - _character_scroll_count, 0))).X;
@@ -354,6 +359,13 @@ void FudgetLineEdit::ScrollToPos()
     {
         // Caret out towards the end of the text.
         _scroll_pos = _font.Font->MeasureText(GetText().Substring(0, Math::Min(GetCaretPos() + _character_scroll_count, GetTextLength()))).X - opt.Bounds.GetWidth() + _caret_width * 2.0f;
+    }
+    else if (_scroll_pos > 0.f && textSize.X - _scroll_pos < opt.Bounds.GetWidth())
+    {
+
+        Float2 afterSize = _font.Font->MeasureText(GetText().Substring(GetCaretPos(), GetTextLength() - GetCaretPos()), opt);
+        if (textSize.X + afterSize.X - _scroll_pos < opt.Bounds.GetWidth())
+            _scroll_pos = Math::Max(0.0f, textSize.X + afterSize.X - opt.Bounds.GetWidth());
     }
 }
 

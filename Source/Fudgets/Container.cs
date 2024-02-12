@@ -37,25 +37,9 @@ namespace Fudgets
                 return null;
             }
 
-            if (GUIRoot == this)
-            {
-                Debug.LogError("Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.");
-                return null;
-            }
-
             var layout = New<T>(); //Activator.CreateInstance<T>();
             Layout = layout;
             return (T)layout;
-        }
-    }
-
-    partial class FudgetGUIRoot
-    {
-        /// <inheritdoc />
-        [Obsolete("Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.", true)]
-        public override T CreateLayout<T>()
-        {
-            return base.CreateLayout<T>();
         }
     }
 }

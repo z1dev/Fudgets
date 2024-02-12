@@ -184,7 +184,7 @@ void FudgetGUIRoot::UnregisterMouseHook(IFudgetMouseHook *hook, FudgetMouseHookT
 	if ((type == FudgetMouseHookType::Global || type == FudgetMouseHookType::Both) && _global_mouse_hooks.Remove(hook))
 		LOG(Warning, "Mouse hook passed in UnregisterMouseHook was not registered as a global mouse hook");
 	if ((type == FudgetMouseHookType::Local || type == FudgetMouseHookType::Both) && _local_mouse_hooks.Remove(hook))
-		LOG(Warning, "Mouse hook passed in UnregisterMouseHook was not registered as a global mouse hook");
+		LOG(Warning, "Mouse hook passed in UnregisterMouseHook was not registered as a local mouse hook");
 }
 
 
@@ -304,6 +304,12 @@ bool FudgetGUIRoot::IsNavigationKey(KeyboardKeys key) const
 	// TODO: use the current input mapping instead of built in arrow keys
 
 	return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown || key == KeyboardKeys::Tab;
+}
+
+void FudgetGUIRoot::OnResized(Float2 new_size)
+{
+	if (Resized.IsBinded())
+		Resized(new_size);
 }
 
 void FudgetGUIRoot::InitializeEvents()

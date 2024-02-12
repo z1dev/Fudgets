@@ -406,7 +406,11 @@ void FudgetContainer::RequestLayout()
     for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
     {
         FudgetControl *control = _children[ix];
-        control->_size = control->_hint_size;
+        if (!Math::NearEqual(control->_size, control->_hint_size))
+        {
+            control->_size = control->_hint_size;
+            control->_pos_layout_updated = true;
+        }
     }
 }
 

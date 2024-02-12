@@ -34,12 +34,6 @@ public:
     template<typename T>
     FORCE_INLINE T* CreateLayout()
     {
-        if (GetGUIRoot() == this)
-        {
-            LOG(Error, "Adding layout directly to the root is not supported. Add a child container or FudgetAssetRoot and set its hint size to the size of this root.");
-            return nullptr;
-        }
-
         T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
         SetLayout(layout);
         return layout;

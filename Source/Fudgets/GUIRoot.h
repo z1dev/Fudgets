@@ -157,6 +157,15 @@ public:
     /// </summary>
     API_FUNCTION() bool IsNavigationKey(KeyboardKeys key) const;
 
+    /// <summary>
+    /// Function registered for getting notified when the UI size changes.
+    /// TODO: only for screen space UI at the moment
+    /// </summary>
+    /// <param name="new_size"></param>
+    /// <returns></returns>
+    API_FUNCTION() void OnResized(Float2 new_size);
+
+    API_EVENT() Delegate<Float2> Resized;
 private:
     // Called once from the Fudget to initialize during gameplay
     void Initialize() override;

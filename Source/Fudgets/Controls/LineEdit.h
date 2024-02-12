@@ -38,6 +38,9 @@ public:
     void OnDraw() override;
 
     /// <inheritdoc />
+    void OnSizeChanged() override;
+
+    /// <inheritdoc />
     int CharIndexAt(Float2 pos) override;
 
     /// <inheritdoc />

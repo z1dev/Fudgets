@@ -19,9 +19,10 @@
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
-    _hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(-1.f, -1.f), _state_flags(FudgetControlState::Enabled),
-    _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr),
-    _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
+    _pos_layout_updated(false), _size_layout_updated(false), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
+    _max_size(-1.f, -1.f), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
+    _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
+    _cached_theme(nullptr)
 {
 }
 
@@ -83,6 +84,7 @@ void FudgetControl::SetHintSize(Float2 value)
         return;
     _hint_size = value;
     SizeOrPosModified(FudgetDirtType::Size);
+
 }
 
 void FudgetControl::SetMinSize(Float2 value)
@@ -138,6 +140,7 @@ void FudgetControl::SetPosition(Float2 value)
 
     _pos = value;
     SizeOrPosModified(FudgetDirtType::Position);
+    OnPositionChanged();
 }
 
 void FudgetControl::RegisterToUpdate(bool value)
@@ -1295,6 +1298,22 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 void FudgetControl::DoDraw()
 {
     SetState(FudgetControlState::Global2LocalCached, false);
+
+    if (_pos_layout_updated || _size_layout_updated)
+    {
+        bool pos = _pos_layout_updated;
+        bool siz = _size_layout_updated;
+        _pos_layout_updated = false;
+        _size_layout_updated = false;
+
+        if (pos)
+            OnPositionChanged();
+        if (siz)
+            OnSizeChanged();
+
+        OnPositionOrSizeChanged(pos, siz);
+    }
+
     OnDraw();
 }
 
@@ -1491,8 +1510,16 @@ bool FudgetControl::IsPositionChangePermitted() const
 
 void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
 {
-    _pos = pos; 
-    _size = size;
+    if (!Math::NearEqual(pos, _pos))
+    {
+        _pos = pos;
+        _pos_layout_updated = true;
+    }
+    if (!Math::NearEqual(size, _size))
+    {
+        _size = size;
+        _size_layout_updated = true;
+    }
 }
 
 void FudgetControl::CreateClassTokens()

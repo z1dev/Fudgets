@@ -262,7 +262,15 @@ Float2 Fudget::GetSize() const
 {
     if (_renderMode == FudgetRenderMode::ScreenSpace)
     {
-        _saved_size = Screen::GetSize();
+        // TODO: call root OnResized for non screenspace too
+
+        Float2 new_size = Screen::GetSize();
+        if (new_size != _saved_size)
+        {
+            _saved_size = new_size;
+            if (_guiRoot != nullptr)
+                _guiRoot->OnResized(_saved_size);
+        }
     }
 
     return _saved_size;

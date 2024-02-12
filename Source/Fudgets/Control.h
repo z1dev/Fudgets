@@ -347,6 +347,29 @@ public:
 	API_FUNCTION() virtual void OnMouseReleased() {}
 
 	/// <summary>
+	/// Called after the control's position changed in its parent. This might be due to direct change of the control's
+	/// position, or because of layout changes. In the latter case OnSizeChanged might be called right after if the
+	/// size was also changed by the layout, and then OnPositionOrSizeChanged is called as well.
+	/// </summary>
+	API_FUNCTION() virtual void OnPositionChanged() {}
+
+	/// <summary>
+	/// Called after the control's size changed. Since it's only possible to modify the size of controls through their
+	/// hint size, this is always called as part of a layout change. OnPositionChanged might have been called right
+	/// before if the position was also changed by the layout, and then OnPositionOrSizeChanged is called as well.
+	/// </summary>
+	API_FUNCTION() virtual void OnSizeChanged() {}
+
+	/// <summary>
+	/// Called after the control's position or size changed due to being laid out in a parent. This is not called after
+	/// manual changes to a control's position. When this function is called, OnPositionChanged and OnSizeChanged have
+	/// already been called if the position or size changed.
+	/// </summary>
+	/// <param name="position">The position was changed by the parent layout</param>
+	/// <param name="size">The size was changed by the parent layout</param>
+	API_FUNCTION() virtual void OnPositionOrSizeChanged(bool position, bool size) {}
+
+	/// <summary>
 	/// Fetches the parent who is managing this control. The parent is also responsible for its destruction.
 	/// In case the parent has a layout, it might set the size and position of this control as well.
 	/// </summary>
@@ -1739,6 +1762,13 @@ private:
 
 	Float2 _pos;
 	Float2 _size;
+
+	// TODO: change these bools into some flags value to save space?
+
+	// Set during layout phase when the control's position was changed by a layout.
+	bool _pos_layout_updated;
+	// Set during layout phase when the control's size was changed by a layout.
+	bool _size_layout_updated;
 
 	Float2 _hint_size;
 	Float2 _min_size;
