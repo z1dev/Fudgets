@@ -117,8 +117,8 @@ private:
     Color _focused_selected_text_color;
     Color _disabled_selected_text_color;
 
-    float _blink_passed = 0.0f;
-    float _scroll_pos = 0.0f;
+    float _blink_passed;
+    float _scroll_pos;
     int _character_scroll_count;
 
     float _caret_blink_time;
