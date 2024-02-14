@@ -1101,7 +1101,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="location">The text location.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawText
@@ -1122,7 +1122,7 @@ public:
 	/// <param name="color">The text color.</param>
 	/// <param name="layout">The text layout properties.</param>
 	/// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr);
+	API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial = nullptr);
 
 	/// <summary>
 	/// Wrapper to Render2D's DrawTexture 

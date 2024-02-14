@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Scripting/ScriptingObject.h"
+#include "Engine/Render2D/Font.h"
 
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
@@ -80,7 +81,6 @@ DECLARE_ENUM_OPERATORS(FudgetFramedFieldState);
 API_STRUCT()
 struct FUDGETS_API FudgetPainterStateHelper
 {
-    using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterStateHelper);
 public:
     FudgetPainterStateHelper();
@@ -94,7 +94,15 @@ public:
     FORCE_INLINE bool Down() const { return HasState(FudgetFramedFieldState::Down); }
     FORCE_INLINE bool Focused() const { return HasState(FudgetFramedFieldState::Focused); }
 
+    /// <summary>
+    /// Current state of the control drawing the frame
+    /// </summary>
     API_FIELD() FudgetFramedFieldState State;
+
+    /// <summary>
+    /// Bounds to draw the frame inside
+    /// </summary>
+    API_FIELD() Rectangle Bounds;
 };
 
 template<>
@@ -314,3 +322,179 @@ private:
     FudgetPadding _inner_padding;
 };
 
+
+API_STRUCT()
+struct FUDGETS_API FudgetTextRangeSpan
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterTextDrawOptions);
+public:
+    FudgetTextRangeSpan() {}
+
+    API_FIELD() Span<Int2> RangeSpan;
+};
+
+template<>
+struct TIsPODType<FudgetTextRangeSpan>
+{
+    enum { Value = true };
+};
+
+API_STRUCT()
+struct FUDGETS_API FudgetPainterTextDrawOptions
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterTextDrawOptions);
+public:
+    FudgetPainterTextDrawOptions() {}
+
+    /// <summary>
+    /// Text to draw
+    /// </summary>
+    API_FIELD() StringView Text;
+
+    /// <summary>
+    /// Range of the text to draw.
+    /// </summary>
+    API_FIELD() Int2 Range;
+
+    /// <summary>
+    /// Draw the text with an offset
+    /// </summary>
+    API_FIELD() Float2 Offset;
+
+    /// <summary>
+    /// Areas for drawing text in different ways. It depends on the painter how it uses them. For example
+    /// a line text painter could take the first item in the spans array and use it to show selections. In a
+    /// different painter the second index would be for spans of bold text.
+    /// </summary>
+    API_FIELD() Span<FudgetTextRangeSpan> Spans;
+
+    /// <summary>
+    /// Used by some painters to pass custom data next to the spans. If used, it is usually required to have
+    /// the same number of items in Data as in the Spans array. 
+    /// </summary>
+    API_FIELD() Span<int> Data;
+};
+
+template<>
+struct TIsPODType<FudgetPainterTextDrawOptions>
+{
+    enum { Value = true };
+};
+
+/// <summary>
+/// Base class for painters that can draw text and have spans specified for different drawing
+/// </summary>
+API_CLASS()
+class FUDGETS_API FudgetTextPainter : public FudgetPartPainter
+{
+    using Base = FudgetPartPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetTextPainter);
+public:
+    /// <summary>
+    /// Draws the standard control part based on the control's current state.
+    /// </summary>
+    /// <param name="control">Control to draw</param>
+    /// <param name="state_object">State and bounds to paint</param>
+    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) {}
+
+    /// <summary>
+    /// Measures the text passed to the painter. The Range of text_options can be used to specify the part of text
+    /// to measure. It depends on the painter if it wraps the text in the state bounds or not.
+    /// </summary>
+    /// <param name="control">Control used for measurement</param>
+    /// <param name="state_object">State and bounds to paint</param>
+    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
+    /// <returns>Size of the measured text</returns>
+    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) { return Float2::Zero;  }
+
+    /// <summary>
+    /// Finds the index of character in the text at a passed position.
+    /// </summary>
+    /// <param name="control">Control used for hit testing</param>
+    /// <param name="state_object">State and bounds to paint</param>
+    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
+    /// <param name="point">The position of the character to look for</param>
+    /// <returns>Index of the character at the given position</returns>
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point) { return 0; }
+};
+
+/// <summary>
+/// Painter of unformatted text drawn with a single font, that can have spans which should be drawn
+/// as selectable
+/// </summary>
+API_CLASS()
+class FUDGETS_API FudgetLineEditTextPainter : public FudgetTextPainter
+{
+    using Base = FudgetTextPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
+public:
+    /// <summary>
+    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
+    /// </summary>
+    API_FUNCTION() static void CreateStyle();
+
+    /// <inheritdoc />
+    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+
+    /// <inheritdoc />
+    void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) override;
+
+    /// <inheritdoc />
+    Float2 Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) override;
+
+    /// <inheritdoc />
+    int HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point) override;
+
+
+    API_FIELD(ReadOnly) static FudgetToken SelfToken;
+
+    /// <summary>
+    /// Token for background area of selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken SelectionDrawToken;
+    /// <summary>
+    /// Token for background area of focused and selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FocusedSelectionDrawToken;
+    /// <summary>
+    /// Token for background area of disabled & selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledSelectionDrawToken;
+    /// <summary>
+    /// Token for normal text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken TextColorToken;
+    /// <summary>
+    /// Token for disabled text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledTextColorToken;
+    /// <summary>
+    /// Token for selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken SelectedTextColorToken;
+    /// <summary>
+    /// Token for focused and selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FocusedSelectedTextColorToken;
+    /// <summary>
+    /// Token for disabled and selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledSelectedTextColorToken;
+    /// <summary>
+    /// Token for the font used for drawing
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FontToken;
+private:
+    FudgetDrawArea _sel_area;
+    FudgetDrawArea _focused_sel_area;
+    FudgetDrawArea _disabled_sel_area;
+
+    Color _text_color;
+    Color _disabled_text_color;
+    Color _selected_text_color;
+    Color _focused_selected_text_color;
+    Color _disabled_selected_text_color;
+
+    FudgetFont _font;
+};

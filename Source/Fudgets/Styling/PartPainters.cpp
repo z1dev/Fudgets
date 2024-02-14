@@ -5,7 +5,6 @@
 #include "StyleStructs.h"
 #include "../Control.h"
 
-
 // FudgetPartPainter
 
 
@@ -58,38 +57,38 @@ FudgetStatePainter::FudgetStatePainter(const SpawnParams &params) : Base(params)
 // FudgetAlignedImagePainter
 
 
-FudgetToken FudgetAlignedImagePainter::SelfToken;
+FudgetToken FudgetAlignedImagePainter::SelfToken = -1;
 
-FudgetToken FudgetAlignedImagePainter::ImageToken;
-FudgetToken FudgetAlignedImagePainter::HoveredImageToken;
-FudgetToken FudgetAlignedImagePainter::PressedImageToken;
-FudgetToken FudgetAlignedImagePainter::DownImageToken;
-FudgetToken FudgetAlignedImagePainter::FocusedImageToken;
-FudgetToken FudgetAlignedImagePainter::DisabledImageToken;
+FudgetToken FudgetAlignedImagePainter::ImageToken = -1;
+FudgetToken FudgetAlignedImagePainter::HoveredImageToken = -1;
+FudgetToken FudgetAlignedImagePainter::PressedImageToken = -1;
+FudgetToken FudgetAlignedImagePainter::DownImageToken = -1;
+FudgetToken FudgetAlignedImagePainter::FocusedImageToken = -1;
+FudgetToken FudgetAlignedImagePainter::DisabledImageToken = -1;
 
-FudgetToken FudgetAlignedImagePainter::ImageTintToken;
-FudgetToken FudgetAlignedImagePainter::HoveredImageTintToken;
-FudgetToken FudgetAlignedImagePainter::PressedImageTintToken;
-FudgetToken FudgetAlignedImagePainter::DownImageTintToken;
-FudgetToken FudgetAlignedImagePainter::FocusedImageTintToken;
-FudgetToken FudgetAlignedImagePainter::DisabledImageTintToken;
+FudgetToken FudgetAlignedImagePainter::ImageTintToken = -1;
+FudgetToken FudgetAlignedImagePainter::HoveredImageTintToken = -1;
+FudgetToken FudgetAlignedImagePainter::PressedImageTintToken = -1;
+FudgetToken FudgetAlignedImagePainter::DownImageTintToken = -1;
+FudgetToken FudgetAlignedImagePainter::FocusedImageTintToken = -1;
+FudgetToken FudgetAlignedImagePainter::DisabledImageTintToken = -1;
 
-FudgetToken FudgetAlignedImagePainter::ImageOffsetToken;
-FudgetToken FudgetAlignedImagePainter::HoveredImageOffsetToken;
-FudgetToken FudgetAlignedImagePainter::PressedImageOffsetToken;
-FudgetToken FudgetAlignedImagePainter::DownImageOffsetToken;
-FudgetToken FudgetAlignedImagePainter::FocusedImageOffsetToken;
-FudgetToken FudgetAlignedImagePainter::DisabledImageOffsetToken;
+FudgetToken FudgetAlignedImagePainter::ImageOffsetToken = -1;
+FudgetToken FudgetAlignedImagePainter::HoveredImageOffsetToken = -1;
+FudgetToken FudgetAlignedImagePainter::PressedImageOffsetToken = -1;
+FudgetToken FudgetAlignedImagePainter::DownImageOffsetToken = -1;
+FudgetToken FudgetAlignedImagePainter::FocusedImageOffsetToken = -1;
+FudgetToken FudgetAlignedImagePainter::DisabledImageOffsetToken = -1;
 
-FudgetToken FudgetAlignedImagePainter::ImagePaddingToken;
-FudgetToken FudgetAlignedImagePainter::HoveredImagePaddingToken;
-FudgetToken FudgetAlignedImagePainter::PressedImagePaddingToken;
-FudgetToken FudgetAlignedImagePainter::DownImagePaddingToken;
-FudgetToken FudgetAlignedImagePainter::FocusedImagePaddingToken;
-FudgetToken FudgetAlignedImagePainter::DisabledImagePaddingToken;
+FudgetToken FudgetAlignedImagePainter::ImagePaddingToken = -1;
+FudgetToken FudgetAlignedImagePainter::HoveredImagePaddingToken = -1;
+FudgetToken FudgetAlignedImagePainter::PressedImagePaddingToken = -1;
+FudgetToken FudgetAlignedImagePainter::DownImagePaddingToken = -1;
+FudgetToken FudgetAlignedImagePainter::FocusedImagePaddingToken = -1;
+FudgetToken FudgetAlignedImagePainter::DisabledImagePaddingToken = -1;
 
-FudgetToken FudgetAlignedImagePainter::HorzAlignToken;
-FudgetToken FudgetAlignedImagePainter::VertAlignToken;
+FudgetToken FudgetAlignedImagePainter::HorzAlignToken = -1;
+FudgetToken FudgetAlignedImagePainter::VertAlignToken = -1;
 
 /*static*/
 void FudgetAlignedImagePainter::CreateStyle()
@@ -126,6 +125,8 @@ void FudgetAlignedImagePainter::CreateStyle()
 
     HorzAlignToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetAlignedImagePainter_HorzAlign"));
     VertAlignToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetAlignedImagePainter_VertAlign"));
+
+    // There are no reasonable defaults unless we add a default image that this painter can draw.
 
     //FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
     //if (style == nullptr)
@@ -278,7 +279,7 @@ void FudgetAlignedImagePainter::Draw(FudgetControl *control, const FudgetPainter
         state_object.Hovered() ? _hovered_image_padding :
         _image_padding;
 
-    Rectangle r = image_padding.Padded(control->GetBounds());
+    Rectangle r = image_padding.Padded(state_object.Bounds);
 
     if (_horz_align != FudgetImageHorzAlign::Stretch)
     {
@@ -311,35 +312,35 @@ void FudgetAlignedImagePainter::Draw(FudgetControl *control, const FudgetPainter
 // FudgetFramedFieldPainter
 
 
-FudgetToken FudgetFramedFieldPainter::SelfToken;
+FudgetToken FudgetFramedFieldPainter::SelfToken = -1;
 
-FudgetToken FudgetFramedFieldPainter::FieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::HoveredFieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::PressedFieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::DownFieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::DisabledFieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::FocusedFieldBackgroundToken;
-FudgetToken FudgetFramedFieldPainter::FieldPaddingToken;
-FudgetToken FudgetFramedFieldPainter::HoveredFieldPaddingToken;
-FudgetToken FudgetFramedFieldPainter::PressedFieldPaddingToken;
-FudgetToken FudgetFramedFieldPainter::DownFieldPaddingToken;
-FudgetToken FudgetFramedFieldPainter::DisabledFieldPaddingToken;
-FudgetToken FudgetFramedFieldPainter::FocusedFieldPaddingToken;
+FudgetToken FudgetFramedFieldPainter::FieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::HoveredFieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::PressedFieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::DownFieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::DisabledFieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::FocusedFieldBackgroundToken = -1;
+FudgetToken FudgetFramedFieldPainter::FieldPaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::HoveredFieldPaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::PressedFieldPaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::DownFieldPaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::DisabledFieldPaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::FocusedFieldPaddingToken = -1;
 
-FudgetToken FudgetFramedFieldPainter::FrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::HoveredFrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::PressedFrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::DownFrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::FocusedFrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::DisabledFrameDrawToken;
-FudgetToken FudgetFramedFieldPainter::FramePaddingToken;
-FudgetToken FudgetFramedFieldPainter::HoveredFramePaddingToken;
-FudgetToken FudgetFramedFieldPainter::PressedFramePaddingToken;
-FudgetToken FudgetFramedFieldPainter::DownFramePaddingToken;
-FudgetToken FudgetFramedFieldPainter::FocusedFramePaddingToken;
-FudgetToken FudgetFramedFieldPainter::DisabledFramePaddingToken;
+FudgetToken FudgetFramedFieldPainter::FrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::HoveredFrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::PressedFrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::DownFrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::FocusedFrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::DisabledFrameDrawToken = -1;
+FudgetToken FudgetFramedFieldPainter::FramePaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::HoveredFramePaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::PressedFramePaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::DownFramePaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::FocusedFramePaddingToken = -1;
+FudgetToken FudgetFramedFieldPainter::DisabledFramePaddingToken = -1;
 
-FudgetToken FudgetFramedFieldPainter::ContentPaddingToken;
+FudgetToken FudgetFramedFieldPainter::ContentPaddingToken = -1;
 
 /*static*/
 void FudgetFramedFieldPainter::CreateStyle()
@@ -494,7 +495,7 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const FudgetPainterS
         state_object.Hovered() ? _hovered_field_padding :
         _field_padding;
 
-    control->DrawArea(area, field_padding.Padded(control->GetBounds()));
+    control->DrawArea(area, field_padding.Padded(state_object.Bounds));
 
     FudgetDrawArea frame = !state_object.Enabled() ? _disabled_frame_area :
         state_object.Down() ? _down_frame_area :
@@ -508,5 +509,221 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const FudgetPainterS
         state_object.Focused() ? _focused_frame_padding :
         state_object.Hovered() ? _hovered_frame_padding :
         _frame_padding;
-    control->DrawArea(frame, frame_padding.Padded(control->GetBounds()));
+    control->DrawArea(frame, frame_padding.Padded(state_object.Bounds));
 }
+
+
+// FudgetTextPainter
+
+
+FudgetTextPainter::FudgetTextPainter(const SpawnParams &params) : Base(params)
+{
+}
+
+
+// FudgetLineEditTextPainter
+
+
+FudgetToken FudgetLineEditTextPainter::SelfToken = -1;
+
+FudgetToken FudgetLineEditTextPainter::SelectionDrawToken = -1;
+FudgetToken FudgetLineEditTextPainter::FocusedSelectionDrawToken = -1;
+FudgetToken FudgetLineEditTextPainter::DisabledSelectionDrawToken = -1;
+FudgetToken FudgetLineEditTextPainter::TextColorToken = -1;
+FudgetToken FudgetLineEditTextPainter::DisabledTextColorToken = -1;
+FudgetToken FudgetLineEditTextPainter::SelectedTextColorToken = -1;
+FudgetToken FudgetLineEditTextPainter::FocusedSelectedTextColorToken = -1;
+FudgetToken FudgetLineEditTextPainter::DisabledSelectedTextColorToken = -1;
+FudgetToken FudgetLineEditTextPainter::FontToken = -1;
+
+void FudgetLineEditTextPainter::CreateStyle()
+{
+    SelfToken = FudgetThemes::RegisterToken(TEXT("Fudgets.FudgetLineEditTextPainter"));
+
+    SelectionDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_SelectionDrawToken"));
+    FocusedSelectionDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_FocusedSelectionDrawToken"));
+    DisabledSelectionDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_DisabledSelectionDrawToken"));
+    TextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_TextColorToken"));
+    DisabledTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_DisabledTextColorToken"));
+    SelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_SelectedTextColorToken"));
+    FocusedSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_FocusedSelectedTextColorToken"));
+    DisabledSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_DisabledSelectedTextColorToken"));
+    FontToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_FontToken"));
+
+    FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
+    if (style == nullptr)
+        return;
+
+    style->SetResourceOverride(SelectionDrawToken, SelectionDrawToken);
+    style->SetResourceOverride(FocusedSelectionDrawToken, FocusedSelectionDrawToken);
+    style->SetResourceOverride(DisabledSelectionDrawToken, DisabledSelectionDrawToken);
+    style->SetResourceOverride(TextColorToken, TextColorToken);
+    style->SetResourceOverride(DisabledTextColorToken, DisabledTextColorToken);
+    style->SetResourceOverride(SelectedTextColorToken, SelectedTextColorToken);
+    style->SetResourceOverride(FocusedSelectedTextColorToken, FocusedSelectedTextColorToken);
+    style->SetResourceOverride(DisabledSelectedTextColorToken, DisabledSelectedTextColorToken);
+
+    style->SetResourceOverride(FontToken, FontToken);
+}
+
+void FudgetLineEditTextPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+{
+    Base::Initialize(theme, style);
+    if (style == nullptr)
+    {
+        style = GetStyle();
+        if (style == nullptr)
+            return;
+    }
+
+    if (!style->GetDrawAreaResource(theme, SelectionDrawToken, _sel_area))
+        _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
+    if (!style->GetDrawAreaResource(theme, FocusedSelectionDrawToken, _focused_sel_area))
+        _focused_sel_area = _sel_area;
+    if (!style->GetDrawAreaResource(theme, DisabledSelectionDrawToken, _disabled_sel_area))
+        _disabled_sel_area = _sel_area;
+
+    if (!style->GetColorResource(theme, TextColorToken, _text_color))
+        _text_color = Color::Black;
+    if (!style->GetColorResource(theme, DisabledTextColorToken, _disabled_text_color))
+        _disabled_text_color = _text_color;
+    if (!style->GetColorResource(theme, SelectedTextColorToken, _selected_text_color))
+        _selected_text_color = Color::White;
+    if (!style->GetColorResource(theme, FocusedSelectedTextColorToken, _focused_selected_text_color))
+        _focused_selected_text_color = _selected_text_color;
+    if (!style->GetColorResource(theme, DisabledSelectedTextColorToken, _disabled_selected_text_color))
+        _disabled_selected_text_color = _selected_text_color;
+
+    style->GetFontResource(theme, FontToken, _font);
+}
+
+
+FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) : Base(params),
+    _text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
+    _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White)
+{
+}
+
+void FudgetLineEditTextPainter::Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options)
+{
+    if (_font.Font == nullptr)
+        return;
+
+    Color selTextColor = !state_object.Enabled() ? _disabled_selected_text_color : state_object.Focused() ? _focused_selected_text_color : _selected_text_color;
+    Color textColor = !state_object.Enabled() ? _disabled_text_color : _text_color;
+
+    TextLayoutOptions opt;
+    opt.BaseLinesGapScale = 1;
+    opt.Scale = 1;
+    opt.VerticalAlignment = TextAlignment::Center;
+    opt.HorizontalAlignment = TextAlignment::Near;
+    opt.TextWrapping = TextWrapping::NoWrap;
+
+    float caret_left = 0;
+    TextRange range;
+    if (text_options.Spans.IsInvalid() || text_options.Spans.Length() == 0 || (text_options.Spans.Length() > 0 && (text_options.Spans[0].RangeSpan.IsInvalid() || text_options.Spans[0].RangeSpan.Length() == 0)))
+    {
+        FudgetPadding tmp(0.f);
+        tmp.Left += text_options.Offset.X;
+        tmp.Top += text_options.Offset.Y;
+        opt.Bounds = tmp.Padded(state_object.Bounds);
+        TextRange range;
+        range.StartIndex = text_options.Range.X;
+        range.EndIndex = text_options.Range.Y;
+
+        control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
+    }
+    else
+    {
+        Rectangle r = state_object.Bounds;
+        r.Location += text_options.Offset;
+        opt.Bounds = r;
+
+        int sel_min = text_options.Spans[0].RangeSpan[0].X;
+        int sel_max = text_options.Spans[0].RangeSpan[0].Y;
+
+        range.StartIndex = text_options.Range.X + 0;
+        range.EndIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_min);
+        if (range.EndIndex > range.StartIndex)
+            control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
+
+        r.Location = Float2(r.Location.X + _font.Font->MeasureText(text_options.Text, range).X, r.Location.Y);
+        opt.Bounds = r;
+
+        //if (GetCaretPos() == sel_min)
+        //    caret_left = r.Location.X;
+
+        range.StartIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_min);
+        range.EndIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_max);
+        Float2 selRectSize = _font.Font->MeasureText(text_options.Text, range);
+
+        FudgetDrawArea sel_bg = !state_object.Enabled() ? _disabled_sel_area : state_object.Focused() ? _focused_sel_area : _sel_area;
+
+        control->DrawArea(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
+
+        control->DrawText(_font.Font, text_options.Text, range, selTextColor, opt);
+
+        if (sel_max < text_options.Range.Y - text_options.Range.X  /*GetTextLength() || GetCaretPos() == sel_max*/)
+        {
+            r.Location = Float2(r.Location.X + _font.Font->MeasureText(text_options.Text, range).X, r.Location.Y);
+            opt.Bounds = r;
+
+            //if (GetCaretPos() == sel_max)
+            //    caret_left = r.Location.X;
+
+            //if (sel_max != GetTextLength())
+            //{
+            range.StartIndex = text_options.Range.X + sel_max;
+            range.EndIndex = text_options.Range.Y;
+            control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
+            //}
+        }
+    }
+}
+
+Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options)
+{
+    if (_font.Font == nullptr)
+        return Float2::Zero;
+
+    TextLayoutOptions opt;
+    opt.BaseLinesGapScale = 1;
+    opt.Scale = 1;
+    opt.VerticalAlignment = TextAlignment::Center;
+    opt.HorizontalAlignment = TextAlignment::Near;
+    opt.TextWrapping = TextWrapping::NoWrap;
+    FudgetPadding tmp(0.f);
+    tmp.Left += text_options.Offset.X;
+    tmp.Top += text_options.Offset.Y;
+    opt.Bounds = tmp.Padded(state_object.Bounds);
+
+    TextRange range;
+    range.StartIndex = text_options.Range.X;
+    range.EndIndex = text_options.Range.Y;
+
+    return _font.Font->MeasureText(text_options.Text, range, opt);
+}
+
+int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point)
+{
+    if (_font.Font == nullptr)
+        return 0;
+
+    TextLayoutOptions opt;
+    opt.BaseLinesGapScale = 1;
+    opt.Scale = 1;
+    opt.VerticalAlignment = TextAlignment::Center;
+    opt.HorizontalAlignment = TextAlignment::Near;
+    opt.TextWrapping = TextWrapping::NoWrap;
+    FudgetPadding tmp(0.f);
+    tmp.Left += text_options.Offset.X;
+    tmp.Top += text_options.Offset.Y;
+    opt.Bounds = tmp.Padded(state_object.Bounds);
+
+    TextRange range;
+    range.StartIndex = text_options.Range.X;
+    range.EndIndex = text_options.Range.Y;
+
+    return _font.Font->HitTestText(text_options.Text, range, point, opt);
+}
+

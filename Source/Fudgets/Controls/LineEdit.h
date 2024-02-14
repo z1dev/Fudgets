@@ -12,15 +12,10 @@ public:
     API_PROPERTY() static FudgetToken GetClassToken();
     API_PROPERTY() static FudgetToken GetFramePainterToken();
     API_PROPERTY() static FudgetToken GetFrameStyleToken();
-    API_PROPERTY() static FudgetToken GetSelectionDrawToken();
-    API_PROPERTY() static FudgetToken GetFocusedSelectionDrawToken();
-    API_PROPERTY() static FudgetToken GetDisabledSelectionDrawToken();
-    API_PROPERTY() static FudgetToken GetTextColorToken();
-    API_PROPERTY() static FudgetToken GetDisabledTextColorToken();
-    API_PROPERTY() static FudgetToken GetSelectedTextColorToken();
-    API_PROPERTY() static FudgetToken GetFocusedSelectedTextColorToken();
-    API_PROPERTY() static FudgetToken GetDisabledSelectedTextColorToken();
-    API_PROPERTY() static FudgetToken GetFontToken();
+    API_PROPERTY() static FudgetToken GetTextPainterToken();
+    API_PROPERTY() static FudgetToken GetTextStyleToken();
+
+    API_PROPERTY() static FudgetToken GetCaretDrawToken();
     API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
     API_PROPERTY() static FudgetToken GetCaretWidthToken();
 
@@ -32,7 +27,7 @@ public:
     /// <inheritdoc />
     int GetTextLength() const override { return _text.Length(); }
     /// <inheritdoc />
-    void SetText(const String &value) override { _text = value; }
+    void SetText(const String &value) override;
 
     /// <inheritdoc />
     void OnDraw() override;
@@ -90,15 +85,10 @@ private:
     static FudgetToken ClassToken;
     static FudgetToken FramePainterToken;
     static FudgetToken FrameStyleToken;
-    static FudgetToken SelectionDrawToken;
-    static FudgetToken FocusedSelectionDrawToken;
-    static FudgetToken DisabledSelectionDrawToken;
-    static FudgetToken TextColorToken;
-    static FudgetToken DisabledTextColorToken;
-    static FudgetToken SelectedTextColorToken;
-    static FudgetToken FocusedSelectedTextColorToken;
-    static FudgetToken DisabledSelectedTextColorToken;
-    static FudgetToken FontToken;
+    static FudgetToken TextPainterToken;
+    static FudgetToken TextStyleToken;
+
+    static FudgetToken CaretDrawToken;
     static FudgetToken CaretBlinkTimeToken;
     static FudgetToken CaretWidthToken;
 
@@ -107,27 +97,20 @@ private:
     void ScrollToPos();
     void FixScrollPos();
 
+    String Process(const String &value) const;
+
     FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
-
-    FudgetDrawArea _sel_area;
-    FudgetDrawArea _focused_sel_area;
-    FudgetDrawArea _disabled_sel_area;
-
-    Color _text_color;
-    Color _disabled_text_color;
-    Color _selected_text_color;
-    Color _focused_selected_text_color;
-    Color _disabled_selected_text_color;
+    FudgetPainterTextDrawOptions _text_options;
+    FudgetTextPainter *_text_painter;
 
     float _blink_passed;
-    float _scroll_pos;
     int _character_scroll_count;
 
+    FudgetDrawArea _caret_draw;
     float _caret_blink_time;
     float _caret_width;
 
-    FudgetFont _font;
-
+    float _scroll_pos;
     String _text;
 };

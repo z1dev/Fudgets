@@ -547,7 +547,7 @@ void FudgetControl::DrawText(Font* font, const StringView& text, const Color& co
     Render2D::DrawText(font, text, color, CachedLocalToGlobal(location), customMaterial);
 }
 
-void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial)
+void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial)
 {
     CacheGlobalToLocal();
     Render2D::DrawText(font, text, textRange, color, CachedLocalToGlobal(location), customMaterial);
@@ -561,7 +561,7 @@ void FudgetControl::DrawText(Font* font, const StringView& text, const Color& co
     Render2D::DrawText(font, text, color, tmp, customMaterial);
 }
 
-void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) TextRange& textRange, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial)
+void FudgetControl::DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, API_PARAM(Ref) TextLayoutOptions& layout, MaterialBase* customMaterial)
 {
     CacheGlobalToLocal();
     TextLayoutOptions tmp = layout;
