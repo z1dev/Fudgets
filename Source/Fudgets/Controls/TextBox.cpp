@@ -128,7 +128,7 @@ void FudgetTextBox::OnInitialize()
         _character_scroll_count = 4;
 
     if (!GetStyleBool(SnapTopLineToken, _snap_top_line))
-        _snap_top_line = true;
+        _snap_top_line = false;
 }
 
 void FudgetTextBox::OnDraw()
@@ -279,7 +279,7 @@ void FudgetTextBox::SetSnapTopLine(bool value)
 {
     if (value == _snap_top_line)
         return;
-    value = _snap_top_line;
+    _snap_top_line = value;
     if (value)
         SnapTopLine();
 

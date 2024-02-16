@@ -291,7 +291,6 @@ void FudgetTextBoxBase::ReplaceSelected(Char ch)
     int sel_max = Math::Max(GetSelStart(), GetSelEnd());
 
     ReplaceCharacters(sel_min, sel_max, ch);
-    //Text = Text.Substring(0, sel_min) + ch + Text.Substring(sel_max, Text.Length - sel_max);
 
     int old_sel_pos = _sel_pos;
     int old_caret_pos = _caret_pos;
@@ -467,7 +466,7 @@ FudgetControlFlags FudgetTextBoxBase::GetInitFlags() const
 
 void FudgetTextBoxBase::InitializeFlags()
 {
-    if ((_textbox_flags | FudgetTextBoxFlags::ResetFlags) == FudgetTextBoxFlags::ResetFlags)
+    if ((_textbox_flags & FudgetTextBoxFlags::ResetFlags) == FudgetTextBoxFlags::ResetFlags)
         _textbox_flags = GetTextBoxInitFlags();
 
     Base::InitializeFlags();
