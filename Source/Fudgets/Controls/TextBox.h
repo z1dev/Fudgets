@@ -3,6 +3,30 @@
 #include "TextBoxBase.h"
 #include "TextBoxPainter.h"
 
+/// <summary>
+/// Text box sizing and auto sizing options determine if the text box size is automatically adjusted to fit its
+/// contents, or entirely relies on the user set values and the layout
+/// </summary>
+API_ENUM()
+enum class FudgetTextBoxSizing
+{
+    /// <summary>
+    /// The size of the textbox is determined by the user set sizes and the layout.
+    /// </summary>
+    Normal,
+    /// <summary>
+    /// The textbox is resized to fit its contents, ignoring the user set sizes, but not the layout. Adding
+    /// new line characters in the text is the only way to influence the size of the control. Word wrap settings
+    /// are respected if the text box is forced to be smaller than what its contents require.
+    /// </summary>
+    AutoSize,
+    /// <summary>
+    /// The width of the textbox is determined by the user set sizes and the layout. The height is adjusted to fit
+    /// the text, respecting new line characters and the word wrap setting, if the layout allows it
+    /// </summary>
+    AutoHeight
+};
+
 
 /// <summary>
 /// Multiline input box for unformatted basic text. Text can span over multiple lines either
@@ -31,7 +55,7 @@ public:
     void OnInitialize() override;
 
     /// <inheritdoc />
-    String GetText() const override { return _text; }
+    StringView GetText() const override { return _text; }
 
     /// <inheritdoc />
     int GetTextLength() const override { return _text.Length(); }
@@ -88,12 +112,26 @@ public:
     /// </summary>
     API_PROPERTY() void SetLineWrapMode(FudgetLineWrapMode value);
 
+    /// <summary>
+    /// Snapping makes the top line in the text box snap to the top edge of the control when scrolling. When not snapping,
+    /// the contents of the text box scroll free. False by default
+    /// </summary>
+    /// <returns>Whether the top line is snapping to the top edge, or the contents scroll free instead</returns>
+    API_PROPERTY() bool GetSnapTopLine() const { return _snap_top_line; }
+
+    /// <summary>
+    /// Snapping makes the top line in the text box snap to the top edge of the control when scrolling. When not snapping,
+    /// the contents of the text box scroll free.
+    /// </summary>
+    /// <param name="value">Whether the top line is snapping to the top edge, or the contents scroll free instead</param>
+    API_PROPERTY() void SetSnapTopLine(bool value);
+
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
 
     /// <inheritdoc />
-    void SetTextInternal(const String &value) override;
+    void SetTextInternal(const StringView &value) override;
 
     /// <inheritdoc />
     bool IsWhitespace(int index) const override;
@@ -105,7 +143,7 @@ protected:
     void DeleteCharacters(int start_index, int end_index) override;
 
     /// <inheritdoc />
-    void ReplaceCharacters(int start_index, int end_index, const String &with) override;
+    void ReplaceCharacters(int start_index, int end_index, const StringView &with) override;
 
     /// <inheritdoc />
     void ReplaceCharacters(int start_index, int end_index, Char ch) override;
@@ -147,16 +185,27 @@ private:
 
     void Process();
 
+    void SnapTopLine();
+
+
     FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
     FudgetMultiLineTextPainter *_text_painter;
     FudgetMultilineTextMeasurements _text_measurements;
 
+    // Time passed in seconds since caret blink started. The caret is visible when this value is below
+    // _caret_blink_time and hidden when it is over it.
     float _blink_passed;
+
+    // Number of characters to scroll in view when moving in a line to the left or right and the caret leaves the
+    // bounds of the control.
     int _character_scroll_count;
 
     // Make the line snap to the top, letting partial lines show on the bottom when scrolling down.
     bool _snap_top_line;
+
+    // Auto sizing or normal sizing
+    FudgetTextBoxSizing _sizing;
 
     FudgetDrawArea _caret_draw;
     float _caret_blink_time;
@@ -166,11 +215,11 @@ private:
     // the caret position changes by a method that should reset it.
     float _caret_updown_x;
 
+    // How much the contents of the text box are scrolled left or up. It is always positive
     Float2 _scroll_pos;
     String _text;
 
     bool _line_wrap;
     FudgetLineWrapMode _wrap_mode;
-
-    bool _draw_ellipsis;
 };
+

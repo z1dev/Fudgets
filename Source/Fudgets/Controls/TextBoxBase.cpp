@@ -9,7 +9,7 @@ FudgetTextBoxBase::FudgetTextBoxBase(const SpawnParams &params) : Base(params),
 
 }
 
-void FudgetTextBoxBase::SetText(const String &value)
+void FudgetTextBoxBase::SetText(const StringView &value)
 {
     CaretChangeReason = FudgetTextBoxCaretChangeReason::Unknown;
     SetTextInternal(value);
@@ -266,7 +266,7 @@ void FudgetTextBoxBase::DeleteSelected()
     DoTextEdited(old_caret_pos, old_sel_pos);
 }
 
-void FudgetTextBoxBase::ReplaceSelected(const String &with)
+void FudgetTextBoxBase::ReplaceSelected(const StringView &with)
 {
     if (GetSelLength() == 0 && with.Length() == 0)
         return;
@@ -419,6 +419,45 @@ void FudgetTextBoxBase::CaretPageDown()
     SetCaretPosInner(GetCaretPosPageDown());
 }
 
+void FudgetTextBoxBase::SetCaretVisible(bool value)
+{
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible) == value)
+        return;
+    SetTextBoxFlag(FudgetTextBoxFlags::CaretVisible, value);
+    _key_selecting = false;
+    _word_skip = false;
+}
+
+void FudgetTextBoxBase::SetEditable(bool value)
+{
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::Editable) == value)
+        return;
+    SetTextBoxFlag(FudgetTextBoxFlags::Editable, value);
+}
+
+void FudgetTextBoxBase::SetAllowWordSkip(bool value)
+{
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::WordSkip) == value)
+        return;
+    SetTextBoxFlag(FudgetTextBoxFlags::WordSkip, value);
+}
+
+void FudgetTextBoxBase::SetMouseSelectable(bool value)
+{
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::MouseSelectable) == value)
+        return;
+    SetTextBoxFlag(FudgetTextBoxFlags::MouseSelectable, value);
+    _mouse_selecting = false;
+}
+
+void FudgetTextBoxBase::SetKeySelectable(bool value)
+{
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::KeySelectable) == value)
+        return;
+    SetTextBoxFlag(FudgetTextBoxFlags::KeySelectable, value);
+    _key_selecting = false;
+}
+
 FudgetControlFlags FudgetTextBoxBase::GetInitFlags() const
 {
     return FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
@@ -503,6 +542,14 @@ int FudgetTextBoxBase::GetCaretPosPageDown()
 FudgetTextBoxFlags FudgetTextBoxBase::GetTextBoxFlags() const
 {
     return _textbox_flags;
+}
+
+void FudgetTextBoxBase::SetTextBoxFlag(FudgetTextBoxFlags flag, bool value)
+{
+    if (value)
+        _textbox_flags |= flag;
+    else
+        _textbox_flags &= ~flag;
 }
 
 bool FudgetTextBoxBase::HasAllTextBoxFlags(FudgetTextBoxFlags flags) const

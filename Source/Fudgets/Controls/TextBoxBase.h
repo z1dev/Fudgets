@@ -73,10 +73,10 @@ enum class FudgetTextBoxFlags
     /// </summary>
     CaretVisible = 1 << 1,
     /// <summary>
-    /// The text box is editable. Includes the CaretVisible flag as well. The text can be changed from code even if this
-    /// flag is not set.
+    /// The text box is editable. The caret must be visible for this flag to have any effect, but the text can be changed
+    /// from code even if this flag is not set.
     /// </summary>
-    Editable = CaretVisible | (1 << 2),
+    Editable = 1 << 2,
     /// <summary>
     /// Allows skipping the words and go to the next whitespace character in the text if the caret is also visible
     /// </summary>
@@ -96,7 +96,7 @@ enum class FudgetTextBoxFlags
 DECLARE_ENUM_OPERATORS(FudgetTextBoxFlags);
 
 
-API_CLASS()
+API_CLASS(Abstract)
 class FUDGETS_API FudgetTextBoxBase : public FudgetControl
 {
     using Base = FudgetControl;
@@ -105,7 +105,7 @@ public:
     /// <summary>
     /// Text displayed in the text box.
     /// </summary>
-    API_PROPERTY() virtual String GetText() const { return TEXT(""); }
+    API_PROPERTY() virtual StringView GetText() const { return TEXT(""); }
     /// <summary>
     /// The text displayed in the text box.
     /// </summary>
@@ -114,7 +114,7 @@ public:
     /// <summary>
     /// Change the text displayed in the text box.
     /// </summary>
-    API_PROPERTY() void SetText(const String &value);
+    API_PROPERTY() void SetText(const StringView &value);
 
     /// <summary>
     /// Position in the text where new characters will be inserted or used as the starting point of deletion.
@@ -248,7 +248,7 @@ public:
     /// the caret's position
     /// </summary>
     /// <param name="with">The replacement string</param>
-    API_FUNCTION() void ReplaceSelected(const String &with);
+    API_FUNCTION() void ReplaceSelected(const StringView &with);
 
     /// <summary>
     /// Replaces the selected part of the edited text with a character. If no text is selected, inserts the character at
@@ -321,6 +321,77 @@ public:
     /// The mouse button was pressed over the text and the text box is in mouse selection mode.
     /// </summary>
     API_PROPERTY() bool MouseSelecting() const { return _mouse_selecting; }
+
+    /// <summary>
+    /// Visibility of the caret when the text box is focused. This will also allow the users to move in the text box
+    /// with the keyboard and scroll it if the caret goes outside the visible bounds.
+    /// </summary>
+    /// <returns>Whether the caret is shown the focused text box</returns>
+    API_PROPERTY() bool GetCaretVisible() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible); }
+
+    /// <summary>
+    /// Visibility of the caret when the text box is focused. This will also allow the users to move in the text box
+    /// with the keyboard and scroll it if the caret goes outside the visible bounds. Unsetting this will make
+    /// the text box uneditable, but won't change that property.
+    /// </summary>
+    /// <param name="value">The new visibility</param>
+    API_PROPERTY() void SetCaretVisible(bool value);
+
+    /// <summary>
+    /// The text of editable text boxes can be changed by users via the keyboard. It's not necessary to be enabled
+    /// when changing the text in code. The caret must be visible or this property has no effect.
+    /// </summary>
+    /// <returns>Whether the text in the text box can be edited</returns>
+    API_PROPERTY() bool GetEditable() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::Editable); }
+
+    /// <summary>
+    /// The text of editable text boxes can be changed by users via the keyboard. It's not necessary to be enabled
+    /// when changing the text in code. The caret must be visible or this property has no effect.
+    /// </summary>
+    /// <param name="value">Whether the text box should be editable</param>
+    API_PROPERTY() void SetEditable(bool value);
+
+    /// <summary>
+    /// When word skip is allowed, holding down a key (usually ctrl) and moving left and right with the keyboard will
+    /// move the caret after the whitespace in front of the word in that direction. The caret must be visible as well
+    /// for this value to have an effect.
+    /// </summary>
+    /// <returns>Whether the caret can skip to the next word</returns>
+    API_PROPERTY() bool GetAllowWordSkip() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::WordSkip); }
+
+    /// <summary>
+    /// When word skip is allowed, holding down a key (usually ctrl) and moving left and right with the keyboard will
+    /// move the caret after the whitespace in front of the word in that direction. The caret must be visible as well
+    /// for this value to have an effect.
+    /// </summary>
+    /// <param name="value">Allowing word skip or not</param>
+    API_PROPERTY() void SetAllowWordSkip(bool value);
+
+    /// <summary>
+    /// The possibility to select text in the text box with the mouse.
+    /// </summary>
+    /// <returns>Whether mouse selection is possible</returns>
+    API_PROPERTY() bool GetMouseSelectable() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::MouseSelectable); }
+
+    /// <summary>
+    /// The possibility to select text in the text box with the mouse.
+    /// </summary>
+    /// <param name="value">Whether mouse selection should be possible</param>
+    API_PROPERTY() void SetMouseSelectable(bool value);
+
+    /// <summary>
+    /// The possibility to select text in the text box with the keyboard using the caret. The caret must be visible as well for
+    /// this value to have an effect.
+    /// </summary>
+    /// <returns>Whether key selection is possible</returns>
+    API_PROPERTY() bool GetKeySelectable() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::KeySelectable); }
+
+    /// <summary>
+    /// The possibility to select text in the text box with the keyboard using the caret. The caret must be visible as well for
+    /// this value to have an effect.
+    /// </summary>
+    /// <param name="value">Whether key selection should be possible</param>
+    API_PROPERTY() void SetKeySelectable(bool value);
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
@@ -331,7 +402,7 @@ protected:
     /// <summary>
     /// Change the text displayed in the text box.
     /// </summary>
-    API_PROPERTY() virtual void SetTextInternal(const String &value) {}
+    API_PROPERTY() virtual void SetTextInternal(const StringView &value) {}
 
     /// <summary>
     /// Checks if a character in the text is a whitespace character.
@@ -360,7 +431,7 @@ protected:
     /// <param name="start_index">Index of first character to replace</param>
     /// <param name="end_index">Index after last character to replace</param>
     /// <param name="with">Replacement string</param>
-    API_FUNCTION() virtual void ReplaceCharacters(int start_index, int end_index, const String &with) {}
+    API_FUNCTION() virtual void ReplaceCharacters(int start_index, int end_index, const StringView &with) {}
 
     /// <summary>
     /// Replaces characters in the text starting at an index before the ending index.
@@ -435,6 +506,13 @@ protected:
     /// </summary>
     /// <returns>The flags set for the control</returns>
     API_PROPERTY() virtual FudgetTextBoxFlags GetTextBoxFlags() const;
+
+    /// <summary>
+    /// Sets one or more flags describing the text box' behavior or appearance.
+    /// </summary>
+    /// <param name="flag">The flag to set or unset for the control</param>
+    /// <param name="value">Whether the flag should be set or unset</param>
+    API_FUNCTION() virtual void SetTextBoxFlag(FudgetTextBoxFlags flag, bool value);
 
     /// <summary>
     /// Matches the given flags with those of the text box, returning true only if all the flags were found.

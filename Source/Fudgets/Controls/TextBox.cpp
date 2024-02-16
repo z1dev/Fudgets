@@ -98,7 +98,7 @@ void FudgetTextBox::InitializeTokens()
 }
 
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
-    _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(true), _caret_blink_time(1.0f), _caret_width(2.0f),
+    _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(false), _caret_blink_time(1.0f), _caret_width(2.0f),
     _caret_updown_x(-1.f), _scroll_pos(0.0f), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace), _draw_ellipsis(false)
 {
 
@@ -223,8 +223,6 @@ void FudgetTextBox::DoTextEdited(int old_caret_pos, int old_sel_pos)
     _caret_updown_x = -1.f;
     Process();
 
-    FixScrollPos();
-    ScrollToPos();
     Base::DoTextEdited(old_caret_pos, old_sel_pos);
 }
 
@@ -275,6 +273,18 @@ void FudgetTextBox::SetLineWrapMode(FudgetLineWrapMode value)
     }
     _wrap_mode = value;
     Process();
+}
+
+void FudgetTextBox::SetSnapTopLine(bool value)
+{
+    if (value == _snap_top_line)
+        return;
+    value = _snap_top_line;
+    if (value)
+        SnapTopLine();
+
+    FixScrollPos();
+    ScrollToPos();
 }
 
 void FudgetTextBox::ScrollToPos()
@@ -371,6 +381,25 @@ void FudgetTextBox::Process()
     options.Wrapping = _line_wrap;
     options.WrapMode = _wrap_mode;
     _text_painter->MeasureLines(this, bounds.GetWidth() - _caret_width * 2.0f, _text, 1.f, options, _text_measurements);
+
+    if (_snap_top_line)
+        SnapTopLine();
+
+    FixScrollPos();
+    ScrollToPos();
+}
+
+void FudgetTextBox::SnapTopLine()
+{
+    if (_text_measurements.Lines.Count() != 0)
+    {
+        int line_index = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y);
+        if (line_index >= 0 && line_index < _text_measurements.Lines.Count())
+        {
+            const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+            _scroll_pos.Y = line.Location.Y;
+        }
+    }
 }
 
 FudgetControlFlags FudgetTextBox::GetInitFlags() const
@@ -378,7 +407,7 @@ FudgetControlFlags FudgetTextBox::GetInitFlags() const
     return FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
 }
 
-void FudgetTextBox::SetTextInternal(const String &value)
+void FudgetTextBox::SetTextInternal(const StringView &value)
 {
     _text = value;
     Process();
@@ -394,7 +423,7 @@ bool FudgetTextBox::IsWhitespace(int index) const
 
 void FudgetTextBox::InsertCharacter(int index, Char ch)
 {
-    _text.Insert(index, String(&ch, 1));
+    _text.Insert(index, StringView(&ch, 1));
 }
 
 void FudgetTextBox::DeleteCharacters(int start_index, int end_index)
@@ -402,7 +431,7 @@ void FudgetTextBox::DeleteCharacters(int start_index, int end_index)
     _text.Remove(start_index, end_index - start_index);
 }
 
-void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, const String &with)
+void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, const StringView &with)
 {
     int insert_len = end_index - start_index;
     int w_len = with.Length();
@@ -412,7 +441,7 @@ void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, const Stri
     else if (insert_len < w_len)
     {
         skipped = w_len - insert_len;
-        _text.Insert(start_index, String(with.Get(), skipped));
+        _text.Insert(start_index, StringView(with.Get(), skipped));
     }
 
     Platform::MemoryCopy(_text.Get() + start_index + skipped, with.Get() + skipped, sizeof(Char) * (w_len - skipped));
@@ -423,7 +452,7 @@ void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, Char ch)
     int insert_len = end_index - start_index;
     if (insert_len == 0)
     {
-        _text.Insert(start_index, String(&ch, 1));
+        _text.Insert(start_index, StringView(&ch, 1));
         return;
     }
 

@@ -27,7 +27,7 @@ public:
     void OnInitialize() override;
 
     /// <inheritdoc />
-    String GetText() const override { return _text; }
+    StringView GetText() const override { return _text; }
 
     /// <inheritdoc />
     int GetTextLength() const override { return _text.Length(); }
@@ -69,7 +69,7 @@ protected:
     FudgetControlFlags GetInitFlags() const override;
 
     /// <inheritdoc />
-    void SetTextInternal(const String &value) override;
+    void SetTextInternal(const StringView &value) override;
 
     /// <inheritdoc />
     bool IsWhitespace(int index) const override;
@@ -81,10 +81,13 @@ protected:
     void DeleteCharacters(int start_index, int end_index) override;
 
     /// <inheritdoc />
-    void ReplaceCharacters(int start_index, int end_index, const String &with) override;
+    void ReplaceCharacters(int start_index, int end_index, const StringView &with) override;
 
     /// <inheritdoc />
     void ReplaceCharacters(int start_index, int end_index, Char ch) override;
+
+    /// <inheritdoc />
+    FudgetTextBoxFlags GetTextBoxInitFlags() const override;
 private:
     static void InitializeTokens();
 
@@ -104,7 +107,7 @@ private:
     void ScrollToPos();
     void FixScrollPos();
 
-    String Process(const String &value) const;
+    void Process(const StringView &value);
 
     FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;

@@ -328,7 +328,7 @@ void FudgetLineEdit::FixScrollPos()
         _scroll_pos = Math::Max(0.0f, textSize.X - w + _scroll_pos);
 }
 
-String FudgetLineEdit::Process(const String &value) const
+void FudgetLineEdit::Process(const StringView &value)
 {
     // Remove unwanted characters and trim to end of line if word wrapping is disabled
 
@@ -360,7 +360,7 @@ String FudgetLineEdit::Process(const String &value) const
         }
     }
 
-    return str.ToString();
+    _text = str.ToString();
 }
 
 FudgetControlFlags FudgetLineEdit::GetInitFlags() const
@@ -368,9 +368,9 @@ FudgetControlFlags FudgetLineEdit::GetInitFlags() const
     return FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
 }
 
-void FudgetLineEdit::SetTextInternal(const String &value)
+void FudgetLineEdit::SetTextInternal(const StringView &value)
 {
-    _text = Process(value);
+    Process(value);
 }
 
 bool FudgetLineEdit::IsWhitespace(int index) const
@@ -382,7 +382,7 @@ bool FudgetLineEdit::IsWhitespace(int index) const
 
 void FudgetLineEdit::InsertCharacter(int index, Char ch)
 {
-    _text.Insert(index, String(&ch, 1));
+    _text.Insert(index, StringView(&ch, 1));
 }
 
 void FudgetLineEdit::DeleteCharacters(int start_index, int end_index)
@@ -390,7 +390,7 @@ void FudgetLineEdit::DeleteCharacters(int start_index, int end_index)
     _text.Remove(start_index, end_index - start_index);
 }
 
-void FudgetLineEdit::ReplaceCharacters(int start_index, int end_index, const String &with)
+void FudgetLineEdit::ReplaceCharacters(int start_index, int end_index, const StringView &with)
 {
     int insert_len = end_index - start_index;
     int w_len = with.Length();
@@ -400,7 +400,7 @@ void FudgetLineEdit::ReplaceCharacters(int start_index, int end_index, const Str
     else if (insert_len < w_len)
     {
         skipped = w_len - insert_len;
-        _text.Insert(start_index, String(with.Get(), skipped));
+        _text.Insert(start_index, StringView(with.Get(), skipped));
     }
 
     Platform::MemoryCopy(_text.Get() + start_index + skipped, with.Get() + skipped, sizeof(Char) * (w_len - skipped));
@@ -411,7 +411,7 @@ void FudgetLineEdit::ReplaceCharacters(int start_index, int end_index, Char ch)
     int insert_len = end_index - start_index;
     if (insert_len == 0)
     {
-        _text.Insert(start_index, String(&ch, 1));
+        _text.Insert(start_index, StringView(&ch, 1));
         return;
     }
 
@@ -421,3 +421,7 @@ void FudgetLineEdit::ReplaceCharacters(int start_index, int end_index, Char ch)
     Platform::MemoryCopy(_text.Get() + start_index, &ch, sizeof(Char));
 }
 
+FudgetTextBoxFlags FudgetLineEdit::GetTextBoxInitFlags() const
+{
+    return FudgetTextBoxFlags::CaretVisible | FudgetTextBoxFlags::Editable | FudgetTextBoxFlags::WordSkip | FudgetTextBoxFlags::MouseSelectable | FudgetTextBoxFlags::KeySelectable;
+}
