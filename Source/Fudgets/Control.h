@@ -1372,6 +1372,25 @@ public:
 	API_FUNCTION() bool GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out) Color &result);
 
 	/// <summary>
+	/// Returns a bool value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <param name="token">Token associated with the bool in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	API_FUNCTION() bool GetStyleBool(FudgetToken token, API_PARAM(Out) bool &result);
+
+	/// <summary>
+	/// Returns a bool value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	API_FUNCTION() bool GetStyleBool(const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result);
+
+	/// <summary>
 	/// Returns a float value for the control based on a theme token.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>

@@ -5,6 +5,9 @@
 #include "StyleStructs.h"
 #include "../Control.h"
 
+#include "Engine/Render2D/FontManager.h"
+
+
 // FudgetPartPainter
 
 
@@ -245,41 +248,41 @@ void FudgetAlignedImagePainter::Initialize(FudgetTheme *theme, FudgetStyle *styl
         _vert_align = FudgetImageVertAlign::Stretch;
 }
 
-void FudgetAlignedImagePainter::Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object)
+void FudgetAlignedImagePainter::Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state)
 {
 
-    AssetReference<TextureBase> image = !state_object.Enabled() ? _disabled_image :
-        state_object.Down() ? _down_image :
-        state_object.Pressed() ? _pressed_image :
-        state_object.Focused() ? _focused_image :
-        state_object.Hovered() ? _hovered_image :
+    AssetReference<TextureBase> image = !state.Enabled() ? _disabled_image :
+        state.Down() ? _down_image :
+        state.Pressed() ? _pressed_image :
+        state.Focused() ? _focused_image :
+        state.Hovered() ? _hovered_image :
         _image;
 
     if (image.Get() == nullptr)
         return;
 
-    Color tint = !state_object.Enabled() ? _disabled_image_tint :
-        state_object.Down() ? _down_image_tint :
-        state_object.Pressed() ? _pressed_image_tint :
-        state_object.Focused() ? _focused_image_tint :
-        state_object.Hovered() ? _hovered_image_tint :
+    Color tint = !state.Enabled() ? _disabled_image_tint :
+        state.Down() ? _down_image_tint :
+        state.Pressed() ? _pressed_image_tint :
+        state.Focused() ? _focused_image_tint :
+        state.Hovered() ? _hovered_image_tint :
         _image_tint;
 
-    Float2 offset = !state_object.Enabled() ? _disabled_image_offset :
-        state_object.Down() ? _down_image_offset :
-        state_object.Pressed() ? _pressed_image_offset :
-        state_object.Focused() ? _focused_image_offset :
-        state_object.Hovered() ? _hovered_image_offset :
+    Float2 offset = !state.Enabled() ? _disabled_image_offset :
+        state.Down() ? _down_image_offset :
+        state.Pressed() ? _pressed_image_offset :
+        state.Focused() ? _focused_image_offset :
+        state.Hovered() ? _hovered_image_offset :
         _image_offset;
 
-    FudgetPadding image_padding = !state_object.Enabled() ? _disabled_image_padding :
-        state_object.Down() ? _down_image_padding :
-        state_object.Pressed() ? _pressed_image_padding :
-        state_object.Focused() ? _focused_image_padding :
-        state_object.Hovered() ? _hovered_image_padding :
+    FudgetPadding image_padding = !state.Enabled() ? _disabled_image_padding :
+        state.Down() ? _down_image_padding :
+        state.Pressed() ? _pressed_image_padding :
+        state.Focused() ? _focused_image_padding :
+        state.Hovered() ? _hovered_image_padding :
         _image_padding;
 
-    Rectangle r = image_padding.Padded(state_object.Bounds);
+    Rectangle r = image_padding.Padded(bounds);
 
     if (_horz_align != FudgetImageHorzAlign::Stretch)
     {
@@ -480,43 +483,43 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
         _inner_padding = FudgetPadding(0.0f);
 }
 
-void FudgetFramedFieldPainter::Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object)
+void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state)
 {
-    FudgetDrawArea area = !state_object.Enabled() ? _disabled_field_bg :
-        state_object.Down() ? _down_field_bg :
-        state_object.Pressed() ? _pressed_field_bg :
-        state_object.Focused() ? _focused_field_bg :
-        state_object.Hovered() ? _hovered_field_bg :
+    FudgetDrawArea area = !state.Enabled() ? _disabled_field_bg :
+        state.Down() ? _down_field_bg :
+        state.Pressed() ? _pressed_field_bg :
+        state.Focused() ? _focused_field_bg :
+        state.Hovered() ? _hovered_field_bg :
         _field_bg;
-    FudgetPadding field_padding = !state_object.Enabled() ? _disabled_field_padding :
-        state_object.Down() ? _down_field_padding :
-        state_object.Pressed() ? _pressed_field_padding :
-        state_object.Focused() ? _focused_field_padding :
-        state_object.Hovered() ? _hovered_field_padding :
+    FudgetPadding field_padding = !state.Enabled() ? _disabled_field_padding :
+        state.Down() ? _down_field_padding :
+        state.Pressed() ? _pressed_field_padding :
+        state.Focused() ? _focused_field_padding :
+        state.Hovered() ? _hovered_field_padding :
         _field_padding;
 
-    control->DrawArea(area, field_padding.Padded(state_object.Bounds));
+    control->DrawArea(area, field_padding.Padded(bounds));
 
-    FudgetDrawArea frame = !state_object.Enabled() ? _disabled_frame_area :
-        state_object.Down() ? _down_frame_area :
-        state_object.Pressed() ? _pressed_frame_area :
-        state_object.Focused() ? _focused_frame_area :
-        state_object.Hovered() ? _hovered_frame_area :
+    FudgetDrawArea frame = !state.Enabled() ? _disabled_frame_area :
+        state.Down() ? _down_frame_area :
+        state.Pressed() ? _pressed_frame_area :
+        state.Focused() ? _focused_frame_area :
+        state.Hovered() ? _hovered_frame_area :
         _frame_area;
-    FudgetPadding frame_padding = !state_object.Enabled() ? _disabled_frame_padding :
-        state_object.Down() ? _down_frame_padding :
-        state_object.Pressed() ? _pressed_frame_padding :
-        state_object.Focused() ? _focused_frame_padding :
-        state_object.Hovered() ? _hovered_frame_padding :
+    FudgetPadding frame_padding = !state.Enabled() ? _disabled_frame_padding :
+        state.Down() ? _down_frame_padding :
+        state.Pressed() ? _pressed_frame_padding :
+        state.Focused() ? _focused_frame_padding :
+        state.Hovered() ? _hovered_frame_padding :
         _frame_padding;
-    control->DrawArea(frame, frame_padding.Padded(state_object.Bounds));
+    control->DrawArea(frame, frame_padding.Padded(bounds));
 }
 
 
 // FudgetTextPainter
 
 
-FudgetTextPainter::FudgetTextPainter(const SpawnParams &params) : Base(params)
+FudgetSingleLineTextPainter::FudgetSingleLineTextPainter(const SpawnParams &params) : Base(params)
 {
 }
 
@@ -604,126 +607,124 @@ FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) 
 {
 }
 
-void FudgetLineEditTextPainter::Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options)
+void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options)
 {
     if (_font.Font == nullptr)
         return;
 
-    Color selTextColor = !state_object.Enabled() ? _disabled_selected_text_color : state_object.Focused() ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = !state_object.Enabled() ? _disabled_text_color : _text_color;
+    Color selTextColor = !state.Enabled() ? _disabled_selected_text_color : state.Focused() ? _focused_selected_text_color : _selected_text_color;
+    Color textColor = !state.Enabled() ? _disabled_text_color : _text_color;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
-    opt.Scale = 1;
-    opt.VerticalAlignment = TextAlignment::Center;
+    opt.Scale = options.Scale;
+    opt.VerticalAlignment = options.VerticalAlignment;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.TextWrapping = TextWrapping::NoWrap;
 
     float caret_left = 0;
-    TextRange range;
-    if (text_options.Spans.IsInvalid() || text_options.Spans.Length() == 0 || (text_options.Spans.Length() > 0 && (text_options.Spans[0].RangeSpan.IsInvalid() || text_options.Spans[0].RangeSpan.Length() == 0)))
+    float scale = options.Scale / FontManager::FontScale;
+    if (options.Spans.IsInvalid() || options.Spans.Length() == 0 || (options.Spans.Length() > 0 && (options.Spans[0].RangeSpan.IsInvalid() || options.Spans[0].RangeSpan.Length() == 0)))
     {
-        FudgetPadding tmp(0.f);
-        tmp.Left += text_options.Offset.X;
-        tmp.Top += text_options.Offset.Y;
-        opt.Bounds = tmp.Padded(state_object.Bounds);
-        TextRange range;
-        range.StartIndex = text_options.Range.X;
-        range.EndIndex = text_options.Range.Y;
-
-        control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
+        opt.Bounds = bounds;
+        control->DrawText(_font.Font, text, range, textColor, opt);
     }
     else
     {
-        Rectangle r = state_object.Bounds;
-        r.Location += text_options.Offset;
+        TextRange range2;
+
+
+        Rectangle r = bounds;
         opt.Bounds = r;
 
-        int sel_min = text_options.Spans[0].RangeSpan[0].X;
-        int sel_max = text_options.Spans[0].RangeSpan[0].Y;
+        int sel_min = options.Spans[0].RangeSpan[0].StartIndex;
+        int sel_max = options.Spans[0].RangeSpan[0].EndIndex;
 
-        range.StartIndex = text_options.Range.X + 0;
-        range.EndIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_min);
-        if (range.EndIndex > range.StartIndex)
-            control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
+        range2.StartIndex = range.StartIndex;
+        range2.EndIndex = Math::Min(range.EndIndex, sel_min);
 
-        r.Location = Float2(r.Location.X + _font.Font->MeasureText(text_options.Text, range).X, r.Location.Y);
-        opt.Bounds = r;
-
-        //if (GetCaretPos() == sel_min)
-        //    caret_left = r.Location.X;
-
-        range.StartIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_min);
-        range.EndIndex = Math::Min(text_options.Range.Y, text_options.Range.X + sel_max);
-        Float2 selRectSize = _font.Font->MeasureText(text_options.Text, range);
-
-        FudgetDrawArea sel_bg = !state_object.Enabled() ? _disabled_sel_area : state_object.Focused() ? _focused_sel_area : _sel_area;
-
-        control->DrawArea(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
-
-        control->DrawText(_font.Font, text_options.Text, range, selTextColor, opt);
-
-        if (sel_max < text_options.Range.Y - text_options.Range.X  /*GetTextLength() || GetCaretPos() == sel_max*/)
+        if (range2.StartIndex < range2.EndIndex)
         {
-            r.Location = Float2(r.Location.X + _font.Font->MeasureText(text_options.Text, range).X, r.Location.Y);
+            control->DrawText(_font.Font, text, range2, textColor, opt);
+
+            r.Location = Float2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
+            if (range2.EndIndex < range.EndIndex)
+            {
+                Char prev_char = text[range2.EndIndex - 1];
+                Char next_char = text[range2.EndIndex];
+                r.Location.X += (float)_font.Font->GetKerning(prev_char, next_char) * scale;
+            }
             opt.Bounds = r;
+        }
 
-            //if (GetCaretPos() == sel_max)
-            //    caret_left = r.Location.X;
+        range2.StartIndex = Math::Clamp(sel_min, range.StartIndex, range.EndIndex);
+        range2.EndIndex = Math::Clamp(sel_max, range.StartIndex, range.EndIndex);
 
-            //if (sel_max != GetTextLength())
-            //{
-            range.StartIndex = text_options.Range.X + sel_max;
-            range.EndIndex = text_options.Range.Y;
-            control->DrawText(_font.Font, text_options.Text, range, textColor, opt);
-            //}
+        if (range2.StartIndex < range2.EndIndex)
+        {
+            Float2 selRectSize = _font.Font->MeasureText(text, range2);
+            FudgetDrawArea sel_bg = !state.Enabled() ? _disabled_sel_area : state.Focused() ? _focused_sel_area : _sel_area;
+            control->DrawArea(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
+            control->DrawText(_font.Font, text, range2, selTextColor, opt);
+
+            if (range2.EndIndex < range.EndIndex && sel_max < range.EndIndex)
+            {
+                Char prev_char = text[range2.EndIndex - 1];
+                Char next_char = text[range2.EndIndex];
+                r.Location.X += (float)_font.Font->GetKerning(prev_char, next_char) * scale;
+
+                r.Location = Float2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
+                opt.Bounds = r;
+            }
+        }
+
+        if (sel_max < range.EndIndex)
+        {
+            range2.StartIndex = Math::Max(range.StartIndex, sel_max);
+            range2.EndIndex = range.EndIndex;
+            control->DrawText(_font.Font, text, range2, textColor, opt);
         }
     }
 }
 
-Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options)
+Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options)
 {
     if (_font.Font == nullptr)
         return Float2::Zero;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
-    opt.Scale = 1;
-    opt.VerticalAlignment = TextAlignment::Center;
+    opt.Scale = options.Scale;
+    opt.VerticalAlignment = options.VerticalAlignment;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.TextWrapping = TextWrapping::NoWrap;
-    FudgetPadding tmp(0.f);
-    tmp.Left += text_options.Offset.X;
-    tmp.Top += text_options.Offset.Y;
-    opt.Bounds = tmp.Padded(state_object.Bounds);
+    opt.Bounds = Rectangle(Float2::Zero, Float2::Zero);
 
-    TextRange range;
-    range.StartIndex = text_options.Range.X;
-    range.EndIndex = text_options.Range.Y;
-
-    return _font.Font->MeasureText(text_options.Text, range, opt);
+    return _font.Font->MeasureText(text, range, opt);
 }
 
-int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point)
+float FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
+{
+    if (_font.Font == nullptr)
+        return 0.f;
+
+    scale = scale / FontManager::FontScale;
+    return _font.Font->GetKerning(a, b) * scale;
+}
+
+int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options, const Float2 &point)
 {
     if (_font.Font == nullptr)
         return 0;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
-    opt.Scale = 1;
-    opt.VerticalAlignment = TextAlignment::Center;
+    opt.Scale = options.Scale;
+    opt.VerticalAlignment = options.VerticalAlignment;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.TextWrapping = TextWrapping::NoWrap;
-    FudgetPadding tmp(0.f);
-    tmp.Left += text_options.Offset.X;
-    tmp.Top += text_options.Offset.Y;
-    opt.Bounds = tmp.Padded(state_object.Bounds);
+    opt.Bounds = bounds;
 
-    TextRange range;
-    range.StartIndex = text_options.Range.X;
-    range.EndIndex = text_options.Range.Y;
-
-    return _font.Font->HitTestText(text_options.Text, range, point, opt);
+    return _font.Font->HitTestText(text, range, point, opt);
 }
 

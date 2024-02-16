@@ -257,6 +257,29 @@ bool FudgetStyle::GetColorResource(FudgetTheme *theme, const Span<FudgetToken> &
 	return false;
 }
 
+bool FudgetStyle::GetBoolResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) bool &result)
+{
+	Variant var;
+	if (GetResourceValue(theme, token, var))
+	{
+		if (BoolFromVariant(var, result))
+			return true;
+	}
+	result = 0.0f;
+	return false;
+}
+
+bool FudgetStyle::GetBoolResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result)
+{
+	for (auto t : tokens)
+	{
+		if (GetBoolResource(theme, t, result))
+			return true;
+	}
+	result = 0.0f;
+	return false;
+}
+
 bool FudgetStyle::GetFloatResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) float &result)
 {
 	Variant var;
@@ -794,6 +817,16 @@ bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result) 
 			return false;
 		}
 		result = *padding;
+		return true;
+	}
+	return false;
+}
+
+bool FudgetStyle::BoolFromVariant(const Variant &var, bool &result) const
+{
+	if (var.Type.Type == VariantType::Bool)
+	{
+		result = var.AsBool;
 		return true;
 	}
 	return false;

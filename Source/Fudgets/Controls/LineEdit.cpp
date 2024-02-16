@@ -2,10 +2,6 @@
 #include "../Styling/Themes.h"
 #include "Engine/Core/Types/StringBuilder.h"
 
-//#include "Engine/Render2D/Font.h"
-//#include "Engine/Core/Types/Variant.h"
-
-
 FudgetToken FudgetLineEdit::ClassToken = -1;
 
 FudgetToken FudgetLineEdit::FramePainterToken = -1;
@@ -16,6 +12,7 @@ FudgetToken FudgetLineEdit::TextStyleToken = -1;
 FudgetToken FudgetLineEdit::CaretDrawToken = -1;
 FudgetToken FudgetLineEdit::CaretBlinkTimeToken = -1;
 FudgetToken FudgetLineEdit::CaretWidthToken = -1;
+FudgetToken FudgetLineEdit::CaretScrollCountToken = -1;
 
 FudgetToken FudgetLineEdit::GetClassToken()
 {
@@ -58,10 +55,17 @@ FudgetToken FudgetLineEdit::GetCaretBlinkTimeToken()
     InitializeTokens();
     return CaretBlinkTimeToken;
 }
+
 FudgetToken FudgetLineEdit::GetCaretWidthToken()
 {
     InitializeTokens();
     return CaretWidthToken;
+}
+
+FudgetToken FudgetLineEdit::GetCaretScrollCountToken()
+{
+    InitializeTokens();
+    return CaretScrollCountToken;
 }
 
 void FudgetLineEdit::InitializeTokens()
@@ -81,6 +85,7 @@ void FudgetLineEdit::InitializeTokens()
     CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretDraw"));
     CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretBlinkTime"));
     CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretWidth"));
+    CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretScrollCount"));
 }
 
 FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
@@ -101,7 +106,7 @@ void FudgetLineEdit::OnInitialize()
     if (!GetStyleToken(TextStyleToken, text_style))
         text_style = FudgetToken::Invalid;
 
-    _text_painter = CreateStylePainter<FudgetTextPainter>(TextPainterToken, text_style);
+    _text_painter = CreateStylePainter<FudgetSingleLineTextPainter>(TextPainterToken, text_style);
 
     if (!GetStyleDrawArea(CaretDrawToken, _caret_draw))
         _caret_draw = FudgetDrawArea(Color::Black);
@@ -109,46 +114,50 @@ void FudgetLineEdit::OnInitialize()
         _caret_blink_time = 1.0f;
     if (!GetStyleFloat(CaretWidthToken, _caret_width))
         _caret_width = 2.0f;
-}
-
-void FudgetLineEdit::SetText(const String &value)
-{
-    _text = Process(value);
+    if (!GetStyleInt(CaretScrollCountToken, _character_scroll_count))
+        _character_scroll_count = 4;
 }
 
 void FudgetLineEdit::OnDraw()
 {
-    _draw_state.Bounds = GetBounds();
+    Rectangle bounds = GetBounds();
     if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, _draw_state);
+        _frame_painter->Draw(this, bounds, _draw_state);
 
     if (_text_painter == nullptr)
         return;
 
     FudgetPadding innerPadding = GetInnerPadding();
-    _draw_state.Bounds = innerPadding.Padded(_draw_state.Bounds);
-    PushClip(_draw_state.Bounds);
+    bounds = innerPadding.Padded(bounds);
+    PushClip(bounds);
 
-    _text_options.Text = _text;
-    _text_options.Offset = Float2(-_scroll_pos, 0.0f);
-    _text_options.Range.X = 0;
-    _text_options.Range.Y = _text.Length();
+    FudgetSingleLineTextOptions options;
+    //options.Text = _text;
+    //options.Offset = Float2(-_scroll_pos, 0.0f);
+    //options.Range.StartIndex = 0;
+    //options.Range.EndIndex = _text.Length();
+
+    bounds.Location.X -= _scroll_pos;
+    bounds.Size.X += _scroll_pos;
 
     FudgetTextRangeSpan selection;
-    Int2 sel_range;
+    FudgetTextRange sel_range;
     if (GetSelLength() != 0)
     {
-        selection.RangeSpan = Span<Int2>(&sel_range, 1);
-        sel_range.X = Math::Min(GetSelStart(), GetSelEnd());
-        sel_range.Y = Math::Max(GetSelStart(), GetSelEnd());
-        _text_options.Spans = Span<FudgetTextRangeSpan>(&selection, 1);
+        selection.RangeSpan = Span<FudgetTextRange>(&sel_range, 1);
+        sel_range.StartIndex = Math::Min(GetSelStart(), GetSelEnd());
+        sel_range.EndIndex = Math::Max(GetSelStart(), GetSelEnd());
+        options.Spans = Span<FudgetTextRangeSpan>(&selection, 1);
     }
     else
     {
-        _text_options.Spans = Span<FudgetTextRangeSpan>();
+        options.Spans = Span<FudgetTextRangeSpan>();
     }
 
-    _text_painter->Draw(this, _draw_state, _text_options);
+    FudgetTextRange range;
+    range.StartIndex = 0;
+    range.EndIndex = _text.Length();
+    _text_painter->Draw(this, bounds, _text, range, _draw_state, options);
 
     PopClip();
 
@@ -161,14 +170,10 @@ void FudgetLineEdit::OnDraw()
     // Draw caret
     if (_blink_passed < _caret_blink_time)
     {
-        // TODO: get a global caret color or pick one for this edit
+        range.EndIndex = GetCaretPos();
+        float caret_left = _text_painter->Measure(this, _text, range, _draw_state, options).X;
 
-        float caret_left;
-
-        _text_options.Range.Y = GetCaretPos();
-        caret_left = _text_painter->Measure(this, _draw_state, _text_options).X;
-
-        DrawArea(_caret_draw, Rectangle(Float2(caret_left - 1.0f + _draw_state.Bounds.GetLeft() - _scroll_pos, _draw_state.Bounds.Location.Y), Float2(_caret_width, _draw_state.Bounds.GetHeight())));
+        DrawArea(_caret_draw, Rectangle(Float2(caret_left - 1.0f + bounds.GetLeft(), bounds.Location.Y), Float2(_caret_width, bounds.GetHeight())));
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)
         _blink_passed -= _caret_blink_time * 2.0f;
@@ -190,22 +195,28 @@ int FudgetLineEdit::CharIndexAt(Float2 pos)
         return 0;
 
     FudgetPadding innerPadding = GetInnerPadding();
-    _draw_state.Bounds = innerPadding.Padded(GetBounds());
+    //_draw_state.Bounds = innerPadding.Padded(GetBounds());
 
-    _text_options.Text = _text;
-    _text_options.Offset = Float2(-_scroll_pos, 0.0f);
-    _text_options.Range.X = 0;
-    _text_options.Range.Y = _text.Length();
+    Rectangle bounds = innerPadding.Padded(GetBounds());
+    bounds.Location.X -= _scroll_pos;
+    bounds.Size.X += _scroll_pos;
 
-    return _text_painter->HitTest(this, _draw_state, _text_options, Float2(pos.X, _draw_state.Bounds.GetTop()));
+    FudgetSingleLineTextOptions options;
+    //options.Text = _text;
+    //options.Offset = Float2(-_scroll_pos, 0.0f);
+    FudgetTextRange range;
+    range.StartIndex = 0;
+    range.EndIndex = _text.Length();
+
+    return _text_painter->HitTest(this, bounds, _text, range, _draw_state, options, Float2(pos.X, bounds.GetTop()));
 }
 
-void FudgetLineEdit::DoPosChanged(int old_caret_pos, int old_sel_pos)
+void FudgetLineEdit::DoPositionChanged(int old_caret_pos, int old_sel_pos)
 {
     _blink_passed = 0.0f;
     ScrollToPos();
 
-    Base::DoPosChanged(old_caret_pos, old_sel_pos);
+    Base::DoPositionChanged(old_caret_pos, old_sel_pos);
 }
 
 void FudgetLineEdit::DoTextEdited(int old_caret_pos, int old_sel_pos)
@@ -252,39 +263,49 @@ void FudgetLineEdit::ScrollToPos()
         return;
 
     FudgetPadding innerPadding = GetInnerPadding();
-    _draw_state.Bounds = innerPadding.Padded(GetBounds());
-    _text_options.Text = _text;
-    _text_options.Offset = Float2(-_scroll_pos, 0.0f);
-    _text_options.Range.X = 0;
-    _text_options.Range.Y = GetCaretPos();
+    Rectangle bounds = innerPadding.Padded(GetBounds());
 
-    Float2 textSize = _text_painter->Measure(this, _draw_state, _text_options);
+    int caret_pos = GetCaretPos();
 
-    if (_scroll_pos > 0.f && textSize.X - _scroll_pos < 0.f)
+    FudgetSingleLineTextOptions options;
+    //options.Text = _text;
+    FudgetTextRange range;
+    range.StartIndex = 0;
+    range.EndIndex = caret_pos;
+
+    float text_width = _text_painter->Measure(this, _text, range, _draw_state, options).X;
+
+    if (_scroll_pos > 0.f && text_width - _scroll_pos < 0.f)
     {
         // Caret out towards the start of the text.
 
-        _text_options.Range.X = 0;
-        _text_options.Range.Y = Math::Max(GetCaretPos() - _character_scroll_count, 0);
-        _scroll_pos = _text_painter->Measure(this, _draw_state, _text_options).X;
+        range.StartIndex = 0;
+        range.EndIndex = Math::Max(caret_pos - _character_scroll_count, 0);
+        _scroll_pos = _text_painter->Measure(this, _text, range, _draw_state, options).X;
     }
-    else if (textSize.X - _scroll_pos >= _draw_state.Bounds.GetWidth())
+    else if (text_width - _scroll_pos >= bounds.GetWidth())
     {
         // Caret out towards the end of the text.
 
-        _text_options.Range.X = GetCaretPos();
-        _text_options.Range.Y = Math::Min(GetCaretPos() + _character_scroll_count, GetTextLength());
-        _scroll_pos = _text_painter->Measure(this, _draw_state, _text_options).X + textSize.X - _draw_state.Bounds.GetWidth() + _caret_width * 2.0f;
+        range.StartIndex = caret_pos;
+        range.EndIndex = Math::Min(caret_pos + _character_scroll_count, GetTextLength());
+        float kerning = 0.f;
+        if (caret_pos > 0 && range.EndIndex > caret_pos)
+            kerning = (float)_text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
+        _scroll_pos = _text_painter->Measure(this, _text, range, _draw_state, options).X + text_width + kerning - bounds.GetWidth() + _caret_width * 2.0f;
     }
-    else if (_scroll_pos > 0.f && textSize.X - _scroll_pos < _draw_state.Bounds.GetWidth())
+    else if (_scroll_pos > 0.f && text_width - _scroll_pos < bounds.GetWidth())
     {
         // Possibly empty space on the right after end of text.
 
-        _text_options.Range.X = GetCaretPos();
-        _text_options.Range.Y = GetTextLength(); //- GetCaretPos();
-        float afterSize = _text_painter->Measure(this, _draw_state, _text_options).X;
-        if (textSize.X + afterSize - _scroll_pos + _caret_width * 2.0f < _draw_state.Bounds.GetWidth())
-            _scroll_pos = Math::Max(0.0f, textSize.X + afterSize - _draw_state.Bounds.GetWidth() + _caret_width * 2.0f);
+        range.StartIndex = caret_pos;
+        range.EndIndex = GetTextLength();
+        float afterSize = _text_painter->Measure(this, _text, range, _draw_state, options).X;
+        float kerning = 0.f;
+        if (caret_pos > 0 && range.EndIndex > caret_pos)
+            kerning = (float)_text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
+        if (text_width + afterSize + kerning - _scroll_pos + _caret_width * 2.0f < bounds.GetWidth())
+            _scroll_pos = Math::Max(0.0f, text_width + afterSize + kerning - bounds.GetWidth() + _caret_width * 2.0f);
     }
 }
 
@@ -294,13 +315,13 @@ void FudgetLineEdit::FixScrollPos()
         return;
 
     FudgetPadding innerPadding = GetInnerPadding();
-    _draw_state.Bounds = Rectangle(Float2::Zero, Float2(std::numeric_limits<float>::max() , std::numeric_limits<float>::max()));
-    _text_options.Text = _text;
-    _text_options.Offset = Float2::Zero;
-    _text_options.Range.X = 0;
-    _text_options.Range.Y = GetTextLength();
+    FudgetSingleLineTextOptions options;
+    //options.Text = _text;
+    FudgetTextRange range;
+    range.StartIndex = 0;
+    range.EndIndex = GetTextLength();
 
-    Float2 textSize = _text_painter->Measure(this, _draw_state, _text_options);
+    Float2 textSize = _text_painter->Measure(this, _text, range, _draw_state, options);
 
     float w = GetInnerPadding().Padded(GetBounds()).GetWidth() + _scroll_pos;
     if (w > textSize.X)
@@ -347,7 +368,12 @@ FudgetControlFlags FudgetLineEdit::GetInitFlags() const
     return FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
 }
 
-bool FudgetLineEdit::IsWhitespace(int index)
+void FudgetLineEdit::SetTextInternal(const String &value)
+{
+    _text = Process(value);
+}
+
+bool FudgetLineEdit::IsWhitespace(int index) const
 {
     if (index < 0 || index >= _text.Length())
         return false;

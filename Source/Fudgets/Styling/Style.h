@@ -181,6 +181,27 @@ public:
 	API_FUNCTION() bool GetColorResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) Color &result);
 
 	/// <summary>
+	/// Looks up a bool resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetBoolResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) bool &result);
+
+	/// <summary>
+	/// Looks up a bool resource associated with a token in this style or a parent style using the theme, and sets the result
+	/// value to it on success.
+	/// This version of the function checks multiple tokens until one matches.
+	/// </summary>
+	/// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+	/// <param name="token">Token that might be associated with the value in this style.</param>
+	/// <param name="result">Receives the resource's value if it is found.</param>
+	/// <returns>Whether the token was associated with a value of the requested type</returns>
+	API_FUNCTION() bool GetBoolResource(FudgetTheme *theme, const Span<FudgetToken> &token, API_PARAM(Out) bool &result);
+
+	/// <summary>
 	/// Looks up a float resource associated with a token in this style or a parent style using the theme, and sets the result
 	/// value to it on success.
 	/// </summary>
@@ -534,6 +555,7 @@ private:
 	bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const;
 	bool FontFromVariant(const Variant &var, FudgetFont &result) const;
 	bool PaddingFromVariant(const Variant &var, FudgetPadding &result) const;
+	bool BoolFromVariant(const Variant &var, bool &result) const;
 	bool FloatFromVariant(const Variant &var, float &result) const;
 	bool Float2FromVariant(const Variant &var, Float2 &result) const;
 	bool Float3FromVariant(const Variant &var, Float3 &result) const;

@@ -84,9 +84,8 @@ void FudgetComboBox::OnInitialize()
 
 void FudgetComboBox::OnDraw()
 {
-    _draw_state.Bounds = GetBounds();
     if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, _draw_state);
+        _frame_painter->Draw(this, GetBounds(), _draw_state);
 }
 
 void FudgetComboBox::OnFocusChanged(bool focused, FudgetControl *other)

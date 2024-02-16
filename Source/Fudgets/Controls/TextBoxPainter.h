@@ -1,0 +1,312 @@
+#pragma once
+
+#include "../Styling/PartPainters.h"
+
+
+/// <summary>
+/// Word wrapping mode used in Fudget text controls. 
+/// </summary>
+API_ENUM()
+enum class FudgetLineWrapMode
+{
+    /// <summary>
+    /// Wrap word at whitespace boundary only. The whitespace is omitted when drawing, but any whitespace
+    /// following is displayed on the next line.
+    /// </summary>
+    Whitespace,
+    /// <summary>
+    /// Same as normal Whitespace wrapping, but also wraps when a word is too long to fit on a line.
+    /// </summary>
+    WhitespaceLongWord,
+    /// <summary>
+    /// Wraps on any character that wouldn't fit the line. No character is omitted while drawing.
+    /// </summary>
+    Anywhere,
+    /// <summary>
+    /// Using a custom object that decides where to break text and if anything needs to be omitted.
+    /// </summary>
+    Custom
+};
+
+API_STRUCT()
+struct FUDGETS_API FudgetLineMeasurements
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLineMeasurements);
+
+    FudgetLineMeasurements() : StartIndex(0), EndIndex(0), Size(0.f), Location(0.f) {}
+
+    /// <summary>
+    /// Index of first character to display in the line
+    /// </summary>
+    API_FIELD() int StartIndex;
+
+    /// <summary>
+    /// Index of the character after last to display in the line
+    /// </summary>
+    API_FIELD() int EndIndex;
+
+    /// <summary>
+    /// Line dimensions
+    /// </summary>
+    API_FIELD() Float2 Size;
+
+    /// <summary>
+    /// Top left corner of the line
+    /// </summary>
+    API_FIELD() Float2 Location;
+};
+
+template<>
+struct TIsPODType<FudgetLineMeasurements>
+{
+    enum { Value = true };
+};
+
+
+API_STRUCT()
+struct FUDGETS_API FudgetMultilineTextMeasurements
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetMultilineTextMeasurements);
+
+    FudgetMultilineTextMeasurements() : Lines(), Size(0.f) {}
+
+    /// <summary>
+    /// Line bounds and character indexes
+    /// </summary>
+    API_FIELD() Array<FudgetLineMeasurements> Lines;
+
+    /// <summary>
+    /// Size of all the measured lines
+    /// </summary>
+    API_FIELD() Float2 Size;
+};
+
+template<>
+struct TIsPODType<FudgetMultilineTextMeasurements>
+{
+    enum { Value = true };
+};
+
+
+API_STRUCT()
+struct FUDGETS_API FudgetMultiLineTextOptions
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetMultiLineTextOptions);
+
+    FudgetMultiLineTextOptions() : Scale(1.0f), Wrapping(false), WrapMode(FudgetLineWrapMode::Whitespace), Spans() {}
+
+    /// <summary>
+    /// Scale to draw with
+    /// </summary>
+    API_FIELD() float Scale;
+
+    /// <summary>
+    /// When true, wrap the text inside some bounds
+    /// </summary>
+    API_FIELD() bool Wrapping;
+
+    /// <summary>
+    /// Word wrapping mode
+    /// </summary>
+    API_FIELD() FudgetLineWrapMode WrapMode;
+
+    /// <summary>
+    /// Ranges for drawing text in different ways. It depends on the painter how it uses them. For example
+    /// a text box painter could take the first item in the spans array and use it to show selections. In a
+    /// different painter the second index would be for spans of bold text. The ranges refer to the whole Text,
+    /// and not just the part specified by Range.
+    /// </summary>
+    API_FIELD() Span<FudgetTextRangeSpan> Spans;
+};
+
+template<>
+struct TIsPODType<FudgetMultiLineTextOptions>
+{
+    enum { Value = true };
+};
+
+/// <summary>
+/// Base class for text painters of multi-line text.
+/// </summary>
+API_CLASS()
+class FUDGETS_API FudgetMultiLineTextPainter : public FudgetPartPainter
+{
+    using Base = FudgetPartPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetMultiLineTextPainter);
+public:
+    /// <summary>
+    /// Draws multi-line text based on previous measurements and the passed options
+    /// </summary>
+    /// <param name="control">Control to paint in</param>
+    /// <param name="bounds">Bounds of the text</param>
+    /// <param name="state">State of the control</param>
+    /// <param name="options">Options for text, like scale or wrapping mode</param>
+    /// <param name="measurements">Line measurements calculated previously with Measure on the text to be drawn</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
+
+    /// <summary>
+    /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
+    /// </summary>
+    /// <param name="a">First character</param>
+    /// <param name="b">Other character</param>
+    /// <returns>Kerning distance between characters</returns>
+    API_FUNCTION() virtual float GetKerning(Char a, Char b, float scale) const { return 0.f; }
+
+    /// <summary>
+    /// Finds the index of character in the text at a position. If the position is outside a line, the closest character's index is returned.
+    /// </summary>
+    /// <param name="control">Control used for hit testing</param>
+    /// <param name="bounds">Bounds of the text</param>
+    /// <param name="state">State of the control</param>
+    /// <param name="options">Options for text, like scale or wrapping mode</param>
+    /// <param name="measurements">Line measurements calculated previously with Measure on the text</param>
+    /// <param name="point">The position of the character to look for</param>
+    /// <returns>Index of the character at the given position</returns>
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) { return 0; }
+
+    /// <summary>
+    /// Finds the upper left corner of the character at an index
+    /// </summary>
+    /// <param name="control">Control to find the character in</param>
+    /// <param name="bounds">Bounds of the text</param>
+    /// <param name="state">State of the control</param>
+    /// <param name="options">Options for text, like scale or wrapping mode</param>
+    /// <param name="measurements">Line measurements calculated previously with Measure on the text</param>
+    /// <param name="char_index">Index of character to look for</param>
+    /// <returns>Position of the upper left corner of the character</returns>
+    API_FUNCTION() virtual Float2 GetCharacterPosition(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const { return Float2::Zero; }
+
+    /// <summary>
+    /// Measures text using the current font.
+    /// </summary>
+    /// <param name="control">Control used for measurement</param>
+    /// <param name="bounds">Bounds of the text to measure</param>
+    /// <param name="text">Text to measure</param>
+    /// <param name="state">State of control used for measurement</param>
+    /// <param name="scale">Text scale</param>
+    /// <returns>Dimensions of the measured text</returns>
+    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, const FudgetPainterStateHelper &state, float scale) { return Float2::Zero; }
+
+    /// <summary>
+    /// Measures the text and separates it to lines. The lines are checked for word wrapping based on the passed options
+    /// and newline characters. The result is used in the other functions for drawing and hit testing.
+    /// </summary>
+    /// <param name="control">Control used for measurement</param>
+    /// <param name="bounds">Bounds of the text to measure. The height is ignored</param>
+    /// <param name="state">State of the control</param>
+    /// <param name="options">Options for text, like the offset, selection spans etc.</param>
+    /// <param name="result">The measured lines</param>
+    API_FUNCTION() virtual void MeasureLines(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) {}
+
+    /// <summary>
+    /// Finds the line that holds the character at an index. If the character is omitted due to word wrapping, the next line's
+    /// index is returned.
+    /// </summary>
+    /// <param name="char_index">Character index to search for</param>
+    /// <returns>Index of the line</returns>
+    API_FUNCTION() virtual int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const { return -1; }
+
+    /// <summary>
+    /// Returns the height of a character in the text at an index position
+    /// </summary>
+    /// <param name="options">Options for text, like scale or wrapping mode</param>
+    /// <param name="measurements">Line measurements calculated previously with Measure on the text</param>
+    /// <param name="char_index">Index of character to look for</param>
+    /// <returns>Height of the line at the character's position</returns>
+    API_FUNCTION() virtual float GetCharacterLineHeight(const StringView &text, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
+};
+
+
+/// <summary>
+/// Text painter for multi-line text boxes with unformatted text.
+/// </summary>
+API_CLASS()
+class FUDGETS_API FudgetTextBoxPainter : public FudgetMultiLineTextPainter
+{
+    using Base = FudgetMultiLineTextPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetTextBoxPainter);
+public:
+    /// <summary>
+    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
+    /// </summary>
+    API_FUNCTION() static void CreateStyle();
+
+    /// <inheritdoc />
+    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+
+    /// <inheritdoc />
+    void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
+
+    /// <inheritdoc />
+    float GetKerning(Char a, Char b, float scale) const override;
+
+    /// <inheritdoc />
+    int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) override;
+
+    /// <inheritdoc />
+    Float2 GetCharacterPosition(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+    /// <inheritdoc />
+    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetPainterStateHelper &state, float scale) override;
+
+    /// <inheritdoc />
+    void MeasureLines(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
+
+    /// <inheritdoc />
+    int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+    /// <inheritdoc />
+    float GetCharacterLineHeight(const StringView &text, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+
+    API_FIELD(ReadOnly) static FudgetToken SelfToken;
+
+    /// <summary>
+    /// Token for background area of selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken SelectionDrawToken;
+    /// <summary>
+    /// Token for background area of focused and selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FocusedSelectionDrawToken;
+    /// <summary>
+    /// Token for background area of disabled & selected text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledSelectionDrawToken;
+    /// <summary>
+    /// Token for normal text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken TextColorToken;
+    /// <summary>
+    /// Token for disabled text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledTextColorToken;
+    /// <summary>
+    /// Token for selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken SelectedTextColorToken;
+    /// <summary>
+    /// Token for focused and selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FocusedSelectedTextColorToken;
+    /// <summary>
+    /// Token for disabled and selected text color
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledSelectedTextColorToken;
+    /// <summary>
+    /// Token for the font used for drawing
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FontToken;
+private:
+    FudgetDrawArea _sel_area;
+    FudgetDrawArea _focused_sel_area;
+    FudgetDrawArea _disabled_sel_area;
+
+    Color _text_color;
+    Color _disabled_text_color;
+    Color _selected_text_color;
+    Color _focused_selected_text_color;
+    Color _disabled_selected_text_color;
+
+    FudgetFont _font;
+};

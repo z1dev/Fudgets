@@ -1,16 +1,19 @@
 #pragma once
 
 #include "TextBoxBase.h"
-#include "../Styling/PartPainters.h"
+#include "TextBoxPainter.h"
+
 
 /// <summary>
-/// Single line input box for unformatted basic text
+/// Multiline input box for unformatted basic text. Text can span over multiple lines either
+/// when lines are too long and word wrapping is enabled, or if there are newline characters
+/// in the text.
 /// </summary>
 API_CLASS()
-class FudgetLineEdit : public FudgetTextBoxBase
+class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
 {
     using Base = FudgetTextBoxBase;
-    DECLARE_SCRIPTING_TYPE(FudgetLineEdit);
+    DECLARE_SCRIPTING_TYPE(FudgetTextBox);
 public:
     API_PROPERTY() static FudgetToken GetClassToken();
     API_PROPERTY() static FudgetToken GetFramePainterToken();
@@ -22,6 +25,7 @@ public:
     API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
     API_PROPERTY() static FudgetToken GetCaretWidthToken();
     API_PROPERTY() static FudgetToken GetCaretScrollCountToken();
+    API_PROPERTY() static FudgetToken GetSnapTopLineToken();
 
     /// <inheritdoc />
     void OnInitialize() override;
@@ -64,6 +68,26 @@ public:
 
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+
+    /// <summary>
+    /// Whether the lines of a text should wrap to the new line if they are too long.
+    /// </summary>
+    API_PROPERTY() bool GetLineWrap() const { return _line_wrap; }
+    /// <summary>
+    /// Whether the lines of a text should wrap to the new line if they are too long.
+    /// </summary>
+    API_PROPERTY() void SetLineWrap(bool value);
+
+    /// <summary>
+    /// Method used to wrap long lines to the next line
+    /// </summary>
+    API_PROPERTY() FudgetLineWrapMode GetLineWrapMode() const { return _wrap_mode; }
+
+    /// <summary>
+    /// Method used to wrap long lines to the next line
+    /// </summary>
+    API_PROPERTY() void SetLineWrapMode(FudgetLineWrapMode value);
+
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
@@ -85,6 +109,18 @@ protected:
 
     /// <inheritdoc />
     void ReplaceCharacters(int start_index, int end_index, Char ch) override;
+
+    /// <inheritdoc />
+    int GetCaretPosUp() override;
+
+    /// <inheritdoc />
+    int GetCaretPosDown() override;
+
+    /// <inheritdoc />
+    int GetCaretPosPageUp() override;
+
+    /// <inheritdoc />
+    int GetCaretPosPageDown() override;
 private:
     static void InitializeTokens();
 
@@ -99,24 +135,40 @@ private:
     static FudgetToken CaretWidthToken;
     static FudgetToken CaretScrollCountToken;
 
+    static FudgetToken SnapTopLineToken;
+
     FudgetPadding GetInnerPadding() const;
 
     void ScrollToPos();
     void FixScrollPos();
 
-    String Process(const String &value) const;
+    void Process();
 
     FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
-    FudgetSingleLineTextPainter *_text_painter;
+    //FudgetPainterTextDrawOptions _text_options;
+    FudgetMultiLineTextPainter *_text_painter;
+    FudgetMultilineTextMeasurements _text_measurements;
 
     float _blink_passed;
     int _character_scroll_count;
+
+    // Make the line snap to the top, letting partial lines show on the bottom when scrolling down.
+    bool _snap_top_line;
 
     FudgetDrawArea _caret_draw;
     float _caret_blink_time;
     float _caret_width;
 
-    float _scroll_pos;
+    // Rightmost X position of the caret when moving with the up and down arrows. This is changed to -1 when
+    // the caret position changes by a method that should reset it.
+    float _caret_updown_x;
+
+    Float2 _scroll_pos;
     String _text;
+
+    bool _line_wrap;
+    FudgetLineWrapMode _wrap_mode;
+
+    bool _draw_ellipsis;
 };

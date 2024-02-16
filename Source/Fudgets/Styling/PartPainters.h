@@ -10,6 +10,7 @@ class FudgetTheme;
 class FudgetStyle;
 class FudgetControl;
 
+
 /// <summary>
 /// Base class for objects that paint the standard controls' parts.
 /// </summary>
@@ -98,11 +99,6 @@ public:
     /// Current state of the control drawing the frame
     /// </summary>
     API_FIELD() FudgetFramedFieldState State;
-
-    /// <summary>
-    /// Bounds to draw the frame inside
-    /// </summary>
-    API_FIELD() Rectangle Bounds;
 };
 
 template<>
@@ -121,8 +117,9 @@ public:
     /// Draws the standard control part based on the control's current state.
     /// </summary>
     /// <param name="control">Control to draw</param>
-    /// <param name="state_object">State to paint</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object) {}
+    /// <param name="bounds">Bounds to draw inside. This is usually the result of padding on the control's bounds.</param>
+    /// <param name="state">State to paint</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) {}
 };
 
 // TODO: these alignments might be unified somewhere if there are multiple
@@ -171,7 +168,7 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) override;
 
     API_FIELD(ReadOnly) static FudgetToken SelfToken;
 
@@ -259,7 +256,7 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) override;
 
     API_FIELD(ReadOnly) static FudgetToken SelfToken;
 
@@ -322,15 +319,43 @@ private:
     FudgetPadding _inner_padding;
 };
 
+/// <summary>
+/// Workaround for TextRange not having FLAXENGINE_API in their declaration
+/// </summary>
+API_STRUCT()
+struct FUDGETS_API FudgetTextRange
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextRange);
+public:
+    FudgetTextRange() : StartIndex(0), EndIndex(0) {}
 
+    FORCE_INLINE FudgetTextRange(const TextRange &range) : StartIndex(range.StartIndex), EndIndex(range.EndIndex) {}
+    FORCE_INLINE FudgetTextRange(TextRange &&range) : StartIndex(range.StartIndex), EndIndex(range.EndIndex) {}
+    FORCE_INLINE FudgetTextRange& operator=(const TextRange &range) { StartIndex = range.StartIndex; EndIndex = range.EndIndex; return *this; }
+    FORCE_INLINE FudgetTextRange& operator=(TextRange &&range) { StartIndex = range.StartIndex; EndIndex = range.EndIndex; return *this; }
+    FORCE_INLINE operator TextRange() const { TextRange r; r.StartIndex = StartIndex; r.EndIndex = EndIndex; return r; }
+
+    API_FIELD() int StartIndex;
+    API_FIELD() int EndIndex;
+};
+
+template<>
+struct TIsPODType<FudgetTextRange>
+{
+    enum { Value = true };
+};
+
+/// <summary>
+/// Workaround for not being able to generate code for array within array. This can be used as a template argument for Span<> instead.
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetTextRangeSpan
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterTextDrawOptions);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetSingleLineTextOptions);
 public:
     FudgetTextRangeSpan() {}
 
-    API_FIELD() Span<Int2> RangeSpan;
+    API_FIELD() Span<FudgetTextRange> RangeSpan;
 };
 
 template<>
@@ -339,84 +364,82 @@ struct TIsPODType<FudgetTextRangeSpan>
     enum { Value = true };
 };
 
+
+/// <summary>
+/// Text drawing options passed to FudgetTextPainter for drawing.
+/// </summary>
 API_STRUCT()
-struct FUDGETS_API FudgetPainterTextDrawOptions
+struct FUDGETS_API FudgetSingleLineTextOptions
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterTextDrawOptions);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetSingleLineTextOptions);
 public:
-    FudgetPainterTextDrawOptions() {}
+    FudgetSingleLineTextOptions() : Scale(1.f), VerticalAlignment(TextAlignment::Center), Spans() {}
+
+    API_FIELD() float Scale;
+
+    API_FIELD() TextAlignment VerticalAlignment;
 
     /// <summary>
-    /// Text to draw
-    /// </summary>
-    API_FIELD() StringView Text;
-
-    /// <summary>
-    /// Range of the text to draw.
-    /// </summary>
-    API_FIELD() Int2 Range;
-
-    /// <summary>
-    /// Draw the text with an offset
-    /// </summary>
-    API_FIELD() Float2 Offset;
-
-    /// <summary>
-    /// Areas for drawing text in different ways. It depends on the painter how it uses them. For example
+    /// Ranges for drawing text in different ways. It depends on the painter how it uses them. For example
     /// a line text painter could take the first item in the spans array and use it to show selections. In a
-    /// different painter the second index would be for spans of bold text.
+    /// different painter the second index would be for spans of bold text. The ranges refer to the whole Text,
+    /// and not just the part specified by Range.
     /// </summary>
     API_FIELD() Span<FudgetTextRangeSpan> Spans;
-
-    /// <summary>
-    /// Used by some painters to pass custom data next to the spans. If used, it is usually required to have
-    /// the same number of items in Data as in the Spans array. 
-    /// </summary>
-    API_FIELD() Span<int> Data;
 };
 
 template<>
-struct TIsPODType<FudgetPainterTextDrawOptions>
+struct TIsPODType<FudgetSingleLineTextOptions>
 {
     enum { Value = true };
 };
 
 /// <summary>
-/// Base class for painters that can draw text and have spans specified for different drawing
+/// Base class for painters that can draw a single line text and have spans specified for different drawing
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetTextPainter : public FudgetPartPainter
+class FUDGETS_API FudgetSingleLineTextPainter : public FudgetPartPainter
 {
     using Base = FudgetPartPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetTextPainter);
+    DECLARE_SCRIPTING_TYPE(FudgetSingleLineTextPainter);
 public:
     /// <summary>
     /// Draws the standard control part based on the control's current state.
     /// </summary>
     /// <param name="control">Control to draw</param>
-    /// <param name="state_object">State and bounds to paint</param>
-    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) {}
+    /// <param name="bounds">Bounds to paint inside of</param>
+    /// <param name="state">State of control</param>
+    /// <param name="text_options">Options for text, like the range or selection spans.</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) {}
 
     /// <summary>
     /// Measures the text passed to the painter. The Range of text_options can be used to specify the part of text
     /// to measure. It depends on the painter if it wraps the text in the state bounds or not.
     /// </summary>
     /// <param name="control">Control used for measurement</param>
-    /// <param name="state_object">State and bounds to paint</param>
-    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
+    /// <param name="state">State of control</param>
+    /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <returns>Size of the measured text</returns>
-    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) { return Float2::Zero;  }
+    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) { return Float2::Zero;  }
 
     /// <summary>
-    /// Finds the index of character in the text at a passed position.
+    /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
+    /// </summary>
+    /// <param name="a">First character</param>
+    /// <param name="b">Other character</param>
+    /// <returns>Kerning distance between characters</returns>
+    API_FUNCTION() virtual float GetKerning(Char a, Char b, float scale) const { return 0.f; }
+
+    /// <summary>
+    /// Finds the index of character in the text at a position.
     /// </summary>
     /// <param name="control">Control used for hit testing</param>
-    /// <param name="state_object">State and bounds to paint</param>
-    /// <param name="text_options">Options for text, like the offset, selection spans etc.</param>
+    /// <param name="bounds">Bounds of the text</param>
+    /// <param name="state">State of control</param>
+    /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <param name="point">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
-    API_FUNCTION() virtual int HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point) { return 0; }
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) { return 0; }
 };
 
 /// <summary>
@@ -424,9 +447,9 @@ public:
 /// as selectable
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetLineEditTextPainter : public FudgetTextPainter
+class FUDGETS_API FudgetLineEditTextPainter : public FudgetSingleLineTextPainter
 {
-    using Base = FudgetTextPainter;
+    using Base = FudgetSingleLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
 public:
     /// <summary>
@@ -438,13 +461,19 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options) override;
+    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
-    int HitTest(FudgetControl *control, const FudgetPainterStateHelper &state_object, const FudgetPainterTextDrawOptions &text_options, const Float2 &point) override;
+    float GetKerning(Char a, Char b, float scale) const override;
+
+    /// <inheritdoc />
+    int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
+
+    ///// <inheritdoc />
+    //FudgetFont GetFont() const override { return _font; }
 
 
     API_FIELD(ReadOnly) static FudgetToken SelfToken;
@@ -498,3 +527,4 @@ private:
 
     FudgetFont _font;
 };
+

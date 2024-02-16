@@ -2,28 +2,31 @@
 #include "Engine/Core/Types/StringBuilder.h"
 #include "Engine/Core/Types/StringView.h"
 
-FudgetTextBoxBase::FudgetTextBoxBase(const SpawnParams &params) : Base(params), _caret_pos(0), _sel_pos(-1),
+FudgetTextBoxBase::FudgetTextBoxBase(const SpawnParams &params) : Base(params),
+    CaretChangeReason(FudgetTextBoxCaretChangeReason::Unknown), _caret_pos(0), _sel_pos(-1),
     _key_selecting(false), _mouse_selecting(false), _word_skip(false)
 {
 
 }
 
+void FudgetTextBoxBase::SetText(const String &value)
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Unknown;
+    SetTextInternal(value);
+}
+
 void FudgetTextBoxBase::SetCaretPos(int value)
 {
     int newpos = Math::Min(GetTextLength(), Math::Max(0, value));
-    if (newpos != _caret_pos)
+    if (newpos != _caret_pos || GetSelStart() != GetSelEnd())
     {
+        int old_sel_pos = _sel_pos;
         int old_caret_pos = _caret_pos;
         _caret_pos = newpos;
-
-        int old_sel_pos = _sel_pos;
         _sel_pos = -1;
 
-        DoPosChanged(old_caret_pos, old_sel_pos);
-    }
-    else if (GetSelStart() != GetSelEnd())
-    {
-        SetSelection(_caret_pos, 0);
+        if (old_sel_pos != _sel_pos || old_caret_pos != _caret_pos)
+            DoPositionChanged(old_caret_pos, old_sel_pos);
     }
 }
 
@@ -35,7 +38,7 @@ void FudgetTextBoxBase::SetSelStart(int value)
         _sel_pos = -1;
 
         if (_sel_pos != old_sel_pos)
-            DoPosChanged(_caret_pos, old_sel_pos);
+            DoPositionChanged(_caret_pos, old_sel_pos);
     }
     else
         SetCaretPos(value);
@@ -52,11 +55,17 @@ void FudgetTextBoxBase::SetSelEnd(int value)
     _caret_pos = Math::Max(0, Math::Min(GetTextLength(), value));
 
     if (old_sel_pos != _sel_pos || old_caret_pos != _caret_pos)
-        DoPosChanged(old_caret_pos, old_sel_pos);
+        DoPositionChanged(old_caret_pos, old_sel_pos);
 }
 
 void FudgetTextBoxBase::SetSelLength(int value)
 {
+    if (value == 0)
+    {
+        SetCaretPos(value);
+        return;
+    }
+
     int old_sel_pos = _sel_pos;
     int old_caret_pos = _caret_pos;
 
@@ -65,7 +74,7 @@ void FudgetTextBoxBase::SetSelLength(int value)
     _caret_pos = Math::Min(GetTextLength(), Math::Max(0, _sel_pos + value));
 
     if (old_sel_pos != _sel_pos || old_caret_pos != _caret_pos)
-        DoPosChanged(old_caret_pos, old_sel_pos);
+        DoPositionChanged(old_caret_pos, old_sel_pos);
 }
 
 void FudgetTextBoxBase::SetSelection(int selectionStart, int selectionLength)
@@ -90,7 +99,19 @@ void FudgetTextBoxBase::SetSelection(int selectionStart, int selectionLength)
     _caret_pos = new_pos;
 
     if (old_sel_pos != _sel_pos || old_caret_pos != _caret_pos)
-        DoPosChanged(old_caret_pos, old_sel_pos);
+        DoPositionChanged(old_caret_pos, old_sel_pos);
+}
+
+void FudgetTextBoxBase::DoPositionChanged(int old_caret_pos, int old_sel_pos)
+{
+    OnPositionChanged(old_caret_pos, old_sel_pos);
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Unknown;
+}
+
+void FudgetTextBoxBase::DoTextEdited(int old_caret_pos, int old_sel_pos)
+{
+    OnTextEdited(old_caret_pos, old_sel_pos);
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Unknown;
 }
 
 FudgetInputResult FudgetTextBoxBase::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
@@ -99,6 +120,7 @@ FudgetInputResult FudgetTextBoxBase::OnMouseDown(Float2 pos, Float2 global_pos, 
         return FudgetInputResult::Consume;
 
     int index = CharIndexAt(pos);
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Mouse;
     SetSelection(index, 0);
 
     _mouse_selecting = true;
@@ -119,6 +141,7 @@ void FudgetTextBoxBase::OnMouseMove(Float2 pos, Float2 global_pos)
         return;
 
     int index = CharIndexAt(pos);
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Mouse;
     SetCaretPosInner(index);
 }
 
@@ -132,7 +155,6 @@ FudgetInputResult FudgetTextBoxBase::OnCharInput(Char ch)
     if (GetSelLength() == 0)
     {
         InsertCharacter(_caret_pos, ch);
-        //SetText(GetText().Substring(0, _caret_pos) + ch + GetText().Substring(_caret_pos, GetTextLength() - _caret_pos));
 
         int old_sel_pos = _sel_pos;
         int old_caret_pos = _caret_pos;
@@ -156,83 +178,46 @@ FudgetInputResult FudgetTextBoxBase::OnKeyDown(KeyboardKeys key)
 
     if (key == KeyboardKeys::Backspace)
     {
-        if (GetSelLength() == 0)
-        {
-            if (_caret_pos > 0)
-            {
-                DeleteCharacters(_caret_pos - 1, _caret_pos);
-                //Text = string.Concat(Text.AsSpan(0, _caret_pos - 1), Text.AsSpan(_caret_pos, GetTextLength() - _caret_pos));
-
-                int old_sel_pos = _sel_pos;
-                int old_caret_pos = _caret_pos;
-
-                _sel_pos = -1;
-                _caret_pos -= 1;
-
-                DoTextEdited(old_caret_pos, old_sel_pos);
-            }
-        }
-        else
-        {
-            DeleteSelected();
-        }
+        BackspacePressed();
     }
     else if (key == KeyboardKeys::Delete)
     {
-        if (GetSelLength() == 0)
-        {
-            if (_caret_pos < GetTextLength())
-            {
-                DeleteCharacters(_caret_pos, _caret_pos + 1);
-                //Text = string.Concat(Text.AsSpan(0, CaretPos), Text.AsSpan(CaretPos + 1, GetTextLength() - CaretPos - 1));
-
-                DoTextEdited(_caret_pos, _sel_pos);
-            }
-        }
-        else
-        {
-            DeleteSelected();
-        }
+        DeletePressed();
     }
     else if (key == KeyboardKeys::ArrowLeft)
     {
-        int change = 1;
-        if (_word_skip)
-        {
-            while (_caret_pos - change >= 0 && IsWhitespace(_caret_pos - change))
-                ++change;
-            while (_caret_pos - change >= 1 && !IsWhitespace(_caret_pos - change - 1))
-                ++change;
-        }
-
-        if (!_key_selecting && GetSelStart() != GetSelEnd())
-            SetCaretPos(Math::Min(GetSelStart(), GetSelEnd()));
-        else
-            SetCaretPosInner(_caret_pos - change);
+        CaretLeft();
     }
     else if (key == KeyboardKeys::ArrowRight)
     {
-        int change = 1;
-        if (_word_skip)
-        {
-            while (_caret_pos + change < GetTextLength() && !IsWhitespace(_caret_pos + change))
-                ++change;
-            while (_caret_pos + change < GetTextLength() && IsWhitespace(_caret_pos + change))
-                ++change;
-        }
-        if (!_key_selecting && GetSelStart() != GetSelEnd())
-            SetCaretPos(Math::Max(GetSelStart(), GetSelEnd()));
-        else
-            SetCaretPosInner(_caret_pos + change);
+        CaretRight();
     }
+    else if (key == KeyboardKeys::ArrowUp)
+    {
+        CaretUp();
+    }
+    else if (key == KeyboardKeys::ArrowDown)
+    {
+        CaretDown();
+    }
+    else if (key == KeyboardKeys::PageUp)
+    {
+        CaretPageUp();
+    }
+    else if (key == KeyboardKeys::PageDown)
+    {
+        CaretPageDown();
+    }
+    else if (key == KeyboardKeys::Home)
+        CaretHome();
+    else if (key == KeyboardKeys::End)
+        CaretEnd();
     else if (key == KeyboardKeys::Shift)
         _key_selecting = true;
     else if (key == KeyboardKeys::Control)
         _word_skip = true;
-    else if (key == KeyboardKeys::Home)
-        SetCaretPosInner(0);
-    else if (key == KeyboardKeys::End)
-        SetCaretPosInner(GetTextLength());
+    else if (key == KeyboardKeys::Return)
+        OnCharInput(L'\n');
 
     return result;
 }
@@ -251,11 +236,11 @@ void FudgetTextBoxBase::DeleteSelected()
 {
     if (GetSelLength() == 0)
         return;
+
     int sel_min = Math::Min(GetSelStart(), GetSelEnd());
     int sel_max = Math::Max(GetSelStart(), GetSelEnd());
 
     DeleteCharacters(sel_min, sel_max);
-    //Text = string.Concat(Text.AsSpan(0, sel_min), Text.AsSpan(sel_max, Text.Length - sel_max));
 
     int old_sel_pos = _sel_pos;
     int old_caret_pos = _caret_pos;
@@ -263,21 +248,18 @@ void FudgetTextBoxBase::DeleteSelected()
     _caret_pos = sel_min;
     _sel_pos = -1;
 
-    if (sel_min != sel_max)
-        DoTextEdited(old_caret_pos, old_sel_pos);
-    else if (old_caret_pos != _caret_pos || old_sel_pos != _sel_pos)
-        DoPosChanged(old_caret_pos, old_sel_pos);
+    DoTextEdited(old_caret_pos, old_sel_pos);
 }
 
 void FudgetTextBoxBase::ReplaceSelected(const String &with)
 {
-    if (GetSelLength() == 0)
+    if (GetSelLength() == 0 && with.Length() == 0)
         return;
+
     int sel_min = Math::Min(GetSelStart(), GetSelEnd());
     int sel_max = Math::Max(GetSelStart(), GetSelEnd());
 
     ReplaceCharacters(sel_min, sel_max, with);
-    //Text = string.Concat(Text.AsSpan(0, sel_min), with, Text.AsSpan(sel_max, Text.Length - sel_max));
 
     int old_sel_pos = _sel_pos;
     int old_caret_pos = _caret_pos;
@@ -285,16 +267,11 @@ void FudgetTextBoxBase::ReplaceSelected(const String &with)
     _caret_pos = sel_min + with.Length();
     _sel_pos = -1;
 
-    if (sel_min != sel_max || with.Length() != 0)
-        DoTextEdited(old_caret_pos, old_sel_pos);
-    else if (old_caret_pos != _caret_pos || old_sel_pos != _sel_pos)
-        DoPosChanged(old_caret_pos, old_sel_pos);
+    DoTextEdited(old_caret_pos, old_sel_pos);
 }
 
 void FudgetTextBoxBase::ReplaceSelected(Char ch)
 {
-    if (GetSelLength() == 0)
-        return;
     int sel_min = Math::Min(GetSelStart(), GetSelEnd());
     int sel_max = Math::Max(GetSelStart(), GetSelEnd());
 
@@ -308,6 +285,123 @@ void FudgetTextBoxBase::ReplaceSelected(Char ch)
     _sel_pos = -1;
 
     DoTextEdited(old_caret_pos, old_sel_pos);
+}
+
+void FudgetTextBoxBase::BackspacePressed()
+{
+    if (GetSelLength() == 0)
+    {
+        if (_caret_pos > 0)
+        {
+            int new_caret_pos = GetCaretPosLeft();
+            DeleteCharacters(new_caret_pos, _caret_pos);
+
+            int old_sel_pos = _sel_pos;
+            int old_caret_pos = _caret_pos;
+
+            _sel_pos = -1;
+            _caret_pos = new_caret_pos;
+
+            DoTextEdited(old_caret_pos, old_sel_pos);
+        }
+    }
+    else
+    {
+        DeleteSelected();
+    }
+}
+
+void FudgetTextBoxBase::DeletePressed()
+{
+    if (GetSelLength() == 0)
+    {
+        if (_caret_pos < GetTextLength())
+        {
+            DeleteCharacters(_caret_pos, GetCaretPosRight());
+            DoTextEdited(_caret_pos, _sel_pos);
+        }
+    }
+    else
+    {
+        DeleteSelected();
+    }
+}
+
+void FudgetTextBoxBase::CaretLeft()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Left;
+
+    if (!_key_selecting && GetSelStart() != GetSelEnd())
+    {
+        SetCaretPos(Math::Min(GetSelStart(), GetSelEnd()));
+        return;
+    }
+
+    SetCaretPosInner(GetCaretPosLeft());
+}
+
+void FudgetTextBoxBase::CaretRight()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Right;
+
+    if (!_key_selecting && GetSelStart() != GetSelEnd())
+    {
+        SetCaretPos(Math::Max(GetSelStart(), GetSelEnd()));
+        return;
+    }
+
+    SetCaretPosInner(GetCaretPosRight());
+}
+
+void FudgetTextBoxBase::CaretUp()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Up;
+
+    if (!_key_selecting && GetSelStart() != GetSelEnd())
+    {
+        SetCaretPos(Math::Min(GetSelStart(), GetSelEnd()));
+        return;
+    }
+
+    SetCaretPosInner(GetCaretPosUp());
+}
+
+void FudgetTextBoxBase::CaretDown()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Down;
+
+    if (!_key_selecting && GetSelStart() != GetSelEnd())
+    {
+        SetCaretPos(Math::Max(GetSelStart(), GetSelEnd()));
+        return;
+    }
+
+    SetCaretPosInner(GetCaretPosDown());
+}
+
+void FudgetTextBoxBase::CaretHome()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::Home;
+
+    SetCaretPosInner(GetCaretPosHome());
+}
+
+void FudgetTextBoxBase::CaretEnd()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::End;
+    SetCaretPosInner(GetCaretPosEnd());
+}
+
+void FudgetTextBoxBase::CaretPageUp()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::PageUp;
+    SetCaretPosInner(GetCaretPosPageUp());
+}
+
+void FudgetTextBoxBase::CaretPageDown()
+{
+    CaretChangeReason = FudgetTextBoxCaretChangeReason::PageDown;
+    SetCaretPosInner(GetCaretPosPageDown());
 }
 
 FudgetControlFlags FudgetTextBoxBase::GetInitFlags() const
@@ -325,3 +419,59 @@ void FudgetTextBoxBase::SetCaretPosInner(int value)
         SetSelection(value, 0);
 }
 
+int FudgetTextBoxBase::GetCaretPosLeft()
+{
+    int change = 1;
+    if (_word_skip)
+    {
+        while (_caret_pos - change >= 0 && IsWhitespace(_caret_pos - change))
+            ++change;
+        while (_caret_pos - change >= 1 && !IsWhitespace(_caret_pos - change - 1))
+            ++change;
+    }
+
+    return _caret_pos - change;
+}
+
+int FudgetTextBoxBase::GetCaretPosRight()
+{
+    int change = 1;
+    if (_word_skip)
+    {
+        while (_caret_pos + change < GetTextLength() && !IsWhitespace(_caret_pos + change))
+            ++change;
+        while (_caret_pos + change < GetTextLength() && IsWhitespace(_caret_pos + change))
+            ++change;
+    }
+    return _caret_pos + change;
+}
+
+int FudgetTextBoxBase::GetCaretPosUp()
+{
+    return Math::Min(GetSelStart(), GetCaretPos());
+}
+
+int FudgetTextBoxBase::GetCaretPosDown()
+{
+    return Math::Max(GetSelStart(), GetCaretPos());
+}
+
+int FudgetTextBoxBase::GetCaretPosHome()
+{
+    return 0;
+}
+
+int FudgetTextBoxBase::GetCaretPosEnd()
+{
+    return GetTextLength();
+}
+
+int FudgetTextBoxBase::GetCaretPosPageUp()
+{
+    return 0;
+}
+
+int FudgetTextBoxBase::GetCaretPosPageDown()
+{
+    return GetTextLength();
+}

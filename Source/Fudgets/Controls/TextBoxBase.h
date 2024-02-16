@@ -2,6 +2,54 @@
 
 #include "../Control.h"
 
+/// <summary>
+/// Passed to FudgetTextBoxBase::DoPositionChanged as a hint why the caret position might have changed
+/// </summary>
+API_ENUM()
+enum class FudgetTextBoxCaretChangeReason
+{
+    /// <summary>
+    /// No reason. Probably changed by the user with a function call to caret or selection change.
+    /// </summary>
+    Unknown,
+    /// <summary>
+    /// Position changed by mouse click
+    /// </summary>
+    Mouse,
+    /// <summary>
+    /// Position changed by moving caret to the left by user input
+    /// </summary>
+    Left,
+    /// <summary>
+    /// Position changed by moving caret to the right by user input
+    /// </summary>
+    Right,
+    /// <summary>
+    /// Position changed by moving caret up by user input
+    /// </summary>
+    Up,
+    /// <summary>
+    /// Position changed by moving caret down by user input
+    /// </summary>
+    Down,
+    /// <summary>
+    /// Position changed by moving caret to the home position by user input
+    /// </summary>
+    Home,
+    /// <summary>
+    /// Position changed by moving caret to the end position by user input
+    /// </summary>
+    End,
+    /// <summary>
+    /// Position changed by moving caret one page up by user input
+    /// </summary>
+    PageUp,
+    /// <summary>
+    /// Position changed by moving caret one page down by user input
+    /// </summary>
+    PageDown,
+};
+
 API_CLASS()
 class FUDGETS_API FudgetTextBoxBase : public FudgetControl
 {
@@ -13,14 +61,14 @@ public:
     /// </summary>
     API_PROPERTY() virtual String GetText() const { return TEXT(""); }
     /// <summary>
-    /// Text displayed in the text box.
+    /// The text displayed in the text box.
     /// </summary>
     API_PROPERTY() virtual int GetTextLength() const { return 0; }
 
     /// <summary>
-    /// Text displayed in the text box.
+    /// Change the text displayed in the text box.
     /// </summary>
-    API_PROPERTY() virtual void SetText(const String &value) { }
+    API_PROPERTY() void SetText(const String &value);
 
     /// <summary>
     /// Position in the text where new characters will be inserted or used as the starting point of deletion.
@@ -35,6 +83,11 @@ public:
     /// </summary>
     API_PROPERTY() void SetCaretPos(int value);
 
+    /// <summary>
+    /// Returns the true value of the selection position. If is negative or matches the caret position then nothing is selected.
+    /// Otherwise it is the start of the selection. Use GetSelStart to always get the caret position if nothing is selected.
+    /// </summary>
+    API_PROPERTY() FORCE_INLINE int GetSelPos() const { return _sel_pos; }
     /// <summary>
     /// The starting position or stationary end of the text selection. If there is no selection in the text box, this is the same as
     /// the current caret position. Setting this value to zero or positive number will move the caret and deselect the selected text.
@@ -81,19 +134,41 @@ public:
 
     /// <summary>
     /// Called when the caret or selection position changes. If the change was due to an edit action that changed the
-    /// text as well, DoTextEdited is called instead.
+    /// text as well, DoTextEdited is called instead. Override OnPositionChanged instead or call the base function
     /// </summary>
     /// <param name="old_caret_pos">Caret position before the change</param>
     /// <param name="old_sel_pos">Selection position before the change</param>
-    API_FUNCTION() virtual void DoPosChanged(int old_caret_pos, int old_sel_pos) { }
+    API_FUNCTION() virtual void OnPositionChanged(int old_caret_pos, int old_sel_pos) {}
 
     /// <summary>
     /// Called when the text changed because of an edit action, like typing a character or pasting text.
+    /// Override OnTextEdited instead or call the base function
     /// </summary>
     /// <param name="old_caret_pos">Caret position before the change</param>
     /// <param name="old_sel_pos">Selection position before the change</param>
-    API_FUNCTION() virtual void DoTextEdited(int old_caret_pos, int old_sel_pos) { }
+    API_FUNCTION() virtual void OnTextEdited(int old_caret_pos, int old_sel_pos) {}
 
+    /// <summary>
+    /// Called when the caret or selection position changes. If the change was due to an edit action that changed the
+    /// text as well, DoTextEdited is called instead. Override OnPositionChanged instead or call the base function
+    /// </summary>
+    /// <param name="old_caret_pos">Caret position before the change</param>
+    /// <param name="old_sel_pos">Selection position before the change</param>
+    API_FUNCTION() virtual void DoPositionChanged(int old_caret_pos, int old_sel_pos);
+
+    /// <summary>
+    /// Called when the text changed because of an edit action, like typing a character or pasting text.
+    /// Override OnTextEdited instead or call the base function
+    /// </summary>
+    /// <param name="old_caret_pos">Caret position before the change</param>
+    /// <param name="old_sel_pos">Selection position before the change</param>
+    API_FUNCTION() virtual void DoTextEdited(int old_caret_pos, int old_sel_pos);
+
+    /// <summary>
+    /// Finds the character index at the control's local position
+    /// </summary>
+    /// <param name="pos">Local position in the control</param>
+    /// <returns>Index of character in the text</returns>
     API_FUNCTION() virtual int CharIndexAt(Float2 pos) { return 0; };
 
     /// <inheritdoc />
@@ -136,16 +211,73 @@ public:
     /// <param name="ch">The replacement character</param>
     API_FUNCTION() void ReplaceSelected(Char ch);
 
+    /// <summary>
+    /// Causes the action followed by the backspace key. Usually deletes the selection or the character before the caret.
+    /// </summary>
+    API_FUNCTION() virtual void BackspacePressed();
+    /// <summary>
+    /// Causes the action followed by the delete key. Usually deletes the selection or the character after the caret.
+    /// </summary>
+    API_FUNCTION() virtual void DeletePressed();
+    /// <summary>
+    /// Moves the caret to the left, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretLeft();
+    /// <summary>
+    /// Moves the caret to the right, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretRight();
+    /// <summary>
+    /// Moves the caret up, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretUp();
+    /// <summary>
+    /// Moves the caret down, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretDown();
+    /// <summary>
+    /// Moves the caret to the front, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretHome();
+    /// <summary>
+    /// Moves the caret to the end, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretEnd();
+    /// <summary>
+    /// Moves the caret to page up, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretPageUp();
+    /// <summary>
+    /// Moves the caret to page down, as if its key was pressed. Should update the selection to extend to
+    /// the new caret position.
+    /// </summary>
+    API_FUNCTION() virtual void CaretPageDown();
+
+    API_PROPERTY() bool WordSkipping() const { return _word_skip; }
+    API_PROPERTY() bool KeySelecting() const { return _key_selecting; }
+    API_PROPERTY() bool MouseSelecting() const { return _mouse_selecting; }
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
+
+    /// <summary>
+    /// Change the text displayed in the text box.
+    /// </summary>
+    API_PROPERTY() virtual void SetTextInternal(const String &value) {}
 
     /// <summary>
     /// Checks if a character in the text is a whitespace character.
     /// </summary>
     /// <param name="index">Character index</param>
     /// <returns>Whether character at index is whitespace or not</returns>
-    API_FUNCTION() virtual bool IsWhitespace(int index) { return false; }
+    API_FUNCTION() virtual bool IsWhitespace(int index) const { return false; }
 
     /// <summary>
     /// Inserts a single character into the editor's text.
@@ -177,8 +309,49 @@ protected:
     /// <param name="ch">Replacement character</param>
     API_FUNCTION() virtual void ReplaceCharacters(int start_index, int end_index, Char ch) {}
 
+    /// <summary>
+    /// Moves the caret to the specified position like SetCaretPos. If keyboard/mouse selection is active, the
+    /// text between the selection start and the new caret position will be selected. Use this to implement
+    /// caret movement with selection.
+    /// </summary>
+    /// <param name="value">The new caret position</param>
+    API_FUNCTION() void SetCaretPosInner(int value);
+
+    /// <summary>
+    /// Caret position when moving to the left, considering word skipping as well.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosLeft();
+    /// <summary>
+    /// Caret position when moving to the right, considering word skipping as well.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosRight();
+    /// <summary>
+    /// Caret position when moving up.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosUp();
+    /// <summary>
+    /// Caret position when moving down.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosDown();
+    /// <summary>
+    /// Caret position when moving "home".
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosHome();
+    /// <summary>
+    /// Caret position when moving to the "end".
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosEnd();
+    /// <summary>
+    /// Caret position when moving one page up.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosPageUp();
+    /// <summary>
+    /// Caret position when moving one page down.
+    /// </summary>
+    API_FUNCTION() virtual int GetCaretPosPageDown();
+
+    API_FIELD() FudgetTextBoxCaretChangeReason CaretChangeReason;
 private:
-    void SetCaretPosInner(int value);
 
     int _caret_pos;
     int _sel_pos;

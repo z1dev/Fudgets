@@ -92,11 +92,11 @@ void FudgetButton::OnUpdate(float delta_time)
 
 void FudgetButton::OnDraw()
 {
-    _draw_state.Bounds = GetBounds();
+    Rectangle bounds = GetBounds();
     if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, _draw_state);
+        _frame_painter->Draw(this, bounds, _draw_state);
     if (_content_painter != nullptr)
-        _content_painter->Draw(this, _draw_state);
+        _content_painter->Draw(this, bounds, _draw_state);
 }
 
 void FudgetButton::OnPressedChanged()

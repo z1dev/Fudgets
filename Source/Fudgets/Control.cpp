@@ -958,6 +958,30 @@ bool FudgetControl::GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out
     return style->GetColorResource(GetActiveTheme(), tokens, result);
 }
 
+bool FudgetControl::GetStyleBool(FudgetToken token, API_PARAM(Out) bool &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = 0.0f;
+        return false;
+    }
+
+    return style->GetBoolResource(GetActiveTheme(), token, result);
+}
+
+bool FudgetControl::GetStyleBool(const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = 0.0f;
+        return false;
+    }
+
+    return style->GetBoolResource(GetActiveTheme(), tokens, result);
+}
+
 bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result)
 {
     FudgetStyle *style = GetActiveStyle();
