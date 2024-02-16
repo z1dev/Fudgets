@@ -454,8 +454,9 @@ void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, Char ch)
 
 int FudgetTextBox::GetCaretPosUp()
 {
-    if (_text_painter == nullptr)
-        return GetCaretPos();
+    int caret_pos = GetCaretPos();
+    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+        return caret_pos;
 
     FudgetPadding innerPadding = GetInnerPadding();
     Rectangle bounds = innerPadding.Padded(GetBounds());
@@ -467,19 +468,41 @@ int FudgetTextBox::GetCaretPosUp()
     options.Wrapping = _line_wrap;
     options.WrapMode = _wrap_mode;
 
-    Float2 caret_pos = _text_painter->GetCharacterPosition(this, bounds, _text, _draw_state, options, _text_measurements, GetCaretPos());
+    Float2 coords = _text_painter->GetCharacterPosition(this, bounds, _text, _draw_state, options, _text_measurements, caret_pos);
     if (_caret_updown_x < 0)
-        _caret_updown_x = caret_pos.X - bounds.GetLeft();
-    caret_pos.X = _caret_updown_x + bounds.GetLeft();
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, GetCaretPos());
-    float line_height = _text_measurements.Lines.Count() > 0 ? _text_measurements.Lines[Math::Min(line_index, _text_measurements.Lines.Count() - 1)].Size.Y : 0.f;
-    return _text_painter->HitTest(this, bounds, _text, _draw_state, options, _text_measurements, caret_pos - Float2(0.f, 1.f));
+        _caret_updown_x = coords.X - bounds.GetLeft();
+    coords.X = _caret_updown_x + bounds.GetLeft();
+
+    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
+    if (line_index < 0 || line_index >= _text_measurements.Lines.Count())
+        return caret_pos;
+    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+
+    float line_height =  _text_measurements.Lines[line_index].Size.Y;
+    int char_index = _text_painter->HitTest(this, bounds, _text, _draw_state, options, _text_measurements, coords - Float2(0.f, 1.f));
+
+    // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
+    // one ended. In this case it's possible that instead of going up one line, this would move the caret to the end of two lines
+    // above. To avoid that, make sure the index is increased by one.
+    if (line_index > 1)
+    {
+        const FudgetLineMeasurements &prev_line = _text_measurements.Lines[line_index - 1];
+        const FudgetLineMeasurements &prev_prev_line = _text_measurements.Lines[line_index - 2];
+        if (char_index == prev_line.StartIndex && prev_line.StartIndex == prev_prev_line.EndIndex)
+            char_index = Math::Min(char_index + 1, prev_line.EndIndex);
+    }
+    // For same reason as above, when lines end on same index as the next one starts on, the index found might move the caret one
+    // line up. This can only happen on the very last line of the text.
+    char_index = Math::Min(char_index, caret_pos);
+
+    return char_index;
 }
 
 int FudgetTextBox::GetCaretPosDown()
 {
-    if (_text_painter == nullptr)
-        return GetCaretPos();
+    int caret_pos = GetCaretPos();
+    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+        return caret_pos;
 
     FudgetPadding innerPadding = GetInnerPadding();
     Rectangle bounds = innerPadding.Padded(GetBounds());
@@ -491,13 +514,33 @@ int FudgetTextBox::GetCaretPosDown()
     options.Wrapping = _line_wrap;
     options.WrapMode = _wrap_mode;
 
-    Float2 caret_pos = _text_painter->GetCharacterPosition(this, bounds, _text, _draw_state, options, _text_measurements, GetCaretPos());
+    Float2 coords = _text_painter->GetCharacterPosition(this, bounds, _text, _draw_state, options, _text_measurements, caret_pos);
     if (_caret_updown_x < 0)
-        _caret_updown_x = caret_pos.X - bounds.GetLeft();
-    caret_pos.X = _caret_updown_x + bounds.GetLeft();
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, GetCaretPos());
-    float line_height = _text_measurements.Lines.Count() > 0 ? _text_measurements.Lines[Math::Min(line_index, _text_measurements.Lines.Count() - 1)].Size.Y : 0.f;
-    return _text_painter->HitTest(this, bounds, _text, _draw_state, options, _text_measurements, caret_pos + Float2(0.f, line_height + 1.f));
+        _caret_updown_x = coords.X - bounds.GetLeft();
+    coords.X = _caret_updown_x + bounds.GetLeft();
+
+    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
+    if (line_index < 0 || line_index >= _text_measurements.Lines.Count())
+        return caret_pos;
+    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+
+    float line_height = _text_measurements.Lines[line_index].Size.Y;
+    int char_index = _text_painter->HitTest(this, bounds, _text, _draw_state, options, _text_measurements, coords + Float2(0.f, line_height + 1.f));
+
+    // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
+    // one ended. In this case it's possible that instead of going down, this would move the caret to the end of the current line.
+    // To avoid that, make sure the index is increased by one.
+    if (char_index == line.EndIndex && line_index < _text_measurements.Lines.Count() - 1)
+    {
+        const FudgetLineMeasurements &next_line = _text_measurements.Lines[line_index + 1];
+        if (line.EndIndex == next_line.StartIndex)
+        char_index = Math::Min(char_index + 1, next_line.EndIndex);
+    }
+    // For same reason as above, when lines end on same index as the next one starts on, the index found might move the caret one
+    // line up. This can only happen on the very last line of the text.
+    char_index = Math::Max(char_index, caret_pos);
+        
+    return char_index;
 }
 
 int FudgetTextBox::GetCaretPosPageUp()
