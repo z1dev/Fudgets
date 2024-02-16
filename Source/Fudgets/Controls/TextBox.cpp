@@ -640,3 +640,9 @@ int FudgetTextBox::GetCaretPosPageDown()
     return char_index;
 }
 
+FudgetTextBoxFlags FudgetTextBox::GetTextBoxInitFlags() const
+{
+    return FudgetTextBoxFlags::CaretVisible | FudgetTextBoxFlags::Editable | FudgetTextBoxFlags::WordSkip | FudgetTextBoxFlags::MouseSelectable | FudgetTextBoxFlags::KeySelectable;
+}
+
+

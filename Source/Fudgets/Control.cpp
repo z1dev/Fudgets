@@ -1424,6 +1424,16 @@ void FudgetControl::Initialize()
     SetState(FudgetControlState::Initialized, true);
 }
 
+void FudgetControl::InitializeFlags()
+{
+    if ((_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
+        _flags = GetInitFlags();
+
+    // The AlwaysOnTop flag only makes sense when the control is a direct child in the root. In that case, the root
+    // can get this flag from GetInitFlags.
+    _flags &= ~FudgetControlFlags::AlwaysOnTop;
+}
+
 void FudgetControl::SetParentDisabled(bool value)
 {
     if (((_state_flags & FudgetControlState::ParentDisabled) == FudgetControlState::ParentDisabled) == value)

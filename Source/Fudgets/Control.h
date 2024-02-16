@@ -666,6 +666,7 @@ public:
 
 	/// <summary>
 	/// Sets flags describing the control's behavior or appearance.
+	/// TODO: this has never been tested. Remove if proves to be useless
 	/// </summary>
 	/// <param name="flags">The new flags</param>
 	API_PROPERTY() virtual void SetControlFlags(FudgetControlFlags flags);
@@ -678,7 +679,7 @@ public:
 	API_FUNCTION() virtual bool HasAllFlags(FudgetControlFlags flags) const;
 
 	/// <summary>
-	/// Matches the given flags with those of the layout, returning true if any of the flags was found.
+	/// Matches the given flags with those of the control, returning true if any of the flags was found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
 	/// <returns>True if at least one flag was found on the control</returns>
@@ -1717,9 +1718,18 @@ protected:
 	/// <param name="value">True if the flag should be set, false if it should be unset </param>
 	API_FUNCTION() virtual void SetState(FudgetControlState states, bool value);
 
-	// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
-	// the base Initialize if it is overriden.
+	/// <summary>
+	/// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
+	/// the base Initialize if it is overriden.
+	/// </summary>
 	API_FUNCTION() virtual void Initialize();
+
+	/// <summary>
+	/// Called each time the control is added to a parent. The base implementation checks for the presence of the ResetFlags
+	/// in _flags and if found, resets the flags with GetInitFlags. Override in derived classes only if a new flag type is
+	/// added that needs initialization.
+	/// </summary>
+	API_FUNCTION() virtual void InitializeFlags();
 
 	/// <summary>
 	/// Called when the control is added to a parent and the ResetFlags flag is present among the flags (which

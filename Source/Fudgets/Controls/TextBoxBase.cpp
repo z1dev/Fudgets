@@ -3,8 +3,8 @@
 #include "Engine/Core/Types/StringView.h"
 
 FudgetTextBoxBase::FudgetTextBoxBase(const SpawnParams &params) : Base(params),
-    CaretChangeReason(FudgetTextBoxCaretChangeReason::Unknown), _caret_pos(0), _sel_pos(-1),
-    _key_selecting(false), _mouse_selecting(false), _word_skip(false)
+    CaretChangeReason(FudgetTextBoxCaretChangeReason::Unknown), _textbox_flags(FudgetTextBoxFlags::ResetFlags),
+    _caret_pos(0), _sel_pos(-1), _key_selecting(false), _mouse_selecting(false), _word_skip(false)
 {
 
 }
@@ -119,11 +119,13 @@ FudgetInputResult FudgetTextBoxBase::OnMouseDown(Float2 pos, Float2 global_pos, 
     if (button != MouseButton::Left)
         return FudgetInputResult::Consume;
 
-    int index = CharIndexAt(pos);
-    CaretChangeReason = FudgetTextBoxCaretChangeReason::Mouse;
-    SetSelection(index, 0);
-
-    _mouse_selecting = true;
+    if (HasAllTextBoxFlags(FudgetTextBoxFlags::MouseSelectable))
+    {
+        int index = CharIndexAt(pos);
+        CaretChangeReason = FudgetTextBoxCaretChangeReason::Mouse;
+        SetSelection(index, 0);
+        _mouse_selecting = true;
+    }
 
     return FudgetInputResult::Consume;
 }
@@ -152,6 +154,9 @@ bool FudgetTextBoxBase::WantsNavigationKey(KeyboardKeys key)
 
 FudgetInputResult FudgetTextBoxBase::OnCharInput(Char ch)
 {
+    if (!HasAllTextBoxFlags(FudgetTextBoxFlags::Editable))
+        return FudgetInputResult::PassThrough;
+
     if (GetSelLength() == 0)
     {
         InsertCharacter(_caret_pos, ch);
@@ -174,50 +179,60 @@ FudgetInputResult FudgetTextBoxBase::OnCharInput(Char ch)
 
 FudgetInputResult FudgetTextBoxBase::OnKeyDown(KeyboardKeys key)
 {
-    FudgetInputResult result = FudgetInputResult::Consume;
+    FudgetInputResult result = HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible) ? FudgetInputResult::Consume : FudgetInputResult::PassThrough;
 
-    if (key == KeyboardKeys::Backspace)
+    if (key == KeyboardKeys::Backspace && HasAllTextBoxFlags(FudgetTextBoxFlags::Editable))
     {
         BackspacePressed();
     }
-    else if (key == KeyboardKeys::Delete)
+    else if (key == KeyboardKeys::Delete && HasAllTextBoxFlags(FudgetTextBoxFlags::Editable))
     {
         DeletePressed();
     }
-    else if (key == KeyboardKeys::ArrowLeft)
+    else if (key == KeyboardKeys::ArrowLeft && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretLeft();
     }
-    else if (key == KeyboardKeys::ArrowRight)
+    else if (key == KeyboardKeys::ArrowRight && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretRight();
     }
-    else if (key == KeyboardKeys::ArrowUp)
+    else if (key == KeyboardKeys::ArrowUp && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretUp();
     }
-    else if (key == KeyboardKeys::ArrowDown)
+    else if (key == KeyboardKeys::ArrowDown && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretDown();
     }
-    else if (key == KeyboardKeys::PageUp)
+    else if (key == KeyboardKeys::PageUp && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretPageUp();
     }
-    else if (key == KeyboardKeys::PageDown)
+    else if (key == KeyboardKeys::PageDown && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
     {
         CaretPageDown();
     }
-    else if (key == KeyboardKeys::Home)
+    else if (key == KeyboardKeys::Home && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
+    {
         CaretHome();
-    else if (key == KeyboardKeys::End)
+    }
+    else if (key == KeyboardKeys::End && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible))
+    {
         CaretEnd();
-    else if (key == KeyboardKeys::Shift)
+    }
+    else if (key == KeyboardKeys::Shift && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible | FudgetTextBoxFlags::KeySelectable))
+    {
         _key_selecting = true;
-    else if (key == KeyboardKeys::Control)
+    }
+    else if (key == KeyboardKeys::Control && HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible | FudgetTextBoxFlags::WordSkip))
+    {
         _word_skip = true;
-    else if (key == KeyboardKeys::Return)
+    }
+    else if (key == KeyboardKeys::Return && HasAllTextBoxFlags(FudgetTextBoxFlags::Editable))
+    {
         OnCharInput(L'\n');
+    }
 
     return result;
 }
@@ -411,6 +426,15 @@ FudgetControlFlags FudgetTextBoxBase::GetInitFlags() const
         FudgetControlFlags::CanHandleKeyEvents | FudgetControlFlags::CanHandleNavigationKeys | Base::GetInitFlags();
 }
 
+void FudgetTextBoxBase::InitializeFlags()
+{
+    if ((_textbox_flags | FudgetTextBoxFlags::ResetFlags) == FudgetTextBoxFlags::ResetFlags)
+        _textbox_flags = GetTextBoxInitFlags();
+
+    Base::InitializeFlags();
+}
+
+
 void FudgetTextBoxBase::SetCaretPosInner(int value)
 {
     if (_key_selecting || _mouse_selecting)
@@ -474,4 +498,19 @@ int FudgetTextBoxBase::GetCaretPosPageUp()
 int FudgetTextBoxBase::GetCaretPosPageDown()
 {
     return GetTextLength();
+}
+
+FudgetTextBoxFlags FudgetTextBoxBase::GetTextBoxFlags() const
+{
+    return _textbox_flags;
+}
+
+bool FudgetTextBoxBase::HasAllTextBoxFlags(FudgetTextBoxFlags flags) const
+{
+    return (_textbox_flags & flags) == flags;
+}
+
+bool FudgetTextBoxBase::HasAnyTextBoxFlag(FudgetTextBoxFlags flags) const
+{
+    return (int)(_textbox_flags & flags) != 0;
 }

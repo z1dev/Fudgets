@@ -50,6 +50,52 @@ enum class FudgetTextBoxCaretChangeReason
     PageDown,
 };
 
+/// <summary>
+/// Flags for text box control behavior
+/// </summary>
+API_ENUM(Attributes="Flags")
+enum class FudgetTextBoxFlags
+{
+    /// <summary>
+    /// Empty flag
+    /// </summary>
+    None = 0,
+    /// <summary>
+    /// Text boxes with this flag will refresh their flags from GetInitFlags when added to a parent. By default,
+    /// text boxes start with this flag and nothing else. Make sure to override GetInitTextBoxFlags to set the proper flags.
+    /// Unlike control flags, there is no special function to get or set flags. Use the appropriate functions/properties
+    /// to access or change the options.
+    /// </summary>
+    ResetFlags = 1 << 0,
+    /// <summary>
+    /// Displays a caret in the text when the text box is focused, that can be used to move around the text. The text
+    /// will be scrolled in the bounds of the text box to keep the caret visible.
+    /// </summary>
+    CaretVisible = 1 << 1,
+    /// <summary>
+    /// The text box is editable. Includes the CaretVisible flag as well. The text can be changed from code even if this
+    /// flag is not set.
+    /// </summary>
+    Editable = CaretVisible | (1 << 2),
+    /// <summary>
+    /// Allows skipping the words and go to the next whitespace character in the text if the caret is also visible
+    /// </summary>
+    WordSkip = 1 << 3,
+    /// <summary>
+    /// The text can be selected with the mouse. It's still possible to select the text with the keyboard or in code
+    /// when this flag is not present.
+    /// </summary>
+    MouseSelectable = 1 << 4,
+    /// <summary>
+    /// The text can be selected with the keyboard if the caret is also visible. It's still possible to select the
+    /// text with the mouse or in code when this flag is not present.
+    /// </summary>
+    KeySelectable = 1 << 5,
+
+};
+DECLARE_ENUM_OPERATORS(FudgetTextBoxFlags);
+
+
 API_CLASS()
 class FUDGETS_API FudgetTextBoxBase : public FudgetControl
 {
@@ -260,12 +306,27 @@ public:
     /// </summary>
     API_FUNCTION() virtual void CaretPageDown();
 
+    /// <summary>
+    /// The key for word skipping (usually ctrl) is currently held down. Word skipping is moving from word to word instead of
+    /// stepping through the text a character at a time.
+    /// </summary>
     API_PROPERTY() bool WordSkipping() const { return _word_skip; }
+
+    /// <summary>
+    /// A key (usually shirt) is pressed down and the text box is in key selection mode. 
+    /// </summary>
     API_PROPERTY() bool KeySelecting() const { return _key_selecting; }
+
+    /// <summary>
+    /// The mouse button was pressed over the text and the text box is in mouse selection mode.
+    /// </summary>
     API_PROPERTY() bool MouseSelecting() const { return _mouse_selecting; }
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
+
+    /// <inheritdoc />
+    void InitializeFlags() override;
 
     /// <summary>
     /// Change the text displayed in the text box.
@@ -350,8 +411,47 @@ protected:
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosPageDown();
 
+    /// <summary>
+    /// Usually don't touch this. Sets what caused the caret to move. Used to know when to store or reset
+    /// the current caret x position to restore it to the right place when moving up or down.
+    /// </summary>
     API_FIELD() FudgetTextBoxCaretChangeReason CaretChangeReason;
+
+
+    /// <summary>
+    /// Called when the text box is added to a parent and the ResetFlags flag is present among the flags (which
+    /// is the default at control creation.) It can be modified individually later by calling the
+    /// appropriate functions/properties for each flag.
+    /// This function can be called multiple times, so relying on special behavior for initialization can have
+    /// unwanted side effects.
+    /// Include the result of the base control's GetTextBoxInitFlags if it's needed for correct behavior.
+    /// </summary>
+    /// <returns>Control flags that should be set to the control.</returns>
+    API_FUNCTION() virtual FudgetTextBoxFlags GetTextBoxInitFlags() const { return FudgetTextBoxFlags::None; }
+
+
+    /// <summary>
+    /// Gets flags describing the text box' behavior or appearance.
+    /// </summary>
+    /// <returns>The flags set for the control</returns>
+    API_PROPERTY() virtual FudgetTextBoxFlags GetTextBoxFlags() const;
+
+    /// <summary>
+    /// Matches the given flags with those of the text box, returning true only if all the flags were found.
+    /// </summary>
+    /// <param name="flags">The flags to look for</param>
+    /// <returns>True  if all the flags were found on the control</returns>
+    API_FUNCTION() virtual bool HasAllTextBoxFlags(FudgetTextBoxFlags flags) const;
+
+    /// <summary>
+    /// Matches the given flags with those of the text box, returning true if any of the flags was found.
+    /// </summary>
+    /// <param name="flags">The flags to look for</param>
+    /// <returns>True if at least one flag was found on the control</returns>
+    API_FUNCTION() virtual bool HasAnyTextBoxFlag(FudgetTextBoxFlags flags) const;
+
 private:
+    FudgetTextBoxFlags _textbox_flags;
 
     int _caret_pos;
     int _sel_pos;

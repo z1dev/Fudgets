@@ -62,8 +62,7 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
     control->_index = index;
     control->_guiRoot = GetGUIRoot();
     control->SetState(FudgetControlState::ParentDisabled, !VirtuallyEnabled());
-    if ((control->_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
-        control->_flags = control->GetInitFlags() & ~(FudgetControlFlags::AlwaysOnTop);
+    control->InitializeFlags();
 
     control->RegisterToUpdate(control->HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
 

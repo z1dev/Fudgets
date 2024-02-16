@@ -121,6 +121,9 @@ protected:
 
     /// <inheritdoc />
     int GetCaretPosPageDown() override;
+
+    /// <inheritdoc />
+    FudgetTextBoxFlags GetTextBoxInitFlags() const override;
 private:
     static void InitializeTokens();
 
@@ -146,7 +149,6 @@ private:
 
     FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
-    //FudgetPainterTextDrawOptions _text_options;
     FudgetMultiLineTextPainter *_text_painter;
     FudgetMultilineTextMeasurements _text_measurements;
 
