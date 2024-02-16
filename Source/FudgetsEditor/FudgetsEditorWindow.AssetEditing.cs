@@ -742,6 +742,7 @@ public sealed class DragFudgets : DragFudgets<DragEventArgs>
     /// Initializes a new instance of the <see cref="DragFudgets"/> class.
     /// </summary>
     /// <param name="validateFunction">The validation function</param>
+    /// <param name="window">TODO: docs</param>
     public DragFudgets(Func<FudgetControlNode, bool> validateFunction, FudgetsEditorWindow window)
     : base(validateFunction, window)
     {
@@ -760,13 +761,16 @@ public class DragFudgets<U> : DragHelper<FudgetControlNode, U> where U : DragEve
     /// </summary>
     public const string DragPrefix = "Fudget Control";
 
-
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public FudgetsEditorWindow _window;
 
     /// <summary>
     /// Creates a new DragHelper
     /// </summary>
     /// <param name="validateFunction">The validation function</param>
+    /// <param name="window">TODO: docs</param>
     public DragFudgets(Func<FudgetControlNode, bool> validateFunction, FudgetsEditorWindow window)
     : base(validateFunction)
     {

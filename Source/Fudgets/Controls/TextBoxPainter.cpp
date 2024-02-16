@@ -101,7 +101,7 @@ _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color:
 {
 }
 
-void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
+void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
 {
     if (_font.Font == nullptr)
         return;
@@ -124,27 +124,32 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
     opt.TextWrapping = TextWrapping::NoWrap;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.VerticalAlignment = TextAlignment::Center;
-    opt.Scale = options.Scale;
+    opt.Scale = measurements.Scale;
 
-    int text_len = text.Length();
+    int text_len = measurements.Text.Length();
 
-    float scale = options.Scale / FontManager::FontScale;
+    float scale = measurements.Scale / FontManager::FontScale;
 
     for (int ix = 0, siz = measurements.Lines.Count(); ix < siz; ++ix)
     {
         const FudgetLineMeasurements &line = measurements.Lines[ix];
         if (line.StartIndex < 0 || line.EndIndex > text_len)
         {
-            LOG(Error, "FudgetTextBoxPainter draw line index out of bounds.");
+            LOG(Error, "FudgetTextBoxPainter draw line index out of range.");
             break;
         }
+
+        if (line.Location.Y + line.Size.Y + offset.Y <= bounds.Location.Y)
+            continue;
+        if (line.Location.Y + offset.Y >= bounds.GetBottom())
+            break;
 
         if (line.StartIndex >= sel_max || line.EndIndex <= sel_min)
         {
             int len = line.EndIndex - line.StartIndex;
-            opt.Bounds = Rectangle(line.Location + bounds.Location, line.Size);
+            opt.Bounds = Rectangle(line.Location + bounds.Location + offset, line.Size);
             
-            control->DrawText(_font.Font, StringView(text.Get() + line.StartIndex, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), textColor, opt);
             continue;
         }
 
@@ -155,14 +160,14 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
         if (line.StartIndex < sel_min)
         {
             int len = sel_min - line.StartIndex;
-            opt.Bounds = Rectangle(line.Location + bounds.Location, line.Size);
+            opt.Bounds = Rectangle(line.Location + bounds.Location + offset, line.Size);
 
-            skip_width = _font.Font->MeasureText(StringView(text.Get() + line.StartIndex, len), opt).X;
+            skip_width = _font.Font->MeasureText(StringView(measurements.Text.Get() + line.StartIndex, len), opt).X;
 
             if (line.EndIndex < sel_max)
-                skip_width += _font.Font->GetKerning(text[sel_min - 1], text[sel_min]) * scale;
+                skip_width += _font.Font->GetKerning(measurements.Text[sel_min - 1], measurements.Text[sel_min]) * scale;
 
-            control->DrawText(_font.Font, StringView(text.Get() + line.StartIndex, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), textColor, opt);
         }
 
         // Selection
@@ -170,26 +175,26 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             int sel_pos = Math::Max(sel_min, line.StartIndex);
             int sel_end = Math::Min(line.EndIndex, sel_max);
             int sel_len = sel_end - sel_pos;
-            opt.Bounds = Rectangle(line.Location + bounds.Location + Float2(skip_width, 0.f), line.Size - Float2(skip_width, 0.f));
+            opt.Bounds = Rectangle(line.Location + bounds.Location + offset + Float2(skip_width, 0.f), line.Size - Float2(skip_width, 0.f));
 
-            float width = _font.Font->MeasureText(StringView(text.Get() + sel_pos, sel_len), opt).X;
+            float width = _font.Font->MeasureText(StringView(measurements.Text.Get() + sel_pos, sel_len), opt).X;
             opt.Bounds.Size.X = width;
 
             skip_width += width;
             if (line.EndIndex > sel_max)
-                skip_width += _font.Font->GetKerning(text[sel_end - 1], text[sel_end]) * scale;
+                skip_width += _font.Font->GetKerning(measurements.Text[sel_end - 1], measurements.Text[sel_end]) * scale;
 
             control->DrawArea(sel_bg, opt.Bounds);
-            control->DrawText(_font.Font, StringView(text.Get() + sel_pos, sel_len), selTextColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_pos, sel_len), selTextColor, opt);
         }
 
         // Line after selection
         if (line.EndIndex > sel_max)
         {
             int len = line.EndIndex - sel_max;
-            opt.Bounds = Rectangle(line.Location + bounds.Location + Float2(skip_width, 0.f), line.Size - Float2(skip_width, 0.f));
+            opt.Bounds = Rectangle(line.Location + bounds.Location + offset + Float2(skip_width, 0.f), line.Size - Float2(skip_width, 0.f));
 
-            control->DrawText(_font.Font, StringView(text.Get() + sel_max, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_max, len), textColor, opt);
         }
     }
 }
@@ -203,54 +208,91 @@ float FudgetTextBoxPainter::GetKerning(Char a, Char b, float scale) const
     return _font.Font->GetKerning(a, b) * scale;
 }
 
-int FudgetTextBoxPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, const Float2 &point)
+int FudgetTextBoxPainter::HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Float2 &point)
 {
     if (_font.Font == nullptr)
         return 0;
 
-    Float2 pt = point - bounds.GetUpperLeft();
-    int text_len = text.Length();
-
-    TextLayoutOptions opt;
-    opt.TextWrapping = TextWrapping::NoWrap;
-    opt.HorizontalAlignment = TextAlignment::Near;
-    opt.VerticalAlignment = TextAlignment::Center;
-    opt.Scale = options.Scale;
+    int text_len = measurements.Text.Length();
 
     for (int ix = 0, siz = measurements.Lines.Count(); ix < siz; ++ix)
     {
         const FudgetLineMeasurements &line = measurements.Lines[ix];
         if (line.StartIndex < 0 || line.EndIndex > text_len)
         {
-            LOG(Error, "FudgetTextBoxPainter draw line index out of bounds.");
+            LOG(Error, "FudgetTextBoxPainter HitTest index out of range.");
             break;
         }
 
-        float y_distance = pt.Y > line.Location.Y + line.Size.Y ? pt.Y - (line.Location.Y + line.Size.Y) : 0.f;
-        if (y_distance > 0 && ix < siz - 1 && (pt.Y >= measurements.Lines[ix + 1].Location.Y || y_distance > pt.Y - measurements.Lines[ix + 1].Location.Y - measurements.Lines[ix + 1].Size.Y))
+        float y_distance = point.Y > line.Location.Y + line.Size.Y ? point.Y - (line.Location.Y + line.Size.Y) : 0.f;
+        if (y_distance > 0 && ix < siz - 1 && (point.Y >= measurements.Lines[ix + 1].Location.Y || y_distance > measurements.Lines[ix + 1].Location.Y - point.Y))
             continue;
         
-        if (pt.X < line.Location.X)
+        if (point.X < line.Location.X)
             return line.StartIndex;
-        if (pt.X > line.Location.X + line.Size.X)
+        if (point.X > line.Location.X + line.Size.X)
             return line.EndIndex;
 
-        pt.Y = Math::Clamp(pt.Y, line.Location.Y, line.Location.Y + line.Size.Y);
-
-        opt.Bounds = Rectangle(line.Location, line.Size);
-        return _font.Font->HitTestText(StringView(text.Get() + line.StartIndex, line.EndIndex - line.StartIndex), pt, opt) + line.StartIndex;
+        return LineHitTest(control, measurements, ix, point.X);
     }
 
     return 0;
 }
 
-Float2 FudgetTextBoxPainter::GetCharacterPosition(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const
+int FudgetTextBoxPainter::LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, float y_position)
 {
-    int text_len = text.Length();
+    if (_font.Font == nullptr)
+        return 0;
+
+    int text_len = measurements.Text.Length();
+
+    for (int ix = 0, siz = measurements.Lines.Count(); ix < siz; ++ix)
+    {
+        const FudgetLineMeasurements &line = measurements.Lines[ix];
+        if (line.StartIndex < 0 || line.EndIndex > text_len)
+        {
+            LOG(Error, "FudgetTextBoxPainter HitTest index out of range.");
+            break;
+        }
+
+        float y_distance = y_position > line.Location.Y + line.Size.Y ? y_position - (line.Location.Y + line.Size.Y) : 0.f;
+        if (y_distance > 0 && ix < siz - 1 && (y_position >= measurements.Lines[ix + 1].Location.Y || y_distance > measurements.Lines[ix + 1].Location.Y - y_position))
+            continue;
+
+        return ix;
+    }
+
+    return 0;
+}
+
+int FudgetTextBoxPainter::LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, float x_position)
+{
+    if (line_index < 0 || line_index >= measurements.Lines.Count())
+    {
+        LOG(Error, "FudgetTextBoxPainter LineHitTest index out of range.");
+        return 0;
+    }
+
+    const FudgetLineMeasurements &line = measurements.Lines[line_index];
+
+    Float2 pt = Float2(x_position, line.Size.Y * .5f);
+
+    TextLayoutOptions opt;
+    opt.TextWrapping = TextWrapping::NoWrap;
+    opt.HorizontalAlignment = TextAlignment::Near;
+    opt.VerticalAlignment = TextAlignment::Center;
+    opt.Scale = measurements.Scale;
+    opt.Bounds = Rectangle(line.Location, line.Size);
+    return _font.Font->HitTestText(StringView(measurements.Text.Get() + line.StartIndex, line.EndIndex - line.StartIndex), pt, opt) + line.StartIndex;
+}
+
+Float2 FudgetTextBoxPainter::GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const
+{
+    int text_len = measurements.Text.Length();
     if (char_index < 0 || char_index > text_len)
         return Float2::Zero;
 
-    float scale = options.Scale / FontManager::FontScale;
+    float scale = measurements.Scale / FontManager::FontScale;
 
     int last_endindex = 0;
 
@@ -258,14 +300,14 @@ Float2 FudgetTextBoxPainter::GetCharacterPosition(FudgetControl *control, const 
     opt.TextWrapping = TextWrapping::NoWrap;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.VerticalAlignment = TextAlignment::Center;
-    opt.Scale = options.Scale;
+    opt.Scale = measurements.Scale;
 
     for (int ix = 0, siz = measurements.Lines.Count(); ix < siz; ++ix)
     {
         const FudgetLineMeasurements &line = measurements.Lines[ix];
         if (line.StartIndex < 0 || line.EndIndex > text_len)
         {
-            LOG(Error, "FudgetTextBoxPainter draw line index out of bounds.");
+            LOG(Error, "FudgetTextBoxPainter GetCharacterPosition index out of range.");
             break;
         }
 
@@ -276,18 +318,18 @@ Float2 FudgetTextBoxPainter::GetCharacterPosition(FudgetControl *control, const 
         }
 
         if (char_index < line.StartIndex)
-            return line.Location + bounds.GetUpperLeft();
+            return line.Location;
 
         opt.Bounds = Rectangle(line.Location, line.Size);
-        float measured = _font.Font->MeasureText(StringView(text.Get() + line.StartIndex, char_index - line.StartIndex), opt).X;
+        float measured = _font.Font->MeasureText(StringView(measurements.Text.Get() + line.StartIndex, char_index - line.StartIndex), opt).X;
 
-        return line.Location + bounds.GetUpperLeft() + Float2(measured, 0.0f);
+        return line.Location + Float2(measured, 0.0f);
     }
 
     return Float2::Zero;
 }
 
-Float2 FudgetTextBoxPainter::Measure(FudgetControl *control, const StringView &text, const FudgetPainterStateHelper &state, float scale)
+Float2 FudgetTextBoxPainter::Measure(FudgetControl *control, const StringView &text, float scale)
 {
     if (_font.Font == nullptr)
         return Float2::Zero;
@@ -303,19 +345,21 @@ Float2 FudgetTextBoxPainter::Measure(FudgetControl *control, const StringView &t
     return _font.Font->MeasureText(text, opt);
 }
 
-void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result)
+void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result)
 {
     result.Size = Float2::Zero;
     result.Lines.Clear();
+    result.Text = text;
+    result.Scale = scale;
 
     if (_font.Font == nullptr)
         return;
 
-    float scale = options.Scale / FontManager::FontScale;
+    scale = scale / FontManager::FontScale;
     float line_height = _font.Font->GetHeight() * scale;
 
-    float pos_x = bounds.Location.X;
-    float pos_y = bounds.Location.Y;
+    float pos_x = 0.f;
+    float pos_y = 0.f;
 
     FontCharacterEntry current;
     FontCharacterEntry prev;
@@ -475,7 +519,7 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, const Rectangle 
 
         if (charbreak != -1)
         {
-            if (second_width + kerning_width + third_width + kerning + next_width > bounds.GetWidth())
+            if (second_width + kerning_width + third_width + kerning + next_width > bounds_width)
             {
                 // Second word is long enough to break and the second part be its own line
 
@@ -507,7 +551,7 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, const Rectangle 
                 third_width += kerning + next_width;
             }
         }
-        else if (options.Wrapping && ix > line_first && first_width + space_width + second_width + kerning + next_width > bounds.GetWidth())
+        else if (options.Wrapping && ix > line_first && first_width + space_width + second_width + kerning + next_width > bounds_width)
         {
             if (options.WrapMode == FudgetLineWrapMode::WhitespaceLongWord && ix != last_whitespace)
             {
@@ -638,9 +682,9 @@ int FudgetTextBoxPainter::GetCharacterLine(FudgetMultilineTextMeasurements &meas
     return measurements.Lines.Count();
 }
 
-float FudgetTextBoxPainter::GetCharacterLineHeight(const StringView &text, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements, int char_index) const
+float FudgetTextBoxPainter::GetCharacterLineHeight( const FudgetMultilineTextMeasurements &measurements, int char_index) const
 {
-    float scale = options.Scale / FontManager::FontScale;
+    float scale = measurements.Scale / FontManager::FontScale;
     return _font.Font->GetHeight() * scale;
 }
 
