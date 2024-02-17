@@ -6,6 +6,9 @@
 #include "Engine/Core/Math/Vector2.h"
 
 
+/// <summary>
+/// Interface required on container classes that use a FudgetProxyLayout layout.
+/// </summary>
 API_INTERFACE() class FUDGETS_API IProxyLayoutContainer
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(IProxyLayoutContainer);
@@ -43,7 +46,8 @@ public:
 /// <summary>
 /// Layout type that manages the dirty flags, like a normal layout would, but lets the parent container
 /// do the layout calculations directly. Used for very simple layouts or when the container is a compound
-/// control that has very specific layouting needs.
+/// control that has very specific layouting needs. Container classes that use this layout should inherit
+/// from the IProxyLayoutContainer interface.
 /// </summary>
 API_CLASS()
 class FUDGETS_API FudgetProxyLayout : public FudgetLayout

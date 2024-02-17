@@ -165,6 +165,9 @@ public:
     /// <returns></returns>
     API_FUNCTION() void OnResized(Float2 new_size);
 
+    /// <summary>
+    /// Callback event when the size of the GUI area changes
+    /// </summary>
     API_EVENT() Delegate<Float2> Resized;
 private:
     // Called once from the Fudget to initialize during gameplay

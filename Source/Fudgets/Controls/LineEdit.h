@@ -12,15 +12,42 @@ class FudgetLineEdit : public FudgetTextBoxBase
     using Base = FudgetTextBoxBase;
     DECLARE_SCRIPTING_TYPE(FudgetLineEdit);
 public:
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetClassToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFramePainterToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFrameStyleToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetTextPainterToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetTextStyleToken();
 
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretDrawToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretWidthToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretScrollCountToken();
 
     /// <inheritdoc />

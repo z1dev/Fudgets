@@ -95,6 +95,9 @@ DECLARE_ENUM_OPERATORS(FudgetDirtType);
 API_ENUM(Attributes="Flags")
 enum class FudgetControlState : uint8
 {
+	/// <summary>
+	/// Empty state
+	/// </summary>
 	None = 0,
 	/// <summary>
 	/// Set to true after the Initialize function ran once
@@ -298,6 +301,9 @@ class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 public:
 	~FudgetControl();
 
+	/// <summary>
+	/// Called the first time the control is added to a parent. Call the original implementation in derived types.
+	/// </summary>
 	API_FUNCTION() virtual void OnInitialize() {}
 
 	/// <summary>
@@ -987,7 +993,7 @@ public:
 	/// <summary>
 	/// Draws 9-slicing sprite by calling Draw9SlicingSprite, using borderWidths to calculate the border and UV parameters.
 	/// </summary>
-	/// <param name="t">The sprite to draw</param>
+	/// <param name="spriteHandle">The sprite to draw</param>
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
@@ -996,7 +1002,7 @@ public:
 	/// <summary>
 	/// Draws 9-slicing sprite by calling Draw9SlicingSpritePoint, using borderWidths to calculate the border and UV parameters.
 	/// </summary>
-	/// <param name="t">The sprite to draw</param>
+	/// <param name="spriteHandle">The sprite to draw</param>
 	/// <param name="rect">The rectangle to draw in</param>
 	/// <param name="borderWidths">The size of the stationary border on each side</param>
 	/// <param name="color">The color to multiply drawn pixels with</param>
@@ -1299,6 +1305,13 @@ public:
 	/// </summary>
 	API_PROPERTY() FudgetTheme* GetActiveTheme();
 
+	/// <summary>
+	/// Constructs a painter object based on a type and the style of the control
+	/// </summary>
+	/// <typeparam name="T">Base type of the painter</typeparam>
+	/// <param name="token">Associated token in the control's style</param>
+	/// <param name="style_token">Token in the control's style that refers to a style to be used with the painter</param>
+	/// <returns>The created painter, or null if the token is not matching a painter or the painter is not derived from the template argument</returns>
 	template<typename T>
 	T* CreateStylePainter(FudgetToken token, FudgetToken style_token)
 	{
@@ -1526,7 +1539,7 @@ public:
 	/// <param name="tokens">An array of tokens that are checked in order</param>
 	/// <param name="result">Structure with font creation settings</param>
 	/// <returns>Whether a valid value was found for a token</returns>
-	API_FUNCTION() bool GetStyleFontSettings(const Span<FudgetToken> &token, API_PARAM(Out) FudgetFontSettings &result);
+	API_FUNCTION() bool GetStyleFontSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFontSettings &result);
 
 	/// <summary>
 	/// Sets result to a font object and the settings that were used to create it. The control might have

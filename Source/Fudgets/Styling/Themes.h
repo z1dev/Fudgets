@@ -13,7 +13,8 @@
 
 class FudgetPartPainter;
 
-// DOCUMENTATION CURRENTLY INVALID, IT DESCRIBES A PREVIOUS STATE WHERE PAINTER OBJECTS EXISTED.
+// DOCUMENTATION CURRENTLY INVALID, IT DESCRIBES AN OLD STATE. It is only kept here because there might be a line or two
+// that is still valid, to keep when a new documentation is written.
 
 // Documentation of using themes and styles, and deriving new ones. Plus how to make controls use them to draw themselves.
 // ============
@@ -156,7 +157,21 @@ public:
     /// </summary>
     FudgetTheme(const FudgetTheme &ori);
 
+    /// <summary>
+    /// Gets one resource associated with a token. The resource can be of any type, even another token, and its use only
+    /// depends on the styles and controls that can use it.
+    /// </summary>
+    /// <param name="token">The token associated with the resource</param>
+    /// <param name="result">The value of the resource</param>
+    /// <returns>Whether a resource was found for the token or not</returns>
     API_FUNCTION() bool GetResource(FudgetToken token, API_PARAM(Out) Variant &result) const;
+
+    /// <summary>
+    /// Sets one resource associated with a token. The resource can be of any type, even another token, and its use only
+    /// depends on the styles and controls that can use it.
+    /// </summary>
+    /// <param name="token">The token to be associated with the resource</param>
+    /// <param name="value">The value of the resource</param>
     API_FUNCTION() void SetResource(FudgetToken token, Variant value);
 private:
     /// <summary>
@@ -312,7 +327,15 @@ public:
     API_FUNCTION() static FudgetPartPainter* CreatePainter(FudgetToken token);
 
 #ifdef USE_EDITOR
+    /// <summary>
+    /// True when the game is running inside the editor, and the theme functions refer to the data created for the game.
+    /// </summary>
     API_PROPERTY() static bool GetRuntimeUse() { return _runtime_use; }
+    /// <summary>
+    /// Set or unset during the game's runtime inside the base classes when they need to access the themes. The use of
+    /// this function is discouraged in any other situation.
+    /// </summary>
+    /// <param name="value">Whether the access to the themes data is from a fudget object running in a game or not</param>
     API_PROPERTY() static void SetRuntimeUse(bool value);
 #endif
 

@@ -14,21 +14,60 @@ class FUDGETS_API FudgetComboBox : public FudgetContainer, public IProxyLayoutCo
     using Base = FudgetContainer;
     DECLARE_SCRIPTING_TYPE(FudgetComboBox);
 public:
-
+    /// <summary>
+    /// Class Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetClassToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFrameDrawToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFocusedFrameDrawToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetDisabledFrameDrawToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFramePainterToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFrameStyleToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonContentStyleToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetEditorClassToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonClassToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonImageToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonHoveredImageToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonDisabledImageToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetButtonWidthToken();
 
+    /// <inheritdoc />
     void OnInitialize() override;
 
     /// <inheritdoc />
@@ -47,20 +86,30 @@ public:
     FudgetInputResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
-
+    /// <inheritdoc />
     void OnMouseMove(Float2 pos, Float2 global_pos) override;
+    /// <inheritdoc />
     void OnMouseEnter(Float2 pos, Float2 global_pos) override;
+    /// <inheritdoc />
     void OnMouseLeave() override;
+    /// <inheritdoc />
     void OnMouseCaptured() override;
+    /// <inheritdoc />
     void OnMouseReleased() override;
 
+    /// <inheritdoc />
     FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) override;
+    /// <inheritdoc />
     FudgetLayoutFlag ProxyInterfaceGetInitFlags() const override;
+    /// <inheritdoc />
     bool ProxyInterfaceLayoutChildren() override;
+    /// <inheritdoc />
     Float2 ProxyInterfaceRequestSize(FudgetSizeType type) const override;
 
+    /// <inheritdoc />
     bool WantsNavigationKey(KeyboardKeys key) override;
 protected:
+    /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
 private:
     static void InitializeTokens();

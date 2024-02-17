@@ -98,8 +98,8 @@ void FudgetTextBox::InitializeTokens()
 }
 
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
-    _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(false), _caret_blink_time(1.0f), _caret_width(2.0f),
-    _caret_updown_x(-1.f), _scroll_pos(0.0f), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace)
+    _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal),
+    _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f), _scroll_pos(0.0f), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace)
 {
 
 }

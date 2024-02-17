@@ -284,6 +284,9 @@ public:
     float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
 
 
+    /// <summary>
+    /// Token
+    /// </summary>
     API_FIELD(ReadOnly) static FudgetToken SelfToken;
 
     /// <summary>
@@ -295,7 +298,7 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static FudgetToken FocusedSelectionDrawToken;
     /// <summary>
-    /// Token for background area of disabled & selected text
+    /// Token for background area of disabled and selected text
     /// </summary>
     API_FIELD(ReadOnly) static FudgetToken DisabledSelectionDrawToken;
     /// <summary>

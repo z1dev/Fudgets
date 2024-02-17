@@ -37,8 +37,11 @@ public:
 	/// </summary>
 	API_FIELD() Color BorderColor;
 
+	/// <inheritdoc />
 	void OnDraw() override;
+	/// <inheritdoc />
 	void Serialize(SerializeStream& stream, const void* otherObj) override;
+	/// <inheritdoc />
 	void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 private:
 	Color _color;

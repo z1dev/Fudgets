@@ -13,14 +13,32 @@ class FUDGETS_API FudgetButtonBase : public FudgetControl
     using Base = FudgetControl;
     DECLARE_SCRIPTING_TYPE(FudgetButtonBase);
 public:
-
+    /// <summary>
+    /// Gets the down state of the button. The button's state is down when it was pressed and stays pressed without user interaction.
+    /// </summary>
+    /// <returns>Whether the button's state is down</returns>
     API_PROPERTY() FORCE_INLINE bool GetDown() const { return _down; }
+    /// <summary>
+    /// Sets the down state of the button. The button's state is down when it was pressed and stays pressed without user interaction.
+    /// </summary>
+    /// <param name="value">The new down state</param>
     API_PROPERTY() void SetDown(bool value);
 
+    /// <summary>
+    /// Gets the pressed state of the button. The button's state is pressed if a mouse button was pressed over the button and the mouse
+    /// pointer is over the button.
+    /// </summary>
+    /// <returns>Whether the button's state is pressed</returns>
     API_PROPERTY() FORCE_INLINE bool GetPressed() const { return _pressed; }
-    API_PROPERTY() void SetPressed(bool value);
 
+    /// <summary>
+    /// Called when the button's down state was set or unset
+    /// </summary>
+    /// <returns></returns>
     API_FUNCTION() virtual void OnDownChanged() {}
+    /// <summary>
+    /// Called when the button's pressed state was set or unset
+    /// </summary>
     API_FUNCTION() virtual void OnPressedChanged() {}
 
     /// <inheritdoc />
@@ -30,6 +48,13 @@ public:
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
 protected:
+    /// <summary>
+    /// Gets the pressed state of the button. The button's state is pressed if a mouse button was pressed over the button and the mouse
+    /// pointer is over the button.
+    /// </summary>
+    /// <param name="value">The new pressed state</param>
+    API_PROPERTY() void SetPressed(bool value);
+
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
 
@@ -70,15 +95,40 @@ public:
     /// <inheritdoc />
     void OnVirtuallyEnabledChanged() override;
 
+    /// <summary>
+    /// Class Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetClassToken();
+    /// <summary>
+    /// Background Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetBackgroundToken();
+    /// <summary>
+    /// Pressed Background Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetPressedBackgroundToken();
+    /// <summary>
+    /// Disabled Background Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetDisabledBackgroundToken();
+    /// <summary>
+    /// Frame Painter Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFramePainterToken();
+    /// <summary>
+    /// Frame Style Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFrameStyleToken();
+    /// <summary>
+    /// Content Painter Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetContentPainterToken();
+    /// <summary>
+    /// Content Style Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetContentStyleToken();
 protected:
+    /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
 private:
     static void InitializeTokens();

@@ -8,7 +8,7 @@
 /// contents, or entirely relies on the user set values and the layout
 /// </summary>
 API_ENUM()
-enum class FudgetTextBoxSizing
+enum class FudgetTextBoxSizingMode
 {
     /// <summary>
     /// The size of the textbox is determined by the user set sizes and the layout.
@@ -39,16 +39,46 @@ class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
     using Base = FudgetTextBoxBase;
     DECLARE_SCRIPTING_TYPE(FudgetTextBox);
 public:
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetClassToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFramePainterToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetFrameStyleToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetTextPainterToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetTextStyleToken();
 
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretDrawToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretWidthToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetCaretScrollCountToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetSnapTopLineToken();
 
     /// <inheritdoc />
@@ -204,8 +234,8 @@ private:
     // Make the line snap to the top, letting partial lines show on the bottom when scrolling down.
     bool _snap_top_line;
 
-    // Auto sizing or normal sizing
-    FudgetTextBoxSizing _sizing;
+    // Tytpe of auto sizing or normal sizing
+    FudgetTextBoxSizingMode _sizing_mode;
 
     FudgetDrawArea _caret_draw;
     float _caret_blink_time;

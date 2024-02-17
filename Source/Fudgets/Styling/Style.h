@@ -90,7 +90,7 @@ public:
 	/// </summary>
 	/// <param name="token">Token associated with the resource</param>
 	/// <returns>The resource if found or null</returns>
-	API_FUNCTION() FudgetStyleResource* GetResource(FudgetToken token);
+	FudgetStyleResource* GetResource(FudgetToken token);
 
 	/// <summary>
 	/// Retrieves the resource's value associated with a token in this style. If this style has no override for the token,
