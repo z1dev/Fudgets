@@ -8,6 +8,9 @@ class FudgetLineEdit;
 class FudgetButton;
 
 
+/// <summary>
+/// Standard combo box control that has an editable part, a button and opens a drop down window with a list of choices.
+/// </summary>
 API_CLASS()
 class FUDGETS_API FudgetComboBox : public FudgetContainer, public IProxyLayoutContainer
 {

@@ -569,12 +569,20 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 
 void FudgetContainer::DoDraw()
 {
-    RequestLayout();
-
     Base::DoDraw();
 
     for (FudgetControl *c : _children)
         c->DoDraw();
+}
+
+void FudgetContainer::DoLayout()
+{
+    RequestLayout();
+    for (FudgetControl *c : _children)
+    {
+        if (c->HasAnyFlag(FudgetControlFlags::ContainerControl))
+            dynamic_cast<FudgetContainer*>(c)->DoLayout();
+    }
 }
 
 void FudgetContainer::Initialize()

@@ -318,11 +318,15 @@ public:
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 
     /// <summary>
-    /// Requests layouting, draws itself and then asks the child controls to draw themselves. Derived containers
-    /// should instead override OnDraw for drawing themselves.
+    /// Draws itself and then asks the child controls to draw themselves. Derived containers should instead override
+    /// OnDraw for drawing themselves.
     /// </summary>
     void DoDraw() override;
 
+    /// <summary>
+    /// Tells the layout to calculate child control placement recursively until the last child control is laid out.
+    /// </summary>
+    API_FUNCTION() virtual void DoLayout();
 protected:
     /// <inheritdoc />
     void Initialize() override;

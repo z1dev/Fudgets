@@ -126,7 +126,7 @@ void FudgetRenderer2D::Render(GPUContext* context, API_PARAM(Ref) RenderContext&
                 //Canvas->_guiRoot->SetHintSize(v.Size);
             //}
 
-            Canvas->GetGUI()->DoDraw();
+            Canvas->DrawGUI();
         }
         catch (...)
         {
@@ -287,6 +287,7 @@ void Fudget::SetSize(Float2 value)
 
 void Fudget::DrawGUI() const
 {
+    _guiRoot->DoLayout();
     _guiRoot->DoDraw();
 }
 

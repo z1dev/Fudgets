@@ -70,11 +70,29 @@ private:
 API_ENUM(Attributes="Flags")
 enum class FudgetFramedFieldState
 {
+    /// <summary>
+    /// Normal state that means no other state is set
+    /// </summary>
     Normal = 0,
+    /// <summary>
+    /// Pressed appearance of a control, usually for buttons
+    /// </summary>
     Pressed = 1 << 0,
+    /// <summary>
+    /// Down appearance of a control, usually for buttons
+    /// </summary>
     Down = 1 << 1,
+    /// <summary>
+    /// Focused appearance of a control that can have the keyboard focus
+    /// </summary>
     Focused = 1 << 2,
+    /// <summary>
+    /// Disabled appearance of a control that means the users can't interact with it
+    /// </summary>
     Disabled = 1 << 3,
+    /// <summary>
+    /// Hovered appearance of a control, usually when the mouse pointer is over it
+    /// </summary>
     Hovered = 1 << 4,
 };
 DECLARE_ENUM_OPERATORS(FudgetFramedFieldState);
@@ -163,9 +181,21 @@ public:
 API_ENUM()
 enum class FudgetImageHorzAlign
 {
+    /// <summary>
+    /// Image is aligned to the left
+    /// </summary>
     Left,
+    /// <summary>
+    /// Image is aligned to the right
+    /// </summary>
     Right,
+    /// <summary>
+    /// Image is aligned to be at the center horizontally
+    /// </summary>
     Center,
+    /// <summary>
+    /// Stretch image to fill the horizontal space
+    /// </summary>
     Stretch
 };
 
@@ -175,9 +205,21 @@ enum class FudgetImageHorzAlign
 API_ENUM()
 enum class FudgetImageVertAlign
 {
+    /// <summary>
+    /// Image is aligned to the top
+    /// </summary>
     Top,
+    /// <summary>
+    /// Image is aligned to the bottom
+    /// </summary>
     Bottom,
+    /// <summary>
+    /// Image is aligned to be at the center vertically
+    /// </summary>
     Center,
+    /// <summary>
+    /// Stretch image to fill the vertical space
+    /// </summary>
     Stretch
 };
 
@@ -614,10 +656,12 @@ class FUDGETS_API FudgetSingleLineTextPainter : public FudgetPartPainter
     DECLARE_SCRIPTING_TYPE(FudgetSingleLineTextPainter);
 public:
     /// <summary>
-    /// Draws the standard control part based on the control's current state.
+    /// Draws the standard control text based on the control's current state.
     /// </summary>
     /// <param name="control">Control to draw</param>
     /// <param name="bounds">Bounds to paint inside of</param>
+    /// <param name="text">Text to draw</param>
+    /// <param name="range">Range in the text to limit drawing to</param>
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) {}
@@ -627,6 +671,8 @@ public:
     /// to measure. It depends on the painter if it wraps the text in the state bounds or not.
     /// </summary>
     /// <param name="control">Control used for measurement</param>
+    /// <param name="text">Text to measure</param>
+    /// <param name="range">Range in the text to limit measurements to</param>
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <returns>Size of the measured text</returns>
@@ -637,6 +683,7 @@ public:
     /// </summary>
     /// <param name="a">First character</param>
     /// <param name="b">Other character</param>
+    /// <param name="scale">Scale of the control used for measurements and drawing</param>
     /// <returns>Kerning distance between characters</returns>
     API_FUNCTION() virtual float GetKerning(Char a, Char b, float scale) const { return 0.f; }
 
@@ -645,6 +692,8 @@ public:
     /// </summary>
     /// <param name="control">Control used for hit testing</param>
     /// <param name="bounds">Bounds of the text</param>
+    /// <param name="text">Text to measure</param>
+    /// <param name="range">Range in the text to limit measurements to</param>
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <param name="point">The position of the character to look for</param>

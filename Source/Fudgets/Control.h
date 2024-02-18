@@ -228,6 +228,12 @@ enum class FudgetControlFlags
 	/// get the key up and down events.
 	/// </summary>
 	CanHandleNavigationKeys = 1 << 14,
+	/// <summary>
+	/// The horizontal and/or vertical size of the control can be influenced by the available space in the layout. Used
+	/// mainly in controls that can auto-size themselves and might change their width or height if the opposite side is
+	/// limited.
+	/// </summary>
+	SizeForSpace = 1 << 15,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 

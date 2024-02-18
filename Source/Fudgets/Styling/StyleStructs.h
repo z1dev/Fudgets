@@ -59,10 +59,15 @@ API_STRUCT() struct FUDGETS_API FudgetSpriteHandle
 
 
 
-
+/// <summary>
+/// Type for drawing a FudgetDrawArea. It determines how the area is filled, whether with color or texture, or only as a border.
+/// </summary>
 API_ENUM(Attributes = "Flags")
 enum class FudgetFillType : uint8
 {
+	/// <summary>
+	/// None
+	/// </summary>
 	None = 0,
 
 	// The fill color or pattern, only one of these is valid
@@ -109,6 +114,9 @@ enum class FudgetFillType : uint8
 };
 DECLARE_ENUM_OPERATORS(FudgetFillType);
 
+/// <summary>
+/// Values determining a frame's placement and exact size
+/// </summary>
 API_ENUM()
 enum class FudgetFrameType
 {
@@ -410,6 +418,9 @@ struct FUDGETS_API FudgetFontSettings
 	API_FIELD() bool Italics;
 };
 
+/// <summary>
+/// Settings for drawing text of a control
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetTextDrawSettings
 {
@@ -504,6 +515,9 @@ struct FUDGETS_API FudgetTextDrawSettings
 	API_FIELD() FudgetToken MaterialToken;
 };
 
+/// <summary>
+/// A font object with its creation settings
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetFont
 {

@@ -37,6 +37,11 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	bool operator>=(const FudgetToken &other) const;
 	bool operator!=(const FudgetToken &other) const;
 
+	FORCE_INLINE bool Equals(const FudgetToken &other)
+	{
+		return other.Token == Token;
+	}
+
 	operator int32() const { return Token; }
 
 	bool IsValid() const { return Token != -1; }
@@ -59,6 +64,11 @@ API_STRUCT() struct FUDGETS_API FudgetToken
 	/// </summary>
 	API_FIELD(ReadOnly) static const FudgetToken Null;
 };
+
+inline uint32 GetHash(const FudgetToken &token)
+{
+	return token.Token;
+}
 
 template<>
 struct TIsPODType<FudgetToken>

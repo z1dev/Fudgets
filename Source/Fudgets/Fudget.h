@@ -325,6 +325,9 @@ public:
         return _guiRoot;
     }
 
+    /// <summary>
+    /// Called by the renderer to calculate layouts and draw the user interface on each frame
+    /// </summary>
     API_FUNCTION()
     FORCE_INLINE void DrawGUI() const;
 

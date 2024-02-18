@@ -58,6 +58,7 @@ public:
     /// </summary>
     /// <param name="control">The control to change to or from always-on-top status</param>
     /// <param name="set_always_on_top">Whether the control should be added to the always on top group or removed from it</param>
+    /// <param name="index">Position of the control among its group (on top or not on top)</param>
     /// <returns>The new absolute index of the control or -1 on failure</returns>
     API_FUNCTION() int ChangeControlAlwaysOnTop(FudgetControl *control, bool set_always_on_top, int index = -1);
 

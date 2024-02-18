@@ -28,6 +28,9 @@ enum class FudgetLineWrapMode
     Custom
 };
 
+/// <summary>
+/// Data about a single line measured by a FudgetMultiLineTextPainter
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetLineMeasurements
 {
@@ -62,7 +65,9 @@ struct TIsPODType<FudgetLineMeasurements>
     enum { Value = true };
 };
 
-
+/// <summary>
+/// Data about lines of a string after measured by a FudgetMultiLineTextPainter
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetMultilineTextMeasurements
 {
@@ -97,7 +102,9 @@ struct TIsPODType<FudgetMultilineTextMeasurements>
     enum { Value = true };
 };
 
-
+/// <summary>
+/// Options that determine how a string of text should be measured and displayed by a FudgetMultiLineTextPainter
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetMultiLineTextOptions
 {

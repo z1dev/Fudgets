@@ -95,7 +95,9 @@ enum class FudgetTextBoxFlags
 };
 DECLARE_ENUM_OPERATORS(FudgetTextBoxFlags);
 
-
+/// <summary>
+/// Base class for multi-line textbox controls
+/// </summary>
 API_CLASS(Abstract)
 class FUDGETS_API FudgetTextBoxBase : public FudgetControl
 {
