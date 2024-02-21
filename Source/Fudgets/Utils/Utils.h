@@ -25,7 +25,7 @@ void MoveInArray(Array<T> &arr, int from, int to)
 	}
 }
 
-extern const float MaximumFloatLimit;
+//extern const float MaximumFloatLimit;
 
 float AddBigFloats(float a, float b);
 

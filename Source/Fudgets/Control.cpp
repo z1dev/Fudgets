@@ -20,7 +20,7 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
     _pos_layout_updated(false), _size_layout_updated(false), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-    _max_size(-1.f, -1.f), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
+    _max_size(MAX_float, MAX_float), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
     _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
     _cached_theme(nullptr)
 {
@@ -82,26 +82,37 @@ void FudgetControl::SetHintSize(Float2 value)
 {
     if (Float2::NearEqual(_hint_size, value))
         return;
+    Float2 old_size = GetHintSize();
     _hint_size = value;
     if (IsDirectSizeChangePermitted())
         _size = _hint_size;
-    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
+    if (!Math::NearEqual(GetHintSize(), old_size))
+        SizeModified();
 }
 
 void FudgetControl::SetMinSize(Float2 value)
 {
     if (Float2::NearEqual(_min_size, value))
         return;
+    Float2 old_size = GetMinSize();
     _min_size = value;
-    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
+    if (!Math::NearEqual(GetMinSize(), old_size))
+        SizeModified();
 }
 
 void FudgetControl::SetMaxSize(Float2 value)
 {
+    if (value.X < 0)
+        value.X = MAX_float;
+    if (value.Y < 0)
+        value.Y = MAX_float;
+
     if (Float2::NearEqual(_max_size, value))
         return;
+    Float2 old_size = GetMaxSize();
     _max_size = value;
-    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
+    if (!Math::NearEqual(GetMaxSize(), old_size))
+        SizeModified();
 }
 
 Float2 FudgetControl::GetSize() const
@@ -125,7 +136,7 @@ void FudgetControl::SetPosition(Float2 value)
         return;
 
     _pos = value;
-    SizeOrPosModified(FudgetLayoutDirtyReason::Position);
+    PositionModified();
     OnPositionChanged();
 }
 
@@ -285,13 +296,17 @@ bool FudgetControl::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
     wanted = GetHintSize();
     min_size = GetMinSize();
     max_size = GetMaxSize();
-    return HasAnyFlag(FudgetControlFlags::SizeDependsOnSpace);
+    return SizeDependsOnSpace();
 }
 
-void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
+void FudgetControl::SizeModified()
 {
-    if (_parent != nullptr)
-        _parent->MarkLayoutDirty(dirt_flags);
+    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
+}
+
+void FudgetControl::PositionModified()
+{
+    SizeOrPosModified(FudgetLayoutDirtyReason::Position);
 }
 
 bool FudgetControl::GetAlwaysOnTop() const
@@ -1438,6 +1453,12 @@ void FudgetControl::InitializeFlags()
     // The AlwaysOnTop flag only makes sense when the control is a direct child in the root. In that case, the root
     // can get this flag from GetInitFlags.
     _flags &= ~FudgetControlFlags::AlwaysOnTop;
+}
+
+void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
+{
+    if (_parent != nullptr)
+        _parent->MarkLayoutDirty(dirt_flags);
 }
 
 void FudgetControl::SetParentDisabled(bool value)

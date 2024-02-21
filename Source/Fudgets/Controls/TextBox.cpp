@@ -97,9 +97,20 @@ void FudgetTextBox::InitializeTokens()
     SnapTopLineToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_SnapTopLine"));
 }
 
+void FudgetTextBox::MarkTextDirty()
+{
+    _lines_dirty = true;
+
+    _available_space = -1.f;
+    if (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None)
+        SizeModified();
+}
+
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
     _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal),
-    _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f), _scroll_pos(0.0f), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace)
+    _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f), _scroll_pos(0.0f), _lines_dirty(false), _line_wrap(false),
+    _wrap_mode(FudgetLineWrapMode::Whitespace), _auto_hint(FudgetAutoSizing::None), _auto_min(FudgetAutoSizing::None), _auto_max(FudgetAutoSizing::None),
+    _available_space(-1.f), _cached_hint(-1.f), _cached_min(-1.f), _cached_max(-1.f)
 {
 
 }
@@ -162,7 +173,7 @@ void FudgetTextBox::OnDraw()
         options.Spans = Span<FudgetTextRangeSpan>();
     }
 
-    _text_painter->Draw(this, bounds, -_scroll_pos, _draw_state, options, _text_measurements);
+    _text_painter->Draw(this, bounds, -_scroll_pos, _draw_state, options, GetMeasurements());
 
     PopClip();
 
@@ -175,10 +186,10 @@ void FudgetTextBox::OnDraw()
     // Draw caret
     if (_blink_passed < _caret_blink_time)
     {
-        Float2 caret_pos = _text_painter->GetCharacterPosition(this, _text_measurements, GetCaretPos()) + bounds.GetUpperLeft() - _scroll_pos;
+        Float2 caret_pos = _text_painter->GetCharacterPosition(this, GetMeasurements(), GetCaretPos()) + bounds.GetUpperLeft() - _scroll_pos;
 
         DrawArea(_caret_draw, Rectangle(caret_pos - Float2(1.0f, 0.f),
-            Float2(_caret_width, _text_painter->GetCharacterLineHeight(_text_measurements, GetCaretPos()) )));
+            Float2(_caret_width, _text_painter->GetCharacterLineHeight(GetMeasurements(), GetCaretPos()) )));
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)
         _blink_passed -= _caret_blink_time * 2.0f;
@@ -202,7 +213,7 @@ int FudgetTextBox::CharIndexAt(Float2 pos)
     FudgetPadding innerPadding = GetInnerPadding();
     Rectangle bounds = innerPadding.Padded(GetBounds());
 
-    return _text_painter->HitTest(this, _text_measurements, pos - bounds.GetUpperLeft() + _scroll_pos);
+    return _text_painter->HitTest(this, GetMeasurements(), pos - bounds.GetUpperLeft() + _scroll_pos);
 }
 
 void FudgetTextBox::DoPositionChanged(int old_caret_pos, int old_sel_pos)
@@ -221,7 +232,11 @@ void FudgetTextBox::DoTextEdited(int old_caret_pos, int old_sel_pos)
 {
     _blink_passed = 0.0f;
     _caret_updown_x = -1.f;
-    Process();
+
+    MarkTextDirty();
+
+    if (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None)
+        SizeModified();
 
     Base::DoTextEdited(old_caret_pos, old_sel_pos);
 }
@@ -256,83 +271,211 @@ bool FudgetTextBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
     return Base::OnMouseUp(pos, global_pos, button);
 }
 
-void FudgetTextBox::CaretPageUp()
+Float2 FudgetTextBox::GetHintSize() const
 {
-    int caret_pos = GetCaretPos();
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
-        return;
-    Float2 scroll_pos = _scroll_pos;
-
-    if (_caret_updown_x < 0)
-        _caret_updown_x = _text_painter->GetCharacterPosition(this, _text_measurements, caret_pos).X;
-
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 1 || line_index >= _text_measurements.Lines.Count())
-        return;
-
-    Base::CaretPageUp();
-
-
-    FudgetPadding innerPadding = GetInnerPadding();
-    float height = innerPadding.Padded(GetBounds()).GetHeight();
-
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
-
-    // TODO: make this an option?
-    // Measure one line height less
-    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
-    Float2 test_pos = Float2(_caret_updown_x, Math::Max(0.f, line.Location.Y + line.Size.Y * .5f - height));
-
-    _scroll_pos.Y = Math::Max(0.f, scroll_pos.Y - height);
-
-    if (_snap_top_line)
+    Float2 size = Base::GetHintSize();
+    if (_auto_hint != FudgetAutoSizing::None && _text_painter != nullptr && _available_space >= 0.f)
     {
-        // Find the line nearest to the scroll pos
-        line_index = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y + 0.5f);
-        const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
-        _scroll_pos.Y = line.Location.Y;
+        switch (_auto_hint)
+        {
+            case FudgetAutoSizing::Both:
+                size = _cached_hint;
+                break;
+            case FudgetAutoSizing::Height:
+                size.Y = _cached_hint.Y;
+                break;
+            case FudgetAutoSizing::Width:
+                size.X = _cached_hint.X;
+                break;
+        }
     }
 
+    return size;
 }
 
-void FudgetTextBox::CaretPageDown()
+Float2 FudgetTextBox::GetMinSize() const
 {
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
-        return;
+    Float2 size = Base::GetMinSize();
+    if (_auto_min != FudgetAutoSizing::None && _available_space >= 0.f)
+    {
+        switch (_auto_min)
+        {
+            case FudgetAutoSizing::Both:
+                size = _cached_min;
+                break;
+            case FudgetAutoSizing::Height:
+                size.Y = _cached_min.Y;
+                break;
+            case FudgetAutoSizing::Width:
+                size.X = _cached_min.X;
+                break;
+        }
+    }
 
-    Float2 scroll_pos = _scroll_pos;
-    int caret_pos = GetCaretPos();
+    return size;
+}
 
-    if (_caret_updown_x < 0)
-        _caret_updown_x = _text_painter->GetCharacterPosition(this, _text_measurements, caret_pos).X;
+Float2 FudgetTextBox::GetMaxSize() const
+{
+    Float2 size = Base::GetMaxSize();
+    if (_auto_max != FudgetAutoSizing::None && _available_space >= 0.f)
+    {
+        switch (_auto_max)
+        {
+            case FudgetAutoSizing::Both:
+                size = _cached_max;
+                break;
+            case FudgetAutoSizing::Height:
+                size.Y = _cached_max.Y;
+                break;
+            case FudgetAutoSizing::Width:
+                size.X = _cached_max.X;
+                break;
+        }
+    }
 
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 0 || line_index >= _text_measurements.Lines.Count() - 1)
-        return;
+    return size;
+}
 
-    Base::CaretPageDown();
+bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
+{
+    if ((_auto_hint == FudgetAutoSizing::None && _auto_min == FudgetAutoSizing::None && _auto_max == FudgetAutoSizing::None) || _text_painter == nullptr)
+        return Base::OnMeasure(available, wanted, min_size, max_size);
 
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+    if (available.X >= 0.f && Math::NearEqual(_available_space, available.X))
+    {
+        wanted = _cached_hint;
+        min_size = _cached_min;
+        max_size = _cached_max;
+        return SizeDependsOnSpace();
+    }
 
     FudgetPadding innerPadding = GetInnerPadding();
-    float height = innerPadding.Padded(GetBounds()).GetHeight();
-    float full_height = height;
+    innerPadding.Right += _caret_width * 2.0f;
 
-    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
-
-    if (_snap_top_line)
+    if (available.X < 0.f)
     {
-        // Find the nearest line on the top to snap to
-        int scroll_line_index = _text_painter->LineAtPos(this, _text_measurements, scroll_pos.Y + full_height - 0.01f);
-        const FudgetLineMeasurements &scroll_line = _text_measurements.Lines[scroll_line_index];
-
-        _scroll_pos.Y = scroll_line.Location.Y; //Math::Min(_text_measurements.Size.Y - full_height, scroll_line.Location.Y);
-
-        FixScrollPos();
+        _available_space = MAX_float;
+        FudgetMultilineTextMeasurements tmp;
+        FudgetMultiLineTextOptions opt;
+        opt.Wrapping = _line_wrap;
+        opt.WrapMode = _wrap_mode;
+        _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
+        _cached_hint = _cached_min = _cached_max = tmp.Size + innerPadding.Size();
     }
     else
-        _scroll_pos.Y = Math::Min(_text_measurements.Size.Y - full_height, scroll_pos.Y + height);
+    {
+        _available_space = available.X;
+        FudgetMultilineTextMeasurements tmp;
+        FudgetMultiLineTextOptions opt;
+        opt.Wrapping = _line_wrap;
+        opt.WrapMode = _wrap_mode;
+        _text_painter->MeasureLines(this, available.X, _text, 1.f, opt, tmp);
+        _cached_hint = tmp.Size + innerPadding.Size();
+        if (_line_wrap)
+        {
+            _text_painter->MeasureLines(this, 0.0001f, _text, 1.f, opt, tmp);
+            _cached_min = tmp.Size + innerPadding.Size();
+            _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
+            _cached_max = tmp.Size + innerPadding.Size();
+        }
+        else
+        {
+            _cached_min = _cached_max = _cached_hint;
+        }
+    }
+
+    Float2 hint = Base::GetHintSize();
+    _cached_hint = wanted = Float2(_auto_hint == FudgetAutoSizing::Both || _auto_hint == FudgetAutoSizing::Width ? _cached_hint.X : hint.X,
+        _auto_hint == FudgetAutoSizing::Both || _auto_hint == FudgetAutoSizing::Height ? _cached_hint.Y : hint.Y);
+    Float2 min = Base::GetMinSize();
+    _cached_min = min = Float2(_auto_min == FudgetAutoSizing::Both || _auto_min == FudgetAutoSizing::Width ? _cached_min.X : min.X,
+        _auto_min == FudgetAutoSizing::Both || _auto_min == FudgetAutoSizing::Height ? _cached_min.Y : min.Y);
+    Float2 max = Base::GetMaxSize();
+    _cached_max = max = Float2(_auto_max == FudgetAutoSizing::Both || _auto_max == FudgetAutoSizing::Width ? _cached_max.X : max.X,
+        _auto_max == FudgetAutoSizing::Both || _auto_max == FudgetAutoSizing::Height ? _cached_max.Y : max.Y);
+
+    return SizeDependsOnSpace();
 }
+
+//void FudgetTextBox::CaretPageUp()
+//{
+//    int caret_pos = GetCaretPos();
+//
+//    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
+//        return;
+//    Float2 scroll_pos = _scroll_pos;
+//
+//    if (_caret_updown_x < 0)
+//        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
+//
+//    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+//    if (line_index < 1 || line_index >= GetMeasurements().Lines.Count())
+//        return;
+//
+//    Base::CaretPageUp();
+//
+//
+//    FudgetPadding innerPadding = GetInnerPadding();
+//    float height = innerPadding.Padded(GetBounds()).GetHeight();
+//
+//    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
+//
+//    // TODO: make this an option?
+//    // Measure one line height less
+//    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
+//    Float2 test_pos = Float2(_caret_updown_x, Math::Max(0.f, line.Location.Y + line.Size.Y * .5f - height));
+//
+//    _scroll_pos.Y = Math::Max(0.f, scroll_pos.Y - height);
+//
+//    if (_snap_top_line)
+//    {
+//        // Find the line nearest to the scroll pos
+//        line_index = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + 0.5f);
+//        const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
+//        _scroll_pos.Y = line.Location.Y;
+//    }
+//
+//}
+
+//void FudgetTextBox::CaretPageDown()
+//{
+//    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
+//        return;
+//
+//    Float2 scroll_pos = _scroll_pos;
+//    int caret_pos = GetCaretPos();
+//
+//    if (_caret_updown_x < 0)
+//        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
+//
+//    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+//    if (line_index < 0 || line_index >= GetMeasurements().Lines.Count() - 1)
+//        return;
+//
+//    Base::CaretPageDown();
+//
+//    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
+//
+//    FudgetPadding innerPadding = GetInnerPadding();
+//    float height = innerPadding.Padded(GetBounds()).GetHeight();
+//    float full_height = height;
+//
+//    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
+//
+//    if (_snap_top_line)
+//    {
+//        // Find the nearest line on the top to snap to
+//        int scroll_line_index = _text_painter->LineAtPos(this, GetMeasurements(), scroll_pos.Y + full_height - 0.01f);
+//        const FudgetLineMeasurements &scroll_line = GetMeasurements().Lines[scroll_line_index];
+//
+//        _scroll_pos.Y = scroll_line.Location.Y; //Math::Min(GetMeasurements().Size.Y - full_height, scroll_line.Location.Y);
+//
+//        FixScrollPos();
+//    }
+//    else
+//        _scroll_pos.Y = Math::Min(GetMeasurements().Size.Y - full_height, scroll_pos.Y + height);
+//}
 
 
 void FudgetTextBox::SetLineWrap(bool value)
@@ -340,7 +483,8 @@ void FudgetTextBox::SetLineWrap(bool value)
     if (_line_wrap == value)
         return;
     _line_wrap = value;
-    Process();
+    
+    MarkTextDirty();
 }
 
 void FudgetTextBox::SetLineWrapMode(FudgetLineWrapMode value)
@@ -351,7 +495,8 @@ void FudgetTextBox::SetLineWrapMode(FudgetLineWrapMode value)
         return;
     }
     _wrap_mode = value;
-    Process();
+
+    MarkTextDirty();
 }
 
 void FudgetTextBox::SetSnapTopLine(bool value)
@@ -366,6 +511,35 @@ void FudgetTextBox::SetSnapTopLine(bool value)
     ScrollToPos();
 }
 
+bool FudgetTextBox::SizeDependsOnSpace() const
+{
+    return _line_wrap && (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None);
+}
+
+void FudgetTextBox::SetAutoHintSizing(FudgetAutoSizing value)
+{
+    if (_auto_hint == value)
+        return;
+    _auto_hint = value;
+    SizeModified();
+}
+
+void FudgetTextBox::SetAutoMinSizing(FudgetAutoSizing value)
+{
+    if (_auto_min == value)
+        return;
+    _auto_min = value;
+    SizeModified();
+}
+
+void FudgetTextBox::SetAutoMaxSizing(FudgetAutoSizing value)
+{
+    if (_auto_max == value)
+        return;
+    _auto_max = value;
+    SizeModified();
+}
+
 void FudgetTextBox::ScrollToPos()
 {
     if (_text_painter == nullptr)
@@ -376,11 +550,11 @@ void FudgetTextBox::ScrollToPos()
 
     int caret_pos = GetCaretPos();
 
-    int line_index = Math::Min(_text_measurements.Lines.Count() - 1, _text_painter->GetCharacterLine(_text_measurements, caret_pos));
+    int line_index = Math::Min(GetMeasurements().Lines.Count() - 1, _text_painter->GetCharacterLine(GetMeasurements(), caret_pos));
     if (line_index < 0)
         return;
 
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
     float text_width = line.Size.X;
     float text_caret_width = _text_painter->Measure(this, StringView(_text.Get() + line.StartIndex, Math::Max(0, caret_pos - line.StartIndex)), 1.f).X;
@@ -421,11 +595,11 @@ void FudgetTextBox::ScrollToPos()
             float top = line.Location.Y;
 
             while (ix > 0 && bottom - top <= height)
-                top = _text_measurements.Lines[--ix].Location.Y;
+                top = GetMeasurements().Lines[--ix].Location.Y;
             if (bottom - top <= height || ix == line_index)
-                _scroll_pos.Y = _text_measurements.Lines[ix].Location.Y;
+                _scroll_pos.Y = GetMeasurements().Lines[ix].Location.Y;
             else
-                _scroll_pos.Y = _text_measurements.Lines[Math::Min(_text_measurements.Lines.Count() - 1, ix + 1)].Location.Y;
+                _scroll_pos.Y = GetMeasurements().Lines[Math::Min(GetMeasurements().Lines.Count() - 1, ix + 1)].Location.Y;
         }
         else
             _scroll_pos.Y = Math::Max(0.f, line.Location.Y + line.Size.Y - bounds.GetHeight());
@@ -440,7 +614,7 @@ void FudgetTextBox::FixScrollPos()
     FudgetPadding innerPadding = GetInnerPadding();
     Rectangle bounds = innerPadding.Padded(GetBounds());
 
-    Float2 extra = bounds.Size - (_text_measurements.Size - _scroll_pos);
+    Float2 extra = bounds.Size - (GetMeasurements().Size - _scroll_pos);
     if (extra.X > 0 && _scroll_pos.X > 0)
         _scroll_pos.X = Math::Max(_scroll_pos.X - extra.X, 0.f);
     if (extra.Y > 0 && _scroll_pos.Y > 0)
@@ -449,10 +623,10 @@ void FudgetTextBox::FixScrollPos()
             _scroll_pos.Y = Math::Max(_scroll_pos.Y - extra.Y, 0.f);
         else
         {
-            int ix = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y + 0.5f);
+            int ix = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + 0.5f);
             while (ix > 0)
             {
-                FudgetLineMeasurements line = _text_measurements.Lines[ix - 1];
+                FudgetLineMeasurements line = GetMeasurements().Lines[ix - 1];
                 if (line.Size.Y > extra.Y)
                     break;
                 --ix;
@@ -465,12 +639,18 @@ void FudgetTextBox::FixScrollPos()
 
 void FudgetTextBox::Process()
 {
+    if (_text_painter == nullptr)
+        return;
+
+    _lines_dirty = false;
+
     Rectangle bounds = GetInnerPadding().Padded(GetBounds());
+    bounds.Size.X -= _caret_width * 2.0f;
 
     FudgetMultiLineTextOptions options;
     options.Wrapping = _line_wrap;
     options.WrapMode = _wrap_mode;
-    _text_painter->MeasureLines(this, bounds.GetWidth() - _caret_width * 2.0f, _text, 1.f, options, _text_measurements);
+    _text_painter->MeasureLines(this, bounds.GetWidth(), _text, 1.f, options, _text_measurements);
 
     if (_snap_top_line)
         SnapTopLine();
@@ -481,12 +661,12 @@ void FudgetTextBox::Process()
 
 void FudgetTextBox::SnapTopLine()
 {
-    if (_text_measurements.Lines.Count() != 0)
+    if (GetMeasurements().Lines.Count() != 0)
     {
-        int line_index = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y + 0.5f);
-        if (line_index >= 0 && line_index < _text_measurements.Lines.Count())
+        int line_index = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + 0.5f);
+        if (line_index >= 0 && line_index < GetMeasurements().Lines.Count())
         {
-            const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+            const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
             _scroll_pos.Y = line.Location.Y;
         }
     }
@@ -500,7 +680,9 @@ FudgetControlFlags FudgetTextBox::GetInitFlags() const
 void FudgetTextBox::SetTextInternal(const StringView &value)
 {
     _text = value;
-    Process();
+
+    MarkTextDirty();
+
     SetCaretPos(GetTextLength());
 }
 
@@ -555,26 +737,26 @@ void FudgetTextBox::ReplaceCharacters(int start_index, int end_index, Char ch)
 int FudgetTextBox::GetCaretPosUp()
 {
     int caret_pos = GetCaretPos();
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
         return caret_pos;
 
     if (_caret_updown_x < 0)
-        _caret_updown_x = _text_painter->GetCharacterPosition(this, _text_measurements, caret_pos).X;
+        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
 
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 1 || line_index >= _text_measurements.Lines.Count())
+    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+    if (line_index < 1 || line_index >= GetMeasurements().Lines.Count())
         return caret_pos;
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
-    int char_index = _text_painter->LineHitTest(this, _text_measurements, line_index - 1, _caret_updown_x);
+    int char_index = _text_painter->LineHitTest(this, GetMeasurements(), line_index - 1, _caret_updown_x);
 
     // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
     // one ended. In this case it's possible that instead of going up one line, this would move the caret to the end of two lines
     // above. To avoid that, make sure the index is changed to match the correct line.
     if (line_index > 1)
     {
-        const FudgetLineMeasurements &prev_line = _text_measurements.Lines[line_index - 1];
-        const FudgetLineMeasurements &prev_prev_line = _text_measurements.Lines[line_index - 2];
+        const FudgetLineMeasurements &prev_line = GetMeasurements().Lines[line_index - 1];
+        const FudgetLineMeasurements &prev_prev_line = GetMeasurements().Lines[line_index - 2];
         if (char_index == prev_line.StartIndex && prev_line.StartIndex == prev_prev_line.EndIndex)
             char_index = Math::Min(char_index + 1, prev_line.EndIndex);
     }
@@ -588,7 +770,7 @@ int FudgetTextBox::GetCaretPosUp()
 int FudgetTextBox::GetCaretPosDown()
 {
     int caret_pos = GetCaretPos();
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
         return caret_pos;
 
     FudgetMultiLineTextOptions options;
@@ -596,21 +778,21 @@ int FudgetTextBox::GetCaretPosDown()
     options.WrapMode = _wrap_mode;
 
     if (_caret_updown_x < 0)
-        _caret_updown_x = _text_painter->GetCharacterPosition(this, _text_measurements, caret_pos).X;
+        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
 
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 0 || line_index >= _text_measurements.Lines.Count() - 1)
+    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+    if (line_index < 0 || line_index >= GetMeasurements().Lines.Count() - 1)
         return caret_pos;
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
-    int char_index = _text_painter->LineHitTest(this, _text_measurements, line_index + 1, _caret_updown_x);
+    int char_index = _text_painter->LineHitTest(this, GetMeasurements(), line_index + 1, _caret_updown_x);
 
     // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
     // one ended. In this case it's possible that instead of going down, this would move the caret to the end of the current line.
     // To avoid that, make sure the index is changed to match the correct line.
-    if (char_index == line.EndIndex && line_index < _text_measurements.Lines.Count() - 1)
+    if (char_index == line.EndIndex && line_index < GetMeasurements().Lines.Count() - 1)
     {
-        const FudgetLineMeasurements &next_line = _text_measurements.Lines[line_index + 1];
+        const FudgetLineMeasurements &next_line = GetMeasurements().Lines[line_index + 1];
         if (line.EndIndex == next_line.StartIndex)
         char_index = Math::Min(char_index + 1, next_line.EndIndex);
     }
@@ -624,45 +806,48 @@ int FudgetTextBox::GetCaretPosDown()
 int FudgetTextBox::GetCaretPosPageUp()
 {
     int caret_pos = GetCaretPos();
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
         return caret_pos;
 
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 1 || line_index >= _text_measurements.Lines.Count())
+    if (_caret_updown_x < 0)
+        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
+
+    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+    if (line_index < 1 || line_index >= GetMeasurements().Lines.Count())
         return caret_pos;
 
     FudgetPadding innerPadding = GetInnerPadding();
     float height = innerPadding.Padded(GetBounds()).GetHeight();
 
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
     // TODO: make this an option?
     // Measure one line height less
     height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
     Float2 test_pos = Float2(_caret_updown_x, Math::Max(0.f, line.Location.Y + line.Size.Y * .5f - height));
 
-    //_scroll_pos.Y = Math::Max(0.f, _scroll_pos.Y - height);
+    _scroll_pos.Y = Math::Max(0.f, _scroll_pos.Y - height);
 
-    int char_index = _text_painter->HitTest(this, _text_measurements, test_pos);
+    int char_index = _text_painter->HitTest(this, GetMeasurements(), test_pos);
 
     // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
     // one ended. In this case it's possible that instead of going up one page, this would move the caret to the end of two lines
     // above. To avoid that, make sure the index is changed to match the correct line.
 
-    int char_line = _text_painter->GetCharacterLine(_text_measurements, char_index);
-    const FudgetLineMeasurements &dest_line = _text_measurements.Lines[char_line];
+    int char_line = _text_painter->GetCharacterLine(GetMeasurements(), char_index);
+    const FudgetLineMeasurements &dest_line = GetMeasurements().Lines[char_line];
 
-    if (char_index == dest_line.EndIndex && char_line < line_index - 1 && _text_measurements.Lines[char_line + 1].StartIndex == char_index)
+    if (char_index == dest_line.EndIndex && char_line < line_index - 1 && GetMeasurements().Lines[char_line + 1].StartIndex == char_index)
     {
-        const FudgetLineMeasurements &other_dest_line = _text_measurements.Lines[char_line + 1];
+        const FudgetLineMeasurements &other_dest_line = GetMeasurements().Lines[char_line + 1];
 
         float end_dist = Math::Abs(_caret_updown_x - dest_line.Location.X - dest_line.Size.X);
         float start_dist = Math::Abs(_caret_updown_x - other_dest_line.Location.X);
         if (start_dist < end_dist)
             char_index++;
-    } else if (char_index == dest_line.StartIndex && char_line > 0 && _text_measurements.Lines[char_line - 1].EndIndex == char_index)
+    } else if (char_index == dest_line.StartIndex && char_line > 0 && GetMeasurements().Lines[char_line - 1].EndIndex == char_index)
     {
-        const FudgetLineMeasurements &other_dest_line = _text_measurements.Lines[char_line - 1];
+        const FudgetLineMeasurements &other_dest_line = GetMeasurements().Lines[char_line - 1];
 
         float start_dist = Math::Abs(_caret_updown_x - dest_line.Location.X);
         float end_dist = Math::Abs(_caret_updown_x - other_dest_line.Location.X - other_dest_line.Size.X);
@@ -677,8 +862,8 @@ int FudgetTextBox::GetCaretPosPageUp()
     if (_snap_top_line)
     {
         // Find the line nearest to the scroll pos
-        line_index = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y + 0.5f);
-        const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
+        line_index = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + 0.5f);
+        const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
         _scroll_pos.Y = line.Location.Y;
     }
 
@@ -688,62 +873,49 @@ int FudgetTextBox::GetCaretPosPageUp()
 int FudgetTextBox::GetCaretPosPageDown()
 {
     int caret_pos = GetCaretPos();
-    if (_text_painter == nullptr || _text_measurements.Lines.Count() == 0)
+    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
         return caret_pos;
+
+    if (_caret_updown_x < 0)
+        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
+
+    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
+    if (line_index < 0 || line_index >= GetMeasurements().Lines.Count() - 1)
+        return caret_pos;
+
+    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
     FudgetPadding innerPadding = GetInnerPadding();
     float height = innerPadding.Padded(GetBounds()).GetHeight();
-
-    //if (_caret_updown_x < 0)
-    //    _caret_updown_x = _text_painter->GetCharacterPosition(this, _text_measurements, caret_pos).X;
-
-    int line_index = _text_painter->GetCharacterLine(_text_measurements, caret_pos);
-    if (line_index < 0 || line_index >= _text_measurements.Lines.Count() - 1)
-        return caret_pos;
-
-    const FudgetLineMeasurements &line = _text_measurements.Lines[line_index];
-
-    //float full_height = height;
+    float full_height = height;
 
     // TODO: make this an option?
     // Measure one line height less
     height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
     Float2 test_pos = Float2(_caret_updown_x, Math::Max(0.f, line.Location.Y + line.Size.Y * .5f + height));
 
-    //// TODO: move the scroll position elsewhere
-    //if (_snap_top_line)fdsa sadf 
-    //{
-    //    // Find the line nearest line on the bottom to snap to
-    //    int scroll_line_index = _text_painter->LineAtPos(this, _text_measurements, _scroll_pos.Y + full_height - 0.01f);
-    //    const FudgetLineMeasurements &scroll_line = _text_measurements.Lines[scroll_line_index];
 
-    //    _scroll_pos.Y = Math::Min(_text_measurements.Size.Y - full_height, scroll_line.Location.Y);
-    //}
-    //else
-    //    _scroll_pos.Y = Math::Min(_text_measurements.Size.Y - full_height, _scroll_pos.Y + height);
-
-
-    int char_index = _text_painter->HitTest(this, _text_measurements, test_pos);
+    int char_index = _text_painter->HitTest(this, GetMeasurements(), test_pos);
 
     // When placing line breaks after any character, the next line usually starts on the same character index where the pervious
     // one ended. In this case it's possible that instead of going up one page, this would move the caret to the end of two lines
     // above. To avoid that, make sure the index is changed to match the correct line.
 
-    int char_line = _text_painter->GetCharacterLine(_text_measurements, char_index);
-    const FudgetLineMeasurements &dest_line = _text_measurements.Lines[char_line];
+    int char_line = _text_painter->GetCharacterLine(GetMeasurements(), char_index);
+    const FudgetLineMeasurements &dest_line = GetMeasurements().Lines[char_line];
 
-    if (char_index == dest_line.EndIndex && char_line < _text_measurements.Lines.Count() - 1 && _text_measurements.Lines[char_line + 1].StartIndex == char_index)
+    if (char_index == dest_line.EndIndex && char_line < GetMeasurements().Lines.Count() - 1 && GetMeasurements().Lines[char_line + 1].StartIndex == char_index)
     {
-        const FudgetLineMeasurements &other_dest_line = _text_measurements.Lines[char_line + 1];
+        const FudgetLineMeasurements &other_dest_line = GetMeasurements().Lines[char_line + 1];
 
         float end_dist = Math::Abs(_caret_updown_x - dest_line.Location.X - dest_line.Size.X);
         float start_dist = Math::Abs(_caret_updown_x - other_dest_line.Location.X);
         if (start_dist < end_dist)
             char_index++;
     }
-    else if (char_index == dest_line.StartIndex && char_line > line_index + 1 && _text_measurements.Lines[char_line - 1].EndIndex == char_index)
+    else if (char_index == dest_line.StartIndex && char_line > line_index + 1 && GetMeasurements().Lines[char_line - 1].EndIndex == char_index)
     {
-        const FudgetLineMeasurements &other_dest_line = _text_measurements.Lines[char_line - 1];
+        const FudgetLineMeasurements &other_dest_line = GetMeasurements().Lines[char_line - 1];
 
         float start_dist = Math::Abs(_caret_updown_x - dest_line.Location.X);
         float end_dist = Math::Abs(_caret_updown_x - other_dest_line.Location.X - other_dest_line.Size.X);
@@ -755,7 +927,27 @@ int FudgetTextBox::GetCaretPosPageDown()
     // line up. This can only happen on the very last line of the text.
     char_index = Math::Max(char_index, caret_pos);
 
+    if (_snap_top_line)
+    {
+        // Find the nearest line on the top to snap to
+        int scroll_line_index = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + full_height - 0.01f);
+        const FudgetLineMeasurements &scroll_line = GetMeasurements().Lines[scroll_line_index];
+
+        _scroll_pos.Y = scroll_line.Location.Y;
+
+        FixScrollPos();
+    }
+    else
+        _scroll_pos.Y = Math::Min(GetMeasurements().Size.Y - full_height, _scroll_pos.Y + height);
+
     return char_index;
+}
+
+void FudgetTextBox::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
+{
+    if ((dirt_flags & FudgetLayoutDirtyReason::Size) == FudgetLayoutDirtyReason::Size)
+        _available_space = -1.f;
+    Base::SizeOrPosModified(dirt_flags);
 }
 
 FudgetTextBoxFlags FudgetTextBox::GetTextBoxInitFlags() const

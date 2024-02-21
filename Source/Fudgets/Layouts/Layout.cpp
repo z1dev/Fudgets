@@ -2,8 +2,8 @@
 #include "../Container.h"
 #include "../Utils/Utils.h"
 
-// These could be in any cpp file but it's most likely to be used in layouts so whatever. Declared as extern in Utils.h
-const float MaximumFloatLimit = (std::numeric_limits<float>::max() - 1.0f);
+//// These could be in any cpp file but it's most likely to be used in layouts so whatever. Declared as extern in Utils.h
+//const float MaximumFloatLimit = (std::numeric_limits<float>::max() - 1.0f);
 
 float AddBigFloats(float a, float b)
 {
@@ -13,21 +13,21 @@ float AddBigFloats(float a, float b)
     if (a < 0 && b < 0)
         return -AddBigFloats(-a, -b);
 
-    if (MaximumFloatLimit - a < b)
-        return MaximumFloatLimit;
+    if (MAX_float -a < b)
+        return MAX_float;
 
     return a + b;
 }
 
 
-FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), _control(nullptr), _old_size(-1.f), _size_from_space(false), _wanted_size(0.f), _min_size(0.f)
+FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), _control(nullptr), _old_size(-1.f), _size_from_space(false), _wanted_size(0.f), _min_size(0.f), _max_size(0.f)
 {
 
 }
 
 
 FudgetLayout::FudgetLayout(const SpawnParams &params) : Base(params), _owner(nullptr),
-        _layout_dirty(false), _size_dirty(false), _cached_space(-1.f), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(FudgetLayoutFlag::ResetFlags), _changing(false)
+        _layout_dirty(false), /*_size_dirty(false), */_cached_space(-1.f), _cached_hint(0.f), _cached_min(0.f), _cached_max(0.f), _flags(FudgetLayoutFlag::ResetFlags), _changing(false)
 {
 
 }
@@ -53,37 +53,45 @@ void FudgetLayout::SetOwner(FudgetContainer *value)
     _changing = false;
 }
 
-void FudgetLayout::MarkDirty(FudgetLayoutDirtyReason dirt_type)
+void FudgetLayout::MarkDirty(FudgetLayoutDirtyReason dirt_reason)
 {
-    bool container = (dirt_type & FudgetLayoutDirtyReason::Container) == FudgetLayoutDirtyReason::Container;
-    if ((dirt_type & FudgetLayoutDirtyReason::Size) == FudgetLayoutDirtyReason::Size)
+    bool size_dirty = false;
+    bool container = (dirt_reason & FudgetLayoutDirtyReason::Container) == FudgetLayoutDirtyReason::Container;
+    if ((dirt_reason & FudgetLayoutDirtyReason::Size) == FudgetLayoutDirtyReason::Size)
     {
         _layout_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize)) || (!container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentResize));
-        _size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize));
+        size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentResize));
     }
-    if ((dirt_type & FudgetLayoutDirtyReason::Position) == FudgetLayoutDirtyReason::Position)
+    if ((dirt_reason & FudgetLayoutDirtyReason::Position) == FudgetLayoutDirtyReason::Position)
     {
         _layout_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition)) || (!container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentReposition));
-        _size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentReposition));
+        size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentReposition));
     }
-    if ((dirt_type & FudgetLayoutDirtyReason::Index) == FudgetLayoutDirtyReason::Index)
+    if ((dirt_reason & FudgetLayoutDirtyReason::Index) == FudgetLayoutDirtyReason::Index)
     {
         _layout_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerIndexChange)) || (!container && HasAnyFlag(FudgetLayoutFlag::LayoutOnContentIndexChange));
-        _size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerIndexChange)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentIndexChange));
+        size_dirty |= (container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerIndexChange)) || (!container && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentIndexChange));
+    }
+
+    if (size_dirty)
+    {
+        if (_owner != nullptr && !_owner->IgnoresLayoutSizes() && _owner->GetParent() != nullptr)
+            _owner->GetParent()->MarkLayoutDirty(FudgetLayoutDirtyReason::Size);
     }
 }
 
-void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_type)
+void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_reason)
 {
-    if ((int)dirt_type & (int)FudgetLayoutDirtyReason::Size)
+    //bool size_dirty = false;
+    if ((int)dirt_reason & (int)FudgetLayoutDirtyReason::Size)
     {
         _layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerResize);
-        _size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize);
+        //size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerResize);
     }
-    if ((int)dirt_type & (int)FudgetLayoutDirtyReason::Position)
+    if ((int)dirt_reason & (int)FudgetLayoutDirtyReason::Position)
     {
         _layout_dirty |= HasAnyFlag(FudgetLayoutFlag::LayoutOnContainerReposition);
-        _size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition);
+        //size_dirty |= HasAnyFlag(FudgetLayoutFlag::ResizeOnContainerReposition);
     }
 }
 
@@ -119,10 +127,10 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
         if (owner == nullptr)
             return;
 
-        Float2 space = owner->LayoutSpace();
-        if (_size_dirty || !Math::NearEqual(_cached_space, space))
-            Measure(space, _cached_hint, _cached_min, _cached_max);
-        _size_dirty = false;
+        //Float2 space = owner->LayoutSpace();
+        //if (_size_dirty || !Math::NearEqual(_cached_space, space))
+        //    Measure(space, _cached_hint, _cached_min, _cached_max);
+        //_size_dirty = false;
         return;
     }
 
@@ -135,7 +143,7 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
     if (LayoutChildren())
         _layout_dirty = false;
 
-    _size_dirty = false;
+    //_size_dirty = false;
 }
 
 void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
@@ -193,66 +201,6 @@ void FudgetLayout::FillSlots()
         ChildAdded(_owner->ChildAt(ix), ix);
     }
 }
-
-//Float2 FudgetLayout::GetRequestedSize(FudgetSizeType type)
-//{
-//    if (_size_dirty)
-//        RecalculateSizes();
-//    switch (type)
-//    {
-//        case FudgetSizeType::Hint:
-//            return _cached_hint;
-//        case FudgetSizeType::Min:
-//            return _cached_min;
-//        case FudgetSizeType::Max:
-//            return _cached_max;
-//        default:
-//            return Float2(0.f);
-//    }
-//}
-//
-//Float2 FudgetLayout::RequestSize(FudgetSizeType type) const
-//{
-//    Float2 result = Float2(-1.0f);
-//
-//    FudgetContainer *owner = GetOwner();
-//    if (owner == nullptr)
-//        return result;
-//    int cnt = owner->GetChildCount();
-//    if (cnt == 0)
-//        return result;
-//
-//    for (int ix = 0; ix < cnt; ++ix)
-//    {
-//        FudgetLayoutSlot *slot = GetSlot(ix);
-//        FudgetControl *control = slot->_control;
-//
-//        if (type != FudgetSizeType::Max)
-//        {
-//            Float2 size = control->GetRequestedSize(type);
-//            size = Float2(Math::Max(size.X, 0.0f), Math::Max(size.Y, 0.0f));
-//            if (type == FudgetSizeType::Hint)
-//                slot->_hint_size = size;
-//            else
-//                slot->_min_size = size;
-//
-//            result = Float2(Math::Max(size.X, result.X), Math::Max(size.Y, result.Y));
-//        }
-//        else
-//        {
-//            Float2 size = control->GetRequestedSize(type);
-//            if (size.X < 0 || size.X > MaximumFloatLimit)
-//                size.X = MaximumFloatLimit;
-//            if (size.Y < 0 || size.Y > MaximumFloatLimit)
-//                size.Y = MaximumFloatLimit;
-//            slot->_max_size = size;
-//
-//            result = Float2(Math::Max(size.X, result.X), Math::Max(size.Y, result.Y));
-//        }
-//    }
-//
-//    return result;
-//}
 
 FudgetLayoutSlot* FudgetLayout::CreateSlot(FudgetControl *control)
 {
@@ -327,7 +275,7 @@ void FudgetLayout::AllDeleted()
     if (_owner != nullptr && HasAnyFlag(FudgetLayoutFlag::ResizeOnContentChange))
         _owner->MarkLayoutDirty(FudgetLayoutDirtyReason::Size);
     _layout_dirty = false;
-    _size_dirty = true;
+    //_size_dirty = true;
 }
 
 FudgetLayoutFlag FudgetLayout::GetLayoutFlags() const
@@ -368,7 +316,7 @@ void FudgetLayout::SetOwnerInternal(FudgetContainer *value)
 
     _owner = value;
     _layout_dirty = true;
-    _size_dirty = true;
+    //_size_dirty = true;
     _cached_space = Float2(-1.f);
 
     if (value != nullptr)

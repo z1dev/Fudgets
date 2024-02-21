@@ -124,10 +124,16 @@ public:
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
     /// <inheritdoc />
-    void CaretPageUp() override;
+    Float2 GetHintSize() const override;
 
     /// <inheritdoc />
-    void CaretPageDown() override;
+    Float2 GetMinSize() const override;
+
+    /// <inheritdoc />
+    Float2 GetMaxSize() const override;
+
+    /// <inheritdoc />
+    bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <summary>
     /// Whether the lines of a text should wrap to the new line if they are too long.
@@ -161,6 +167,37 @@ public:
     /// </summary>
     /// <param name="value">Whether the top line is snapping to the top edge, or the contents scroll free instead</param>
     API_PROPERTY() void SetSnapTopLine(bool value);
+
+    /// <inheritdocs />
+    bool SizeDependsOnSpace() const override;
+
+    /// <summary>
+    /// Which, if any of the hint size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    API_PROPERTY() FudgetAutoSizing GetAutoHintSizing() const { return _auto_hint; }
+    /// <summary>
+    /// Which, if any of the hint size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    /// <param name="value">The new auto size setting</param>
+    API_PROPERTY() void SetAutoHintSizing(FudgetAutoSizing value);
+    /// <summary>
+    /// Which, if any of the minimum size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    API_PROPERTY() FudgetAutoSizing GetAutoMinSizing() const { return _auto_min; }
+    /// <summary>
+    /// Which, if any of the minimum size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    /// <param name="value">The new auto size setting</param>
+    API_PROPERTY() void SetAutoMinSizing(FudgetAutoSizing value);
+    /// <summary>
+    /// Which, if any of the maximum size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    API_PROPERTY() FudgetAutoSizing GetAutoMaxSizing() const { return _auto_max; }
+    /// <summary>
+    /// Which, if any of the maximum size dimensions are calculated by the text box based on its text contents
+    /// </summary>
+    /// <param name="value">The new auto size setting</param>
+    API_PROPERTY() void SetAutoMaxSizing(FudgetAutoSizing value);
 
 protected:
     /// <inheritdoc />
@@ -197,9 +234,14 @@ protected:
     int GetCaretPosPageDown() override;
 
     /// <inheritdoc />
+    void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags) override;
+
+    /// <inheritdoc />
     FudgetTextBoxFlags GetTextBoxInitFlags() const override;
 private:
     static void InitializeTokens();
+
+    void MarkTextDirty();
 
     static FudgetToken ClassToken;
     static FudgetToken FramePainterToken;
@@ -219,6 +261,7 @@ private:
     void ScrollToPos();
     void FixScrollPos();
 
+    FORCE_INLINE FudgetMultilineTextMeasurements& GetMeasurements() { if (_lines_dirty) Process(); return _text_measurements; }
     void Process();
 
     void SnapTopLine();
@@ -254,8 +297,26 @@ private:
     // How much the contents of the text box are scrolled left or up. It is always positive
     Float2 _scroll_pos;
     String _text;
+    // There was a change in the text or the control size changed that requires new measurements for the lines.
+    // The measurements will take place the next time the data is needed.
+    bool _lines_dirty;
 
+    // Wrapping of lines is turned on or off
     bool _line_wrap;
+    // How to wrap lines
     FudgetLineWrapMode _wrap_mode;
+
+    FudgetAutoSizing _auto_hint;
+    FudgetAutoSizing _auto_min;
+    FudgetAutoSizing _auto_max;
+
+    // The available width that the cached sizes were calculated for.
+    float _available_space;
+    // Used for auto sizing
+    Float2 _cached_hint;
+    // Used for auto sizing
+    Float2 _cached_min;
+    // Used for auto sizing
+    Float2 _cached_max;
 };
 

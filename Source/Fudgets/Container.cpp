@@ -205,10 +205,10 @@ Float2 FudgetContainer::GetLayoutHintSize() const
     if (!self_height && !self_width)
         return Float2::Max(min_size, _layout->GetHintSize());
     if (self_height && self_width)
-        return Float2::Max(min_size, Base::GetHintSize());
+        return Float2::Max(min_size, GetHintSize());
 
     Float2 value = Float2::Max(min_size, _layout->GetHintSize());
-    Float2 base = Float2::Max(min_size, Base::GetHintSize());
+    Float2 base = Float2::Max(min_size, GetHintSize());
 
     if (self_width)
         value.X = base.X;
@@ -216,16 +216,6 @@ Float2 FudgetContainer::GetLayoutHintSize() const
         value.Y = base.Y;
 
     return value;
-}
-
-void FudgetContainer::SetHintSize(Float2 value)
-{
-    Float2 old_size = GetHintSize();
-    Base::SetHintSize(value);
-    if (Math::NearEqual(GetHintSize(), old_size))
-        return;
-
-    MarkLayoutDirty(FudgetLayoutDirtyReason::Size | FudgetLayoutDirtyReason::Container);
 }
 
 Float2 FudgetContainer::GetLayoutMinSize() const
@@ -240,10 +230,10 @@ Float2 FudgetContainer::GetLayoutMinSize() const
     if (!self_height && !self_width)
         return Float2::Max(Float2::Zero, _layout->GetMinSize());
     if (self_height && self_width)
-        return Float2::Max(Float2::Zero, Base::GetMinSize());
+        return Float2::Max(Float2::Zero, GetMinSize());
 
     Float2 value = Float2::Max(Float2::Zero, _layout->GetMinSize());
-    Float2 base = Float2::Max(Float2::Zero, Base::GetMinSize());
+    Float2 base = Float2::Max(Float2::Zero, GetMinSize());
 
     if (self_width)
         value.X = base.X;
@@ -251,16 +241,6 @@ Float2 FudgetContainer::GetLayoutMinSize() const
         value.Y = base.Y;
 
     return value;
-}
-
-void FudgetContainer::SetMinSize(Float2 value)
-{
-    Float2 old_size = GetMinSize();
-    Base::SetMinSize(value);
-    if (Math::NearEqual(GetMinSize(), old_size))
-        return;
-
-    MarkLayoutDirty(FudgetLayoutDirtyReason::Size | FudgetLayoutDirtyReason::Container);
 }
 
 Float2 FudgetContainer::GetLayoutMaxSize() const
@@ -274,10 +254,10 @@ Float2 FudgetContainer::GetLayoutMaxSize() const
     if (!self_height && !self_width)
         return _layout->GetMaxSize();
     if (self_height && self_width)
-        return Base::GetMaxSize();
+        return GetMaxSize();
 
     Float2 value = _layout->GetMaxSize();
-    Float2 base = Base::GetMaxSize();
+    Float2 base = GetMaxSize();
 
     if (self_width)
         value.X = base.X;
@@ -285,16 +265,6 @@ Float2 FudgetContainer::GetLayoutMaxSize() const
         value.Y = base.Y;
 
     return value;
-}
-
-void FudgetContainer::SetMaxSize(Float2 value)
-{
-    Float2 old_size = GetMaxSize();
-    Base::SetMaxSize(value);
-    if (Math::NearEqual(GetMaxSize(), old_size))
-        return;
-
-    MarkLayoutDirty(FudgetLayoutDirtyReason::Size | FudgetLayoutDirtyReason::Container);
 }
 
 Float2 FudgetContainer::LayoutSpace() const
@@ -305,12 +275,20 @@ Float2 FudgetContainer::LayoutSpace() const
 void FudgetContainer::MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags)
 {
     if (_layout == nullptr)
+    {
+        if (_parent != nullptr)
+            _parent->MarkLayoutDirty(dirt_flags & (~FudgetLayoutDirtyReason::Container));
         return;
+    }
 
     _layout->MarkDirty(dirt_flags);
 
-    if (_parent != nullptr && _layout->IsSizeDirty())
-        _parent->MarkLayoutDirty(FudgetLayoutDirtyReason::Size);
+    dirt_flags &= ~FudgetLayoutDirtyReason::Container;
+    if (!IgnoresLayoutSizes())
+        dirt_flags &= ~FudgetLayoutDirtyReason::Size;
+
+    if (_parent != nullptr && (int)dirt_flags != 0)
+        _parent->MarkLayoutDirty(dirt_flags);
 }
 
 void FudgetContainer::EnsureLayout()
@@ -341,7 +319,7 @@ bool FudgetContainer::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted,
     //if (_layout == nullptr)
     //    return Base::OnMeasure(available, wanted, min_size);
 
-    bool result = _layout->Measure(available, wanted, min_size, max_size) || (!_layout->HasAllFlags(FudgetLayoutFlag::CanProvideSizes) && HasAnyFlag(FudgetControlFlags::SizeDependsOnSpace));
+    bool result = _layout->Measure(available, wanted, min_size, max_size) || (!_layout->HasAllFlags(FudgetLayoutFlag::CanProvideSizes) && SizeDependsOnSpace());
 
     wanted = GetLayoutHintSize();
     min_size = GetLayoutMinSize();
@@ -469,16 +447,16 @@ FudgetLayout* FudgetContainer::SetLayout(FudgetLayout *value)
 
 void FudgetContainer::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
 {
-    ; // NO-OP
+    MarkLayoutDirty(dirt_flags | FudgetLayoutDirtyReason::Container);
 }
 
 void FudgetContainer::SetControlFlags(FudgetControlFlags flags)
 {
     flags |= FudgetControlFlags::ContainerControl;
     Base::SetControlFlags(flags);
-    MarkLayoutDirty(FudgetLayoutDirtyReason::All | FudgetLayoutDirtyReason::Container);
-    if (_parent != nullptr)
-        _parent->MarkLayoutDirty(FudgetLayoutDirtyReason::All);
+    //MarkLayoutDirty(FudgetLayoutDirtyReason::All | FudgetLayoutDirtyReason::Container);
+    //if (_parent != nullptr)
+    //    _parent->MarkLayoutDirty(FudgetLayoutDirtyReason::All);
 }
 
 bool FudgetContainer::IsControlPositionChangePermitted(const FudgetControl *control) const
@@ -529,6 +507,43 @@ void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlags request,
         if (control->HasAnyFlag(FudgetControlFlags::ContainerControl) && (block == FudgetControlFlags::None || !control->HasAnyFlag(block)))
             dynamic_cast<FudgetContainer*>(control)->ControlsAtPosition(pos - control->_pos, request, reject, block, result);
     }
+}
+
+bool FudgetContainer::IgnoresLayoutHintSize() const
+{
+    bool self_width = !HasSizeOverride(FudgetSizeOverride::LayoutHintWidth) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideHintSizeWidth)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedHintWidth) && IsDirectSizeChangePermitted());
+    bool self_height = !HasSizeOverride(FudgetSizeOverride::LayoutHintHeight) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideHintSizeHeight)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedHintHeight) && IsDirectSizeChangePermitted());
+
+    return self_width || self_height;
+}
+
+bool FudgetContainer::IgnoresLayoutMinSize() const
+{
+
+    bool self_width = !HasSizeOverride(FudgetSizeOverride::LayoutMinWidth) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMinSizeWidth)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMinWidth) && IsDirectSizeChangePermitted());
+    bool self_height = !HasSizeOverride(FudgetSizeOverride::LayoutMinHeight) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMinSizeHeight)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMinHeight) && IsDirectSizeChangePermitted());
+
+    return self_width || self_height;
+}
+
+bool FudgetContainer::IgnoresLayoutMaxSize() const
+{
+
+    bool self_width = !HasSizeOverride(FudgetSizeOverride::LayoutMaxWidth) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMaxSizeWidth)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMaxWidth) && IsDirectSizeChangePermitted());
+    bool self_height = !HasSizeOverride(FudgetSizeOverride::LayoutMaxHeight) || _layout == nullptr || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMaxSizeHeight)
+        || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMaxHeight) && IsDirectSizeChangePermitted());
+
+    return self_width || self_height;
+}
+
+bool FudgetContainer::IgnoresLayoutSizes() const
+{
+    return IgnoresLayoutHintSize() || IgnoresLayoutMinSize() || IgnoresLayoutMaxSize();
 }
 
 void FudgetContainer::SetSizeOverrides(FudgetSizeOverride value)

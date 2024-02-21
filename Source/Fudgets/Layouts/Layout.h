@@ -126,7 +126,7 @@ enum class FudgetLayoutFlag
     None = 0,
 
     /// <summary>
-    /// Layout calculation is necessary if the available space for the layout changes
+    /// Layout calculation is necessary if the available space in the parent container changes
     /// </summary>
     LayoutOnContainerResize = 1 << 0,
     /// <summary>
@@ -150,27 +150,27 @@ enum class FudgetLayoutFlag
     /// </summary>
     LayoutOnContentIndexChange = 1 << 4,
     /// <summary>
-    /// Size calculation is necessary if the available space for the layout changes
+    /// The sizes provided by the layout change if the available space in the parent container changes
     /// </summary>
     ResizeOnContainerResize = 1 << 5,
     /// <summary>
-    /// Size calculation is necessary if a child control was resized.
+    /// The sizes provided by the layout change if a child control was resized.
     /// </summary>
     ResizeOnContentResize = 1 << 6,
     /// <summary>
-    /// Size calculation is necessary if the owner container's position changed.
+    /// The sizes provided by the layout change if the owner container's position changed.
     /// </summary>
     ResizeOnContainerReposition = 1 << 7,
     /// <summary>
-    /// Size calculation is necessary if a child control's position changed.
+    /// The sizes provided by the layout change if a child control's position changed.
     /// </summary>
     ResizeOnContentReposition = 1 << 8,
     /// <summary>
-    /// Size calculation is necessary if the owner container's index changed in its parent.
+    /// The sizes provided by the layout change if the owner container's index changed in its parent.
     /// </summary>
     ResizeOnContainerIndexChange = 1 << 9,
     /// <summary>
-    /// Size calculation is necessary if a child control's index changed.
+    /// The sizes provided by the layout change if a child control's index changed.
     /// </summary>
     ResizeOnContentIndexChange = 1 << 9,
 
@@ -183,11 +183,11 @@ enum class FudgetLayoutFlag
     /// </summary>
     LayoutOnContentChange = LayoutOnContentResize | LayoutOnContentReposition | LayoutOnContentIndexChange,
     /// <summary>
-    /// Size calculation is necessary for any change in the container
+    /// The sizes provided by the layout change for any change in the container
     /// </summary>
     ResizeOnContainerChange = ResizeOnContainerResize | ResizeOnContainerReposition | ResizeOnContainerIndexChange,
     /// <summary>
-    /// Size calculation is necessary for any change in the contents
+    /// The sizes provided by the layout change for any change in the contents
     /// </summary>
     ResizeOnContentChange = ResizeOnContentResize | ResizeOnContentReposition | ResizeOnContentIndexChange,
 
@@ -255,7 +255,7 @@ enum class FudgetLayoutFlag
     CanProvideSizeHeight = CanProvideHintSizeHeight | CanProvideMinSizeHeight | CanProvideMaxSizeHeight,
 
     /// <summary>
-    /// Set on the layout before assigning it to an owner container, to reset its flags from GetInitFlags.
+    /// Set on the layout before assigning it to an owner container to reset its flags from GetInitFlags.
     /// Makes the flags reset the next time the layout owner changes to not null
     /// </summary>
     ResetFlags
@@ -349,28 +349,29 @@ public:
     API_PROPERTY(Attributes="HideInEditor") bool IsLayoutDirty() const { return _layout_dirty; }
 
     /// <summary>
-    /// Dirty size means that due to changes of the owner container or its children, the stored size
-    /// values are out of date and need to be recalculated. This is done on the next frame.
-    /// </summary>
-    /// <returns>Whether size recalculation is necessary</returns>
-    API_PROPERTY(Attributes="HideInEditor") bool IsSizeDirty() const { return _size_dirty; }
+    ///// Dirty size means that due to changes of the owner container or its children, the stored size
+    ///// values are out of date and need to be recalculated. This is done on the next frame.
+    ///// </summary>
+    ///// <returns>Whether size recalculation is necessary</returns>
+    //API_PROPERTY(Attributes="HideInEditor") bool IsSizeDirty() const { return _size_dirty; }
 
     /// <summary>
     /// Notifies the layout that either its owner container, or a child control changed since the last layout
     /// or size measurement calculation. This can mean that the layout itself needs to update the child controls
-    /// inside the container. Layouts that don't depend on the specific change are free to ignore this call.
+    /// inside the container, or that parents need to do layout calculations up the tree. Layouts that don't
+    /// depend on the specific change will not be marked dirty.
     /// </summary>
-    /// <param name="dirt_type">What changed in the container or contents: size, position or both</param>
-    /// <param name="content_changed">True if the changed is caused by a child control's change, or this layout requests it</param>
-    API_FUNCTION() virtual void MarkDirty(FudgetLayoutDirtyReason dirt_type);
+    /// <param name="dirt_reason">What changed in the container or contents</param>
+    API_FUNCTION() virtual void MarkDirty(FudgetLayoutDirtyReason dirt_reason);
 
     /// <summary>
     /// Sets the dirty flag for any change that happened during layout recalculation in a parent's layout. The
     /// layout is calculated from the top, so when this function is called, this layout will be calculated in the
-    /// same frame.
+    /// same frame. Marking a layout dirty this way will not influence the parents. The Container flag doesn't need
+    /// to be set in the dirt reason, because it is always effective
     /// </summary>
-    /// <param name="dirt_type"></param>
-    API_FUNCTION() virtual void MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_type);
+    /// <param name="dirt_reason">What changed in the container</param>
+    API_FUNCTION() virtual void MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_reason);
 
     /// <summary>
     /// Returns the calculated preferred size of the layout with all the managed controls laid out at the ideal size.
@@ -574,7 +575,7 @@ private:
     Array<FudgetLayoutSlot*> _slots;
 
     bool _layout_dirty;
-    bool _size_dirty;
+    //bool _size_dirty;
 
     // The available size given by the owner container used for the cached measurements. The dirty flag
     // doesn't need to be true if this is different in a new request and the LayoutOnContainerResize or

@@ -452,35 +452,43 @@ protected:
     API_FUNCTION() void SetCaretPosInner(int value);
 
     /// <summary>
-    /// Caret position when moving to the left, considering word skipping as well.
+    /// Caret position when moving to the left, considering word skipping as well. Called when the user moves
+    /// the caret. Overrides are allowed to change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosLeft();
     /// <summary>
-    /// Caret position when moving to the right, considering word skipping as well.
+    /// Caret position when moving to the right, considering word skipping as well. Called when the user moves
+    /// the caret. Overrides are allowed to change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosRight();
     /// <summary>
-    /// Caret position when moving up.
+    /// Caret position when moving up. Called when the user moves the caret. Overrides are allowed to change
+    /// the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosUp();
     /// <summary>
-    /// Caret position when moving down.
+    /// Caret position when moving down. Called when the user moves the caret. Overrides are allowed to change
+    /// the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosDown();
     /// <summary>
-    /// Caret position when moving "home".
+    /// Caret position when moving "home". Called when the user moves the caret. Overrides are allowed to
+    /// change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosHome();
     /// <summary>
-    /// Caret position when moving to the "end".
+    /// Caret position when moving to the "end". Called when the user moves the caret. Overrides are allowed
+    /// to change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosEnd();
     /// <summary>
-    /// Caret position when moving one page up.
+    /// Caret position when moving one page up. Called when the user moves the caret. Overrides are allowed
+    /// to change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosPageUp();
     /// <summary>
-    /// Caret position when moving one page down.
+    /// Caret position when moving one page down. Called when the user moves the caret. Overrides are allowed
+    /// to change the internal values and scroll position as necessary.
     /// </summary>
     API_FUNCTION() virtual int GetCaretPosPageDown();
 

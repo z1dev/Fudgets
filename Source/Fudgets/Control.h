@@ -85,10 +85,16 @@ enum class FudgetLayoutDirtyReason : uint8
 	/// A control's index changed in its parent
 	/// </summary>
 	Index = 1 << 2,
+
 	/// <summary>
 	/// The notification is the result of a container's change
 	/// </summary>
 	Container = 1 << 3,
+
+	/// <summary>
+	/// Both a control's size and position changed
+	/// </summary>
+	SizePos = Size | Position,
 
 	/// <summary>
 	/// Flag corresponding to size, position, and index
@@ -150,7 +156,7 @@ DECLARE_ENUM_OPERATORS(FudgetControlState);
 /// Flags for controls that describe their behavior
 /// </summary>
 API_ENUM(Attributes="Flags")
-enum class FudgetControlFlags
+enum class FudgetControlFlags : uint16
 {
 	/// <summary>
 	/// Empty flag
@@ -236,14 +242,33 @@ enum class FudgetControlFlags
 	/// get the key up and down events.
 	/// </summary>
 	CanHandleNavigationKeys = 1 << 14,
-	/// <summary>
-	/// The horizontal and/or vertical size of the control can be influenced by the available space in the layout. Used
-	/// mainly in controls that can auto-size themselves and might change their width or height if the opposite side is
-	/// limited. 
-	/// </summary>
-	SizeDependsOnSpace = 1 << 15,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
+
+/// <summary>
+/// Which size, if any, will be provided by the control using these values. Controls that can calculate their own sizes will
+/// override the Get***Size functions to change the width, height or both of the result.
+/// </summary>
+API_ENUM()
+enum class FudgetAutoSizing
+{
+	/// <summary>
+	/// No size is automatic
+	/// </summary>
+	None,
+	/// <summary>
+	/// Width is calculated by the control
+	/// </summary>
+	Width,
+	/// <summary>
+	/// Height is calculated by the control
+	/// </summary>
+	Height,
+	/// <summary>
+	/// Both dimensions are calculated by the control
+	/// </summary>
+	Both
+};
 
 /// <summary>
 /// Types of mouse and touch inputs a control can handle.
@@ -479,6 +504,7 @@ public:
 	/// </summary>
 	/// <returns>The maximum size the control is allowed to have</returns>
 	API_PROPERTY() virtual Float2 GetMaxSize() const { return _max_size; }
+
 	/// <summary>
 	/// Gets the size that determines how big a control can grow at most. The control might become larger
 	/// than this size if the layout it is in doesn't respect the property.
@@ -570,30 +596,32 @@ public:
 	/// <returns>The coordinate of the control's bottom side</returns>
 	API_PROPERTY() float GetBottom() const { return GetTop() + GetHeight(); }
 
+	API_FUNCTION() virtual bool SizeDependsOnSpace() const { return false; }
+
 	/// <summary>
-	/// Returns sizes of this control to the parent's layout. The first is the size the control needs to
-	/// show its contents properly, while the other size is the minimum size that's still enough for the control to
-	/// be usable. This function is called several times during layouting. The minimum size must stay constant
-	/// for the same layout frame for controls without the SizeDependsOnSpace flag.
-	/// The available space might be provided for the control, which can be useful for controls that might change the
-	/// wanted size depending on it. If any dimension of the available space is negative, the control is unrestricted
-	/// in that dimension. Controls without the SizeDependsOnSpace flag must always return the same wanted size, even
-	/// if it's larger than what's available. Controls with the flag should return the closest size they can be that
-	/// fit the space, but if they can't do that, a larger size is accepted.
+	/// Reports sizes of this control to the parent's layout based on available space. This function may be called
+	/// several times during layout calculation and it must provide consistent results.
+	/// Controls that have different sizes if the available space changes (as returned by SizeDependsOnSpace) need
+	/// to report the same results for the same space. This result should be below the available space if it's
+	/// possible.
+	/// If any dimension of the available space is negative, the control is unrestricted in that dimension.
 	/// </summary>
 	/// <param name="available">Available space in the parent layout or negative if the space is not restricted.</param>
 	/// <param name="wanted">The dimensions the control requests that's enough to fit it properly</param>
 	/// <param name="min_size">The smallest size in either direction the control can still fit in.</param>
-	/// <param name="max_size">The largest size the control wants to have.</param>
-	/// <returns>The flag SizeDependsOnSpace is present in the control or a child control for containers</returns>
+	/// <param name="max_size">The largest size that might be useful for the control.</param>
+	/// <returns>Whether the control (or its contents in case of container) would return true when calling SizeDependsOnSpace</returns>
 	API_FUNCTION() virtual bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size);
 
 	/// <summary>
-	/// Called by inner size or position changing functions to deal with changes. This implementation
-	/// notifies a parent to mark itself dirty.
+	/// Marks layouts dirty when the control changes in a way that influences its size.
 	/// </summary>
-	/// <param name="dirt_flags">Flags of what changed</param>
-	API_FUNCTION() virtual void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags);
+	API_FUNCTION() virtual void SizeModified();
+
+	/// <summary>
+	/// Marks layouts dirty when the control changes in a way that influences its position.
+	/// </summary>
+	API_FUNCTION() virtual void PositionModified();
 
 	/// <summary>
 	/// Returns whether the control is a direct child control of the GUI root and is always placed above not
@@ -1809,6 +1837,13 @@ protected:
 	/// layout.
 	/// </summary>
 	API_FUNCTION() virtual void RequestLayout() {}
+
+	/// <summary>
+	/// Called by inner size or position changing functions to deal with changes. This implementation
+	/// notifies a parent to mark itself dirty.
+	/// </summary>
+	/// <param name="dirt_flags">Flags of what changed</param>
+	API_FUNCTION() virtual void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags);
 
 	/// <summary>
 	/// Called by a parent container's SetParentDisabledRecursive to notify its children that they have to be disabled.

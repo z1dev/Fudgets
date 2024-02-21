@@ -241,9 +241,6 @@ public:
     /// <returns>The container's preferred size with the current layout</returns>
     API_FUNCTION() Float2 GetLayoutHintSize() const;
 
-    /// <inheritdoc />
-    void SetHintSize(Float2 value) override;
-
     /// <summary>
     /// Gets the minimum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred minimum size, this is the minimum size set to the container itself.
@@ -251,18 +248,12 @@ public:
     /// <returns>The container's minimum size with the current layout</returns>
     API_FUNCTION() Float2 GetLayoutMinSize() const;
 
-    /// <inheritdoc />
-    void SetMinSize(Float2 value) override;
-
     /// <summary>
     /// Gets the maximum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred maximum size, this is the maximum size set to the container itself.
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
     API_FUNCTION() Float2 GetLayoutMaxSize() const;
-
-    /// <inheritdoc />
-    void SetMaxSize(Float2 value) override;
 
     /// <summary>
     /// The available space in the container for child controls, which excludes internal padding. Only valid if
@@ -370,6 +361,26 @@ public:
     API_PROPERTY() FudgetSizeOverride GetSizeOverrides() const { return _size_overrides; }
 
     /// <summary>
+    /// Whether the container is providing its own hint size, not using the layout to calculate it.
+    /// </summary>
+    API_PROPERTY() bool IgnoresLayoutHintSize() const;
+
+    /// <summary>
+    /// Whether the container is providing its own min size, not using the layout to calculate it.
+    /// </summary>
+    API_PROPERTY() bool IgnoresLayoutMinSize() const;
+
+    /// <summary>
+    /// Whether the container is providing its own max size, not using the layout to calculate it.
+    /// </summary>
+    API_PROPERTY() bool IgnoresLayoutMaxSize() const;
+
+    /// <summary>
+    /// Whether the container is providing its own sizes, not using the layout to calculate them.
+    /// </summary>
+    API_PROPERTY() bool IgnoresLayoutSizes() const;
+
+    /// <summary>
     /// Determines which sizes are calculated by the layout and which ones are calculated by the container.
     /// </summary>
     API_PROPERTY() void SetSizeOverrides(FudgetSizeOverride value);
@@ -391,7 +402,6 @@ public:
     /// OnDraw for drawing themselves.
     /// </summary>
     void DoDraw() override;
-
 protected:
     /// <inheritdoc />
     void Initialize() override;
