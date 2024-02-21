@@ -85,8 +85,8 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
             RenderRoot = new FudgetGUIRoot();
             RootObject = _asset.WidgetData;
 
-            RootObject.HintSize = _resolution;
-            RenderRoot.HintSize = _resolution;
+            //RootObject.HintSize = _resolution;
+            //RenderRoot.HintSize = _resolution;
             RootObject.Parent = RenderRoot;
 
             _selectedControls = new List<FudgetControl>();
@@ -256,12 +256,12 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         {
             if (control is FudgetContainer container)
             {
-                container.MarkLayoutDirty(FudgetDirtType.All);
+                container.MarkLayoutDirty(FudgetLayoutDirtyReason.All);
             }
 
         }
 
-        RenderRoot.MarkLayoutDirty(FudgetDirtType.All);
+        RenderRoot.MarkLayoutDirty(FudgetLayoutDirtyReason.All);
     }
 
     private void RecalculateRenderSize()
@@ -272,8 +272,8 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         _resolution = _imagePanel.Size;
         _texture.Resize((int)_resolution.X, (int)_resolution.Y);
 
-        RootObject.HintSize = _resolution;
-        RenderRoot.HintSize = _resolution;
+        //RootObject.HintSize = _resolution;
+        //RenderRoot.HintSize = _resolution;
         ForceLayout();
     }
 

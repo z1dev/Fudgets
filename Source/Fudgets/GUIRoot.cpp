@@ -40,6 +40,13 @@ FudgetGUIRoot::~FudgetGUIRoot()
 	UnregisterControlUpdates();
 }
 
+void FudgetGUIRoot::FudgetInit()
+{
+	if (IsInRunningGame())
+		InitializeEvents();
+	Base::Initialize();
+}
+
 int FudgetGUIRoot::AddChild(FudgetControl *control, int index)
 {
 	FudgetControlFlags flags = control->_flags;
@@ -312,6 +319,11 @@ void FudgetGUIRoot::OnResized(Float2 new_size)
 		Resized(new_size);
 }
 
+void FudgetGUIRoot::DoLayout()
+{
+	RequestLayout();
+}
+
 void FudgetGUIRoot::InitializeEvents()
 {
 	if (events_initialized)
@@ -364,13 +376,6 @@ void FudgetGUIRoot::ControlUpdates()
 		c->RegisterToUpdate(false);
 	_controls_to_add_to_updating.Clear();
 	_controls_to_remove_from_updating.Clear();
-}
-
-void FudgetGUIRoot::Initialize()
-{
-	if (IsInRunningGame())
-		InitializeEvents();
-	Base::Initialize();
 }
 
 FudgetMouseHookResult FudgetGUIRoot::ProcessLocalMouseHooks(HookProcessingType type, FudgetControl *control, Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
@@ -717,8 +722,12 @@ void FudgetGUIRoot::HandleMouseLeave()
 
 	if (_mouse_capture_control != nullptr)
 	{
+#if !USE_EDITOR
+		// MouseLeave is sent in editor for floating game window when moving mouse after button down. TODO: test in cooked game.
+
 		LOG(Error, "MouseCapture not null on DoMouseLeave");
 		ReleaseMouseCapture();
+#endif
 		return;
 	}
 
@@ -779,6 +788,9 @@ void FudgetGUIRoot::HandleKeyUp(KeyboardKeys key)
 
 void FudgetGUIRoot::HandleCharInput(Char ch)
 {
+	if (ch == 127)
+		return;
+
 	FudgetControl *c = FindKeyboardInputControl(KeyboardKeys::None);
 	while (c != nullptr)
 	{

@@ -495,7 +495,7 @@ void Fudget::Setup()
     if (_isLoading)
         return;
 
-    _guiRoot->Initialize();
+    _guiRoot->FudgetInit();
 
     switch (_renderMode)
     {

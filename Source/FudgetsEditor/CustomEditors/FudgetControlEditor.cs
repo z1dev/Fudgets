@@ -6,7 +6,6 @@ using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine;
 using Fudgets;
-using System.Reflection;
 
 namespace FudgetsEditor.CustomEditors
 {
@@ -80,8 +79,9 @@ namespace FudgetsEditor.CustomEditors
                         {
                             ScriptType type = (ScriptType)x.Tag;
                             FudgetContainer control = Values[0] as FudgetContainer;
-                            control.Layout = type.CreateInstance() as FudgetLayout;
-
+                            var old_layout = control.SetLayout(type.CreateInstance() as FudgetLayout);
+                            if (old_layout != null)
+                                FlaxEngine.Object.Destroy(old_layout);
                             _label.Label.Text = $"Current Layout: {FlaxEditor.Utilities.Utils.GetPropertyNameUI(type.Name)}";
                         };
                     }

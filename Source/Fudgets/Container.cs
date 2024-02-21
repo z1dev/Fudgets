@@ -38,7 +38,9 @@ namespace Fudgets
             }
 
             var layout = New<T>(); //Activator.CreateInstance<T>();
-            Layout = layout;
+            var old_layout = SetLayout(layout);
+            if (old_layout != null)
+                Destroy(old_layout);
             return (T)layout;
         }
     }

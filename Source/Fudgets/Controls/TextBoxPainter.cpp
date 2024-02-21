@@ -17,6 +17,21 @@ FudgetMultiLineTextPainter::FudgetMultiLineTextPainter(const SpawnParams &params
 {
 }
 
+void FudgetMultiLineTextPainter::AddLine(API_PARAM(Ref) Float2 &pos, int start_index, int end_index, float line_width, float line_height, API_PARAM(Ref) FudgetMultilineTextMeasurements &result)
+{
+    FudgetLineMeasurements line;
+    line.StartIndex = start_index;
+    line.EndIndex = end_index;
+    line.Location = pos;
+    line.Size = Float2(line_width, line_height);
+
+    result.Lines.Add(line);
+    result.Size.X = Math::Max(result.Size.X, line.Size.X);
+    result.Size.Y += line_height;
+
+    pos.Y += line_height;
+}
+
 
 // FudgetTextBoxPainter
 
@@ -358,8 +373,7 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
     scale = scale / FontManager::FontScale;
     float line_height = _font.Font->GetHeight() * scale;
 
-    float pos_x = 0.f;
-    float pos_y = 0.f;
+    Float2 pos = Float2::Zero;
 
     FontCharacterEntry current;
     FontCharacterEntry prev;
@@ -396,43 +410,22 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
                 // Encountering a newline means, the word we tested for being too long isn't
                 // too long, and it will be on its own line.
 
-                FudgetLineMeasurements line;
-                line.StartIndex = line_first;
-                line.EndIndex = last_whitespace;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(first_width, line_height);
+                if (last_whitespace == -1)
+                {
+                    AddLine(pos, line_first, charbreak, first_width, line_height, result);
+                    AddLine(pos, charbreak, ix, third_width, line_height, result);
+                }
+                else
+                {
+                    AddLine(pos, line_first, last_whitespace, first_width, line_height, result);
+                    AddLine(pos, last_whitespace + 1, ix, second_width + kerning_width + third_width, line_height, result);
+                }
 
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
-
-                pos_y += line_height;
-
-                line.StartIndex = last_whitespace + 1;
-                line.EndIndex = ix;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(second_width + kerning_width + third_width, line_height);
-
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
-
-                prev.IsValid = false;
             }
             else
             {
-                FudgetLineMeasurements line;
-                line.StartIndex = line_first;
-                line.EndIndex = ix;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(first_width + space_width + second_width, line_height);
-
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
-
+                AddLine(pos, line_first, ix, first_width + space_width + second_width, line_height, result);
             }
-            pos_y += line_height;
 
             line_first = ix + 1;
             last_whitespace = -1;
@@ -464,35 +457,33 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
                     space_width = 0.f;
                     second_width = 0.f;
                 }
+                else if (last_whitespace == -1)
+                {
+                    AddLine(pos, line_first, charbreak, first_width, line_height, result);
+
+                    line_first = charbreak;
+                    last_whitespace = ix;
+                    charbreak = -1;
+                    first_width = third_width;
+                    space_width = 0.f;
+                    second_width = 0.f;
+                    kerning_width = 0.f;
+                    third_width = 0.f;
+                }
                 else
                 {
-                    // Same handling like this was a line-break
+                    AddLine(pos, line_first, last_whitespace, first_width, line_height, result);
 
-                    FudgetLineMeasurements line;
-                    line.StartIndex = line_first;
-                    line.EndIndex = last_whitespace;
-                    line.Location = Float2(pos_x, pos_y);
-                    line.Size = Float2(first_width, line_height);
-
-                    result.Lines.Add(line);
-                    result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                    result.Size.Y += line_height;
-
-                    pos_y += line_height;
-
-                    line.StartIndex = last_whitespace + 1;
-                    line.EndIndex = ix;
-                    line.Location = Float2(pos_x, pos_y);
-                    line.Size = Float2(second_width + kerning_width + third_width, line_height);
-
-                    result.Lines.Add(line);
-                    result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                    result.Size.Y += line_height;
-
-                    prev.IsValid = false;
-
-                    continue;
+                    line_first = last_whitespace + 1;
+                    last_whitespace = ix;
+                    charbreak = -1;
+                    first_width = second_width + kerning_width + third_width;
+                    space_width = 0.f;
+                    second_width = 0.f;
+                    kerning_width = 0.f;
+                    third_width = 0.f;
                 }
+                
             }
         }
 
@@ -523,28 +514,33 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
             {
                 // Second word is long enough to break and the second part be its own line
 
-                FudgetLineMeasurements line;
-                line.StartIndex = line_first;
-                line.EndIndex = charbreak;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(first_width + space_width + second_width, line_height);
+                AddLine(pos, line_first, charbreak, first_width + space_width + second_width, line_height, result);
 
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
+                if (last_whitespace == -1)
+                {
+                    AddLine(pos, charbreak, ix, third_width, line_height, result);
 
-                pos_y += line_height;
+                    line_first = ix;
+                    charbreak = -1;
+                    first_width = next_width;
+                    space_width = 0.f;
+                    second_width = 0.f;
+                    kerning_width = 0.f;
+                    third_width = 0.f;
+                }
+                else
+                {
+                    line_first = charbreak;
+                    last_whitespace = -1;
+                    charbreak = -1;
+                    first_width = third_width + kerning + next_width;
+                    space_width = 0.f;
+                    second_width = 0.f;
+                    kerning_width = 0.f;
+                    third_width = 0.f;
 
-                line_first = charbreak;
-                last_whitespace = -1;
-                charbreak = -1;
-                first_width = third_width + kerning + next_width;
-                space_width = 0.f;
-                second_width = 0.f;
-                kerning_width = 0.f;
-                third_width = 0.f;
-
-                prev.IsValid = false;
+                    prev.IsValid = false;
+                }
             }
             else
             {
@@ -562,17 +558,7 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
             }
             else if (options.WrapMode == FudgetLineWrapMode::Whitespace || (options.WrapMode == FudgetLineWrapMode::WhitespaceLongWord && ix == last_whitespace))
             {
-                FudgetLineMeasurements line;
-                line.StartIndex = line_first;
-                line.EndIndex = last_whitespace;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(first_width, line_height);
-
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
-
-                pos_y += line_height;
+                AddLine(pos, line_first, last_whitespace, first_width, line_height, result);
 
                 line_first = last_whitespace + 1;
                 last_whitespace = -1;
@@ -589,17 +575,7 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
             }
             else if (options.WrapMode == FudgetLineWrapMode::Anywhere)
             {
-                FudgetLineMeasurements line;
-                line.StartIndex = line_first;
-                line.EndIndex = ix;
-                line.Location = Float2(pos_x, pos_y);
-                line.Size = Float2(first_width, line_height);
-
-                result.Lines.Add(line);
-                result.Size.X = Math::Max(result.Size.X, line.Size.X);
-                result.Size.Y += line_height;
-
-                pos_y += line_height;
+                AddLine(pos, line_first, ix, first_width, line_height, result);
 
                 line_first = ix;
                 last_whitespace = -1;
@@ -629,44 +605,24 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, float bounds_wid
     if (charbreak != -1)
     {
         // Only reached if word wrapping is true and its the long word breaking mode.
-        // Encountering a newline means, the word we tested for being too long isn't
+        // Encountering the end of text means the word we tested for being too long isn't
         // too long, and it will be on its own line.
 
-        FudgetLineMeasurements line;
-        line.StartIndex = line_first;
-        line.EndIndex = last_whitespace;
-        line.Location = Float2(pos_x, pos_y);
-        line.Size = Float2(first_width, line_height);
+        if (last_whitespace == -1)
+        {
+            AddLine(pos, line_first, charbreak, first_width, line_height, result);
+            AddLine(pos, charbreak, text.Length(), third_width, line_height, result);
+        }
+        else
+        {
+            AddLine(pos, line_first, last_whitespace, first_width, line_height, result);
+            AddLine(pos, last_whitespace + 1, text.Length(), second_width + kerning_width + third_width, line_height, result);
+        }
 
-        result.Lines.Add(line);
-        result.Size.X = Math::Max(result.Size.X, line.Size.X);
-        result.Size.Y += line_height;
-
-        pos_y += line_height;
-
-        line.StartIndex = last_whitespace + 1;
-        line.EndIndex = text.Length();
-        line.Location = Float2(pos_x, pos_y);
-        line.Size = Float2(second_width + kerning_width + third_width, line_height);
-
-        result.Lines.Add(line);
-        result.Size.X = Math::Max(result.Size.X, line.Size.X);
-        result.Size.Y += line_height;
-
-        prev.IsValid = false;
     }
     else
     {
-        FudgetLineMeasurements line;
-        line.StartIndex = line_first;
-        line.EndIndex = text.Length();
-        line.Location = Float2(pos_x, pos_y);
-        line.Size = Float2(first_width + space_width + second_width, line_height);
-
-        result.Lines.Add(line);
-        result.Size.X = Math::Max(result.Size.X, line.Size.X);
-        result.Size.Y += line_height;
-
+        AddLine(pos, line_first, text.Length(), first_width + space_width + second_width, line_height, result);
     }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Control.h"
+
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Input/Enums.h"
 #include "Engine/Core/Log.h"
@@ -9,8 +10,128 @@ class FudgetLayout;
 class Fudget;
 
 
-enum class FudgetDirtType : uint8;
+enum class FudgetLayoutDirtyReason : uint8;
 
+/// <summary>
+/// Flags determining how a container measures its different sizes, or instead uses its layout's measurements
+/// </summary>
+API_ENUM(Attributes="Flags")
+enum class FudgetSizeOverride
+{
+    /// <summary>
+    /// The container's hint width is that of its layout if the layout provides it
+    /// </summary>
+    LayoutHintWidth = 1 << 0,
+    /// <summary>
+    /// The container's hint height is that of its layout if the layout provides it
+    /// </summary>
+    LayoutHintHeight = 1 << 1,
+    /// <summary>
+    /// The container's min width is that of its layout if the layout provides it
+    /// </summary>
+    LayoutMinWidth = 1 << 2,
+    /// <summary>
+    /// The container's min height is that of its layout if the layout provides it
+    /// </summary>
+    LayoutMinHeight = 1 << 3,
+    /// <summary>
+    /// The container's max width is that of its layout if the layout provides it
+    /// </summary>
+    LayoutMaxWidth = 1 << 4,
+    /// <summary>
+    /// The container's max height is that of its layout if the layout provides it
+    /// </summary>
+    LayoutMaxHeight = 1 << 5,
+    /// <summary>
+    /// The container's hint width is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutHintWidth.
+    /// </summary>
+    UnrestrictedHintWidth = LayoutHintWidth | 1 << 6,
+    /// <summary>
+    /// The container's hint height is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutHintHeight.
+    /// </summary>
+    UnrestrictedHintHeight = LayoutHintHeight | 1 << 7,
+    /// <summary>
+    /// The container's min width is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutMinWidth.
+    /// </summary>
+    UnrestrictedMinWidth = LayoutMinWidth | 1 << 8,
+    /// <summary>
+    /// The container's min height is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutMinHeight.
+    /// </summary>
+    UnrestrictedMinHeight = LayoutMinHeight | 1 << 9,
+    /// <summary>
+    /// The container's max width is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutMaxWidth.
+    /// </summary>
+    UnrestrictedMaxWidth = LayoutMaxWidth | 1 << 10,
+    /// <summary>
+    /// The container's max height is that of its layout if the layout provides it, unless the container
+    /// is in a parent layout that doesn't set its child controls' size. Takes precedence over LayoutMaxHeight.
+    /// </summary>
+    UnrestrictedMaxHeight = LayoutMaxHeight | 1 << 11,
+
+    /// <summary>
+    /// The container's hint sizes are calculated by the layout if the layout provides it
+    /// </summary>
+    LayoutHint = LayoutHintWidth | LayoutHintHeight,
+    /// <summary>
+    /// The container's min sizes are calculated by the layout if the layout provides it
+    /// </summary>
+    LayoutMin = LayoutMinWidth | LayoutMinHeight,
+    /// <summary>
+    /// The container's max sizes are calculated by the layout if the layout provides it
+    /// </summary>
+    LayoutMax = LayoutMaxWidth | LayoutMaxHeight,
+    /// <summary>
+    /// The container's widths are calculated by the layout if the layout provides it
+    /// </summary>
+    LayoutWidth = LayoutHintWidth | LayoutMinWidth | LayoutMaxWidth,
+    /// <summary>
+    /// The container's heights are calculated by the layout if the layout provides it
+    /// </summary>
+    LayoutHeight = LayoutHintHeight | LayoutMinHeight | LayoutMaxHeight,
+
+    /// <summary>
+    /// The container's hint sizes are calculated by the layout if the layout provides it, apart from
+    /// sizes that a parent container's layout doesn't set for its child controls
+    /// </summary>
+    UnrestrictedHint = UnrestrictedHintWidth | UnrestrictedHintHeight,
+    /// <summary>
+    /// The container's min sizes are calculated by the layout if the layout provides it, apart from
+    /// sizes that a parent container's layout doesn't set for its child controls
+    /// </summary>
+    UnrestrictedMin = UnrestrictedMinWidth | UnrestrictedMinHeight,
+    /// <summary>
+    /// The container's max sizes are calculated by the layout if the layout provides it, apart from
+    /// sizes that a parent container's layout doesn't set for its child controls
+    /// </summary>
+    UnrestrictedMax = UnrestrictedMaxWidth | UnrestrictedMaxHeight,
+    /// <summary>
+    /// The container's widths are calculated by the layout if the layout provides it, apart from
+    /// sizes that a parent container's layout doesn't set for its child controls
+    /// </summary>
+    UnrestrictedWidth = UnrestrictedHintWidth | UnrestrictedMinWidth | UnrestrictedMaxWidth,
+    /// <summary>
+    /// The container's heights are calculated by the layout if the layout provides it, apart from
+    /// sizes that a parent container's layout doesn't set for its child controls
+    /// </summary>
+    UnrestrictedHeight = UnrestrictedHintHeight | UnrestrictedMinHeight | UnrestrictedMaxHeight,
+
+    /// <summary>
+    /// Every size that the container's layout provides is calculated by the layout
+    /// </summary>
+    AllLayout = LayoutHint | LayoutMin | LayoutMax,
+
+    /// <summary>
+    /// Every size that the container's layout provides is calculated by the layout, apart from sizes
+    /// that a parent container's layout doesn't set for its child controls. This is the default
+    /// </summary>
+    AllUnrestricted = UnrestrictedHint | UnrestrictedMin | UnrestrictedMax,
+};
+DECLARE_ENUM_OPERATORS(FudgetSizeOverride);
 
 /// <summary>
 /// Container class that can have child controls and a layout to position the controls
@@ -26,7 +147,7 @@ public:
     template<typename T>
     FORCE_INLINE T* CreateChild()
     {
-        T* child = New<T>(SpawnParams(Guid::New(), TypeInitializer));
+        T* child = New<T>(SpawnParams(Guid::New(), T::TypeInitializer));
         AddChild(child);
         return child;
     }
@@ -34,8 +155,10 @@ public:
     template<typename T>
     FORCE_INLINE T* CreateLayout()
     {
-        T* layout = New<T>(SpawnParams(Guid::New(), TypeInitializer));
-        SetLayout(layout);
+        T* layout = New<T>(SpawnParams(Guid::New(), T::TypeInitializer));
+        FudgetLayout *old_layout = SetLayout(layout);
+        if (old_layout != nullptr)
+            Delete(old_layout);
         return layout;
     }
 
@@ -116,7 +239,7 @@ public:
     /// doesn't have a preferred size, this is the preferred size of the container itself.
     /// </summary>
     /// <returns>The container's preferred size with the current layout</returns>
-    Float2 GetHintSize() const override;
+    API_FUNCTION() Float2 GetLayoutHintSize() const;
 
     /// <inheritdoc />
     void SetHintSize(Float2 value) override;
@@ -126,7 +249,7 @@ public:
     /// doesn't have a preferred minimum size, this is the minimum size set to the container itself.
     /// </summary>
     /// <returns>The container's minimum size with the current layout</returns>
-    Float2 GetMinSize() const override;
+    API_FUNCTION() Float2 GetLayoutMinSize() const;
 
     /// <inheritdoc />
     void SetMinSize(Float2 value) override;
@@ -136,118 +259,37 @@ public:
     /// doesn't have a preferred maximum size, this is the maximum size set to the container itself.
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
-    Float2 GetMaxSize() const override;
+    API_FUNCTION() Float2 GetLayoutMaxSize() const;
 
     /// <inheritdoc />
     void SetMaxSize(Float2 value) override;
 
     /// <summary>
-    /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
-    /// width, this setting will be ignored, and the container will have to rely on its own hint size.
+    /// The available space in the container for child controls, which excludes internal padding. Only valid if
+    /// the size of the container is valid. 
+    /// TODO: implement internal padding
     /// </summary>
-    /// <returns>Using the layout's width or not</returns>
-    API_PROPERTY() bool GetUsingLayoutHintWidth() const { return _hint_width_from_layout; }
+    /// <returns></returns>
+    API_PROPERTY() Float2 LayoutSpace() const;
 
     /// <summary>
-    /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
-    /// width, this setting will be ignored, and the container will have to rely on its own hint size.
-    /// </summary>
-    /// <param name="value">Use the layout's width or not</param>
-    API_PROPERTY() void SetUsingLayoutHintWidth(bool value);
-
-    /// <summary>
-    /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
-    /// height, this setting will be ignored, and the container will have to rely on its own hint size.
-    /// </summary>
-    /// <returns>Using the layout's height or not</returns>
-    API_PROPERTY() bool GetUsingLayoutHintHeight() const { return _hint_height_from_layout; }
-
-    /// <summary>
-    /// Determines if the height of the container is calculated based on the layout or the preferred size is
-    /// based on the container's hint size. If the container has a layout that can't provide its own hint size
-    /// height, this setting will be ignored, and the container will have to rely on its own hint size.
-    /// </summary>
-    /// <param name="value">Use the layout's height or not</param>
-    API_PROPERTY() void SetUsingLayoutHintHeight(bool value);
-
-    /// <summary>
-    /// Determines if the minimum width of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() bool GetUsingLayoutMinWidth() const { return _min_width_from_layout; }
-
-    /// <summary>
-    /// Determines if the minimum width of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() void SetUsingLayoutMinWidth(bool value);
-
-    /// <summary>
-    /// Determines if the maximum width of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() bool GetUsingLayoutMaxWidth() const { return _max_width_from_layout; }
-
-    /// <summary>
-    /// Determines if the maximum width of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min width or not</returns>
-    API_PROPERTY() void SetUsingLayoutMaxWidth(bool value);
-
-    /// <summary>
-    /// Determines if the minimum height of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() bool GetUsingLayoutMinHeight() const { return _min_height_from_layout; }
-
-    /// <summary>
-    /// Determines if the minimum height of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() void SetUsingLayoutMinHeight(bool value);
-
-    /// <summary>
-    /// Determines if the maximum height of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() bool GetUsingLayoutMaxHeight() const { return _max_height_from_layout; }
-
-    /// <summary>
-    /// Determines if the maximum height of the container is calculated by the layout or it is set directly on
-    /// the container
-    /// </summary>
-    /// <returns>Using the layout's min height or not</returns>
-    API_PROPERTY() void SetUsingLayoutMaxHeight(bool value);
-
-    /// <summary>
-    /// Notifies the layout of this container that one or more of the stored sizes and control positions might
-    /// need to be recalculated.
+    /// Notifies the layout of this container that the stored sizes and control positions need to be recalculated.
     /// </summary>
     /// <param name="dirt_flags">The size that needs recalculation</param>
-    /// <param name="content_changed">True if the changed was caused by a child control or layout</param>
     /// <returns></returns>
-    API_FUNCTION() void MarkLayoutDirty(FudgetDirtType dirt_flags, bool content_changed = false);
+    API_FUNCTION() void MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags);
 
     /// <summary>
-    /// Requests the immediate recalculation of the controls and their sizes inside the container's layout. Only those sizes are
-    /// recalculated that are made dirty by calling MarkLayoutDirty directly or that have changed.
-    /// In the container's implementation, if no layout is present, the controls are moved to their requested size and position.
-    /// Compound controls can use this function to layout their children.
+    /// Makes sure that this container and the child controls in this container have a valid size and position. This
+    /// can cause parent layout calculations if needed.
     /// </summary>
-    API_FUNCTION() virtual void RequestLayout();
+    API_FUNCTION() void EnsureLayout();
 
     /// <inheritdoc />
     void OnDraw() override;
+
+    /// <inheritdoc />
+    bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <inheritdoc />
     void DoFocusChanged(bool focused, FudgetControl *other) override;
@@ -256,23 +298,25 @@ public:
     void ClearStyleCache(bool inherited = true) override;
 
     /// <summary>
-    /// Returns the current layout set for the container
+    /// The current layout set for the container, or null if no layout was set.
     /// </summary>
-    API_PROPERTY() FudgetLayout* GetLayout() const { return _layout; }
+    API_PROPERTY() FudgetLayout* GetLayout() const { return _dummy_layout ? nullptr : _layout; }
 
     /// <summary>
-    /// Sets the given layout for the container. It's the responsibility of the user to get the current layout beforehand and
-    /// delete it when this function is done.
+    /// Sets the given layout for the container. It's the responsibility of the user to delete the old layout returned
+    /// from this function if it's not null. Trying to set the layout already in this container is an error and will
+    /// always return null.
     /// </summary>
     /// <param name="value">The new layout for the container</param>
-    API_PROPERTY() void SetLayout(FudgetLayout *value);
+    /// <returns>Layout previously set for the container or null on error.</returns>
+    API_FUNCTION() FudgetLayout* SetLayout(FudgetLayout *value);
 
     /// <summary>
     /// In the base FudgeControl, this would notify parent containers of changes, but changes are
     /// handled differently in this class, and this function does nothing.
     /// </summary>
     /// <param name="dirt_flags">Flags of what changed</param>
-    void SizeOrPosModified(FudgetDirtType dirt_flags) override final;
+    void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags) override final;
 
     /// <inheritdoc />
     void SetControlFlags(FudgetControlFlags flags) override;
@@ -283,7 +327,15 @@ public:
     /// </summary>
     /// <param name="control">The control requesting position change</param>
     /// <returns>Whether the control can change its position or not</returns>
-    API_FUNCTION() bool IsControlPositioningPermitted(const FudgetControl *control) const;
+    API_FUNCTION() bool IsControlPositionChangePermitted(const FudgetControl *control) const;
+
+    /// <summary>
+    /// Determines if setting the size hint of a control in this container should result in changing the control's size
+    /// as well. This is usually false in a container with a layout that is responsible for the control dimensions.
+    /// </summary>
+    /// <param name="control">The control requesting size change</param>
+    /// <returns>Whether the control can update its size or not</returns>
+    API_FUNCTION() bool IsControlDirectSizeChangePermitted(const FudgetControl *control) const;
 
     /// <summary>
     /// Fills an array with all child controls belonging to the container.
@@ -312,6 +364,23 @@ public:
     /// <returns>List of controls matching at least one request flag and none of the reject flags</returns>
     API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlags request, FudgetControlFlags reject, FudgetControlFlags block, API_PARAM(Ref) Array<FudgetControl*> &result);
 
+    /// <summary>
+    /// Determines which sizes are calculated by the layout and which ones are calculated by the container.
+    /// </summary>
+    API_PROPERTY() FudgetSizeOverride GetSizeOverrides() const { return _size_overrides; }
+
+    /// <summary>
+    /// Determines which sizes are calculated by the layout and which ones are calculated by the container.
+    /// </summary>
+    API_PROPERTY() void SetSizeOverrides(FudgetSizeOverride value);
+
+    /// <summary>
+    /// Checks if a size override is set in the container. If the value is a combination of flags, all need to be set.
+    /// </summary>
+    /// <param name="value">Size override flag or flags to check</param>
+    /// <returns>Whether the flag is set for the container</returns>
+    API_FUNCTION() bool HasSizeOverride(FudgetSizeOverride value) const;
+
     // Serialization
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
@@ -323,10 +392,6 @@ public:
     /// </summary>
     void DoDraw() override;
 
-    /// <summary>
-    /// Tells the layout to calculate child control placement recursively until the last child control is laid out.
-    /// </summary>
-    API_FUNCTION() virtual void DoLayout();
 protected:
     /// <inheritdoc />
     void Initialize() override;
@@ -335,10 +400,18 @@ protected:
     FudgetControlFlags GetInitFlags() const override;
 
     /// <inheritdoc />
+    void RequestLayout() override;
+
+    /// <inheritdoc />
     void SetParentDisabled(bool value) override;
 
 private:
     void SetParentDisabledRecursive();
+
+    // Called from EnsureLayout into parent containers to find one that needs layouting. The passed value is the last
+    // container in the chain that has a dirty layout. If the root is reached, the last_dirty container's
+    // RequestLayout is called, unless last_dirty is null.
+    void EnsureLayoutParent(FudgetContainer *last_dirty);
 
     /// <summary>
     /// Directly changes the position and size of the control. Only to be called by FudgetLayout. This derived
@@ -348,16 +421,18 @@ private:
     /// <param name="size">The new size</param>
     void LayoutUpdate(Float2 pos, Float2 size) override;
 
+    /// <summary>
+    /// Creates the FudgetContainerLayout as the default layout in the container, when no other layout is set.
+    /// This layout is never returned with GetLayout and should be transparent to the outside.
+    /// </summary>
+    void CreateDummyLayout();
+
     Array<FudgetControl*> _children;
     FudgetLayout *_layout;
-
-    bool _hint_width_from_layout;
-    bool _hint_height_from_layout;
-
-    bool _min_width_from_layout;
-    bool _max_width_from_layout;
-    bool _min_height_from_layout;
-    bool _max_height_from_layout;
+    // Using a FudgetContainerLayout that lets its child controls determine their own position and size
+    bool _dummy_layout;
+    // Setting that determines which sizes are calculated by the layout and which ones are calculated by the container.
+    FudgetSizeOverride _size_overrides;
 
     // Used locally to avoid double calling functions from child controls.
     bool _changing;

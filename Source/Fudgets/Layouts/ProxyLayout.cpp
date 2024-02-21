@@ -16,16 +16,30 @@ bool FudgetProxyLayout::LayoutChildren()
 {
     auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
     if (owner == nullptr)
-        return false;
+    {
+        CacheHintSize(Float2::Zero);
+        CacheMinSize(Float2::Zero);
+        return true;
+    }
     return owner->ProxyInterfaceLayoutChildren();
 }
 
-Float2 FudgetProxyLayout::RequestSize(FudgetSizeType type) const
+bool FudgetProxyLayout::Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
     auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
     if (owner == nullptr)
-        return Float2(0.f);
-    return owner->ProxyInterfaceRequestSize(type);
+    {
+        CacheHintSize(Float2::Zero);
+        CacheMinSize(Float2::Zero);
+        CacheMaxSize(Float2::Zero);
+        return false;
+    }
+    bool result = owner->ProxyInterfaceMeasure(available, wanted_size, min_size, max_size);
+    CacheHintSize(wanted_size);
+    CacheMinSize(min_size);
+    CacheMaxSize(max_size);
+    CacheMeasureSpace(available);
+    return result;
 }
 
 FudgetLayoutSlot* FudgetProxyLayout::CreateSlot(FudgetControl *control)

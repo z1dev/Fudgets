@@ -123,6 +123,12 @@ public:
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
+    /// <inheritdoc />
+    void CaretPageUp() override;
+
+    /// <inheritdoc />
+    void CaretPageDown() override;
+
     /// <summary>
     /// Whether the lines of a text should wrap to the new line if they are too long.
     /// </summary>

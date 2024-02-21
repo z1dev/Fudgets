@@ -222,6 +222,10 @@ protected:
     /// <inheritdoc />
     bool LayoutChildren() override;
 
+    /// <inheritdoc />
+    bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+
+
     /// <summary>
     /// The slot of a child control at an index in its container
     /// </summary>

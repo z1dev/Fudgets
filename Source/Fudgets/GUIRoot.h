@@ -19,6 +19,8 @@ public:
 
     ~FudgetGUIRoot();
 
+    void FudgetInit();
+
     /// <summary>
     /// Inserts a control into the layout of the gui root as a top-level control. If an index is provided,
     /// the controls with the same or higher index are moved one index higher. The control with the highest
@@ -167,12 +169,17 @@ public:
     API_FUNCTION() void OnResized(Float2 new_size);
 
     /// <summary>
+    /// Starts the layout of the whole control tree. Only controls with a dirty layout are affected.
+    /// </summary>
+    API_FUNCTION() void DoLayout();
+
+    /// <summary>
     /// Callback event when the size of the GUI area changes
     /// </summary>
     API_EVENT() Delegate<Float2> Resized;
 private:
-    // Called once from the Fudget to initialize during gameplay
-    void Initialize() override;
+    //// Called once from the Fudget to initialize during gameplay
+    //void Initialize() override;
 
     enum class HookProcessingType
     {
@@ -247,6 +254,6 @@ private:
     // should be avoided. It will log a warning if it happens.
     bool _processing_updates;
 
-    friend class Fudget;
+    //friend class Fudget;
 };
 

@@ -68,26 +68,34 @@ enum class FudgetSizeType : uint8
 
 
 /// <summary>
-/// Used for any function call in controls and layouts that need to know if it affects size or position
+/// Indicates a change in a control that might cause a layout recalculation
 /// </summary>
 API_ENUM(Attributes = "Flags")
-enum class FudgetDirtType : uint8
+enum class FudgetLayoutDirtyReason : uint8
 {
 	/// <summary>
-	/// Flag corresponding to size. Used for example to indicate when a control's size changes
+	/// A control's size changed
 	/// </summary>
-	Size = 1,
+	Size = 1 << 0,
 	/// <summary>
-	/// Flag corresponding to position. Used for example to indicate when a control's position changes
+	/// A control's position changed in its parent
 	/// </summary>
-	Position = 2,
+	Position = 1 << 1,
+	/// <summary>
+	/// A control's index changed in its parent
+	/// </summary>
+	Index = 1 << 2,
+	/// <summary>
+	/// The notification is the result of a container's change
+	/// </summary>
+	Container = 1 << 3,
 
 	/// <summary>
-	/// Flag corresponding to both size and position.
+	/// Flag corresponding to size, position, and index
 	/// </summary>
-	All = Size | Position
+	All = Size | Position | Index
 };
-DECLARE_ENUM_OPERATORS(FudgetDirtType);
+DECLARE_ENUM_OPERATORS(FudgetLayoutDirtyReason);
 
 /// <summary>
 /// Flags describing a control's current state
@@ -231,9 +239,9 @@ enum class FudgetControlFlags
 	/// <summary>
 	/// The horizontal and/or vertical size of the control can be influenced by the available space in the layout. Used
 	/// mainly in controls that can auto-size themselves and might change their width or height if the opposite side is
-	/// limited.
+	/// limited. 
 	/// </summary>
-	SizeForSpace = 1 << 15,
+	SizeDependsOnSpace = 1 << 15,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlags);
 
@@ -452,15 +460,9 @@ public:
 	API_PROPERTY() virtual void SetHintSize(Float2 value);
 
 	/// <summary>
-	/// Gets the size that the control currently occupies in its parent's layout. This value can't be directly changed. Use
-	/// SetHintSize to change it.
-	/// </summary>
-	/// <returns>The current size of the control.</returns>
-	API_PROPERTY() virtual Float2 GetSize() const;
-
-	/// <summary>
-	/// Gets the minimum size the control can be resized to while still showing its contents. The control might become smaller
-	/// than this size if the layout it is in doesn't have enough space.
+	/// Gets the minimum size the control can be resized to while still showing its contents. The control might become
+	/// smaller than this size if the layout it is in doesn't have enough space.
+	/// 
 	/// </summary>
 	/// <returns>The minimum size the control needs to show its contents</returns>
 	API_PROPERTY() virtual Float2 GetMinSize() const { return _min_size; }
@@ -485,12 +487,41 @@ public:
 	API_PROPERTY() virtual void SetMaxSize(Float2 value);
 
 	/// <summary>
-	/// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
-	/// and GetSize.
+	/// Gets the size that the control currently occupies in its parent's layout. Be aware that this might result in
+	/// layout recalculation of some parents in the tree. This value can't be directly modified. Use SetHintSize to
+	/// change it.
 	/// </summary>
-	/// <param name="sizeType">Which size to return</param>
-	/// <returns>The control's size specified in type</returns>
-	API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType sizeType) const;
+	/// <returns>The current size of the control.</returns>
+	API_PROPERTY() virtual Float2 GetSize() const;
+
+	/// <summary>
+	/// Gets the position of this control in its parent's layout, relative to the top-left corner of the parent's
+	/// contents' area (inside padding). Be aware that this might result in layout recalculation of some parents in
+	/// the tree.
+	/// </summary>
+	/// <returns>The control's current position</returns>
+	API_PROPERTY() Float2 GetPosition() const;
+
+	/// <summary>
+	/// Modifies the position of the control in its parent's layout, relative to the top-left corner if
+	/// the layout allows free positioning.
+	/// </summary>
+	/// <param name="value">The requested new position</param>
+	API_PROPERTY() virtual void SetPosition(Float2 value);
+
+	/// <summary>
+	/// The position of the control as set in SetPosition or in the last layout frame. Calling this is safe from
+	/// most contexts but might result in an outdated value.
+	/// </summary>
+	API_PROPERTY() virtual Float2 GetHintPosition() const { return _pos; }
+
+	///// <summary>
+	///// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
+	///// and GetSize.
+	///// </summary>
+	///// <param name="sizeType">Which size to return</param>
+	///// <returns>The control's size specified in type</returns>
+	//API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType sizeType) const;
 
 	/// <summary>
 	/// Gets the current width the control takes up in its parent's  layout.
@@ -503,19 +534,6 @@ public:
 	/// </summary>
 	/// <returns>The current height of the control</returns>
 	API_PROPERTY() virtual float GetHeight() const { return GetSize().Y; }
-
-	/// <summary>
-	/// Gets the position of this control in its parent's layout, relative to the top-left corner.
-	/// </summary>
-	/// <returns>The control's current position</returns>
-	API_PROPERTY() Float2 GetPosition() const;
-
-	/// <summary>
-	/// Modifies the position of the control in its parent's layout, relative to the top-left corner if
-	/// the layout allows free positioning.
-	/// </summary>
-	/// <param name="value">The requested new position</param>
-	API_PROPERTY() virtual void SetPosition(Float2 value);
 
 	/// <summary>
 	/// Gets the local bounding rectangle of the control relative to its parent, calculating the size if necessary.
@@ -553,11 +571,29 @@ public:
 	API_PROPERTY() float GetBottom() const { return GetTop() + GetHeight(); }
 
 	/// <summary>
+	/// Returns sizes of this control to the parent's layout. The first is the size the control needs to
+	/// show its contents properly, while the other size is the minimum size that's still enough for the control to
+	/// be usable. This function is called several times during layouting. The minimum size must stay constant
+	/// for the same layout frame for controls without the SizeDependsOnSpace flag.
+	/// The available space might be provided for the control, which can be useful for controls that might change the
+	/// wanted size depending on it. If any dimension of the available space is negative, the control is unrestricted
+	/// in that dimension. Controls without the SizeDependsOnSpace flag must always return the same wanted size, even
+	/// if it's larger than what's available. Controls with the flag should return the closest size they can be that
+	/// fit the space, but if they can't do that, a larger size is accepted.
+	/// </summary>
+	/// <param name="available">Available space in the parent layout or negative if the space is not restricted.</param>
+	/// <param name="wanted">The dimensions the control requests that's enough to fit it properly</param>
+	/// <param name="min_size">The smallest size in either direction the control can still fit in.</param>
+	/// <param name="max_size">The largest size the control wants to have.</param>
+	/// <returns>The flag SizeDependsOnSpace is present in the control or a child control for containers</returns>
+	API_FUNCTION() virtual bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size);
+
+	/// <summary>
 	/// Called by inner size or position changing functions to deal with changes. This implementation
 	/// notifies a parent to mark itself dirty.
 	/// </summary>
 	/// <param name="dirt_flags">Flags of what changed</param>
-	API_FUNCTION() virtual void SizeOrPosModified(FudgetDirtType dirt_flags);
+	API_FUNCTION() virtual void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags);
 
 	/// <summary>
 	/// Returns whether the control is a direct child control of the GUI root and is always placed above not
@@ -1717,6 +1753,7 @@ public:
 	/// </summary>
 	API_FUNCTION() virtual void DoMouseLeave();
 
+
 	/// <summary>
 	/// Checks if the control has any of the passed flags in its state
 	/// </summary>
@@ -1763,6 +1800,17 @@ protected:
 	API_FUNCTION() virtual FudgetControlFlags GetInitFlags() const { return FudgetControlFlags::None; }
 
 	/// <summary>
+	/// Requests the immediate recalculation of a control's sizes and the positioning of its contents. The control
+	/// can choose to ignore this call if its contents are cached and didn't change since the last layout request.
+	/// Only call this function on the root of the control tree, or on a control which can layout its children
+	/// without invalidating its parent's layout.
+	/// In the container's implementation, if no layout is present, the controls are moved to their requested size
+	/// and position. Compound controls can override this function to layout their children if they don't have a
+	/// layout.
+	/// </summary>
+	API_FUNCTION() virtual void RequestLayout() {}
+
+	/// <summary>
 	/// Called by a parent container's SetParentDisabledRecursive to notify its children that they have to be disabled.
 	/// </summary>
 	/// <param name="value">Whether the parent was disabled</param>
@@ -1789,6 +1837,13 @@ private:
 	/// </summary>
 	/// <returns>True if the control is allowed to directly change its position</returns>
 	bool IsPositionChangePermitted() const;
+
+	/// <summary>
+	/// Setting the size hint of a control will automatically set its size as well. This is usually false
+	/// in a layout that is responsible for the control dimensions.
+	/// </summary>
+	/// <returns></returns>
+	bool IsDirectSizeChangePermitted() const;
 
 	/// <summary>
 	/// Directly changes the position and size of the control. Only to be called by FudgetLayout.

@@ -29,8 +29,6 @@ bool FudgetAnchorLayout::LayoutChildren()
 
     Float2 space = owner->GetSize();
 
-
-
     for (int ix = 0; ix < cnt; ++ix)
     {
         FudgetAnchorLayoutSlot *slot = GetSlot(ix);
@@ -42,12 +40,12 @@ bool FudgetAnchorLayout::LayoutChildren()
         if (slot->leftAnchor == FudgetHorizontalAnchor::None && slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
             float center = (slot->leftPercent + slot->rightPercent) * 0.5f;
-            control_size.X = slot->_hint_size.X;
+            control_size.X = slot->_wanted_size.X;
             control_pos.X = (space.X * center) - control_size.X * 0.5f;
         }
         else if (slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
-            control_size.X = slot->_hint_size.X;
+            control_size.X = slot->_wanted_size.X;
             if (slot->leftAnchor == FudgetHorizontalAnchor::Left)
                 control_pos.X = space.X * slot->leftPercent;
             else
@@ -55,7 +53,7 @@ bool FudgetAnchorLayout::LayoutChildren()
         }
         else if (slot->leftAnchor == FudgetHorizontalAnchor::None)
         {
-            control_size.X = slot->_hint_size.X;
+            control_size.X = slot->_wanted_size.X;
             if (slot->rightAnchor == FudgetHorizontalAnchor::Right)
                 control_pos.X = space.X * (1 - slot->rightPercent) - control_size.X;
             else
@@ -90,12 +88,12 @@ bool FudgetAnchorLayout::LayoutChildren()
         if (slot->topAnchor == FudgetVerticalAnchor::None && slot->bottomAnchor == FudgetVerticalAnchor::None)
         {
             float center = (slot->topPercent + slot->bottomPercent) * 0.5f;
-            control_size.Y = slot->_hint_size.Y;
+            control_size.Y = slot->_wanted_size.Y;
             control_pos.Y = (space.Y * center) - control_size.Y * 0.5f;
         }
         else if (slot->bottomAnchor == FudgetVerticalAnchor::None)
         {
-            control_size.Y = slot->_hint_size.Y;
+            control_size.Y = slot->_wanted_size.Y;
             if (slot->topAnchor == FudgetVerticalAnchor::Top)
                 control_pos.Y = space.Y * slot->topPercent;
             else
@@ -103,7 +101,7 @@ bool FudgetAnchorLayout::LayoutChildren()
         }
         else if (slot->topAnchor == FudgetVerticalAnchor::None)
         {
-            control_size.Y = slot->_hint_size.Y;
+            control_size.Y = slot->_wanted_size.Y;
             if (slot->bottomAnchor == FudgetVerticalAnchor::Bottom)
                 control_pos.Y = space.Y * (1 - slot->bottomPercent) - control_size.Y;
             else
@@ -140,6 +138,34 @@ bool FudgetAnchorLayout::LayoutChildren()
     return true;
 }
 
+bool FudgetAnchorLayout::Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
+{
+    wanted_size = Float2::Zero;
+    min_size = Float2::Zero;
+    max_size = Float2::Zero;
+    CacheHintSize(wanted_size);
+    CacheMinSize(min_size);
+    CacheMinSize(max_size);
+
+    auto owner = GetOwner();
+    if (owner == nullptr)
+        return false;
+
+    int count = owner->GetChildCount();
+
+    if (count == 0)
+        return false;
+
+    for (int ix = 0; ix < count; ++ix)
+    {
+        auto slot = GetSlot(ix);
+        slot->_size_from_space = slot->_control->OnMeasure(available, slot->_wanted_size, slot->_min_size, slot->_max_size);
+    }
+
+    return false;
+}
+
+
 FudgetAnchorLayoutSlot* FudgetAnchorLayout::GetSlot(int index)
 {
     return (FudgetAnchorLayoutSlot*)Base::GetSlot(index);
@@ -167,7 +193,7 @@ void FudgetAnchorLayout::SetLeftAnchor(int index, FudgetHorizontalAnchor value)
 {
     auto slot = GetSlot(index);
     slot->leftAnchor = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 
 FudgetHorizontalAnchor FudgetAnchorLayout::GetRightAnchor(int index) const { return GetSlot(index)->rightAnchor; }
@@ -175,7 +201,7 @@ void FudgetAnchorLayout::SetRightAnchor(int index, FudgetHorizontalAnchor value)
 {
     auto slot = GetSlot(index);
     slot->rightAnchor = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 
 FudgetVerticalAnchor FudgetAnchorLayout::GetTopAnchor(int index) const { return GetSlot(index)->topAnchor; }
@@ -183,14 +209,14 @@ void FudgetAnchorLayout::SetTopAnchor(int index, FudgetVerticalAnchor value)
 {
     auto slot = GetSlot(index);
     slot->topAnchor = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 FudgetVerticalAnchor FudgetAnchorLayout::GetBottomAnchor(int index) const { return GetSlot(index)->bottomAnchor; }
 void FudgetAnchorLayout::SetBottomAnchor(int index, FudgetVerticalAnchor value)
 {
     auto slot = GetSlot(index);
     slot->bottomAnchor = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 
 float FudgetAnchorLayout::GetLeftPercent(int index) const { return GetSlot(index)->leftPercent; }
@@ -198,26 +224,26 @@ void FudgetAnchorLayout::SetLeftPercent(int index, float value)
 {
     auto slot = GetSlot(index);
     slot->leftPercent = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 float FudgetAnchorLayout::GetRightPercent(int index) const { return GetSlot(index)->rightPercent; }
 void FudgetAnchorLayout::SetRightPercent(int index, float value)
 {
     auto slot = GetSlot(index);
     slot->rightPercent = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 float FudgetAnchorLayout::GetTopPercent(int index) const { return GetSlot(index)->topPercent; }
 void FudgetAnchorLayout::SetTopPercent(int index, float value)
 {
     auto slot = GetSlot(index);
     slot->topPercent = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }
 float FudgetAnchorLayout::GetBottomPercent(int index) const { return GetSlot(index)->bottomPercent; }
 void FudgetAnchorLayout::SetBottomPercent(int index, float value)
 {
     auto slot = GetSlot(index);
     slot->bottomPercent = value;
-    MarkDirty(FudgetDirtType::All, true);
+    MarkDirty(FudgetLayoutDirtyReason::All);
 }

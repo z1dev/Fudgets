@@ -91,11 +91,11 @@ namespace FlaxEditor.Content
             FudgetFilledBox box4 = new FudgetFilledBox();
             box4.Color = Color.Beige;
 
-            box.HintSize = new Float2(9999, 9999);
-            box2.HintSize = new Float2(9999, 9999);
-            box3.HintSize = new Float2(9999, 9999);
-            box4.HintSize = new Float2(9999, 9999);
-            containerTest.HintSize = new Float2(9999, 9999);
+            //box.HintSize = new Float2(9999, 9999);
+            //box2.HintSize = new Float2(9999, 9999);
+            //box3.HintSize = new Float2(9999, 9999);
+            //box4.HintSize = new Float2(9999, 9999);
+            //containerTest.HintSize = new Float2(9999, 9999);
 
             containerTest.CreateLayout<FudgetListLayout>();
             containerTest.AddChild(box3);

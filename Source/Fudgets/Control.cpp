@@ -83,8 +83,9 @@ void FudgetControl::SetHintSize(Float2 value)
     if (Float2::NearEqual(_hint_size, value))
         return;
     _hint_size = value;
-    SizeOrPosModified(FudgetDirtType::Size);
-
+    if (IsDirectSizeChangePermitted())
+        _size = _hint_size;
+    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
 }
 
 void FudgetControl::SetMinSize(Float2 value)
@@ -92,7 +93,7 @@ void FudgetControl::SetMinSize(Float2 value)
     if (Float2::NearEqual(_min_size, value))
         return;
     _min_size = value;
-    SizeOrPosModified(FudgetDirtType::Size);
+    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
 }
 
 void FudgetControl::SetMaxSize(Float2 value)
@@ -100,36 +101,21 @@ void FudgetControl::SetMaxSize(Float2 value)
     if (Float2::NearEqual(_max_size, value))
         return;
     _max_size = value;
-    SizeOrPosModified(FudgetDirtType::Size);
-}
-
-Float2 FudgetControl::GetRequestedSize(FudgetSizeType type) const
-{
-    switch (type)
-    {
-        case FudgetSizeType::Hint:
-            return GetHintSize();
-        case FudgetSizeType::Min:
-            return GetMinSize();
-        case FudgetSizeType::Max:
-            return GetMaxSize();
-        default:
-            return Float2(0.f);
-    }
+    SizeOrPosModified(FudgetLayoutDirtyReason::Size);
 }
 
 Float2 FudgetControl::GetSize() const
 {
     if (_parent == nullptr)
         return _hint_size;
-    _parent->RequestLayout();
+    _parent->EnsureLayout();
     return _size;
 }
 
 Float2 FudgetControl::GetPosition() const
 {
     if (_parent != nullptr)
-        _parent->RequestLayout();
+        _parent->EnsureLayout();
     return _pos;
 }
 
@@ -139,7 +125,7 @@ void FudgetControl::SetPosition(Float2 value)
         return;
 
     _pos = value;
-    SizeOrPosModified(FudgetDirtType::Position);
+    SizeOrPosModified(FudgetLayoutDirtyReason::Position);
     OnPositionChanged();
 }
 
@@ -158,6 +144,9 @@ void FudgetControl::RegisterToUpdate(bool value)
 
 Float2 FudgetControl::LocalToGlobal(Float2 local) const
 {
+    if (_parent != nullptr)
+        GetGUIRoot()->DoLayout();
+
     FudgetContainer *parent = _parent;
     local += GetPosition();
 
@@ -172,6 +161,9 @@ Float2 FudgetControl::LocalToGlobal(Float2 local) const
 
 Float2 FudgetControl::GlobalToLocal(Float2 global) const
 {
+    if (_parent != nullptr)
+        GetGUIRoot()->DoLayout();
+
     FudgetContainer *parent = _parent;
     global -= GetPosition();
 
@@ -186,6 +178,9 @@ Float2 FudgetControl::GlobalToLocal(Float2 global) const
 
 Rectangle FudgetControl::LocalToGlobal(const Rectangle &local) const
 {
+    if (_parent != nullptr)
+        GetGUIRoot()->DoLayout();
+
     FudgetContainer *parent = _parent;
     Float2 pos = local.Location;
     pos += GetPosition();
@@ -201,6 +196,9 @@ Rectangle FudgetControl::LocalToGlobal(const Rectangle &local) const
 
 Rectangle FudgetControl::GlobalToLocal(const Rectangle &global) const
 {
+    if (_parent != nullptr)
+        GetGUIRoot()->DoLayout();
+
     FudgetContainer *parent = _parent;
     Float2 pos = global.Location;
     pos -= GetPosition();
@@ -269,7 +267,7 @@ void FudgetControl::SetControlFlags(FudgetControlFlags flags)
     }
 
     // Might not need recalculation but we can't be sure.
-    SizeOrPosModified(FudgetDirtType::All);
+    SizeOrPosModified(FudgetLayoutDirtyReason::All);
 }
 
 bool FudgetControl::HasAllFlags(FudgetControlFlags flags) const
@@ -282,10 +280,18 @@ bool FudgetControl::HasAnyFlag(FudgetControlFlags flags) const
     return (int)(flags & _flags) != 0;
 }
 
-void FudgetControl::SizeOrPosModified(FudgetDirtType dirt_flags)
+bool FudgetControl::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
+{
+    wanted = GetHintSize();
+    min_size = GetMinSize();
+    max_size = GetMaxSize();
+    return HasAnyFlag(FudgetControlFlags::SizeDependsOnSpace);
+}
+
+void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
 {
     if (_parent != nullptr)
-        _parent->MarkLayoutDirty(dirt_flags, true);
+        _parent->MarkLayoutDirty(dirt_flags);
 }
 
 bool FudgetControl::GetAlwaysOnTop() const
@@ -1539,7 +1545,12 @@ bool FudgetControl::IsPositionChangePermitted() const
 {
     if (!_parent)
         return true;
-    return _parent->IsControlPositioningPermitted(this);
+    return _parent->IsControlPositionChangePermitted(this);
+}
+
+bool FudgetControl::IsDirectSizeChangePermitted() const
+{
+    return _parent == nullptr || _parent->IsControlDirectSizeChangePermitted(this);
 }
 
 void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)

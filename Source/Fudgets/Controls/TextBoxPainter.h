@@ -240,6 +240,9 @@ public:
     /// <param name="char_index">Index of character to look for</param>
     /// <returns>Height of the line at the character's position</returns>
     API_FUNCTION() virtual float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
+protected:
+
+    API_FUNCTION() virtual void AddLine(API_PARAM(Ref) Float2 &pos, int start_index, int end_index, float line_width, float line_height, API_PARAM(Ref) FudgetMultilineTextMeasurements &result);
 };
 
 

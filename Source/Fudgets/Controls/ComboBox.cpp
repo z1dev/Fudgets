@@ -208,21 +208,45 @@ bool FudgetComboBox::ProxyInterfaceLayoutChildren()
     return true;
 }
 
-Float2 FudgetComboBox::ProxyInterfaceRequestSize(FudgetSizeType type) const
+bool FudgetComboBox::ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
+    wanted_size = Float2::Zero;
+    min_size = Float2::Zero;
+    max_size = Float2::Zero;
     if (_editor != nullptr && _button != nullptr)
     {
-        Float2 result = _editor->GetRequestedSize(type);
-        Float2 btnResult = _button->GetRequestedSize(type);
-        if (type != FudgetSizeType::Max)
-            result.X += btnResult.X;
-        else
-            result.X = AddBigFloats(result.X, _button->GetRequestedSize(type).X);
-        result.Y = Math::Max(result.Y, btnResult.Y);
-        return result;
+        Float2 editor_wanted = Float2::Zero;
+        Float2 editor_min = Float2::Zero;
+        Float2 editor_max = Float2::Zero;
+        _editor->OnMeasure(available, editor_wanted, editor_min, editor_max);
+        Float2 button_wanted = Float2::Zero;
+        Float2 button_min = Float2::Zero;
+        Float2 button_max = Float2::Zero;
+        _button->OnMeasure(available, button_wanted, button_min, button_max);
     }
-    return Float2(0.0f);
+
+    wanted_size = FudgetControl::GetHintSize();
+    min_size = FudgetControl::GetMinSize();
+    max_size = FudgetControl::GetMaxSize();
+
+    return false;
 }
+
+//Float2 FudgetComboBox::ProxyInterfaceRequestSize(FudgetSizeType type) const
+//{
+//    if (_editor != nullptr && _button != nullptr)
+//    {
+//        Float2 result = _editor->GetRequestedSize(type);
+//        Float2 btnResult = _button->GetRequestedSize(type);
+//        if (type != FudgetSizeType::Max)
+//            result.X += btnResult.X;
+//        else
+//            result.X = AddBigFloats(result.X, _button->GetRequestedSize(type).X);
+//        result.Y = Math::Max(result.Y, btnResult.Y);
+//        return result;
+//    }
+//    return Float2(0.0f);
+//}
 
 bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
 {

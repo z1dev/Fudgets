@@ -11,35 +11,38 @@
 /// </summary>
 API_INTERFACE() class FUDGETS_API IProxyLayoutContainer
 {
-	DECLARE_SCRIPTING_TYPE_MINIMAL(IProxyLayoutContainer);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(IProxyLayoutContainer);
 public:
-	virtual ~IProxyLayoutContainer() = default;
+    virtual ~IProxyLayoutContainer() = default;
 
-	/// <summary>
-	/// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
-	/// </summary>
-	/// <returns>Whether the layout was successful and the layout dirty flag can be cleared</returns>
-	API_FUNCTION() virtual bool ProxyInterfaceLayoutChildren() = 0;
+    /// <summary>
+    /// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
+    /// </summary>
+    /// <returns>Whether the layout was successful and the layout dirty flag can be cleared</returns>
+    API_FUNCTION() virtual bool ProxyInterfaceLayoutChildren() = 0;
 
-	/// <summary>
-	/// Acts in place of a FudgetProxyLayout to provide the RequestSize method.
-	/// </summary>
-	/// <param name="type">Which size to calculate and return</param>
-	/// <returns>The calculated size</returns>
-	API_FUNCTION() virtual Float2 ProxyInterfaceRequestSize(FudgetSizeType type) const = 0;
 
-	/// <summary>
-	/// Acts in place of a FudgetProxyLayout to provide the CreateSlot method.
-	/// </summary>
-	/// <param name="control">The control that will be inserted into the slot</param>
-	/// <returns>The created object holding layouting properties of the control</returns>
-	API_FUNCTION() virtual FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) = 0;
+    /// <summary>
+    /// Acts in place of a FudgetProxyLayout to provide the CreateSlot method.
+    /// </summary>
+    /// <param name="control">The control that will be inserted into the slot</param>
+    /// <returns>The created object holding layouting properties of the control</returns>
+    API_FUNCTION() virtual FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) = 0;
 
-	/// <summary>
-	/// Acts in place of a FudgetProxyLayout to provide the GetInitFlags method.
-	/// </summary>
-	/// <returns>Layout flags that should be set to the layout.</returns>
-	API_FUNCTION() virtual FudgetLayoutFlag ProxyInterfaceGetInitFlags() const = 0;
+    /// <summary>
+    /// Acts in place of a FudgetProxyLayout to provide the Measure method.
+    /// </summary>
+    /// <param name="avaliable">The available space for the layout contents or unrestricted when negative</param>
+    /// <param name="wanted_size">The size requested by the layout contents. This might be larger than the available space.</param>
+    /// <param name="min_size">The minimum size requied by the layout. Should be the same value unless the contents change</param>
+    /// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
+    API_FUNCTION() virtual bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) = 0;
+
+    /// <summary>
+    /// Acts in place of a FudgetProxyLayout to provide the GetInitFlags method.
+    /// </summary>
+    /// <returns>Layout flags that should be set to the layout.</returns>
+    API_FUNCTION() virtual FudgetLayoutFlag ProxyInterfaceGetInitFlags() const = 0;
 };
 
 
@@ -57,19 +60,19 @@ class FUDGETS_API FudgetProxyLayout : public FudgetLayout
 public:
     ~FudgetProxyLayout();
 
-	/// <inheritdoc />
-	bool LayoutChildren() override;
+    /// <inheritdoc />
+    bool LayoutChildren() override;
 
-	/// <inheritdoc />
-	Float2 RequestSize(FudgetSizeType type) const override;
+    ///// <inheritdoc />
+    bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
-	/// <inheritdoc />
-	FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
+    /// <inheritdoc />
+    FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
 
-	/// <inheritdoc />
-	FudgetLayoutFlag GetInitFlags() const override;
+    /// <inheritdoc />
+    FudgetLayoutFlag GetInitFlags() const override;
 
-	/// <inheritdoc />
-	void SetControlDimensions(int index, Float2 pos, Float2 size) override;
+    /// <inheritdoc />
+    void SetControlDimensions(int index, Float2 pos, Float2 size) override;
 
 };

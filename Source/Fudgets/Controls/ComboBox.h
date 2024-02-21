@@ -107,7 +107,7 @@ public:
     /// <inheritdoc />
     bool ProxyInterfaceLayoutChildren() override;
     /// <inheritdoc />
-    Float2 ProxyInterfaceRequestSize(FudgetSizeType type) const override;
+    bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <inheritdoc />
     bool WantsNavigationKey(KeyboardKeys key) override;
