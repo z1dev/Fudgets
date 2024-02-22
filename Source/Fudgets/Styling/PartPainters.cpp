@@ -244,7 +244,7 @@ void FudgetAlignedImagePainter::Initialize(FudgetTheme *theme, FudgetStyle *styl
 
     if (!style->GetEnumResource<FudgetImageHorzAlign>(theme, HorzAlignToken, _horz_align))
         _horz_align = FudgetImageHorzAlign::Stretch;
-    if (!style->GetEnumResource<FudgetImageVertAlign>(theme, HorzAlignToken, _vert_align))
+    if (!style->GetEnumResource<FudgetImageVertAlign>(theme, VertAlignToken, _vert_align))
         _vert_align = FudgetImageVertAlign::Stretch;
 }
 

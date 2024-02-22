@@ -28,5 +28,44 @@ namespace Fudgets
 
             return painter;
         }
+
+        /// <summary>
+        /// Returns an enum value for the control based on a theme token.
+        /// The resulting value depends on both the active style and the theme currently set for this control.
+        /// </summary>
+        /// <typeparam name="T">The enum type</typeparam>
+        /// <param name="token">Token associated with the int in the active style</param>
+        /// <param name="result">Variable that receives the result</param>
+        /// <returns>Whether a valid value was found for the token</returns>
+        public bool GetStyleEnum<T>(FudgetToken token, out T result) where T: Enum
+        {
+            var style = ActiveStyle;
+            if (style == null)
+            {
+                result = default;
+                return false;
+            }
+            return style.GetEnumResource<T>(ActiveTheme, token, out result);
+        }
+
+        /// <summary>
+        /// Returns an enum value for the control based on a theme token.
+        /// The resulting value depends on both the active style and the theme currently set for this control.
+        /// This version of the function accepts an array, and returns the value for the first token found.
+        /// </summary>
+        /// <typeparam name="T">The enum type</typeparam>
+        /// <param name="tokens">An array of tokens that are checked in order</param>
+        /// <param name="result">Variable that receives the result</param>
+        /// <returns>Whether a valid value was found for a token</returns>
+        public bool GetStyleEnum<T>(FudgetToken[] tokens, out T result) where T : Enum
+        {
+            foreach (var item in tokens)
+            {
+                if (GetStyleEnum<T>(item, out result))
+                    return true;
+            }
+            result = default;
+            return false;
+        }
     }
 }

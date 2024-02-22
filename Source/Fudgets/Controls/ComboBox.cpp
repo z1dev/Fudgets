@@ -232,22 +232,6 @@ bool FudgetComboBox::ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Floa
     return false;
 }
 
-//Float2 FudgetComboBox::ProxyInterfaceRequestSize(FudgetSizeType type) const
-//{
-//    if (_editor != nullptr && _button != nullptr)
-//    {
-//        Float2 result = _editor->GetRequestedSize(type);
-//        Float2 btnResult = _button->GetRequestedSize(type);
-//        if (type != FudgetSizeType::Max)
-//            result.X += btnResult.X;
-//        else
-//            result.X = AddBigFloats(result.X, _button->GetRequestedSize(type).X);
-//        result.Y = Math::Max(result.Y, btnResult.Y);
-//        return result;
-//    }
-//    return Float2(0.0f);
-//}
-
 bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
 {
     return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown;

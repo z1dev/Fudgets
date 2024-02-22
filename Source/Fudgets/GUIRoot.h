@@ -134,6 +134,13 @@ public:
     API_PROPERTY() FudgetControl* GetHoveredControl() const { return _mouse_over_control; }
 
     /// <summary>
+    /// When called for the hovered control, checks if the displayed cursor needs to be changed,
+    /// and then changes it. Has no effect if the control doesn't have the mouse pointer.
+    /// </summary>
+    /// <param name="control">Control to check for updated cursor</param>
+    API_FUNCTION() void UpdateCursor(FudgetControl *control);
+
+    /// <summary>
     /// Registers or unregisters the control to receive the global update tick. Its OnUpdate will be called by the root.
     /// </summary>
     /// <param name="control">The control to register its update</param>

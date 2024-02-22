@@ -246,6 +246,21 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 		_focus_control->DoFocusChanged(true, value);
 }
 
+void FudgetGUIRoot::UpdateCursor(FudgetControl *control)
+{
+	if (control == this || _mouse_over_control != control)
+		return;
+
+	CursorType cursor = control != nullptr ? control->GetContextCursor() : CursorType::Default;
+	if (GetCursor() == cursor)
+		return;
+
+	SetCursor(cursor);
+
+	if (_window != nullptr)
+		_window->SetCursor(cursor);
+}
+
 bool FudgetGUIRoot::RegisterControlUpdate(FudgetControl *control, bool value)
 {
 	if (control == nullptr)
@@ -693,6 +708,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 					continue;
 
 				c->OnMouseMove(cpos, pos);
+				UpdateCursor(c);
 				return;
 			}
 		}
@@ -709,6 +725,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 		if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
 			old_mouse_control->DoMouseLeave();
 	}
+	UpdateCursor(_mouse_over_control);
 }
 
 void FudgetGUIRoot::HandleMouseLeave()
@@ -741,6 +758,7 @@ void FudgetGUIRoot::HandleMouseLeave()
 		if (result != FudgetMouseHookResult::EatEvent && result != FudgetMouseHookResult::SkipControl)
 			old_mouse_control->DoMouseLeave();
 	}
+	UpdateCursor(_mouse_over_control);
 }
 
 void FudgetGUIRoot::HandleKeyDown(KeyboardKeys key)

@@ -15,6 +15,7 @@
 #include "Engine/Input/Keyboard.h"
 #include "Engine/Input/KeyboardKeys.h"
 #include "Engine/Core/Collections/Array.h"
+#include "Engine/Platform/Base/WindowBase.h"
 
 #include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
@@ -390,6 +391,12 @@ public:
 	/// Called when the control stops capturing the mouse input.
 	/// </summary>
 	API_FUNCTION() virtual void OnMouseReleased() {}
+
+	/// <summary>
+	/// Called when the mouse cursor was in a call to SetCursor. Don't set the cursor directly as a response to this
+	/// call to avoid infinite recursion.
+	/// </summary>
+	API_FUNCTION() virtual void OnCursorChanged() {}
 
 	/// <summary>
 	/// Called after the control's position changed in its parent. This might be due to direct change of the control's
@@ -1570,6 +1577,46 @@ public:
 	API_FUNCTION() bool GetStyleInt(const Span<FudgetToken> &tokens, API_PARAM(Out) int &result);
 
 	/// <summary>
+	/// Returns an enum value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// </summary>
+	/// <typeparam name="T">The enum type</typeparam>
+	/// <param name="token">Token associated with the int in the active style</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for the token</returns>
+	template<typename T>
+	bool GetStyleEnum(FudgetToken token, API_PARAM(Out) T &result)
+	{
+		FudgetStyle *style = GetActiveStyle();
+		if (style == nullptr)
+		{
+			result = (T)0;
+			return false;
+		}
+
+		return style->GetEnumResource<T>(GetActiveTheme(), token, result);
+	}
+
+	/// <summary>
+	/// Returns an enum value for the control based on a theme token.
+	/// The resulting value depends on both the active style and the theme currently set for this control.
+	/// This version of the function accepts an array, and returns the value for the first token found.
+	/// </summary>
+	/// <typeparam name="T">The enum type</typeparam>
+	/// <param name="tokens">An array of tokens that are checked in order</param>
+	/// <param name="result">Variable that receives the result</param>
+	/// <returns>Whether a valid value was found for a token</returns>
+	template<typename T>
+	bool GetStyleEnum(const Span<FudgetToken> &tokens, API_PARAM(Out) T &result)
+	{
+		for (auto t : tokens)
+			if (GetStyleEnum<T>(t, result))
+				return true;
+		return false;
+	}
+
+
+	/// <summary>
 	/// Returns a padding value for the control based on a theme token.
 	/// The resulting value depends on both the active style and the theme currently set for this control.
 	/// </summary>
@@ -1781,6 +1828,29 @@ public:
 	/// </summary>
 	API_FUNCTION() virtual void DoMouseLeave();
 
+	/// <summary>
+	/// Gets the displayed cursor when the mouse pointer is moved above the control, as long as no other control
+	/// captured the mouse, and this control doesn't ignore mouse movement. If this value is Default, the actual
+	/// cursor shown can be context dependent. Read GetContextCursor for the current value.
+	/// </summary>
+	/// <returns>The cursor type set for this control</returns>
+	API_PROPERTY() CursorType GetCursor() const { return _cursor; }
+	/// <summary>
+	/// Sets the displayed cursor when the mouse pointer is moved above the control, as long as no other control
+	/// captured the mouse, and this control doesn't ignore mouse movement. If this value is Default, the actual
+	/// cursor shown can be context dependent. Read GetContextCursor for the current value.
+	/// </summary>
+	API_PROPERTY() void SetCursor(CursorType value);
+
+	/// <summary>
+	/// The displayed cursor when the mouse pointer is moved above the control, as long as no other control
+	/// captured the mouse, and this control doesn't ignore mouse movement. This is the same as GetCursor if
+	/// there is a non default cursor set. Otherwise the control can decide to provide a different cursor,
+	/// for example based on pointer position.
+	/// </summary>
+	/// <returns></returns>
+	API_PROPERTY() virtual CursorType GetContextCursor() const { return _cursor; }
+
 
 	/// <summary>
 	/// Checks if the control has any of the passed flags in its state
@@ -1826,6 +1896,13 @@ protected:
 	/// </summary>
 	/// <returns>Control flags that should be set to the control.</returns>
 	API_FUNCTION() virtual FudgetControlFlags GetInitFlags() const { return FudgetControlFlags::None; }
+
+	/// <summary>
+	/// Notifies the UI root that the cursor of this control changed. It's only necessary if the cursor change is not
+	/// the result of a mouse move event.
+	/// </summary>
+	/// <returns></returns>
+	API_FUNCTION() void DoCursorChanged();
 
 	/// <summary>
 	/// Requests the immediate recalculation of a control's sizes and the positioning of its contents. The control
@@ -1897,6 +1974,9 @@ private:
 	String _name;
 
 	FudgetControlFlags _flags;
+
+	// Cursor shown for controls that don't let the mouse pass through on mouse move.
+	CursorType _cursor;
 
 	Float2 _pos;
 	Float2 _size;

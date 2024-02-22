@@ -18,7 +18,7 @@
 
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _pos(0.f), _size(0.0f),
+    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _cursor(CursorType::Default), _pos(0.f), _size(0.0f),
     _pos_layout_updated(false), _size_layout_updated(false), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
     _max_size(MAX_float, MAX_float), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
     _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
@@ -1412,6 +1412,24 @@ void FudgetControl::FudgetControl::DoMouseLeave()
 {
     SetState(FudgetControlState::ShowHovered, false);
     OnMouseLeave();
+}
+
+void FudgetControl::SetCursor(CursorType value)
+{
+    if (value == _cursor)
+        return;
+
+    value = _cursor;
+    DoCursorChanged();
+}
+
+void FudgetControl::DoCursorChanged()
+{
+    auto root = GetGUIRoot();
+    if (root != nullptr)
+        root->UpdateCursor(this);
+
+    OnCursorChanged();
 }
 
 bool FudgetControl::HasAnyState(FudgetControlState states) const

@@ -79,6 +79,10 @@ public:
     /// <summary>
     /// Token
     /// </summary>
+    API_PROPERTY() static FudgetToken GetBeamCursorToken();
+    /// <summary>
+    /// Token
+    /// </summary>
     API_PROPERTY() static FudgetToken GetSnapTopLineToken();
 
     /// <inheritdoc />
@@ -122,6 +126,9 @@ public:
 
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+
+    /// <inheritdoc />
+    CursorType GetContextCursor() const override;
 
     /// <inheritdoc />
     Float2 GetHintSize() const override;
@@ -254,6 +261,8 @@ private:
     static FudgetToken CaretWidthToken;
     static FudgetToken CaretScrollCountToken;
 
+    static FudgetToken BeamCursorToken;
+
     static FudgetToken SnapTopLineToken;
 
     FudgetPadding GetInnerPadding() const;
@@ -275,6 +284,9 @@ private:
     // Time passed in seconds since caret blink started. The caret is visible when this value is below
     // _caret_blink_time and hidden when it is over it.
     float _blink_passed;
+
+    bool _show_beam_cursor;
+    CursorType _beam_cursor;
 
     // Number of characters to scroll in view when moving in a line to the left or right and the caret leaves the
     // bounds of the control.

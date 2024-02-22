@@ -14,6 +14,7 @@ FudgetToken FudgetTextBox::CaretDrawToken = -1;
 FudgetToken FudgetTextBox::CaretBlinkTimeToken = -1;
 FudgetToken FudgetTextBox::CaretWidthToken = -1;
 FudgetToken FudgetTextBox::CaretScrollCountToken = -1;
+FudgetToken FudgetTextBox::BeamCursorToken = -1;
 FudgetToken FudgetTextBox::SnapTopLineToken = -1;
 
 FudgetToken FudgetTextBox::GetClassToken()
@@ -69,6 +70,12 @@ FudgetToken FudgetTextBox::GetCaretScrollCountToken()
     return CaretScrollCountToken;
 }
 
+FudgetToken FudgetTextBox::GetBeamCursorToken()
+{
+    InitializeTokens();
+    return BeamCursorToken;
+}
+
 FudgetToken FudgetTextBox::GetSnapTopLineToken()
 {
     InitializeTokens();
@@ -94,6 +101,8 @@ void FudgetTextBox::InitializeTokens()
     CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretWidth"));
     CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretScrollCount"));
 
+    BeamCursorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_BeamCursor"));
+
     SnapTopLineToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_SnapTopLine"));
 }
 
@@ -107,10 +116,11 @@ void FudgetTextBox::MarkTextDirty()
 }
 
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
-    _text_measurements(), _blink_passed(0.0f), _character_scroll_count(0), _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal),
-    _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f), _scroll_pos(0.0f), _lines_dirty(false), _line_wrap(false),
-    _wrap_mode(FudgetLineWrapMode::Whitespace), _auto_hint(FudgetAutoSizing::None), _auto_min(FudgetAutoSizing::None), _auto_max(FudgetAutoSizing::None),
-    _available_space(-1.f), _cached_hint(-1.f), _cached_min(-1.f), _cached_max(-1.f)
+    _text_measurements(), _blink_passed(0.0f), _show_beam_cursor(false), _beam_cursor(CursorType::Default), _character_scroll_count(0),
+    _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal), _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f),
+    _scroll_pos(0.0f), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
+    _auto_hint(FudgetAutoSizing::None), _auto_min(FudgetAutoSizing::None), _auto_max(FudgetAutoSizing::None), _available_space(-1.f),
+    _cached_hint(-1.f), _cached_min(-1.f), _cached_max(-1.f)
 {
 
 }
@@ -138,8 +148,13 @@ void FudgetTextBox::OnInitialize()
     if (!GetStyleInt(CaretScrollCountToken, _character_scroll_count))
         _character_scroll_count = 4;
 
+    if (!GetStyleEnum<CursorType>(BeamCursorToken, _beam_cursor))
+        _beam_cursor = CursorType::IBeam;
+
     if (!GetStyleBool(SnapTopLineToken, _snap_top_line))
         _snap_top_line = false;
+
+    
 }
 
 void FudgetTextBox::OnDraw()
@@ -151,8 +166,8 @@ void FudgetTextBox::OnDraw()
     if (_text_painter == nullptr)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    bounds = innerPadding.Padded(bounds);
+    FudgetPadding inner_padding = GetInnerPadding();
+    bounds = inner_padding.Padded(bounds);
     PushClip(bounds);
 
     FudgetMultiLineTextOptions options;
@@ -210,8 +225,8 @@ int FudgetTextBox::CharIndexAt(Float2 pos)
     if (_text_painter == nullptr)
         return 0;
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    Rectangle bounds = innerPadding.Padded(GetBounds());
+    FudgetPadding inner_padding = GetInnerPadding();
+    Rectangle bounds = inner_padding.Padded(GetBounds());
 
     return _text_painter->HitTest(this, GetMeasurements(), pos - bounds.GetUpperLeft() + _scroll_pos);
 }
@@ -258,17 +273,37 @@ void FudgetTextBox::OnVirtuallyEnabledChanged()
 
 void FudgetTextBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
+    if (!MouseIsCaptured())
+    {
+        Rectangle bounds = GetInnerPadding().Padded(GetBounds());
+        _show_beam_cursor = bounds.Contains(pos);
+    }
     Base::OnMouseMove(pos, global_pos);
 }
 
 FudgetInputResult FudgetTextBox::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
+    Rectangle bounds = GetInnerPadding().Padded(GetBounds());
+    if (!bounds.Contains(pos))
+        return FudgetInputResult::Ignore;
+
     return Base::OnMouseDown(pos, global_pos, button, double_click);
 }
 
 bool FudgetTextBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
     return Base::OnMouseUp(pos, global_pos, button);
+}
+
+CursorType FudgetTextBox::GetContextCursor() const
+{
+    CursorType cursor = GetCursor();
+    if (cursor != CursorType::Default)
+        return cursor;
+
+    if (_show_beam_cursor)
+        return _beam_cursor;
+    return CursorType::Default;
 }
 
 Float2 FudgetTextBox::GetHintSize() const
@@ -350,8 +385,8 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
         return SizeDependsOnSpace();
     }
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    innerPadding.Right += _caret_width * 2.0f;
+    FudgetPadding inner_padding = GetInnerPadding();
+    inner_padding.Right += _caret_width * 2.0f;
 
     if (available.X < 0.f)
     {
@@ -361,7 +396,7 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
         opt.Wrapping = _line_wrap;
         opt.WrapMode = _wrap_mode;
         _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
-        _cached_hint = _cached_min = _cached_max = tmp.Size + innerPadding.Size();
+        _cached_hint = _cached_min = _cached_max = tmp.Size + inner_padding.Size();
     }
     else
     {
@@ -371,13 +406,13 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
         opt.Wrapping = _line_wrap;
         opt.WrapMode = _wrap_mode;
         _text_painter->MeasureLines(this, available.X, _text, 1.f, opt, tmp);
-        _cached_hint = tmp.Size + innerPadding.Size();
+        _cached_hint = tmp.Size + inner_padding.Size();
         if (_line_wrap)
         {
             _text_painter->MeasureLines(this, 0.0001f, _text, 1.f, opt, tmp);
-            _cached_min = tmp.Size + innerPadding.Size();
+            _cached_min = tmp.Size + inner_padding.Size();
             _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
-            _cached_max = tmp.Size + innerPadding.Size();
+            _cached_max = tmp.Size + inner_padding.Size();
         }
         else
         {
@@ -416,8 +451,8 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
 //    Base::CaretPageUp();
 //
 //
-//    FudgetPadding innerPadding = GetInnerPadding();
-//    float height = innerPadding.Padded(GetBounds()).GetHeight();
+//    FudgetPadding inner_padding = GetInnerPadding();
+//    float height = inner_padding.Padded(GetBounds()).GetHeight();
 //
 //    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 //
@@ -457,8 +492,8 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
 //
 //    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 //
-//    FudgetPadding innerPadding = GetInnerPadding();
-//    float height = innerPadding.Padded(GetBounds()).GetHeight();
+//    FudgetPadding inner_padding = GetInnerPadding();
+//    float height = inner_padding.Padded(GetBounds()).GetHeight();
 //    float full_height = height;
 //
 //    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
@@ -545,8 +580,8 @@ void FudgetTextBox::ScrollToPos()
     if (_text_painter == nullptr)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    Rectangle bounds = innerPadding.Padded(GetBounds());
+    FudgetPadding inner_padding = GetInnerPadding();
+    Rectangle bounds = inner_padding.Padded(GetBounds());
 
     int caret_pos = GetCaretPos();
 
@@ -611,8 +646,8 @@ void FudgetTextBox::FixScrollPos()
     if (_text_painter == nullptr || _scroll_pos == Float2::Zero)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    Rectangle bounds = innerPadding.Padded(GetBounds());
+    FudgetPadding inner_padding = GetInnerPadding();
+    Rectangle bounds = inner_padding.Padded(GetBounds());
 
     Float2 extra = bounds.Size - (GetMeasurements().Size - _scroll_pos);
     if (extra.X > 0 && _scroll_pos.X > 0)
@@ -816,8 +851,8 @@ int FudgetTextBox::GetCaretPosPageUp()
     if (line_index < 1 || line_index >= GetMeasurements().Lines.Count())
         return caret_pos;
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    float height = innerPadding.Padded(GetBounds()).GetHeight();
+    FudgetPadding inner_padding = GetInnerPadding();
+    float height = inner_padding.Padded(GetBounds()).GetHeight();
 
     const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
@@ -885,8 +920,8 @@ int FudgetTextBox::GetCaretPosPageDown()
 
     const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
 
-    FudgetPadding innerPadding = GetInnerPadding();
-    float height = innerPadding.Padded(GetBounds()).GetHeight();
+    FudgetPadding inner_padding = GetInnerPadding();
+    float height = inner_padding.Padded(GetBounds()).GetHeight();
     float full_height = height;
 
     // TODO: make this an option?
