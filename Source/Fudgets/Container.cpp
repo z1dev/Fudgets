@@ -625,27 +625,27 @@ FudgetControlFlags FudgetContainer::GetInitFlags() const
 
 void FudgetContainer::RequestLayout()
 {
-    if (_layout != nullptr)
-    {
+    //if (_layout != nullptr)
+    //{
         _layout->RequestLayoutChildren(false);
         for (FudgetControl *c : _children)
             c->RequestLayout();
-    }
-    else
-    {
-        // With no layout, every control is positioned wherever they want to be.
+    //}
+    //else
+    //{
+    //    // With no layout, every control is positioned wherever they want to be.
 
-        for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
-        {
-            FudgetControl *control = _children[ix];
-            Float2 wanted = Float2::Zero;
-            Float2 minsiz = Float2::Zero;
-            Float2 maxsiz = Float2::Zero;
-            control->OnMeasure(LayoutSpace(), wanted, minsiz, maxsiz);
-            control->LayoutUpdate(control->_pos, wanted);
-            control->RequestLayout();
-        }
-    }
+    //    for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
+    //    {
+    //        FudgetControl *control = _children[ix];
+    //        Float2 wanted = Float2::Zero;
+    //        Float2 minsiz = Float2::Zero;
+    //        Float2 maxsiz = Float2::Zero;
+    //        control->OnMeasure(LayoutSpace(), wanted, minsiz, maxsiz);
+    //        control->LayoutUpdate(control->_pos, wanted);
+    //        control->RequestLayout();
+    //    }
+    //}
 }
 
 void FudgetContainer::SetParentDisabled(bool value)

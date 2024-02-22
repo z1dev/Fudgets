@@ -17,14 +17,15 @@
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Platform/Base/WindowBase.h"
 
-#include "Utils/SmartPointers.h"
+//#include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
 #include "Styling/StyleStructs.h"
+#include "Styling/Style.h"
 
 
 class FudgetContainer;
 class FudgetGUIRoot;
-class FudgetStyle;
+//class FudgetStyle;
 class FudgetTheme;
 class TextureBase;
 struct SpriteHandle;

@@ -11,7 +11,7 @@
 
 class FudgetThemes;
 class FudgetTheme;
-class FudgetElementPainter;
+class FudgetPartPainter;
 struct FudgetDrawArea;
 struct FudgetTextDrawSettings;
 struct FudgetPadding;
@@ -81,8 +81,7 @@ public:
 		if (!token.IsValid())
 			return nullptr;
 
-		FudgetPartPainter *painter = FudgetThemes::CreatePainter(token);
-		T *result = dynamic_cast<T*>(painter);
+		T *result = dynamic_cast<T*>(CreatePainterInternal(token));
 		if (result == nullptr)
 		{
 			Delete(result);
@@ -606,6 +605,8 @@ private:
 		}
 		return false;
 	}
+
+	FudgetPartPainter* CreatePainterInternal(FudgetToken token) const;
 
 	FudgetStyle *_parent;
 	Array<FudgetStyle*> _derived;

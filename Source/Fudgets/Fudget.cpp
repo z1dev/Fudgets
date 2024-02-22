@@ -3,6 +3,7 @@
 #include "GUIRoot.h"
 
 #include "Engine/Level/Scene/Scene.h"
+#include "Engine/Level/Actors/Camera.h"
 #include "Engine/Profiler/Profiler.h"
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Graphics/GPUContext.h"
@@ -369,7 +370,7 @@ void Fudget::GetWorldMatrix(Vector3 viewOrigin, API_PARAM(Out) Matrix& world) co
 #endif
 
     // Use default camera is not specified
-    auto camera = GetRenderCamera() == nullptr ? Camera::GetMainCamera() : GetRenderCamera();
+    Camera *camera = GetRenderCamera() == nullptr ? Camera::GetMainCamera() : GetRenderCamera();
 
     if (_renderMode == FudgetRenderMode::WorldSpace || (_renderMode == FudgetRenderMode::WorldSpaceFaceCamera && !camera))
     {
@@ -622,7 +623,7 @@ void Fudget::Setup()
 
 void Fudget::OnUpdate()
 {
-    if (this && IsActiveInHierarchy() && _renderMode != FudgetRenderMode::ScreenSpace)
+    if (IsActiveInHierarchy() && _renderMode != FudgetRenderMode::ScreenSpace)
     {
         try
         {
