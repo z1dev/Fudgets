@@ -14,11 +14,11 @@ class FUDGETS_API FudgetContainerLayout : public FudgetLayout
     using Base = FudgetLayout;
     DECLARE_SCRIPTING_TYPE(FudgetContainerLayout);
 protected:
-	/// <inheritdoc />
-	bool LayoutChildren() override;
+	///// <inheritdoc />
+	//void LayoutChildren(Float2 space) override;
 
-	/// <inheritdoc />
-	bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+	///// <inheritdoc />
+	//bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
 	/// <inheritdoc />
 	bool IsControlPositionChangePermitted(const FudgetControl *control) const override { return true; }

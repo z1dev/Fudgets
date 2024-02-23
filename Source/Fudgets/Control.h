@@ -604,7 +604,11 @@ public:
 	/// <returns>The coordinate of the control's bottom side</returns>
 	API_PROPERTY() float GetBottom() const { return GetTop() + GetHeight(); }
 
-	API_FUNCTION() virtual bool SizeDependsOnSpace() const { return false; }
+	/// <summary>
+	/// Whether the control might change any of its requested sizes depending on the available space. For example when
+	/// calculating word wrapping.
+	/// </summary>
+	API_PROPERTY() virtual bool SizeDependsOnSpace() const { return false; }
 
 	/// <summary>
 	/// Reports sizes of this control to the parent's layout based on available space. This function may be called

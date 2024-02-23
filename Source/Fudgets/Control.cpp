@@ -1476,7 +1476,7 @@ void FudgetControl::InitializeFlags()
 void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
 {
     if (_parent != nullptr)
-        _parent->MarkLayoutDirty(dirt_flags);
+        _parent->MarkLayoutDirty(dirt_flags, this);
 }
 
 void FudgetControl::SetParentDisabled(bool value)

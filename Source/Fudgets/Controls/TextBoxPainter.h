@@ -241,7 +241,15 @@ public:
     /// <returns>Height of the line at the character's position</returns>
     API_FUNCTION() virtual float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
 protected:
-
+    /// <summary>
+    /// Appends new line measurements to the existing ones.
+    /// </summary>
+    /// <param name="pos">Location of the line</param>
+    /// <param name="start_index">First character's index in the text on this line</param>
+    /// <param name="end_index">The next character's index in the text after the end of this line</param>
+    /// <param name="line_width">Width of the line in screen units</param>
+    /// <param name="line_height">Height of the line in screen units</param>
+    /// <param name="result">Measurements to expand</param>
     API_FUNCTION() virtual void AddLine(API_PARAM(Ref) Float2 &pos, int start_index, int end_index, float line_width, float line_height, API_PARAM(Ref) FudgetMultilineTextMeasurements &result);
 };
 

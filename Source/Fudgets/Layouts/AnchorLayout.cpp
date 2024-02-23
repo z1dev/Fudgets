@@ -14,24 +14,28 @@ FudgetAnchorLayout::FudgetAnchorLayout(const SpawnParams &params) : Base(params)
 
 }
 
-bool FudgetAnchorLayout::LayoutChildren()
+void FudgetAnchorLayout::LayoutChildren(Float2 space)
 {
     // All controls sizes will be their hint size if the anchors don't change the control's size. For anchors that affect
-            // the size too, the control's requested sizes are ignored. If the resulting size would be negative, the control will
-            // have 0 size.
+    // the size too, the control's requested sizes are ignored. If the resulting size would be negative, the control will
+    // have 0 size.
+
+    SetMeasuredSizes(space, Float2::Zero, Float2::Zero, Float2::Zero, false);
+
+    if (IsUnrestrictedSpace(space))
+        return;
 
     FudgetContainer *owner = GetOwner();
-    if (owner == nullptr)
-        return false;
-    int cnt = owner->GetChildCount();
-    if (cnt == 0)
-        return true;
+    int count = owner->GetChildCount();
 
-    Float2 space = owner->GetSize();
-
-    for (int ix = 0; ix < cnt; ++ix)
+    for (int ix = 0; ix < count; ++ix)
     {
-        FudgetAnchorLayoutSlot *slot = GetSlot(ix);
+        auto slot = GetSlot(ix);
+
+        Float2 wanted = Float2::Zero;
+        Float2 min = Float2::Zero;
+        Float2 max = Float2::Zero;
+        MeasureSlot(ix, slot->ComputedBounds.Size, wanted, min, max);
 
         Float2 control_size = Float2::Zero;
         Float2 control_pos = Float2::Zero;
@@ -40,12 +44,12 @@ bool FudgetAnchorLayout::LayoutChildren()
         if (slot->leftAnchor == FudgetHorizontalAnchor::None && slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
             float center = (slot->leftPercent + slot->rightPercent) * 0.5f;
-            control_size.X = slot->_wanted_size.X;
+            control_size.X = wanted.X;
             control_pos.X = (space.X * center) - control_size.X * 0.5f;
         }
         else if (slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
-            control_size.X = slot->_wanted_size.X;
+            control_size.X = wanted.X;
             if (slot->leftAnchor == FudgetHorizontalAnchor::Left)
                 control_pos.X = space.X * slot->leftPercent;
             else
@@ -53,7 +57,7 @@ bool FudgetAnchorLayout::LayoutChildren()
         }
         else if (slot->leftAnchor == FudgetHorizontalAnchor::None)
         {
-            control_size.X = slot->_wanted_size.X;
+            control_size.X = wanted.X;
             if (slot->rightAnchor == FudgetHorizontalAnchor::Right)
                 control_pos.X = space.X * (1 - slot->rightPercent) - control_size.X;
             else
@@ -88,12 +92,12 @@ bool FudgetAnchorLayout::LayoutChildren()
         if (slot->topAnchor == FudgetVerticalAnchor::None && slot->bottomAnchor == FudgetVerticalAnchor::None)
         {
             float center = (slot->topPercent + slot->bottomPercent) * 0.5f;
-            control_size.Y = slot->_wanted_size.Y;
+            control_size.Y = wanted.Y;
             control_pos.Y = (space.Y * center) - control_size.Y * 0.5f;
         }
         else if (slot->bottomAnchor == FudgetVerticalAnchor::None)
         {
-            control_size.Y = slot->_wanted_size.Y;
+            control_size.Y = wanted.Y;
             if (slot->topAnchor == FudgetVerticalAnchor::Top)
                 control_pos.Y = space.Y * slot->topPercent;
             else
@@ -101,7 +105,7 @@ bool FudgetAnchorLayout::LayoutChildren()
         }
         else if (slot->topAnchor == FudgetVerticalAnchor::None)
         {
-            control_size.Y = slot->_wanted_size.Y;
+            control_size.Y = wanted.Y;
             if (slot->bottomAnchor == FudgetVerticalAnchor::Bottom)
                 control_pos.Y = space.Y * (1 - slot->bottomPercent) - control_size.Y;
             else
@@ -132,38 +136,25 @@ bool FudgetAnchorLayout::LayoutChildren()
             }
         }
 
-        SetControlDimensions(ix, control_pos, control_size);
+        slot->ComputedBounds = Rectangle(control_pos, control_size);
     }
-
-    return true;
 }
 
-bool FudgetAnchorLayout::Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
-{
-    wanted_size = Float2::Zero;
-    min_size = Float2::Zero;
-    max_size = Float2::Zero;
-    CacheHintSize(wanted_size);
-    CacheMinSize(min_size);
-    CacheMinSize(max_size);
-
-    auto owner = GetOwner();
-    if (owner == nullptr)
-        return false;
-
-    int count = owner->GetChildCount();
-
-    if (count == 0)
-        return false;
-
-    for (int ix = 0; ix < count; ++ix)
-    {
-        auto slot = GetSlot(ix);
-        slot->_size_from_space = slot->_control->OnMeasure(available, slot->_wanted_size, slot->_min_size, slot->_max_size);
-    }
-
-    return false;
-}
+//bool FudgetAnchorLayout::Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
+//{
+//
+//    auto owner = GetOwner();
+//    int count = owner->GetChildCount();
+//
+//
+//    for (int ix = 0; ix < count; ++ix)
+//    {
+//        auto slot = GetSlot(ix);
+//        slot->_size_from_space = slot->_control->OnMeasure(available, slot->_wanted_size, slot->_min_size, slot->_max_size);
+//    }
+//
+//    return false;
+//}
 
 
 FudgetAnchorLayoutSlot* FudgetAnchorLayout::GetSlot(int index)
@@ -184,7 +175,7 @@ FudgetLayoutFlag FudgetAnchorLayout::GetInitFlags() const
 FudgetLayoutSlot* FudgetAnchorLayout::CreateSlot(FudgetControl *control)
 {
     auto slot = New<FudgetAnchorLayoutSlot>();
-    slot->_control = control;
+    slot->Control = control;
     return slot;
 }
 

@@ -272,23 +272,29 @@ Float2 FudgetContainer::LayoutSpace() const
     return GetSize();
 }
 
-void FudgetContainer::MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags)
+void FudgetContainer::MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags, FudgetControl *control)
 {
-    if (_layout == nullptr)
-    {
-        if (_parent != nullptr)
-            _parent->MarkLayoutDirty(dirt_flags & (~FudgetLayoutDirtyReason::Container));
+    if (control != nullptr && control->GetParent() != this)
         return;
-    }
 
-    _layout->MarkDirty(dirt_flags);
+    bool self = (dirt_flags & FudgetLayoutDirtyReason::Container) == FudgetLayoutDirtyReason::Container;
+    bool size_change = _layout->MarkDirty(dirt_flags) && !IgnoresLayoutSizes();
+    if (control != nullptr && (dirt_flags & FudgetLayoutDirtyReason::Size) == FudgetLayoutDirtyReason::Size)
+        _layout->MarkControlSizesDirty(control->GetIndexInParent());
+
+    if (_parent == nullptr)
+        return;
+
+    if (size_change)
+        dirt_flags = FudgetLayoutDirtyReason::Size;
+
+    if (!self && !size_change)
+        return;
 
     dirt_flags &= ~FudgetLayoutDirtyReason::Container;
-    if (!IgnoresLayoutSizes())
-        dirt_flags &= ~FudgetLayoutDirtyReason::Size;
 
-    if (_parent != nullptr && (int)dirt_flags != 0)
-        _parent->MarkLayoutDirty(dirt_flags);
+    if ((int)dirt_flags != 0)
+        _parent->MarkLayoutDirty(dirt_flags, this);
 }
 
 void FudgetContainer::EnsureLayout()
@@ -316,56 +322,21 @@ void FudgetContainer::OnDraw()
 
 bool FudgetContainer::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
-    //if (_layout == nullptr)
-    //    return Base::OnMeasure(available, wanted, min_size);
-
-    bool result = _layout->Measure(available, wanted, min_size, max_size) || (!_layout->HasAllFlags(FudgetLayoutFlag::CanProvideSizes) && SizeDependsOnSpace());
+    bool result = false;
+    if (!IgnoresLayoutSizes())
+    {
+        _layout->DoLayoutChildren(available);
+        if (_layout->HasAllFlags(FudgetLayoutFlag::CanProvideSizes))
+            result = _layout->SizeDependsOnSpace();
+        else if (!_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideSizes))
+            result = SizeDependsOnSpace();
+        else
+            result = _layout->SizeDependsOnSpace() || SizeDependsOnSpace();
+    }
 
     wanted = GetLayoutHintSize();
     min_size = GetLayoutMinSize();
     max_size = GetLayoutMaxSize();
-
-    //bool self_hint_width = !HasSizeOverride(FudgetSizeOverride::LayoutHintWidth) || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideHintSizeWidth)
-    //    || (HasSizeOverride(FudgetSizeOverride::UnrestrictedHintWidth) && IsDirectSizeChangePermitted());
-    //bool self_hint_height = !HasSizeOverride(FudgetSizeOverride::LayoutHintHeight) || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideHintSizeHeight)
-    //    || (HasSizeOverride(FudgetSizeOverride::UnrestrictedHintHeight) && IsDirectSizeChangePermitted());
-
-    //if (self_hint_width && self_hint_height)
-    //{
-    //    wanted = GetHintSize();
-    //}
-    //else if (self_hint_width)
-    //{
-    //    Float2 size = GetHintSize();
-    //    wanted.X = size.X;
-    //}
-    //else if (self_hint_height)
-    //{
-    //    Float2 size = GetHintSize();
-    //    wanted.Y = size.Y;
-    //}
-
-    //bool self_min_width = !HasSizeOverride(FudgetSizeOverride::LayoutMinWidth) || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMinSizeWidth)
-    //    || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMinWidth) && IsDirectSizeChangePermitted());
-    //bool self_min_height = !HasSizeOverride(FudgetSizeOverride::LayoutMinHeight) || !_layout->HasAnyFlag(FudgetLayoutFlag::CanProvideMinSizeHeight)
-    //    || (HasSizeOverride(FudgetSizeOverride::UnrestrictedMinHeight) && IsDirectSizeChangePermitted());
-
-    //if (self_min_width && self_min_height)
-    //{
-    //    min_size = GetMinSize();
-    //}
-    //else if (self_min_width)
-    //{
-    //    Float2 size = GetMinSize();
-    //    min_size.X = size.X;
-    //}
-    //else if (self_min_height)
-    //{
-    //    Float2 size = GetMinSize();
-    //    min_size.Y = size.Y;
-    //}
-
-
 
     return result;
 }
@@ -625,27 +596,9 @@ FudgetControlFlags FudgetContainer::GetInitFlags() const
 
 void FudgetContainer::RequestLayout()
 {
-    //if (_layout != nullptr)
-    //{
-        _layout->RequestLayoutChildren(false);
-        for (FudgetControl *c : _children)
-            c->RequestLayout();
-    //}
-    //else
-    //{
-    //    // With no layout, every control is positioned wherever they want to be.
-
-    //    for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
-    //    {
-    //        FudgetControl *control = _children[ix];
-    //        Float2 wanted = Float2::Zero;
-    //        Float2 minsiz = Float2::Zero;
-    //        Float2 maxsiz = Float2::Zero;
-    //        control->OnMeasure(LayoutSpace(), wanted, minsiz, maxsiz);
-    //        control->LayoutUpdate(control->_pos, wanted);
-    //        control->RequestLayout();
-    //    }
-    //}
+    _layout->RequestLayoutChildren(false);
+    for (FudgetControl *c : _children)
+        c->RequestLayout();
 }
 
 void FudgetContainer::SetParentDisabled(bool value)

@@ -264,11 +264,12 @@ public:
     API_PROPERTY() Float2 LayoutSpace() const;
 
     /// <summary>
-    /// Notifies the layout of this container that the stored sizes and control positions need to be recalculated.
+    /// Notifies this container about a change that might require layout calculations. If a control initiated the
+    /// change, it should be passed to the function, otherwise its sizes might not be measured.
     /// </summary>
-    /// <param name="dirt_flags">The size that needs recalculation</param>
-    /// <returns></returns>
-    API_FUNCTION() void MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags);
+    /// <param name="dirt_flags">Cause of the layout change</param>
+    /// <param name="control">Child control that initiated the change or null</param>
+    API_FUNCTION() void MarkLayoutDirty(FudgetLayoutDirtyReason dirt_flags, FudgetControl *control = nullptr);
 
     /// <summary>
     /// Makes sure that this container and the child controls in this container have a valid size and position. This

@@ -220,10 +220,10 @@ public:
 
 protected:
     /// <inheritdoc />
-    bool LayoutChildren() override;
+    void LayoutChildren(Float2 space) override;
 
-    /// <inheritdoc />
-    bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    ///// <inheritdoc />
+    //bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
 
     /// <summary>

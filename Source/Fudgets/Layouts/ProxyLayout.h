@@ -18,8 +18,12 @@ public:
     /// <summary>
     /// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
     /// </summary>
-    /// <returns>Whether the layout was successful and the layout dirty flag can be cleared</returns>
-    API_FUNCTION() virtual bool ProxyInterfaceLayoutChildren() = 0;
+    API_FUNCTION() virtual void ProxyInterfacePreLayoutChildren(Float2 space) = 0;
+
+    /// <summary>
+    /// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
+    /// </summary>
+    API_FUNCTION() virtual void ProxyInterfaceLayoutChildren(Float2 space) = 0;
 
 
     /// <summary>
@@ -29,20 +33,27 @@ public:
     /// <returns>The created object holding layouting properties of the control</returns>
     API_FUNCTION() virtual FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) = 0;
 
-    /// <summary>
-    /// Acts in place of a FudgetProxyLayout to provide the Measure method.
-    /// </summary>
-    /// <param name="avaliable">The available space for the layout contents or unrestricted when negative</param>
-    /// <param name="wanted_size">The size requested by the layout contents. This might be larger than the available space.</param>
-    /// <param name="min_size">The minimum size requied by the layout. Should be the same value unless the contents change</param>
-    /// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
-    API_FUNCTION() virtual bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) = 0;
+    ///// <summary>
+    ///// Acts in place of a FudgetProxyLayout to provide the Measure method.
+    ///// </summary>
+    ///// <param name="avaliable">The available space for the layout contents or unrestricted when negative</param>
+    ///// <param name="wanted_size">The size requested by the layout contents. This might be larger than the available space.</param>
+    ///// <param name="min_size">The minimum size requied by the layout. Should be the same value unless the contents change</param>
+    ///// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
+    //API_FUNCTION() virtual bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) = 0;
 
     /// <summary>
     /// Acts in place of a FudgetProxyLayout to provide the GetInitFlags method.
     /// </summary>
     /// <returns>Layout flags that should be set to the layout.</returns>
     API_FUNCTION() virtual FudgetLayoutFlag ProxyInterfaceGetInitFlags() const = 0;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    API_FUNCTION() virtual bool ProxyInterfacePlaceControlInSlotRectangle(int index) = 0;
 };
 
 
@@ -60,11 +71,36 @@ class FUDGETS_API FudgetProxyLayout : public FudgetLayout
 public:
     ~FudgetProxyLayout();
 
+    /// <summary>
+    /// Call from an IProxylayoutContainer's ProxyInterfaceLayoutChildren to set the calculated position and size of it controls.
+    /// </summary>
+    /// <param name="index">Index of the control</param>
+    /// <param name="pos">Calculated position of control relative to the IProxyLayoutContainer</param>
+    /// <param name="size">Calculated size of the control</param>
+    API_FUNCTION() void SetComputedBounds(int index, Float2 pos, Float2 size);
+
+    /// <summary>
+    /// Call from an IProxylayoutContainer's ProxyInterfaceLayoutChildren when the proxy layout calculated its size requirements.
+    /// If the available space is unrestricted (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and
+    /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause float overflow
+    /// when calculating any of the sizes.
+    /// </summary>
+    /// <param name="space">The available space for child controls</param>
+    /// <param name="wanted_size">The optimal size of the layout</param>
+    /// <param name="wanted_min">The minimal usable size for the layout</param>
+    /// <param name="wanted_max">The maximum useful size for the layout</param>
+    /// <param name="size_from_space">Whether the layout or any of the child controls will modify their size requirements based on
+    /// available space (for example word wrapped text)</param>
+    API_FUNCTION() void SetControlSizes(Float2 space, Float2 wanted_size, Float2 wanted_min, Float2 wanted_max, bool size_from_space);
+protected:
     /// <inheritdoc />
-    bool LayoutChildren() override;
+    void PreLayoutChildren(Float2 space) override;
+
+    /// <inheritdoc />
+    void LayoutChildren(Float2 space) override;
 
     ///// <inheritdoc />
-    bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    //bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <inheritdoc />
     FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
@@ -75,4 +111,6 @@ public:
     /// <inheritdoc />
     void SetControlDimensions(int index, Float2 pos, Float2 size) override;
 
+    /// <inheritdoc />
+    void PlaceControlInSlotRectangle(int index) override;
 };

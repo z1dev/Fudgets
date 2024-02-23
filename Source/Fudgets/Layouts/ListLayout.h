@@ -86,12 +86,12 @@ public:
     /// <summary>
     /// Horizontal alignment of control in its column or row
     /// </summary>
-    API_FIELD() FudgetHorzAlign _horz_align;
+    API_FIELD() FudgetLayoutHorzAlign _horz_align;
 
     /// <summary>
     /// Vertical alignment of control in its column or row
     /// </summary>
-    API_FIELD() FudgetVertAlign _vert_align;
+    API_FIELD() FudgetLayoutVertAlign _vert_align;
 
     /// <summary>
     /// Padding around inside the slot around the control
@@ -116,23 +116,17 @@ public:
 
     // Cashed values. Don't save, don't edit.
 
-    /// <summary>
-    /// The slot can grow larger than the _wanted_size if there is leftover space. It will take the
-    /// part of the space multiplied by this ratio.
-    /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") float _grow_ratio;
+    ///// <summary>
+    ///// Size of a slot as measured for the list layout. It uses the original measurements and the list layout
+    ///// sizing and shrinking rules to determine the value.
+    ///// </summary>
+    //API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _wanted_size;
 
-    /// <summary>
-    /// How much the slot can shrink from the _wanted_size before the contents' minimum size is reached. The
-    /// x and y components of this value might be unrelated to each other. For example auto sizing labels
-    /// have different height based on their width. In that case the minimum height is determined by the
-    /// number of newlines in the text, even if the width might be much larger in that case.
-    /// This value is not calculated more than once per layout frame. It must be constant until the contents
-    /// change.
-    /// </summary>
-    API_FIELD(Attributes = "HideInEditor") Float2 _shrink_size;
-
-
+    ///// <summary>
+    ///// Size a slot can shrink as measured for the list layout. It uses the original measurements and the list
+    ///// layout sizing and shrinking rules to determine the value.
+    ///// </summary>
+    //API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _shrink_size;
 
 };
 
@@ -180,7 +174,7 @@ public:
     /// </summary>
     /// <param name="index">The control's index in its container</param>
     /// <returns>The control's horizontal alignment</returns>
-    API_FUNCTION() FudgetHorzAlign GetSlotHorizontalAlignment(int index) const;
+    API_FUNCTION() FudgetLayoutHorzAlign GetSlotHorizontalAlignment(int index) const;
 
     /// <summary>
     /// Sets a control's horizontal alignment given its index in the owner container. The horizontal alignment
@@ -188,7 +182,7 @@ public:
     /// </summary>
     /// <param name="index">The control's index in its container</param>
     /// <param name="value">The control's new horizontal alignment</param>
-    API_FUNCTION() void SetSlotHorizontalAlignment(int index, FudgetHorzAlign value);
+    API_FUNCTION() void SetSlotHorizontalAlignment(int index, FudgetLayoutHorzAlign value);
 
     /// <summary>
     /// Gets a control's vertical alignment given its index in the owner container. The vertical alignment
@@ -196,7 +190,7 @@ public:
     /// </summary>
     /// <param name="index">The control's index in its container</param>
     /// <returns>The control's vertical alignment</returns>
-    API_FUNCTION() FudgetVertAlign GetSlotVerticalAlignment(int index) const;
+    API_FUNCTION() FudgetLayoutVertAlign GetSlotVerticalAlignment(int index) const;
 
     /// <summary>
     /// Sets a control's vertical alignment given its index in the owner container. The vertical alignment
@@ -204,7 +198,7 @@ public:
     /// </summary>
     /// <param name="index">The control's index in its container</param>
     /// <param name="value">The control's new vertical alignment</param>
-    API_FUNCTION() void SetSlotVerticalAlignment(int index, FudgetVertAlign value);
+    API_FUNCTION() void SetSlotVerticalAlignment(int index, FudgetLayoutVertAlign value);
 
     ///// <summary>
     ///// Returns true if the control wants its minimum or maximum size respected in the layout when it's
@@ -248,10 +242,12 @@ protected:
     //Float2 RequestSize(FudgetSizeType type) const override;
 
     /// <inheritdoc />
-    bool LayoutChildren() override;
-
+    void PreLayoutChildren(Float2 space) override;
     /// <inheritdoc />
-    bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    void LayoutChildren(Float2 space) override;
+
+    ///// <inheritdoc />
+    //bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <inheritdoc />
     FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
@@ -266,16 +262,20 @@ protected:
     /// <inheritdoc />
     FudgetLayoutFlag GetInitFlags() const override;
 
-private:
-    /// <summary>
-    /// Requests the content of slots with the SizeDependsOnSpace flag to re-measure themselves for the available
-    /// space provided in the layout's relevant direction. The minimum size is ignored.
-    /// </summary>
-    /// <param name="sizes">Array of calculated space in each slot in the relevant direction</param>
-    /// <returns>Whether any of the slots' wanted size changed from the original wanted size</returns>
-    bool RepeatMeasure(const Array<float> &sizes);
+    /// <inheritdoc />
+    void PlaceControlInSlotRectangle(int index) override;
 
-    void PlaceControlInSlotRectangle(int index, FudgetListLayoutSlot *slot, Float2 pos, Float2 size);
+private:
+    ///// <summary>
+    ///// Requests the content of slots with the SizeDependsOnSpace flag to re-measure themselves for the available
+    ///// space provided in the layout's relevant direction. The minimum size is ignored.
+    ///// </summary>
+    ///// <param name="sizes">Array of calculated space in each slot in the relevant direction</param>
+    ///// <returns>Whether any of the slots' wanted size changed from the original wanted size</returns>
+    //bool RepeatMeasure(const Array<float> &sizes);
+
+    // Used during layouting to check if the sizing rule allows its slot to expand. It uses data provided from PreLayoutChildren
+    bool IsExpandingRule(FudgetDistributedSizingRule rule) const;
 
     FORCE_INLINE float Relevant(Float2 value) const
     {
@@ -316,4 +316,18 @@ private:
 
     FudgetOrientation _ori;
     //bool _stretched;
+
+    // Temporary values used during layout frame:
+
+    // Available space with all slot paddings subtracted 
+    float _no_padding_space;
+
+    bool _has_expanding;
+    bool _has_grow_expanding;
+    bool _has_grow_exact;
+    bool _has_exact;
+    bool _has_shrink;
+    bool _has_minimal;
+
+    bool _space_dependent;
 };

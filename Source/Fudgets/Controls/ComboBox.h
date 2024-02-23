@@ -105,9 +105,15 @@ public:
     /// <inheritdoc />
     FudgetLayoutFlag ProxyInterfaceGetInitFlags() const override;
     /// <inheritdoc />
-    bool ProxyInterfaceLayoutChildren() override;
+    void ProxyInterfacePreLayoutChildren(Float2 space) override;
     /// <inheritdoc />
-    bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    void ProxyInterfaceLayoutChildren(Float2 space) override;
+
+    ///// <inheritdoc />
+    //bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+
+    /// <inheritdoc />
+    bool ProxyInterfacePlaceControlInSlotRectangle(int index) override { return false; }
 
     /// <inheritdoc />
     bool WantsNavigationKey(KeyboardKeys key) override;

@@ -5,6 +5,7 @@
 #include "Engine/Core/Math/Vector2.h"
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Serialization/Serialization.h"
+#include "Engine/Core/Math/Rectangle.h"
 
 class FudgetControl;
 class FudgetContainer;
@@ -16,39 +17,57 @@ enum class FudgetLayoutDirtyReason : uint8;
 /// Horizontal alignment of a control in the slots or cells of layouts that can align controls horizontally in different ways.
 /// </summary>
 API_ENUM()
-enum class FudgetHorzAlign
+enum class FudgetLayoutHorzAlign
 {
     /// <summary>
-    /// Control should stick to the left side of the available space. If the slot is too small, the control will fill the area
-    /// and this setting wil act the same as if it was Fill.
+    /// The control should stick to the left side of the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Left,
     /// <summary>
-    /// Control should be centered horizontally in the available space. If the slot is too small, the control will fill the
-    /// area and this setting wil act the same as if it was Fill.
+    /// The control should be centered in the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Center,
     /// <summary>
-    /// Control should stick to the right side of the available space. If the slot is too small, the control will fill the area
-    /// and this setting wil act the same as if it was Fill.
+    /// The control should stick to the right side of the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Right,
     /// <summary>
-    /// Makes the control fill the available area horizontally, no matter its size.
+    /// The control should stick to the left side of the layout slot. If the slot is bigger, the control will be resized but
+    /// won't be larger than its maximum size. If the slot is too small, the control will fill the area and this setting wil
+    /// act the same as if it was Fill.
+    /// </summary>
+    LeftGrow,
+    /// <summary>
+    /// The control should be centered in the layout slot. If the slot is bigger, the control will be resized but won't
+    /// be larger than its maximum size. If the slot is too small, the control will fill the area and this setting will act the
+    /// same as if it was Fill.
+    /// </summary>
+    CenterGrow,
+    /// <summary>
+    /// The control should stick to the right side of the layout slot. If the slot is bigger, the control will be resized but
+    /// won't be larger than its maximum size. If the slot is too small, the control will fill the area and this setting will act
+    /// the same as if it was Fill.
+    /// </summary>
+    RightGrow,
+    /// <summary>
+    /// The control should fill the available space in its slot horizontally.
     /// </summary>
     Fill,
     /// <summary>
-    /// Control should stick to the left side of the available space. If the slot is too small, the control will keep its minimal
+    /// The control should stick to the left side of the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the right or be clipped.
     /// </summary>
     ClipLeft,
     /// <summary>
-    /// Control should be centered horizontally in the available space. If the slot is too small, the control will keep its minimal
+    /// The control should be centered horizontally in the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the sides or be clipped.
     /// </summary>
     ClipCenter,
     /// <summary>
-    /// Control should stick to the right side of the available space. If the slot is too small, the control will keep its minimal
+    /// The control should stick to the right side of the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the left or be clipped.
     /// </summary>
     ClipRight
@@ -58,39 +77,57 @@ enum class FudgetHorzAlign
 /// Vertical alignment of a control in the slots or cells of layouts that can align controls vertically in different ways.
 /// </summary>
 API_ENUM()
-enum class FudgetVertAlign
+enum class FudgetLayoutVertAlign
 {
     /// <summary>
-    /// Control should stick to the top side of the available space. If the slot is too small, the control will fill the area
-    /// and this setting wil act the same as if it was Fill.
+    /// The control should stick to the top of the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Top,
     /// <summary>
-    /// Control should be centered vertically in the available space. If the slot is too small, the control will fill the
-    /// area and this setting wil act the same as if it was Fill.
+    /// The control should be centered in the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Center,
     /// <summary>
-    /// Control should stick to the bottom side of the available space. If the slot is too small, the control will fill the area
-    /// and this setting wil act the same as if it was Fill.
+    /// The control should stick to the bottom of the layout slot. If the slot is bigger, the control will keep its hint size.
+    /// If the slot is too small, the control will fill the area and this setting will act the same as if it was Fill.
     /// </summary>
     Bottom,
     /// <summary>
-    /// Makes the control fill the available area vertically, no matter its size.
+    /// The control should stick to the top of the layout slot. If the slot is bigger, the control will be resized but
+    /// won't be larger than its maximum size. If the slot is too small, the control will fill the area and this setting wil
+    /// act the same as if it was Fill.
+    /// </summary>
+    TopGrow,
+    /// <summary>
+    /// The control should be centered in the layout slot. If the slot is bigger, the control will be resized but won't
+    /// be larger than its maximum size. If the slot is too small, the control will fill the area and this setting will act the
+    /// same as if it was Fill.
+    /// </summary>
+    CenterGrow,
+    /// <summary>
+    /// The control should stick to the bottom of the layout slot. If the slot is bigger, the control will be resized but
+    /// won't be larger than its maximum size. If the slot is too small, the control will fill the area and this setting will act
+    /// the same as if it was Fill.
+    /// </summary>
+    BottomGrow,
+    /// <summary>
+    /// The control should fill the available space in its slot horizontally.
     /// </summary>
     Fill,
     /// <summary>
-    /// Control should stick to the top side of the available space. If the slot is too small, the control will keep its minimal
+    /// The control should stick to the top of the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the bottom or be clipped.
     /// </summary>
     ClipTop,
     /// <summary>
-    /// Control should be centered vertically in the available space. If the slot is too small, the control will keep its minimal
+    /// The control should be centered horizontally in the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the sides or be clipped.
     /// </summary>
     ClipCenter,
     /// <summary>
-    /// Control should stick to the bottom side of the available space. If the slot is too small, the control will keep its minimal
+    /// The control should stick to the bottom of the layout slot. If the slot is too small, the control will keep its minimal
     /// size, and either stick out to the top or be clipped.
     /// </summary>
     ClipBottom
@@ -114,8 +151,7 @@ enum class FudgetOrientation
 
 /// <summary>
 /// Flags that indicate what change will result in dirty layouts and sizes, and how the layout's size might
-/// influence the size of its container. If no LayoutOn... and ResizeOn... flags are specified, the layout
-/// allows the owner container's controls to size and position themselves.
+/// influence the size of its container.
 /// </summary>
 API_ENUM(Attributes = "Flags")
 enum class FudgetLayoutFlag
@@ -263,6 +299,43 @@ enum class FudgetLayoutFlag
 DECLARE_ENUM_OPERATORS(FudgetLayoutFlag);
 
 
+/// <summary>
+/// Measurements of a control in a layout, which depends on the available space for some controls
+/// </summary>
+API_STRUCT()
+struct FUDGETS_API FudgetLayoutSizeCache
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLayoutSizeCache);
+
+    FudgetLayoutSizeCache() : IsValid(false), SpaceMeasured(MAX_float - 1.0f), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
+
+    /// <summary>
+    /// Whether the data in this cache is valid and hasn't been invalidated.
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") bool IsValid;
+    /// <summary>
+    /// Space provided in measure used to calculate the wanted sizes
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 SpaceMeasured;
+    /// <summary>
+    /// The optimal size for a control.
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Size;
+    /// <summary>
+    /// The minimum size requested by a control.
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Min;
+    /// <summary>
+    /// The maximum size requested by a control.
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Max;
+
+    /// <summary>
+    /// Same as the control flag. If the available space changes, the control's sizes might change as well. Can be
+    /// true for a container that holds a control with this flag or has a layout with such behavior.
+    /// </summary>
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") bool SizeFromSpace;
+};
 
 /// <summary>
 /// Base class for "slots" in a layout that can be used to assign properties for controls for layouting
@@ -274,44 +347,38 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
     DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
 public:
-    /// <summary>
-    /// Fetches the control that is positioned and sized by the values in this slot
-    /// </summary>
-    /// <returns>The control in this slot</returns>
-    API_PROPERTY(Attributes="HideInEditor") FudgetControl* GetControl() const { return _control; }
+    ///// <summary>
+    ///// Fetches the control that is positioned and sized by the values in this slot
+    ///// </summary>
+    ///// <returns>The control in this slot</returns>
+    //API_PROPERTY(Attributes="HideInEditor") FudgetControl* GetControl() const { return _control; }
 
     /// <summary>
     /// The control placed in the slot. The attributes affect its position and size 
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor") FudgetControl *_control;
+    API_FIELD(Attributes = "HideInEditor") FudgetControl *Control;
 
     /// <summary>
     /// Size of the control at the start of layouting. Used for determining if the control needs to update its
     /// own layout after the layout is calculated. Controls with the SizeDependsOnSpace flag are asked to
     /// calculate their sizes again if the new size doesn't match the old one.
     /// </summary>
-    API_FIELD(Attributes="HideInEditor, NoSerialize") Float2 _old_size;
+    API_FIELD(Attributes="HideInEditor, NoSerialize") FudgetLayoutSizeCache OldSizes;
 
     /// <summary>
-    /// Same as the control flag. If the available space changes, the control's sizes might change as well. Can be
-    /// true for a container that holds a control with this flag or has a layout with such behavior.
+    /// Dimensions of a control when it can take all the space it requested.
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") bool _size_from_space;
-
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") FudgetLayoutSizeCache UnrestrictedSizes;
     /// <summary>
     /// Dimensions the control wishes to have, provided a space it can occupy. Usually calculated from the hint size
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _wanted_size;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") FudgetLayoutSizeCache Sizes;
+
 
     /// <summary>
-    /// Minimum dimensions the control needs
+    /// Temporary value used during layout calculation
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _min_size;
-
-    /// <summary>
-    /// Largest size the control wants
-    /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _max_size;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Rectangle ComputedBounds;
 
 };
 
@@ -362,7 +429,16 @@ public:
     /// depend on the specific change will not be marked dirty.
     /// </summary>
     /// <param name="dirt_reason">What changed in the container or contents</param>
-    API_FUNCTION() virtual void MarkDirty(FudgetLayoutDirtyReason dirt_reason);
+    /// <returns>Whether the size of the layout could change after a layout calculation</returns>
+    API_FUNCTION() virtual bool MarkDirty(FudgetLayoutDirtyReason dirt_reason);
+
+    /// <summary>
+    /// Notifies the layout that the size of one of its child controls changed and it needs to be measured.
+    /// This does not mark the layout dirty and won't result in updating the control sizes unless MarkDirty
+    /// is also called.
+    /// </summary>
+    /// <param name="index">Index of the control in the owner container</param>
+    API_FUNCTION() virtual void MarkControlSizesDirty(int index);
 
     /// <summary>
     /// Sets the dirty flag for any change that happened during layout recalculation in a parent's layout. The
@@ -395,35 +471,47 @@ public:
     API_PROPERTY(Attributes="HideInEditor") Float2 GetMaxSize();
 
     /// <summary>
+    /// Whether the layout or any of its child controls can change their requested sizes depending on the available space.
+    /// </summary>
+    API_PROPERTY(Attributes = "HideInEditor") bool SizeDependsOnSpace() const;
+
+    /// <summary>
     /// Calculates the child controls position and size on the owner container if necessary or requested.
     /// </summary>
     /// <param name="forced">Whether to recalculate layouts even if the layout is not dirty.</param>
     API_FUNCTION() void RequestLayoutChildren(bool forced);
 
+    /// <summary>
+    /// Use in measurement and layout functions to determine if the space for the layout is unrestricted or not.
+    /// </summary>
+    /// <param name="space">The size of the available space to check</param>
+    /// <returns>Whether the layout can size and place its children without being limited in space</returns>
+    API_FUNCTION() FORCE_INLINE bool IsUnrestrictedSpace(Float2 space) const { return space.X < 0.f && space.Y < 0.f; }
+
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 protected:
-    /// <summary>
-    /// Call in derived layout classes to cache the size after Measure.
-    /// </summary>
-    /// <param name="value">Updated size to store</param>
-    API_FUNCTION() void CacheMeasureSpace(Float2 value) { _cached_space = value; }
-    /// <summary>
-    /// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    /// size until new measurements are made
-    /// </summary>
-    /// <param name="value">Updated size to store</param>
-    API_FUNCTION() void CacheHintSize(Float2 value) { _cached_hint = value; }
-    /// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    /// size until new measurements are made
-    /// </summary>
-    /// <param name="value">Updated size to store</param>
-    API_FUNCTION() void CacheMinSize(Float2 value) { _cached_min = value; }
-    /// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    /// size until new measurements are made
-    /// </summary>
-    /// <param name="value">Updated size to store</param>
-    API_FUNCTION() void CacheMaxSize(Float2 value) { _cached_max = value; }
+    ///// <summary>
+    ///// Call in derived layout classes to cache the size after Measure.
+    ///// </summary>
+    ///// <param name="value">Updated size to store</param>
+    //API_FUNCTION() void CacheMeasureSpace(Float2 value) { _cached_space = value; }
+    ///// <summary>
+    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
+    ///// size until new measurements are made
+    ///// </summary>
+    ///// <param name="value">Updated size to store</param>
+    //API_FUNCTION() void CacheHintSize(Float2 value) { _cached_hint = value; }
+    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
+    ///// size until new measurements are made
+    ///// </summary>
+    ///// <param name="value">Updated size to store</param>
+    //API_FUNCTION() void CacheMinSize(Float2 value) { _cached_min = value; }
+    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
+    ///// size until new measurements are made
+    ///// </summary>
+    ///// <param name="value">Updated size to store</param>
+    //API_FUNCTION() void CacheMaxSize(Float2 value) { _cached_max = value; }
 
     /// <summary>
     /// Checks the index argument and determines if it is a valid index for accessing a slot on the layout
@@ -460,22 +548,74 @@ protected:
     API_FUNCTION() virtual void FillSlots();
 
     /// <summary>
-    /// Calculates and sets the child controls' position and size on the owner container, using the available space, and
-    /// precalculated sizes in slots.
+    /// Called once before starting the layouting calculations. Layouts can use this function to pre-calculate values.
+    /// For example the available space without all padding that wouldn't change between steps of layout calculation
     /// </summary>
-    /// <returns>Whether the layout was successful and the layout dirty flag can be cleared</returns>
-    API_FUNCTION() virtual bool LayoutChildren() { return false; }
+    /// <param name="space"></param>
+    /// <returns></returns>
+    API_FUNCTION() virtual void PreLayoutChildren(Float2 space);
 
     /// <summary>
-    /// Calculates the size of the layout contents based on a value for available width and height. If one of the
-    /// available dimensions is negative, then the layout is not restricted in space in that dimension.
+    /// Calculates the bounds of the child controls in the owner container, using the available space and slot size
+    /// measurements. Call SetMeasuredSizes at least once to provide the parent layouts the appropriate sizes of this
+    /// layout.
     /// </summary>
-    /// <param name="avaliable">The available space for the layout contents or unrestricted when negative</param>
-    /// <param name="wanted_size">The size requested by the layout contents. This might be larger than the available space.</param>
-    /// <param name="min_size">The minimum size requied by the layout. Should be constant unless the contents change</param>
-    /// <param name="min_size">The maximum size requied by the layout. Should be constant unless the contents change</param>
-    /// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
-    API_FUNCTION() virtual bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) { ASSERT(false); }
+    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
+    API_FUNCTION() virtual void LayoutChildren(Float2 space);
+
+    ///// <summary>
+    ///// Calculates the size of the layout contents based on a value for available width and height. If one of the available
+    ///// dimensions is negative, then the layout is not restricted in space in that dimension.
+    ///// </summary>
+    ///// <param name="owner">The container owner of this layout. Provided for convenience.</param>
+    ///// <param name="count">The number of controls. Provided for convenience.</param>
+    ///// <param name="avaliable">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
+    ///// <param name="wanted_size">The size requested by the control in the slot. This might be larger than the available space.</param>
+    ///// <param name="wanted_min">The minimum size requied by the control in the slot. Should be constant unless the contents change</param>
+    ///// <param name="wanted_max">The maximum size requied by the control in the slot. Should be constant unless the contents change</param>
+    ///// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
+    //API_FUNCTION() virtual bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max) { ASSERT(false); }
+
+    /// <summary>
+    /// Calculates and sets the child controls' position and size on the owner container, using the available space, and
+    /// precalculated sizes in slots. Its behavior is undefined if the sizes are not already measured with DoMeasure.
+    /// In derived classes override LayoutChildren instead.
+    /// </summary>
+    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
+    API_FUNCTION() virtual void DoLayoutChildren(Float2 space);
+
+    /// <summary>
+    /// Measures the control in the slot if it doesn't have valid measurements for the passed available space. Otherwise returns
+    /// the cached values. Call this in Measure instead of directly accessing the slot's control, calling its OnMeasure.
+    /// </summary>
+    /// <param name="index">Slot index</param>
+    /// <param name="available">The available space for the layout contents. Negative values mean unrestricted space</param>
+    /// <param name="wanted_size">The size requested by the control in the slot. This might be larger than the available space.</param>
+    /// <param name="wanted_min">The minimum size requied by the control in the slot. Should be constant unless the contents change</param>
+    /// <param name="wanted_max">The maximum size requied by the control in the slot. Should be constant unless the contents change</param>
+    /// <returns>Whether the control's size depends on available space, or has a child control that influences this behavior</returns>
+    API_FUNCTION() virtual bool MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
+
+    /// <summary>
+    /// Call inside LayoutChildren when the layout calculated its size requirements. If the available space is unrestricted
+    /// (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and updating any slot layout data
+    /// should be avoided. Care must be taken not to cause float overflow when calculating any of the sizes.
+    /// </summary>
+    /// <param name="available">The available space for child controls</param>
+    /// <param name="wanted_size">The optimal size of the layout</param>
+    /// <param name="wanted_min">The minimal usable size for the layout</param>
+    /// <param name="wanted_max">The maximum useful size for the layout</param>
+    /// <param name="size_from_space">Whether the layout or any of the child controls will modify their size requirements based on
+    /// available space (for example word wrapped text)</param>
+    API_FUNCTION() void SetMeasuredSizes(Float2 available, Float2 wanted_size, Float2 wanted_min, Float2 wanted_max, bool size_from_space);
+
+    /// <summary>
+    /// Called after the end of layout calculation to place the controls in their slot. The slot size should already be calculated and saved
+    /// in the ComputedBounds member of the slots. By default the layout moves the controls to fill their calculated bounds, but derived
+    /// classes can fit controls in the calculated bounds in different ways, for example to align smaller controls to one side of their slot.
+    /// </summary>
+    /// <param name="index"></param>
+    API_FUNCTION() virtual void PlaceControlInSlotRectangle(int index);
 
     /// <summary>
     /// Creates a slot which represents properties of a single child control on the owner container. The function
@@ -577,17 +717,20 @@ private:
     bool _layout_dirty;
     //bool _size_dirty;
 
-    // The available size given by the owner container used for the cached measurements. The dirty flag
-    // doesn't need to be true if this is different in a new request and the LayoutOnContainerResize or
-    // ResizeOnContainerResize flags are set.
-    Float2 _cached_space;
+    //// The available size given by the owner container used for the cached measurements. The dirty flag
+    //// doesn't need to be true if this is different in a new request and the LayoutOnContainerResize or
+    //// ResizeOnContainerResize flags are set.
+    //Float2 _cached_space;
 
-    // Calculated hint size in the last call to Measure
-    Float2 _cached_hint;
-    // Calculated min size in the last call to Measure
-    Float2 _cached_min;
-    // Calculated max size in the last call to Measure
-    Float2 _cached_max;
+    //// Calculated hint size in the last call to Measure
+    //Float2 _cached_hint;
+    //// Calculated min size in the last call to Measure
+    //Float2 _cached_min;
+    //// Calculated max size in the last call to Measure
+    //Float2 _cached_max;
+
+    FudgetLayoutSizeCache _sizes;
+    FudgetLayoutSizeCache _unrestricted_sizes;
 
     // Flags determining what can cause the layout to become dirty
     FudgetLayoutFlag _flags;
