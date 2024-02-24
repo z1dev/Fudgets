@@ -258,7 +258,7 @@ public partial class FudgetsEditorWindow
         MarkAsEdited();
         _saveButton.Enabled = true;
 
-        ForceLayout();
+       ForceLayout();
     }
 
     /// <summary>

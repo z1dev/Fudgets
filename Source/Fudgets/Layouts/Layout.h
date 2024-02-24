@@ -174,7 +174,9 @@ enum class FudgetLayoutFlag
     /// </summary>
     LayoutOnContainerReposition = 1 << 2,
     /// <summary>
-    /// Layout calculation is necessary if a child control's position changed.
+    /// Layout calculation is necessary if a child control's position changed. This can be used
+    /// in layouts to mark themselves dirty even if child controls can't manually change position,
+    /// when a slot setting requires control position change.
     /// </summary>
     LayoutOnContentReposition = 1 << 3,
     /// <summary>
@@ -419,9 +421,11 @@ public:
 
     /// <summary>
     /// Notifies the layout that either its owner container, or a child control changed since the last layout
-    /// or size measurement calculation. This can mean that the layout itself needs to update the child controls
-    /// inside the container, or that parents need to do layout calculations up the tree. Layouts that don't
-    /// depend on the specific change will not be marked dirty.
+    /// or size measurement calculation, and the change affects the managed controls' size or position within the
+    /// layout.
+    /// Call MarkDirty directly if a change in the layout or one of its slots only affects the managed controls.
+    /// Call MarkOwnerDirty, if a change affects the owner container's size. For example a control's alignment
+    /// in its slot doesn't change the owner's size, while adding padding to it might.
     /// </summary>
     /// <param name="dirt_reason">What changed in the container or contents</param>
     /// <returns>Whether the size of the layout could change after a layout calculation</returns>
@@ -610,6 +614,13 @@ protected:
     /// Called by the owner container when all child controls were removed from it
     /// </summary>
     API_FUNCTION() virtual void AllDeleted();
+
+    /// <summary>
+    /// Call MarkOwnerDirty, if a change in the layout or one of its slots affects the owner container's size. Call
+    /// MarkDirty directly if a change only affects the managed controls. For example a control's alignment in its
+    /// slot doesn't change the owner's size, while adding padding to it might.
+    /// </summary>
+    API_FUNCTION() virtual void MarkOwnerDirty();
 
     /// <summary>
     /// Determines if the control is allowed to update its position directly, instead of being positioned

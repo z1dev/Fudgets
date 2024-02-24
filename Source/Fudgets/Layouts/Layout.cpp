@@ -246,6 +246,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
 
         bool from_space = owner->SizeDependsOnSpace();
         SetMeasuredSizes(FudgetLayoutSizeCache(available, 0.f, 0.f, 0.f, from_space));
+        _layout_dirty = false;
         return;
     }
 
@@ -492,6 +493,13 @@ void FudgetLayout::AllDeleted()
         _owner->MarkLayoutDirty(FudgetLayoutDirtyReason::Size);
     _layout_dirty = false;
     //_size_dirty = true;
+}
+
+void FudgetLayout::MarkOwnerDirty()
+{
+    if (_owner == nullptr)
+        return;
+    _owner->MarkLayoutDirty(FudgetLayoutDirtyReason::Container | FudgetLayoutDirtyReason::Size);
 }
 
 FudgetLayoutFlag FudgetLayout::GetLayoutFlags() const

@@ -1449,7 +1449,7 @@ void FudgetControl::SetCursor(CursorType value)
     if (value == _cursor)
         return;
 
-    value = _cursor;
+    _cursor = value;
     DoCursorChanged();
 }
 

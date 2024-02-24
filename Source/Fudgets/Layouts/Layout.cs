@@ -39,6 +39,7 @@ namespace Fudgets
 
     }
 
+#if FLAX_EDITOR
     public partial class FudgetLayout
     {
         /// <summary>
@@ -51,4 +52,5 @@ namespace Fudgets
             return GetSlot(index);
         }
     }
+#endif
 }

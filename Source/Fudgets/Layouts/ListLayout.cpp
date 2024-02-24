@@ -19,39 +19,65 @@ FudgetListLayout::FudgetListLayout(const SpawnParams &params) : Base(params), _o
 void FudgetListLayout::SetOrientation(FudgetOrientation value)
 {
     _ori = value;
-    MarkDirty(FudgetLayoutDirtyReason::All | FudgetLayoutDirtyReason::Container);
+    MarkOwnerDirty();
 }
 
 FudgetLayoutHorzAlign FudgetListLayout::GetSlotHorizontalAlignment(int index) const
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return FudgetLayoutHorzAlign::Left;
 
-    return GetSlot(index)->_horz_align;
+    return slot->_horz_align;
 }
 
 void FudgetListLayout::SetSlotHorizontalAlignment(int index, FudgetLayoutHorzAlign value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_horz_align = value;
+    int slot_group = (slot->_horz_align == FudgetLayoutHorzAlign::Left || slot->_horz_align == FudgetLayoutHorzAlign::Right || slot->_horz_align == FudgetLayoutHorzAlign::Center) ? 0 :
+        (slot->_horz_align == FudgetLayoutHorzAlign::LeftGrow || slot->_horz_align == FudgetLayoutHorzAlign::RightGrow || slot->_horz_align == FudgetLayoutHorzAlign::CenterGrow) ? 1 :
+        (slot->_horz_align == FudgetLayoutHorzAlign::ClipLeft || slot->_horz_align == FudgetLayoutHorzAlign::ClipRight || slot->_horz_align == FudgetLayoutHorzAlign::ClipCenter) ? 2 : 3;
+    slot->_horz_align = value;
+    int change_group = (value == FudgetLayoutHorzAlign::Left || value == FudgetLayoutHorzAlign::Right || value == FudgetLayoutHorzAlign::Center) ? 0 :
+        (value == FudgetLayoutHorzAlign::LeftGrow || value == FudgetLayoutHorzAlign::RightGrow || value == FudgetLayoutHorzAlign::CenterGrow) ? 1 :
+        (value == FudgetLayoutHorzAlign::ClipLeft || value == FudgetLayoutHorzAlign::ClipRight || value == FudgetLayoutHorzAlign::ClipCenter) ? 2 : 3;
+
+    if (slot_group != change_group)
+        MarkOwnerDirty();
+    else
+        MarkDirty(FudgetLayoutDirtyReason::Position | FudgetLayoutDirtyReason::Size);
 }
 
 FudgetLayoutVertAlign FudgetListLayout::GetSlotVerticalAlignment(int index) const
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return FudgetLayoutVertAlign::Top;
 
-    return GetSlot(index)->_vert_align;
+    return slot->_vert_align;
 }
 
 void FudgetListLayout::SetSlotVerticalAlignment(int index, FudgetLayoutVertAlign value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_vert_align = value;
+    int slot_group = (slot->_vert_align == FudgetLayoutVertAlign::Top || slot->_vert_align == FudgetLayoutVertAlign::Bottom || slot->_vert_align == FudgetLayoutVertAlign::Center) ? 0 :
+        (slot->_vert_align == FudgetLayoutVertAlign::TopGrow || slot->_vert_align == FudgetLayoutVertAlign::BottomGrow || slot->_vert_align == FudgetLayoutVertAlign::CenterGrow) ? 1 :
+        (slot->_vert_align == FudgetLayoutVertAlign::ClipTop || slot->_vert_align == FudgetLayoutVertAlign::ClipBottom || slot->_vert_align == FudgetLayoutVertAlign::ClipCenter) ? 2 : 3;
+    slot->_vert_align = value;
+    int change_group = (value == FudgetLayoutVertAlign::Top || value == FudgetLayoutVertAlign::Bottom || value == FudgetLayoutVertAlign::Center) ? 0 :
+        (value == FudgetLayoutVertAlign::TopGrow || value == FudgetLayoutVertAlign::BottomGrow || value == FudgetLayoutVertAlign::CenterGrow) ? 1 :
+        (value == FudgetLayoutVertAlign::ClipTop || value == FudgetLayoutVertAlign::ClipBottom || value == FudgetLayoutVertAlign::ClipCenter) ? 2 : 3;
+
+    if (slot_group != change_group)
+        MarkOwnerDirty();
+    else
+        MarkDirty(FudgetLayoutDirtyReason::Position | FudgetLayoutDirtyReason::Size);
 }
 
 FudgetPadding& FudgetListLayout::GetSlotPadding(int index) const
@@ -63,58 +89,69 @@ FudgetPadding& FudgetListLayout::GetSlotPadding(int index) const
 
 void FudgetListLayout::SetSlotPadding(int index, FudgetPadding value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_padding = value;
+    slot->_padding = value;
+    MarkOwnerDirty();
 }
 
 FudgetDistributedSizingRule FudgetListLayout::GetSlotSizingRule(int index) const
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return FudgetDistributedSizingRule::Exact;
 
-    return GetSlot(index)->_sizing_rule;
+    return slot->_sizing_rule;
 }
 
 void FudgetListLayout::SetSlotSizingRule(int index, FudgetDistributedSizingRule value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_sizing_rule = value;
+    slot->_sizing_rule = value;
+    MarkOwnerDirty();
 }
 
 FudgetDistributedShrinkingRule FudgetListLayout::GetSlotShrinkingRule(int index) const
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return FudgetDistributedShrinkingRule::Exact;
 
-    return GetSlot(index)->_shrinking_rule;
+    return slot->_shrinking_rule;
 }
 
 void FudgetListLayout::SetSlotShrinkingRule(int index, FudgetDistributedShrinkingRule value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_shrinking_rule = value;
+    slot->_shrinking_rule = value;
+    MarkOwnerDirty();
 }
 
 Float2 FudgetListLayout::GetSlotWeight(int index) const
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return Float2::Zero;
 
-    return GetSlot(index)->_weight;
+    return slot->_weight;
 }
 
 void FudgetListLayout::SetSlotWeight(int index, Float2 value)
 {
-    if (!GoodSlotIndex(index))
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
         return;
 
-    GetSlot(index)->_weight = value;
+    slot->_weight = value;
+    MarkOwnerDirty();
 }
 
 void FudgetListLayout::PreLayoutChildren(Float2 space)
@@ -442,9 +479,9 @@ FudgetListLayoutSlot* FudgetListLayout::GetSlot(int index) const
 
 FudgetLayoutFlag FudgetListLayout::GetInitFlags() const
 {
-    return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::ResizeOnContainerResize |
-        FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | FudgetLayoutFlag::CanProvideSizes |
-        Base::GetInitFlags();
+    return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize | FudgetLayoutFlag::LayoutOnContentReposition |
+        FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange |
+        FudgetLayoutFlag::CanProvideSizes | Base::GetInitFlags();
 }
 
 void FudgetListLayout::PlaceControlInSlotRectangle(int index)
