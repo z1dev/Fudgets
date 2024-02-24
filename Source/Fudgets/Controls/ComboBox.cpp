@@ -214,7 +214,7 @@ void FudgetComboBox::ProxyInterfaceLayoutChildren(Float2 space)
         _layout->SetComputedBounds(1, Float2(GetSize().X - _button_width - GetInnerPadding().Right, 0.0f), Float2(_button_width, GetSize().Y));
     }
 
-    _layout->SetControlSizes(space, FudgetControl::GetHintSize(), FudgetControl::GetMinSize(), FudgetControl::GetMaxSize(), false);
+    _layout->SetControlSizes(FudgetLayoutSizeCache(space, FudgetControl::GetHintSize(), FudgetControl::GetMinSize(), FudgetControl::GetMaxSize(), false));
 }
 
 //bool FudgetComboBox::ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)

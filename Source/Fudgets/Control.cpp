@@ -293,9 +293,9 @@ bool FudgetControl::HasAnyFlag(FudgetControlFlags flags) const
 
 bool FudgetControl::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
-    wanted = GetHintSize();
-    min_size = GetMinSize();
-    max_size = GetMaxSize();
+    wanted = GetLayoutHintSize();
+    min_size = GetLayoutMinSize();
+    max_size = GetLayoutMaxSize();
     return SizeDependsOnSpace();
 }
 

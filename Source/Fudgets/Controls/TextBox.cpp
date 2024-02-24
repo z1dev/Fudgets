@@ -2,6 +2,7 @@
 
 #include "../Styling/Themes.h"
 #include "Engine/Core/Types/StringBuilder.h"
+#include "../Layouts/Layout.h"
 
 FudgetToken FudgetTextBox::ClassToken = -1;
 
@@ -110,8 +111,8 @@ void FudgetTextBox::MarkTextDirty()
 {
     _lines_dirty = true;
 
-    _available_space = -1.f;
-    if (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None)
+    _measure_space = -1.f;
+    if (_auto_size != FudgetAutoSizing::None)
         SizeModified();
 }
 
@@ -119,8 +120,7 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_st
     _text_measurements(), _blink_passed(0.0f), _show_beam_cursor(false), _beam_cursor(CursorType::Default), _character_scroll_count(0),
     _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal), _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f),
     _scroll_pos(0.0f), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
-    _auto_hint(FudgetAutoSizing::None), _auto_min(FudgetAutoSizing::None), _auto_max(FudgetAutoSizing::None), _available_space(-1.f),
-    _cached_hint(-1.f), _cached_min(-1.f), _cached_max(-1.f)
+    _auto_size(FudgetAutoSizing::None), _measure_space(-1.f), _cached_size(-1.f)
 {
 
 }
@@ -250,7 +250,7 @@ void FudgetTextBox::DoTextEdited(int old_caret_pos, int old_sel_pos)
 
     MarkTextDirty();
 
-    if (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None)
+    if (_auto_size != FudgetAutoSizing::None)
         SizeModified();
 
     Base::DoTextEdited(old_caret_pos, old_sel_pos);
@@ -306,21 +306,21 @@ CursorType FudgetTextBox::GetContextCursor() const
     return CursorType::Default;
 }
 
-Float2 FudgetTextBox::GetHintSize() const
+Float2 FudgetTextBox::GetLayoutHintSize() const
 {
     Float2 size = Base::GetHintSize();
-    if (_auto_hint != FudgetAutoSizing::None && _text_painter != nullptr && _available_space >= 0.f)
+    if (_auto_size != FudgetAutoSizing::None)
     {
-        switch (_auto_hint)
+        switch (_auto_size)
         {
             case FudgetAutoSizing::Both:
-                size = _cached_hint;
+                size = _cached_size;
                 break;
             case FudgetAutoSizing::Height:
-                size.Y = _cached_hint.Y;
+                size.Y = _cached_size.Y;
                 break;
             case FudgetAutoSizing::Width:
-                size.X = _cached_hint.X;
+                size.X = _cached_size.X;
                 break;
         }
     }
@@ -328,107 +328,53 @@ Float2 FudgetTextBox::GetHintSize() const
     return size;
 }
 
-Float2 FudgetTextBox::GetMinSize() const
+Float2 FudgetTextBox::GetLayoutMinSize() const
 {
-    Float2 size = Base::GetMinSize();
-    if (_auto_min != FudgetAutoSizing::None && _available_space >= 0.f)
-    {
-        switch (_auto_min)
-        {
-            case FudgetAutoSizing::Both:
-                size = _cached_min;
-                break;
-            case FudgetAutoSizing::Height:
-                size.Y = _cached_min.Y;
-                break;
-            case FudgetAutoSizing::Width:
-                size.X = _cached_min.X;
-                break;
-        }
-    }
-
-    return size;
+    return GetLayoutHintSize();
 }
 
-Float2 FudgetTextBox::GetMaxSize() const
+Float2 FudgetTextBox::GetLayoutMaxSize() const
 {
-    Float2 size = Base::GetMaxSize();
-    if (_auto_max != FudgetAutoSizing::None && _available_space >= 0.f)
-    {
-        switch (_auto_max)
-        {
-            case FudgetAutoSizing::Both:
-                size = _cached_max;
-                break;
-            case FudgetAutoSizing::Height:
-                size.Y = _cached_max.Y;
-                break;
-            case FudgetAutoSizing::Width:
-                size.X = _cached_max.X;
-                break;
-        }
-    }
-
-    return size;
+    return GetLayoutHintSize();
 }
 
 bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
-    if ((_auto_hint == FudgetAutoSizing::None && _auto_min == FudgetAutoSizing::None && _auto_max == FudgetAutoSizing::None) || _text_painter == nullptr)
+    // TODO:  auto size text all sizes should be same
+
+    if (_auto_size == FudgetAutoSizing::None || _text_painter == nullptr)
         return Base::OnMeasure(available, wanted, min_size, max_size);
 
-    if (available.X >= 0.f && Math::NearEqual(_available_space, available.X))
-    {
-        wanted = _cached_hint;
-        min_size = _cached_min;
-        max_size = _cached_max;
-        return SizeDependsOnSpace();
-    }
+    if ((!FudgetLayout::IsUnrestrictedSpace(available) && Math::NearEqual(_measure_space, available.X)) || (FudgetLayout::IsUnrestrictedSpace(available) && _measure_space == MAX_float))
+        return Base::OnMeasure(available, wanted, min_size, max_size);
 
     FudgetPadding inner_padding = GetInnerPadding();
     inner_padding.Right += _caret_width * 2.0f;
 
-    if (available.X < 0.f)
+    if (FudgetLayout::IsUnrestrictedSpace(available))
     {
-        _available_space = MAX_float;
+        _measure_space = MAX_float;
         FudgetMultilineTextMeasurements tmp;
         FudgetMultiLineTextOptions opt;
         opt.Wrapping = _line_wrap;
         opt.WrapMode = _wrap_mode;
         _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
-        _cached_hint = _cached_min = _cached_max = tmp.Size + inner_padding.Size();
+        _cached_size = tmp.Size + inner_padding.Size();
     }
     else
     {
-        _available_space = available.X;
+        _measure_space = available.X;
         FudgetMultilineTextMeasurements tmp;
         FudgetMultiLineTextOptions opt;
         opt.Wrapping = _line_wrap;
         opt.WrapMode = _wrap_mode;
         _text_painter->MeasureLines(this, available.X, _text, 1.f, opt, tmp);
-        _cached_hint = tmp.Size + inner_padding.Size();
-        if (_line_wrap)
-        {
-            _text_painter->MeasureLines(this, 0.0001f, _text, 1.f, opt, tmp);
-            _cached_min = tmp.Size + inner_padding.Size();
-            _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
-            _cached_max = tmp.Size + inner_padding.Size();
-        }
-        else
-        {
-            _cached_min = _cached_max = _cached_hint;
-        }
+        _cached_size = tmp.Size + inner_padding.Size();
     }
 
     Float2 hint = Base::GetHintSize();
-    _cached_hint = wanted = Float2(_auto_hint == FudgetAutoSizing::Both || _auto_hint == FudgetAutoSizing::Width ? _cached_hint.X : hint.X,
-        _auto_hint == FudgetAutoSizing::Both || _auto_hint == FudgetAutoSizing::Height ? _cached_hint.Y : hint.Y);
-    Float2 min = Base::GetMinSize();
-    _cached_min = min = Float2(_auto_min == FudgetAutoSizing::Both || _auto_min == FudgetAutoSizing::Width ? _cached_min.X : min.X,
-        _auto_min == FudgetAutoSizing::Both || _auto_min == FudgetAutoSizing::Height ? _cached_min.Y : min.Y);
-    Float2 max = Base::GetMaxSize();
-    _cached_max = max = Float2(_auto_max == FudgetAutoSizing::Both || _auto_max == FudgetAutoSizing::Width ? _cached_max.X : max.X,
-        _auto_max == FudgetAutoSizing::Both || _auto_max == FudgetAutoSizing::Height ? _cached_max.Y : max.Y);
+    _cached_size = max_size = min_size = wanted = Float2(_auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Width ? _cached_size.X : hint.X,
+        _auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Height ? _cached_size.Y : hint.Y);
 
     return SizeDependsOnSpace();
 }
@@ -548,30 +494,14 @@ void FudgetTextBox::SetSnapTopLine(bool value)
 
 bool FudgetTextBox::SizeDependsOnSpace() const
 {
-    return _line_wrap && (_auto_hint != FudgetAutoSizing::None || _auto_min != FudgetAutoSizing::None || _auto_max != FudgetAutoSizing::None);
+    return _line_wrap && _auto_size != FudgetAutoSizing::None;
 }
 
-void FudgetTextBox::SetAutoHintSizing(FudgetAutoSizing value)
+void FudgetTextBox::SetAutoSize(FudgetAutoSizing value)
 {
-    if (_auto_hint == value)
+    if (_auto_size == value)
         return;
-    _auto_hint = value;
-    SizeModified();
-}
-
-void FudgetTextBox::SetAutoMinSizing(FudgetAutoSizing value)
-{
-    if (_auto_min == value)
-        return;
-    _auto_min = value;
-    SizeModified();
-}
-
-void FudgetTextBox::SetAutoMaxSizing(FudgetAutoSizing value)
-{
-    if (_auto_max == value)
-        return;
-    _auto_max = value;
+    _auto_size = value;
     SizeModified();
 }
 
@@ -981,7 +911,7 @@ int FudgetTextBox::GetCaretPosPageDown()
 void FudgetTextBox::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
 {
     if ((dirt_flags & FudgetLayoutDirtyReason::Size) == FudgetLayoutDirtyReason::Size)
-        _available_space = -1.f;
+        _measure_space = -1.f;
     Base::SizeOrPosModified(dirt_flags);
 }
 

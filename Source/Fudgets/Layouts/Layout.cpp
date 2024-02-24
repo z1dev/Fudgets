@@ -20,7 +20,7 @@ float AddBigFloats(float a, float b)
 }
 
 
-FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), Control(nullptr), OldSizes(), UnrestrictedSizes(), Sizes()
+FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), Control(nullptr), OldSizes(), UnrestrictedSizes(), Sizes(), ComputedBounds(0.f, 0.f)
 {
 
 }
@@ -114,25 +114,16 @@ void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_reason)
 
 Float2 FudgetLayout::GetHintSize()
 {
-    //if (!_size_dirty && !Float2::NearEqual(_cached_hint, Float2(-1.0f)))
-    //    return _cached_hint;
-    //_cached_hint = GetRequestedSize(FudgetSizeType::Hint);
     return _sizes.IsValid ? _sizes.Size : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Size : Float2::Zero;
 }
 
 Float2 FudgetLayout::GetMinSize()
 {
-    //if (!_size_dirty && !Float2::NearEqual(_cached_min, Float2(-1.0f)))
-    //    return _cached_min;
-    //_cached_min = GetRequestedSize(FudgetSizeType::Min);
     return _sizes.IsValid ? _sizes.Min : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Min : Float2::Zero;
 }
 
 Float2 FudgetLayout::GetMaxSize()
 {
-    //if (!_size_dirty && !Float2::NearEqual(_cached_max, Float2(-1.0f)))
-    //    return _cached_max;
-    //_cached_max = GetRequestedSize(FudgetSizeType::Max);
     return _sizes.IsValid ? _sizes.Max : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Max : Float2::Zero;
 }
 
@@ -144,17 +135,7 @@ bool FudgetLayout::SizeDependsOnSpace() const
 void FudgetLayout::RequestLayoutChildren(bool forced)
 {
     if (!_layout_dirty && !forced)
-    {
-        auto owner = GetOwner();
-        if (owner == nullptr)
-            return;
-
-        //Float2 space = owner->LayoutSpace();
-        //if (_size_dirty || !Math::NearEqual(_cached_space, space))
-        //    Measure(space, _cached_hint, _cached_min, _cached_max);
-        //_size_dirty = false;
         return;
-    }
 
     auto owner = GetOwner();
     if (owner == nullptr)
@@ -162,17 +143,6 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
 
     Float2 space = owner->LayoutSpace();
     DoLayoutChildren(space);
-    ////Measure(owner->LayoutSpace(), _cached_hint, _cached_min, _cached_max);
-
-    //// Measurements might need to calculate the layout and unset the dirty flag.
-    //if (!_layout_dirty)
-    //    return;
-
-    //PreLayoutChildren(space);
-    //LayoutChildren(space);
-    //_layout_dirty = false;
-
-    //_size_dirty = false;
 }
 
 void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
@@ -245,13 +215,17 @@ void FudgetLayout::LayoutChildren(Float2 space)
     auto owner = GetOwner();
     int count = owner->GetChildCount();
 
-    SetMeasuredSizes(space, 0.f, 0.f, 0.f, false);
+    SetMeasuredSizes(FudgetLayoutSizeCache(space));
     if (IsUnrestrictedSpace(space))
         return;
 
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+        if (!slot->UnrestrictedSizes.IsValid)
+            continue;
+        slot->Sizes = slot->UnrestrictedSizes;
+        slot->Sizes.Space = slot->UnrestrictedSizes.Size;
         slot->ComputedBounds = Rectangle(slot->Control->GetHintPosition(), slot->UnrestrictedSizes.Size);
     }
 }
@@ -268,11 +242,19 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     int count = owner->GetChildCount();
     if (count == 0)
     {
+        // Nothing to do.
+
         bool from_space = owner->SizeDependsOnSpace();
-        SetMeasuredSizes(available, 0.f, 0.f, 0.f, from_space);
+        SetMeasuredSizes(FudgetLayoutSizeCache(available, 0.f, 0.f, 0.f, from_space));
         return;
     }
 
+    // Calculates the unrestricted size of every control that is invalid. Most of the time this is enough.
+    // Exceptions are controls that might resize themselves after the available space changes. For example
+    // word wrapping labels.
+
+    // Number of controls that might need to be measured multiple times, because their size depends on the
+    // space in their slot.
     int size_from_space_cnt = 0;
     for (int ix = 0; ix < count; ++ix)
     {
@@ -290,35 +272,46 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     bool unrestricted = IsUnrestrictedSpace(available);
     if (!_layout_dirty && _unrestricted_sizes.IsValid && (!_unrestricted_sizes.SizeFromSpace || unrestricted))
     {
+        // The layout doesn't require calculations if it already has valid measurements. In this case it is either
+        // given unlimited space, or no control's measurement depends on the available space.
         return;
     }
-    if (!_layout_dirty && _sizes.IsValid && Float2::NearEqual(available, _sizes.SpaceMeasured))
+    if (!_layout_dirty && _sizes.IsValid && Float2::NearEqual(available, _sizes.Space))
     {
+        // The layout doesn't require calculations if it already has valid measurements. In this case it was previously
+        // laid out in the same available space.
         return;
     }
-
-    //_unrestricted_sizes.IsValid = false;
-    //_sizes.IsValid = false;
 
     // Layout and measure until the sizes are determined
 
+    // Allow the layout to initialize its values and clean up calculated slots
     PreLayoutChildren(available);
+
+    // Keeps track if the layout has controls that need to be measured multiple times for different slot sizes.
     bool need_remeasure = false;
+    // Measurements saved for such controls. If this changes after the layout, they will be measured again.
     Array<FudgetLayoutSizeCache> compare_cache(size_from_space_cnt);
     compare_cache.AddUninitialized(size_from_space_cnt);
 
-
+    // Limits the number of iterations in case a control keeps changing its size during measurements.
+    // TODO: make the maximum iterations customizable
+    const int max_iterations = 3;
+    int iteration = 0;
 
     do
     {
-        for (int ix = 0, pos = 0; ix < count && pos < size_from_space_cnt; ++ix)
+        // Save measurements for size changing controls
+        for (int ix = 0, pos = 0; !unrestricted && ix < count && pos < size_from_space_cnt; ++ix)
         {
             auto slot = GetSlot(ix);
             if (!slot->UnrestrictedSizes.SizeFromSpace)
                 continue;
             compare_cache[pos++] = slot->Sizes;
         }
+        // Do the layout
         LayoutChildren(available);
+        // Check if the saved measurements for size changing controls were changed.
         if (!unrestricted && size_from_space_cnt > 0)
         {
             for (int ix = 0, pos = 0; ix < count && pos < size_from_space_cnt && !need_remeasure; ++ix)
@@ -330,7 +323,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
                 need_remeasure = !slot->Sizes.IsValid || !Float2::NearEqual(cached.Size, slot->Sizes.Size) || !Float2::NearEqual(cached.Min, slot->Sizes.Min) || !Float2::NearEqual(cached.Max, slot->Sizes.Max);
             }
         }
-    } while (need_remeasure);
+    } while (need_remeasure && (++iteration < max_iterations));
 
     if (!unrestricted)
     {
@@ -339,6 +332,8 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     }
 
     _layout_dirty = !_sizes.IsValid && !_unrestricted_sizes.IsValid;
+    if (_layout_dirty)
+        LOG(Warning, "Layout measurements were invalid or were not set with SetMeasuredSizes.");
 }
 
 bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max)
@@ -354,7 +349,7 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
         wanted_max = slot->UnrestrictedSizes.Min;
         return slot->UnrestrictedSizes.SizeFromSpace;
     }
-    else if (slot->Sizes.IsValid && Math::NearEqual(available, slot->Sizes.SpaceMeasured))
+    else if (slot->Sizes.IsValid && Math::NearEqual(available, slot->Sizes.Space))
     {
         wanted_size = slot->Sizes.Size;
         wanted_min = slot->Sizes.Max;
@@ -370,7 +365,7 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     if (IsUnrestrictedSpace(available))
     {
         slot->UnrestrictedSizes.IsValid = true;
-        slot->UnrestrictedSizes.SpaceMeasured = available;
+        slot->UnrestrictedSizes.Space = available;
         wanted_size = slot->UnrestrictedSizes.Size = size;
         wanted_min = slot->UnrestrictedSizes.Min = min;
         wanted_max = slot->UnrestrictedSizes.Max = max;
@@ -382,7 +377,7 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     else
     {
         slot->Sizes.IsValid = true;
-        slot->Sizes.SpaceMeasured = available;
+        slot->Sizes.Space = available;
         wanted_size = slot->Sizes.Size = size;
         wanted_min = slot->Sizes.Min = min;
         wanted_max = slot->Sizes.Max = max;
@@ -392,29 +387,29 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     return from_space;
 }
 
-void FudgetLayout::SetMeasuredSizes(Float2 available, Float2 size, Float2 min, Float2 max, bool size_from_space)
+void FudgetLayout::SetMeasuredSizes(const FudgetLayoutSizeCache &sizes)
 {
-    if (IsUnrestrictedSpace(available) || !size_from_space)
+    if (IsUnrestrictedSpace(sizes.Space) || !sizes.SizeFromSpace)
     {
         _unrestricted_sizes.IsValid = true;
-        _unrestricted_sizes.SpaceMeasured = -1.f;
-        _unrestricted_sizes.Size = size;
-        _unrestricted_sizes.Min = min;
-        _unrestricted_sizes.Max = max;
+        _unrestricted_sizes.Space = -1.f;
+        _unrestricted_sizes.Size = sizes.Size;
+        _unrestricted_sizes.Min = sizes.Min;
+        _unrestricted_sizes.Max = sizes.Max;
 
-        if (!size_from_space)
+        if (!sizes.SizeFromSpace)
             _sizes = _unrestricted_sizes;
     }
     else
     {
         _sizes.IsValid = true;
-        _sizes.SpaceMeasured = available;
-        _sizes.Size = size;
-        _sizes.Min = min;
-        _sizes.Max = max;
+        _sizes.Space  = sizes.Space;
+        _sizes.Size = sizes.Size;
+        _sizes.Min = sizes.Min;
+        _sizes.Max = sizes.Max;
     }
-    _unrestricted_sizes.SizeFromSpace = size_from_space;
-    _sizes.SizeFromSpace = size_from_space;
+    _unrestricted_sizes.SizeFromSpace = sizes.SizeFromSpace;
+    _sizes.SizeFromSpace = sizes.SizeFromSpace;
 }
 
 void FudgetLayout::PlaceControlInSlotRectangle(int index)

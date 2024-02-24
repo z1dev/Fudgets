@@ -307,7 +307,9 @@ struct FUDGETS_API FudgetLayoutSizeCache
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLayoutSizeCache);
 
-    FudgetLayoutSizeCache() : IsValid(false), SpaceMeasured(MAX_float - 1.0f), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
+    FudgetLayoutSizeCache() : IsValid(false), Space(MAX_float - 1.0f), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
+    FudgetLayoutSizeCache(Float2 space) : IsValid(true), Space(space), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
+    FudgetLayoutSizeCache(Float2 space, Float2 size, Float2 min, Float2 max, bool size_from_space = false) : IsValid(true), Space(space), Size(size), Min(min), Max(max), SizeFromSpace(size_from_space) {}
 
     /// <summary>
     /// Whether the data in this cache is valid and hasn't been invalidated.
@@ -316,7 +318,7 @@ struct FUDGETS_API FudgetLayoutSizeCache
     /// <summary>
     /// Space provided in measure used to calculate the wanted sizes
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 SpaceMeasured;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Space;
     /// <summary>
     /// The optimal size for a control.
     /// </summary>
@@ -416,13 +418,6 @@ public:
     API_PROPERTY(Attributes="HideInEditor") bool IsLayoutDirty() const { return _layout_dirty; }
 
     /// <summary>
-    ///// Dirty size means that due to changes of the owner container or its children, the stored size
-    ///// values are out of date and need to be recalculated. This is done on the next frame.
-    ///// </summary>
-    ///// <returns>Whether size recalculation is necessary</returns>
-    //API_PROPERTY(Attributes="HideInEditor") bool IsSizeDirty() const { return _size_dirty; }
-
-    /// <summary>
     /// Notifies the layout that either its owner container, or a child control changed since the last layout
     /// or size measurement calculation. This can mean that the layout itself needs to update the child controls
     /// inside the container, or that parents need to do layout calculations up the tree. Layouts that don't
@@ -451,6 +446,7 @@ public:
 
     /// <summary>
     /// Returns the calculated preferred size of the layout with all the managed controls laid out at the ideal size.
+    /// The return value is invalid for dirty layouts.
     /// This might require recalculation if the preferred size of any control changed or a new control was added.
     /// </summary>
     /// <returns>The layout's preferred size</returns>
@@ -486,33 +482,11 @@ public:
     /// </summary>
     /// <param name="space">The size of the available space to check</param>
     /// <returns>Whether the layout can size and place its children without being limited in space</returns>
-    API_FUNCTION() FORCE_INLINE bool IsUnrestrictedSpace(Float2 space) const { return space.X < 0.f && space.Y < 0.f; }
+    API_FUNCTION() FORCE_INLINE static bool IsUnrestrictedSpace(Float2 space) { return space.X < 0.f || space.Y < 0.f; }
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
 protected:
-    ///// <summary>
-    ///// Call in derived layout classes to cache the size after Measure.
-    ///// </summary>
-    ///// <param name="value">Updated size to store</param>
-    //API_FUNCTION() void CacheMeasureSpace(Float2 value) { _cached_space = value; }
-    ///// <summary>
-    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    ///// size until new measurements are made
-    ///// </summary>
-    ///// <param name="value">Updated size to store</param>
-    //API_FUNCTION() void CacheHintSize(Float2 value) { _cached_hint = value; }
-    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    ///// size until new measurements are made
-    ///// </summary>
-    ///// <param name="value">Updated size to store</param>
-    //API_FUNCTION() void CacheMinSize(Float2 value) { _cached_min = value; }
-    ///// Call in derived layout classes to cache the size after Measure. This value will be used as the
-    ///// size until new measurements are made
-    ///// </summary>
-    ///// <param name="value">Updated size to store</param>
-    //API_FUNCTION() void CacheMaxSize(Float2 value) { _cached_max = value; }
-
     /// <summary>
     /// Checks the index argument and determines if it is a valid index for accessing a slot on the layout
     /// </summary>
@@ -549,10 +523,13 @@ protected:
 
     /// <summary>
     /// Called once before starting the layouting calculations. Layouts can use this function to pre-calculate values.
-    /// For example the available space without all padding that wouldn't change between steps of layout calculation
+    /// For example the available space could be stored after excluding all padding sizes, which wouldn't change between
+    /// steps of layout calculation.
+    /// The default implementation resets the computed sizes of all slots. Call the base implementation if this is
+    /// desirable.
     /// </summary>
-    /// <param name="space"></param>
-    /// <returns></returns>
+    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
+    /// value is valid</param>
     API_FUNCTION() virtual void PreLayoutChildren(Float2 space);
 
     /// <summary>
@@ -560,40 +537,26 @@ protected:
     /// measurements. Call SetMeasuredSizes at least once to provide the parent layouts the appropriate sizes of this
     /// layout.
     /// </summary>
-    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
+    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
+    /// value is valid</param>
     API_FUNCTION() virtual void LayoutChildren(Float2 space);
-
-    ///// <summary>
-    ///// Calculates the size of the layout contents based on a value for available width and height. If one of the available
-    ///// dimensions is negative, then the layout is not restricted in space in that dimension.
-    ///// </summary>
-    ///// <param name="owner">The container owner of this layout. Provided for convenience.</param>
-    ///// <param name="count">The number of controls. Provided for convenience.</param>
-    ///// <param name="avaliable">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
-    ///// <param name="wanted_size">The size requested by the control in the slot. This might be larger than the available space.</param>
-    ///// <param name="wanted_min">The minimum size requied by the control in the slot. Should be constant unless the contents change</param>
-    ///// <param name="wanted_max">The maximum size requied by the control in the slot. Should be constant unless the contents change</param>
-    ///// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
-    //API_FUNCTION() virtual bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max) { ASSERT(false); }
 
     /// <summary>
     /// Calculates and sets the child controls' position and size on the owner container, using the available space, and
     /// precalculated sizes in slots. Its behavior is undefined if the sizes are not already measured with DoMeasure.
     /// In derived classes override LayoutChildren instead.
     /// </summary>
-    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this value is valid</param>
+    /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
+    /// value is valid</param>
     API_FUNCTION() virtual void DoLayoutChildren(Float2 space);
 
     /// <summary>
     /// Measures the control in the slot if it doesn't have valid measurements for the passed available space. Otherwise returns
-    /// the cached values. Call this in Measure instead of directly accessing the slot's control, calling its OnMeasure.
+    /// the cached values. Call this in LayoutChildren instead of directly accessing the slot's control, calling its OnMeasure.
     /// </summary>
     /// <param name="index">Slot index</param>
     /// <param name="available">The available space for the layout contents. Negative values mean unrestricted space</param>
-    /// <param name="wanted_size">The size requested by the control in the slot. This might be larger than the available space.</param>
-    /// <param name="wanted_min">The minimum size requied by the control in the slot. Should be constant unless the contents change</param>
-    /// <param name="wanted_max">The maximum size requied by the control in the slot. Should be constant unless the contents change</param>
-    /// <returns>Whether the control's size depends on available space, or has a child control that influences this behavior</returns>
+    /// <param name="result">Receives the sizes requested by the control in the slot.</param>
     API_FUNCTION() virtual bool MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
 
     /// <summary>
@@ -601,13 +564,8 @@ protected:
     /// (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and updating any slot layout data
     /// should be avoided. Care must be taken not to cause float overflow when calculating any of the sizes.
     /// </summary>
-    /// <param name="available">The available space for child controls</param>
-    /// <param name="wanted_size">The optimal size of the layout</param>
-    /// <param name="wanted_min">The minimal usable size for the layout</param>
-    /// <param name="wanted_max">The maximum useful size for the layout</param>
-    /// <param name="size_from_space">Whether the layout or any of the child controls will modify their size requirements based on
-    /// available space (for example word wrapped text)</param>
-    API_FUNCTION() void SetMeasuredSizes(Float2 available, Float2 wanted_size, Float2 wanted_min, Float2 wanted_max, bool size_from_space);
+    /// <param name="sizes">The available space and sizes for child controls. Every member needs to be filled</param>
+    API_FUNCTION() void SetMeasuredSizes(const FudgetLayoutSizeCache &sizes);
 
     /// <summary>
     /// Called after the end of layout calculation to place the controls in their slot. The slot size should already be calculated and saved
@@ -714,22 +672,18 @@ private:
     FudgetContainer *_owner;
     Array<FudgetLayoutSlot*> _slots;
 
+    /// <summary>
+    /// The child control positions and possibly sizes need to be recalculated, due to a change
+    /// </summary>
     bool _layout_dirty;
-    //bool _size_dirty;
 
-    //// The available size given by the owner container used for the cached measurements. The dirty flag
-    //// doesn't need to be true if this is different in a new request and the LayoutOnContainerResize or
-    //// ResizeOnContainerResize flags are set.
-    //Float2 _cached_space;
-
-    //// Calculated hint size in the last call to Measure
-    //Float2 _cached_hint;
-    //// Calculated min size in the last call to Measure
-    //Float2 _cached_min;
-    //// Calculated max size in the last call to Measure
-    //Float2 _cached_max;
-
+    /// <summary>
+    /// Cached measurements of the layout contents
+    /// </summary>
     FudgetLayoutSizeCache _sizes;
+    /// <summary>
+    /// Cached measurements of the layout contents when the available space is unlimited
+    /// </summary>
     FudgetLayoutSizeCache _unrestricted_sizes;
 
     // Flags determining what can cause the layout to become dirty

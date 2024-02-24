@@ -131,13 +131,13 @@ public:
     CursorType GetContextCursor() const override;
 
     /// <inheritdoc />
-    Float2 GetHintSize() const override;
+    Float2 GetLayoutHintSize() const override;
 
     /// <inheritdoc />
-    Float2 GetMinSize() const override;
+    Float2 GetLayoutMinSize() const override;
 
     /// <inheritdoc />
-    Float2 GetMaxSize() const override;
+    Float2 GetLayoutMaxSize() const override;
 
     /// <inheritdoc />
     bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
@@ -181,31 +181,12 @@ public:
     /// <summary>
     /// Which, if any of the hint size dimensions are calculated by the text box based on its text contents
     /// </summary>
-    API_PROPERTY() FudgetAutoSizing GetAutoHintSizing() const { return _auto_hint; }
+    API_PROPERTY() FudgetAutoSizing GetAutoSize() const { return _auto_size; }
     /// <summary>
     /// Which, if any of the hint size dimensions are calculated by the text box based on its text contents
     /// </summary>
     /// <param name="value">The new auto size setting</param>
-    API_PROPERTY() void SetAutoHintSizing(FudgetAutoSizing value);
-    /// <summary>
-    /// Which, if any of the minimum size dimensions are calculated by the text box based on its text contents
-    /// </summary>
-    API_PROPERTY() FudgetAutoSizing GetAutoMinSizing() const { return _auto_min; }
-    /// <summary>
-    /// Which, if any of the minimum size dimensions are calculated by the text box based on its text contents
-    /// </summary>
-    /// <param name="value">The new auto size setting</param>
-    API_PROPERTY() void SetAutoMinSizing(FudgetAutoSizing value);
-    /// <summary>
-    /// Which, if any of the maximum size dimensions are calculated by the text box based on its text contents
-    /// </summary>
-    API_PROPERTY() FudgetAutoSizing GetAutoMaxSizing() const { return _auto_max; }
-    /// <summary>
-    /// Which, if any of the maximum size dimensions are calculated by the text box based on its text contents
-    /// </summary>
-    /// <param name="value">The new auto size setting</param>
-    API_PROPERTY() void SetAutoMaxSizing(FudgetAutoSizing value);
-
+    API_PROPERTY() void SetAutoSize(FudgetAutoSizing value);
 protected:
     /// <inheritdoc />
     FudgetControlFlags GetInitFlags() const override;
@@ -318,17 +299,11 @@ private:
     // How to wrap lines
     FudgetLineWrapMode _wrap_mode;
 
-    FudgetAutoSizing _auto_hint;
-    FudgetAutoSizing _auto_min;
-    FudgetAutoSizing _auto_max;
+    FudgetAutoSizing _auto_size;
 
-    // The available width that the cached sizes were calculated for.
-    float _available_space;
+    // The space used for calculating the cached size.
+    float _measure_space;
     // Used for auto sizing
-    Float2 _cached_hint;
-    // Used for auto sizing
-    Float2 _cached_min;
-    // Used for auto sizing
-    Float2 _cached_max;
+    Float2 _cached_size;
 };
 

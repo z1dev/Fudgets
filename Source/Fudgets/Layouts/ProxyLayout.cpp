@@ -17,9 +17,9 @@ void FudgetProxyLayout::SetComputedBounds(int index, Float2 pos, Float2 size)
     slot->ComputedBounds = Rectangle(pos, size);
 }
 
-void FudgetProxyLayout::SetControlSizes(Float2 space, Float2 wanted_size, Float2 wanted_min, Float2 wanted_max, bool size_from_space)
+void FudgetProxyLayout::SetControlSizes(const FudgetLayoutSizeCache &sizes)
 {
-    SetMeasuredSizes(space, wanted_size, wanted_min, wanted_max, size_from_space);
+    SetMeasuredSizes(sizes);
 }
 
 void FudgetProxyLayout::PreLayoutChildren(Float2 space)

@@ -238,16 +238,10 @@ public:
 
 
 protected:
-    ///// <inheritdoc />
-    //Float2 RequestSize(FudgetSizeType type) const override;
-
     /// <inheritdoc />
     void PreLayoutChildren(Float2 space) override;
     /// <inheritdoc />
     void LayoutChildren(Float2 space) override;
-
-    ///// <inheritdoc />
-    //bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
 
     /// <inheritdoc />
     FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
@@ -266,14 +260,6 @@ protected:
     void PlaceControlInSlotRectangle(int index) override;
 
 private:
-    ///// <summary>
-    ///// Requests the content of slots with the SizeDependsOnSpace flag to re-measure themselves for the available
-    ///// space provided in the layout's relevant direction. The minimum size is ignored.
-    ///// </summary>
-    ///// <param name="sizes">Array of calculated space in each slot in the relevant direction</param>
-    ///// <returns>Whether any of the slots' wanted size changed from the original wanted size</returns>
-    //bool RepeatMeasure(const Array<float> &sizes);
-
     // Used during layouting to check if the sizing rule allows its slot to expand. It uses data provided from PreLayoutChildren
     bool IsExpandingRule(FudgetDistributedSizingRule rule) const;
 

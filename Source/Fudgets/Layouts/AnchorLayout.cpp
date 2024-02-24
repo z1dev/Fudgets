@@ -20,7 +20,7 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space)
     // the size too, the control's requested sizes are ignored. If the resulting size would be negative, the control will
     // have 0 size.
 
-    SetMeasuredSizes(space, Float2::Zero, Float2::Zero, Float2::Zero, false);
+    SetMeasuredSizes(FudgetLayoutSizeCache(space, Float2::Zero, Float2::Zero, Float2::Zero, false));
 
     if (IsUnrestrictedSpace(space))
         return;
@@ -139,23 +139,6 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space)
         slot->ComputedBounds = Rectangle(control_pos, control_size);
     }
 }
-
-//bool FudgetAnchorLayout::Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
-//{
-//
-//    auto owner = GetOwner();
-//    int count = owner->GetChildCount();
-//
-//
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//        slot->_size_from_space = slot->_control->OnMeasure(available, slot->_wanted_size, slot->_min_size, slot->_max_size);
-//    }
-//
-//    return false;
-//}
-
 
 FudgetAnchorLayoutSlot* FudgetAnchorLayout::GetSlot(int index)
 {

@@ -239,21 +239,21 @@ public:
     /// doesn't have a preferred size, this is the preferred size of the container itself.
     /// </summary>
     /// <returns>The container's preferred size with the current layout</returns>
-    API_FUNCTION() Float2 GetLayoutHintSize() const;
+    Float2 GetLayoutHintSize() const override;
 
     /// <summary>
     /// Gets the minimum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred minimum size, this is the minimum size set to the container itself.
     /// </summary>
     /// <returns>The container's minimum size with the current layout</returns>
-    API_FUNCTION() Float2 GetLayoutMinSize() const;
+    Float2 GetLayoutMinSize() const override;
 
     /// <summary>
     /// Gets the maximum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred maximum size, this is the maximum size set to the container itself.
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
-    API_FUNCTION() Float2 GetLayoutMaxSize() const;
+    Float2 GetLayoutMaxSize() const override;
 
     /// <summary>
     /// The available space in the container for child controls, which excludes internal padding. Only valid if
@@ -265,7 +265,8 @@ public:
 
     /// <summary>
     /// Notifies this container about a change that might require layout calculations. If a control initiated the
-    /// change, it should be passed to the function, otherwise its sizes might not be measured.
+    /// change, it should be passed to the function, otherwise its sizes might not be measured. The control must
+    /// be null for changes in self.
     /// </summary>
     /// <param name="dirt_flags">Cause of the layout change</param>
     /// <param name="control">Child control that initiated the change or null</param>

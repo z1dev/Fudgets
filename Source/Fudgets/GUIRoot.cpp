@@ -330,6 +330,7 @@ bool FudgetGUIRoot::IsNavigationKey(KeyboardKeys key) const
 
 void FudgetGUIRoot::OnResized(Float2 new_size)
 {
+	SizeModified();
 	if (Resized.IsBinded())
 		Resized(new_size);
 }

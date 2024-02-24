@@ -85,13 +85,8 @@ public:
     /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause float overflow
     /// when calculating any of the sizes.
     /// </summary>
-    /// <param name="space">The available space for child controls</param>
-    /// <param name="wanted_size">The optimal size of the layout</param>
-    /// <param name="wanted_min">The minimal usable size for the layout</param>
-    /// <param name="wanted_max">The maximum useful size for the layout</param>
-    /// <param name="size_from_space">Whether the layout or any of the child controls will modify their size requirements based on
-    /// available space (for example word wrapped text)</param>
-    API_FUNCTION() void SetControlSizes(Float2 space, Float2 wanted_size, Float2 wanted_min, Float2 wanted_max, bool size_from_space);
+    /// <param name="size">The space used for measurement and the measured sizes of the layout. Every field should be set in the struct.</param>
+    API_FUNCTION() void SetControlSizes(const FudgetLayoutSizeCache &sizes);
 protected:
     /// <inheritdoc />
     void PreLayoutChildren(Float2 space) override;

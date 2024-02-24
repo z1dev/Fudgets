@@ -222,10 +222,6 @@ protected:
     /// <inheritdoc />
     void LayoutChildren(Float2 space) override;
 
-    ///// <inheritdoc />
-    //bool Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
-
-
     /// <summary>
     /// The slot of a child control at an index in its container
     /// </summary>

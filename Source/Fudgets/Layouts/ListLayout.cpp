@@ -109,6 +109,8 @@ void FudgetListLayout::PreLayoutChildren(Float2 space)
         _no_padding_space -= RelevantPad(slot->_padding);
     }
 
+    // These are necessary to know which slot can grow or needs to shrink during measurements.
+
     _has_expanding = false;
     _has_grow_expanding = false;
     _has_grow_exact = false;
@@ -128,6 +130,8 @@ void FudgetListLayout::PreLayoutChildren(Float2 space)
         _has_minimal |= slot->_sizing_rule == FudgetDistributedSizingRule::Minimal;
         _space_dependent |= slot->UnrestrictedSizes.SizeFromSpace;
 
+        // This layout needs to reset the computed bounds at the start, to know for every consecutive
+        // iteration what to measure.
         slot->ComputedBounds.Size = Float2(-1.f);
     }
 }
@@ -191,7 +195,7 @@ void FudgetListLayout::LayoutChildren(Float2 space)
         OppositeRef(layout_max) = Math::Max(Opposite(layout_max), Opposite(max) + OppositePad(slot->_padding));
     }
 
-    SetMeasuredSizes(space, layout_wanted, layout_min, layout_max, _space_dependent);
+    SetMeasuredSizes(FudgetLayoutSizeCache(space, layout_wanted, layout_min, layout_max, _space_dependent));
 
     if (unrestricted)
         return;
@@ -389,226 +393,7 @@ void FudgetListLayout::LayoutChildren(Float2 space)
         else
             pos.Y += RelevantPad(slot->_padding) + size_y;
     }
-
-
-    //for (int ix = 0; ix < count; ++ix)
-    //{
-    //    auto slot = GetSlot(ix);
-    //    float size = Math::Max(0.f, sizes[ix]);
-
-    //    float size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0.0f);
-    //    float size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0.0f);
-
-    //    PlaceControlInSlotRectangle(ix, slot, Float2(pos.X + slot->_padding.Left, pos.Y + slot->_padding.Top), Float2(size_x, size_y));
-
-    //    if (_ori == FudgetOrientation::Horizontal)
-    //        pos.X += RelevantPad(slot->_padding) + size_x;
-    //    else
-    //        pos.Y += RelevantPad(slot->_padding) + size_y;
-    //}
-
-
 }
-
-//bool FudgetListLayout::Measure(FudgetContainer *owner, int count, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max)
-//{
-//    bool space_dependent = false;
-//    wanted_size = Float2::Zero;
-//    wanted_min = Float2::Zero;
-//    wanted_max = Float2::Zero;
-//    if (IsUnrestrictedSpace(available))
-//    {
-//        for (int ix = 0; ix < count; ++ix)
-//        {
-//            Float2 size = Float2::Zero;
-//            Float2 min = Float2::Zero;
-//            Float2 max = Float2::Zero;
-//            space_dependent |= MeasureSlot(ix, available, size, min, max);
-//
-//            RelevantRef(wanted_size) = AddBigFloats(RelevantRef(wanted_size), Relevant(size));
-//            OppositeRef(wanted_size) = Math::Max(Opposite(wanted_size), Opposite(size));
-//
-//            RelevantRef(wanted_min) = AddBigFloats(RelevantRef(wanted_min), Relevant(min));
-//            OppositeRef(wanted_min) = Math::Max(Opposite(wanted_min), Opposite(min));
-//
-//            RelevantRef(wanted_max) = AddBigFloats(Relevant(wanted_max), Relevant(max));
-//            OppositeRef(wanted_max) = Math::Min(Opposite(wanted_max), Opposite(max));
-//        }
-//        return space_dependent;
-//    }
-//
-//    bool has_expanding = false;
-//    bool has_grow_expanding = false;
-//    bool has_grow_exact = false;
-//    bool has_exact = false;
-//    bool has_shrink = false;
-//    bool has_minimal = false;
-//
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//
-//        Float2 size = Float2::Zero;
-//        Float2 min = Float2::Zero;
-//        Float2 max = Float2::Zero;
-//        space_dependent |= MeasureSlot(ix, -1.f, size, min, max);
-//
-//        slot->_wanted_size = size;
-//        slot->_shrink_size = Float2(Math::Max(size.X - min.X, 0.f), Math::Max(size.Y - min.Y, 0.f));
-//
-//        has_expanding |= slot->_sizing_rule == FudgetDistributedSizingRule::Expanding;
-//        has_grow_expanding |= slot->_sizing_rule == FudgetDistributedSizingRule::GrowExpanding;
-//        has_grow_exact |= slot->_sizing_rule == FudgetDistributedSizingRule::GrowExact;
-//        has_exact |= slot->_sizing_rule == FudgetDistributedSizingRule::Exact;
-//        has_shrink |= slot->_sizing_rule == FudgetDistributedSizingRule::Shrink;
-//        has_minimal |= slot->_sizing_rule == FudgetDistributedSizingRule::Minimal;
-//    }
-//    
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//
-//        if (has_expanding || has_grow_exact || has_grow_expanding)
-//        {
-//            if (slot->_sizing_rule == FudgetDistributedSizingRule::Shrink)
-//            {
-//                RelevantRef(slot->_wanted_size) -= Relevant(slot->_shrink_size);
-//                RelevantRef(slot->_shrink_size) = 0.f;
-//            }
-//        }
-//        else if (has_expanding || has_grow_exact || has_grow_expanding || has_shrink)
-//        {
-//            if (slot->_sizing_rule == FudgetDistributedSizingRule::Minimal)
-//            {
-//                RelevantRef(slot->_wanted_size) -= Relevant(slot->_shrink_size);
-//                RelevantRef(slot->_shrink_size) = 0.f;
-//            }
-//        }
-//
-//        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
-//            RelevantRef(slot->_shrink_size) = RelevantRef(slot->_wanted_size);
-//
-//        RelevantRef(wanted_size) = AddBigFloats(RelevantRef(wanted_size), Relevant(slot->_wanted_size));
-//        OppositeRef(wanted_size) = Math::Max(Opposite(wanted_size), Opposite(slot->_wanted_size));
-//
-//        RelevantRef(wanted_min) = AddBigFloats(RelevantRef(wanted_min), Relevant(slot->_wanted_size - slot->_shrink_size));
-//        OppositeRef(wanted_min) = Math::Max(Opposite(wanted_min), Opposite(slot->_wanted_size - slot->_shrink_size));
-//
-//        RelevantRef(wanted_max) = AddBigFloats(Relevant(wanted_max), Relevant(slot->UnrestrictedSizes.Max));
-//        OppositeRef(wanted_max) = Math::Min(Opposite(wanted_max), Opposite(slot->UnrestrictedSizes.Max));
-//    }
-//
-//
-//    return space_dependent;
-//}
-//
-//bool FudgetListLayout::RepeatMeasure(const Array<float> &sizes)
-//{
-//    auto owner = GetOwner();
-//    int count = owner->GetChildCount();
-//
-//    bool size_changed = false;
-//    Float2 space = owner->LayoutSpace();
-//
-//    bool has_expanding = false;
-//    bool has_grow_expanding = false;
-//    bool has_grow_exact = false;
-//    bool has_exact = false;
-//    bool has_shrink = false;
-//    bool has_minimal = false;
-//
-//    Array<Float2> wanted_sizes(count);
-//    Array<Float2> shrink_sizes(count);
-//    Array<Float2> max_sizes(count);
-//
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//
-//        has_expanding |= slot->_sizing_rule == FudgetDistributedSizingRule::Expanding;
-//        has_grow_expanding |= slot->_sizing_rule == FudgetDistributedSizingRule::GrowExpanding;
-//        has_grow_exact |= slot->_sizing_rule == FudgetDistributedSizingRule::GrowExact;
-//        has_exact |= slot->_sizing_rule == FudgetDistributedSizingRule::Exact;
-//        has_shrink |= slot->_sizing_rule == FudgetDistributedSizingRule::Shrink;
-//        has_minimal |= slot->_sizing_rule == FudgetDistributedSizingRule::Minimal;
-//
-//        if (!slot->_size_from_space)
-//            continue;
-//
-//        Float2 size(sizes[ix]);
-//        OppositeRef(size) = Opposite(space);
-//
-//        Float2 wanted_size = Float2::Zero;
-//        Float2 wanted_min = Float2::Zero;
-//        Float2 max_size = Float2::Zero;
-//        slot->_control->OnMeasure(size, wanted_size, wanted_min, max_size);
-//
-//        wanted_sizes.Add(wanted_size);
-//        shrink_sizes.Add(Float2(Math::Max(wanted_size.X - wanted_min.X, 0.f), Math::Max(wanted_size.Y - wanted_min.Y, 0.f)));
-//        max_sizes.Add(max_size);
-//    }
-//
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//        if (!slot->_size_from_space)
-//            continue;
-//
-//        Float2 wanted_size = wanted_sizes[ix];
-//        Float2 shrink_size = shrink_sizes[ix];
-//        Float2 max_size = max_sizes[ix];
-//
-//        if (has_expanding || has_grow_exact || has_grow_expanding)
-//        {
-//            if (slot->_sizing_rule == FudgetDistributedSizingRule::Shrink)
-//            {
-//                RelevantRef(wanted_size) -= Relevant(shrink_size);
-//                RelevantRef(shrink_size) = 0.f;
-//            }
-//        }
-//        else if (has_expanding || has_grow_exact || has_grow_expanding || has_shrink)
-//        {
-//            if (slot->_sizing_rule == FudgetDistributedSizingRule::Minimal)
-//            {
-//                RelevantRef(wanted_size) -= Relevant(shrink_size);
-//                RelevantRef(shrink_size) = 0.f;
-//            }
-//        }
-//
-//        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
-//            RelevantRef(shrink_size) = RelevantRef(wanted_size);
-//
-//        if (!Math::NearEqual(wanted_size, slot->_wanted_size) || !Math::NearEqual(shrink_size, slot->_shrink_size) || !Math::NearEqual(max_size, slot->_max_size))
-//        {
-//            size_changed = true;
-//            slot->_wanted_size = wanted_size;
-//            slot->_shrink_size = shrink_size;
-//            slot->_max_size = max_size;
-//        }
-//    }
-//
-//    Float2 wanted_size = Float2::Zero;
-//    Float2 wanted_min = Float2::Zero;
-//    Float2 max_size = Float2::Zero;
-//
-//    for (int ix = 0; ix < count; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//        RelevantRef(wanted_size) += Relevant(slot->_wanted_size);
-//        OppositeRef(wanted_size) = Math::Max(Opposite(wanted_size), Opposite(slot->_wanted_size));
-//
-//        RelevantRef(wanted_min) += Relevant(slot->_wanted_size - slot->_shrink_size);
-//        OppositeRef(wanted_min) = Math::Max(Opposite(wanted_min), Opposite(slot->_wanted_size - slot->_shrink_size));
-//
-//        RelevantRef(max_size) = AddBigFloats(Relevant(max_size), Relevant(slot->_max_size));
-//        OppositeRef(max_size) = Math::Min(Opposite(max_size), Opposite(slot->_max_size));
-//    }
-//    CacheHintSize(wanted_size);
-//    CacheMinSize(wanted_min);
-//    CacheMaxSize(max_size);
-//
-//    return size_changed;
-//}
 
 FudgetLayoutSlot* FudgetListLayout::CreateSlot(FudgetControl *control)
 {
@@ -635,60 +420,6 @@ FudgetLayoutFlag FudgetListLayout::GetInitFlags() const
         FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::LayoutOnContentIndexChange | FudgetLayoutFlag::CanProvideSizes |
         Base::GetInitFlags();
 }
-
-//Float2 FudgetListLayout::RequestSize(FudgetSizeType type) const
-//{
-//    auto owner = GetOwner();
-//    if (owner == nullptr)
-//        return Float2(0.0f);
-//    int count = GetOwner()->GetChildCount();
-//    if (count == 0.f)
-//        return Float2(0.f);
-//
-//    Float2 result(0.0f);
-//
-//    for (int ix = 0, siz = count; ix < siz; ++ix)
-//    {
-//        auto slot = GetSlot(ix);
-//        Float2 pad = Float2(slot->_padding.Width(), slot->_padding.Height());
-//        Float2 size = slot->_control->GetRequestedSize(type);
-//        Float2 corrected_size = size;
-//
-//        if (type != FudgetSizeType::Max)
-//        {
-//            if (Relevant(corrected_size) < 0)
-//                RelevantRef(corrected_size) = 0;
-//            if (Opposite(corrected_size) < 0)
-//                OppositeRef(corrected_size) = 0;
-//        }
-//        else
-//        {
-//            if (Relevant(corrected_size) < 0 || Relevant(corrected_size) > MaximumFloatLimit)
-//                RelevantRef(corrected_size) = MaximumFloatLimit;
-//            if (Opposite(corrected_size) < 0 || Opposite(corrected_size) > MaximumFloatLimit)
-//                OppositeRef(corrected_size) = MaximumFloatLimit;
-//        }
-//
-//        // Overflow checking replacement of RelevantRef(result) += Relevant(corrected_size)
-//        RelevantRef(result) = AddBigFloats(Relevant(pad), AddBigFloats(Relevant(result), Relevant(corrected_size)));
-//        OppositeRef(result) = Math::Max(Opposite(result), AddBigFloats(Opposite(pad), Opposite(corrected_size)));
-//
-//        switch (type)
-//        {
-//            case FudgetSizeType::Hint:
-//                slot->_hint_size = corrected_size;
-//                break;
-//            case FudgetSizeType::Min:
-//                slot->_min_size = corrected_size;
-//                break;
-//            case FudgetSizeType::Max:
-//                slot->_max_size = corrected_size;
-//                break;
-//        }
-//    }
-//
-//    return result;
-//}
 
 void FudgetListLayout::PlaceControlInSlotRectangle(int index)
 {

@@ -493,6 +493,15 @@ public:
 	API_PROPERTY() virtual void SetHintSize(Float2 value);
 
 	/// <summary>
+	/// The size preferred by the control for layouting purposes. This is different from GetHintSize as it can differ
+	/// from the value set by the user. The default implementation returns the same value as GetHintSize, but it can be
+	/// overriden in derived classes that need to calculate a different size. This value might not be valid until the
+	/// parent layout is finalized.
+	/// </summary>
+	/// <returns>The size requested by the control from the parent's layout</returns>
+	API_PROPERTY(Attributes="HideInEditor, NoSerialize") virtual Float2 GetLayoutHintSize() const { return _hint_size; }
+
+	/// <summary>
 	/// Gets the minimum size the control can be resized to while still showing its contents. The control might become
 	/// smaller than this size if the layout it is in doesn't have enough space.
 	/// 
@@ -507,6 +516,15 @@ public:
 	API_PROPERTY() virtual void SetMinSize(Float2 value);
 
 	/// <summary>
+	/// The smallest size the control can fit in for layouting purposes. This is different from GetMinSize as it can
+	/// differ from the value set by the user. The default implementation returns the same value as GetMinSize, but it
+	/// can be overriden in derived classes that need to calculate a different size. This value might not be valid until
+	/// the parent layout is finalized.
+	/// </summary>
+	/// <returns>The minimum size requested by the control from the parent's layout</returns>
+	API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Float2 GetLayoutMinSize() const { return _min_size; }
+
+	/// <summary>
 	/// Gets the size that determines how big a control can grow at most. The control might become larger
 	/// than this size if the layout it is in doesn't respect the property.
 	/// </summary>
@@ -519,6 +537,15 @@ public:
 	/// </summary>
 	/// <returns>The maximum size the control is allowed to have</returns>
 	API_PROPERTY() virtual void SetMaxSize(Float2 value);
+
+	/// <summary>
+	/// The largest size the control needs for layouting purposes. This is different from GetMaxSize as it can
+	/// differ from the value set by the user. The default implementation returns the same value as GetMaxSize, but it
+	/// can be overriden in derived classes that need to calculate a different size. This value might not be valid until
+	/// the parent layout is finalized.
+	/// </summary>
+	/// <returns>The maximum size requested by the control from the parent's layout</returns>
+	API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Float2 GetLayoutMaxSize() const { return _max_size; }
 
 	/// <summary>
 	/// Gets the size that the control currently occupies in its parent's layout. Be aware that this might result in
