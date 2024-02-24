@@ -152,7 +152,7 @@ void FudgetLayout::Serialize(SerializeStream& stream, const void* otherObj)
     stream.String(GetType().Fullname);
     SERIALIZE_MEMBER(ID, GetID());
 
-    SERIALIZE_MEMBER(Flags, _flags);
+    //SERIALIZE_MEMBER(Flags, _flags);
 }
 
 void FudgetLayout::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
@@ -345,15 +345,15 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     if (slot->UnrestrictedSizes.IsValid && (!slot->UnrestrictedSizes.SizeFromSpace || IsUnrestrictedSpace(available)))
     {
         wanted_size = slot->UnrestrictedSizes.Size;
-        wanted_min = slot->UnrestrictedSizes.Max;
-        wanted_max = slot->UnrestrictedSizes.Min;
+        wanted_min = slot->UnrestrictedSizes.Min;
+        wanted_max = slot->UnrestrictedSizes.Max;
         return slot->UnrestrictedSizes.SizeFromSpace;
     }
     else if (slot->Sizes.IsValid && Math::NearEqual(available, slot->Sizes.Space))
     {
         wanted_size = slot->Sizes.Size;
-        wanted_min = slot->Sizes.Max;
-        wanted_max = slot->Sizes.Min;
+        wanted_min = slot->Sizes.Min;
+        wanted_max = slot->Sizes.Max;
         return slot->Sizes.SizeFromSpace;
     }
 

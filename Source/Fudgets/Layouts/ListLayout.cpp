@@ -91,6 +91,54 @@ void FudgetListLayout::SetSlotPadding(int index, FudgetPadding value)
     GetSlot(index)->_padding = value;
 }
 
+FudgetDistributedSizingRule FudgetListLayout::GetSlotSizingRule(int index) const
+{
+    if (!GoodSlotIndex(index))
+        return FudgetDistributedSizingRule::Exact;
+
+    return GetSlot(index)->_sizing_rule;
+}
+
+void FudgetListLayout::SetSlotSizingRule(int index, FudgetDistributedSizingRule value)
+{
+    if (!GoodSlotIndex(index))
+        return;
+
+    GetSlot(index)->_sizing_rule = value;
+}
+
+FudgetDistributedShrinkingRule FudgetListLayout::GetSlotShrinkingRule(int index) const
+{
+    if (!GoodSlotIndex(index))
+        return FudgetDistributedShrinkingRule::Exact;
+
+    return GetSlot(index)->_shrinking_rule;
+}
+
+void FudgetListLayout::SetSlotShrinkingRule(int index, FudgetDistributedShrinkingRule value)
+{
+    if (!GoodSlotIndex(index))
+        return;
+
+    GetSlot(index)->_shrinking_rule = value;
+}
+
+Float2 FudgetListLayout::GetSlotWeight(int index) const
+{
+    if (!GoodSlotIndex(index))
+        return Float2::Zero;
+
+    return GetSlot(index)->_weight;
+}
+
+void FudgetListLayout::SetSlotWeight(int index, Float2 value)
+{
+    if (!GoodSlotIndex(index))
+        return;
+
+    GetSlot(index)->_weight = value;
+}
+
 void FudgetListLayout::PreLayoutChildren(Float2 space)
 {
     if (IsUnrestrictedSpace(space))

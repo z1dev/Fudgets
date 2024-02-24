@@ -114,20 +114,6 @@ public:
     /// </summary>
     API_FIELD() Float2 _weight;
 
-    // Cashed values. Don't save, don't edit.
-
-    ///// <summary>
-    ///// Size of a slot as measured for the list layout. It uses the original measurements and the list layout
-    ///// sizing and shrinking rules to determine the value.
-    ///// </summary>
-    //API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _wanted_size;
-
-    ///// <summary>
-    ///// Size a slot can shrink as measured for the list layout. It uses the original measurements and the list
-    ///// layout sizing and shrinking rules to determine the value.
-    ///// </summary>
-    //API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 _shrink_size;
-
 };
 
 /// <summary>
@@ -152,21 +138,6 @@ public:
     /// </summary>
     /// <param name="value">The layout direction for positioning child controls</param>
     API_PROPERTY() void SetOrientation(FudgetOrientation value);
-
-    ///// <summary>
-    ///// Whether the layout tries to size its controls to fill up the available space in the orientation
-    ///// of the layout. When this is false, the controls are placed one after the other with their preferred
-    ///// size.
-    ///// </summary>
-    ///// <returns>Whether the layout fills the available space</returns>
-    //API_PROPERTY() bool IsStretched() const { return _stretched; }
-    ///// <summary>
-    ///// Sets whether the layout tries to size its controls to fill up the available space in the orientation
-    ///// of the layout. When this is false, the controls are placed one after the other with their preferred
-    ///// size.
-    ///// </summary>
-    ///// <param name="value">Whether the layout fills the available space</param>
-    //API_PROPERTY() void SetStretched(bool value);
 
     /// <summary>
     /// Gets a control's horizontal alignment given its index in the owner container. The horizontal alignment
@@ -200,26 +171,6 @@ public:
     /// <param name="value">The control's new vertical alignment</param>
     API_FUNCTION() void SetSlotVerticalAlignment(int index, FudgetLayoutVertAlign value);
 
-    ///// <summary>
-    ///// Returns true if the control wants its minimum or maximum size respected in the layout when it's
-    ///// possible. During the size calculation of the layout, the minimum and maximum sizes are taken into
-    ///// account independent of this setting. It's only relevant, when the control sizing and placement is
-    ///// calculated.
-    ///// </summary>
-    ///// <param name="index">The control's index in its container</param>
-    ///// <returns>Whether control's size limits will be respected during layout or not</returns>
-    //API_FUNCTION() bool GetSlotLimitsEnforced(int index) const;
-
-    ///// <summary>
-    ///// Tells the layout if the control wants its minimum or maximum size respected when it is possible.
-    ///// During the size calculation of the layout, the minimum and maximum sizes are taken into account
-    ///// independent of this setting. It's only relevant, when the control sizing and placement is
-    ///// calculated.
-    ///// </summary>
-    ///// <param name="index">The control's index in its container</param>
-    ///// <param name="value">Whether control's size limits should be respected during layout or not</param>
-    //API_FUNCTION() void SetSlotLimitsEnforced(int index, bool value);
-
     /// <summary>
     /// Gets the padding of a control in its slot. The padding with the control together counts as the
     /// content of a slot, and it is calculated as an inner border around the control
@@ -236,6 +187,47 @@ public:
     /// <param name="value">The padding values for the sides</param>
     API_FUNCTION() void SetSlotPadding(int index, FudgetPadding value);
 
+    /// <summary>
+    /// Gets the sizing rule of a control slot. The sizing rule determines how a slot expands.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <returns>The sizing rule</returns>
+    API_FUNCTION() FudgetDistributedSizingRule GetSlotSizingRule(int index) const;
+
+    /// <summary>
+    /// Sets the sizing rule of a control slot. The sizing rule determines how a slot expands.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <param name="value">The sizing rule</param>
+    API_FUNCTION() void SetSlotSizingRule(int index, FudgetDistributedSizingRule value);
+    /// <summary>
+    /// Gets the shrinking rule of a control slot. The shrinking rule determines whether a slot shrinks
+    /// before other slots reach their minimum size.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <returns>The shrinking rule</returns>
+    API_FUNCTION() FudgetDistributedShrinkingRule GetSlotShrinkingRule(int index) const;
+    /// <summary>
+    /// Sets the shrinking rule of a control slot. The shrinking rule determines whether a slot shrinks
+    /// before other slots reach their minimum size.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <param name="value">The shrinking rule</param>
+    API_FUNCTION() void SetSlotShrinkingRule(int index, FudgetDistributedShrinkingRule value);
+    /// <summary>
+    /// Gets the weight a control slot. The slot weight determines the relative size of a slot when
+    /// multiple slots can expand or shrink. Its effect depends on the sizing and shrinking rules.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <returns>The slot weight</returns>
+    API_FUNCTION() Float2 GetSlotWeight(int index) const;
+    /// <summary>
+    /// Sets the weight a control slot. The slot weight determines the relative size of a slot when
+    /// multiple slots can expand or shrink. Its effect depends on the sizing and shrinking rules.
+    /// </summary>
+    /// <param name="index">The control's index in its container</param>
+    /// <param name="value">The slot weight</param>
+    API_FUNCTION() void SetSlotWeight(int index, Float2 value);
 
 protected:
     /// <inheritdoc />
@@ -290,14 +282,14 @@ private:
     FORCE_INLINE float RelevantPad(const FudgetPadding &padding) const
     {
         if (_ori == FudgetOrientation::Horizontal)
-            return padding.Left + padding.Top;
+            return padding.Left + padding.Right;
         return padding.Top + padding.Bottom;
     }
     FORCE_INLINE float OppositePad(const FudgetPadding &padding) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return padding.Top + padding.Bottom;
-        return padding.Left + padding.Top;
+        return padding.Left + padding.Right;
     }
 
     FudgetOrientation _ori;
