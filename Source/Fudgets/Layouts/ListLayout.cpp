@@ -22,12 +22,6 @@ void FudgetListLayout::SetOrientation(FudgetOrientation value)
     MarkDirty(FudgetLayoutDirtyReason::All | FudgetLayoutDirtyReason::Container);
 }
 
-//void FudgetListLayout::SetStretched(bool value)
-//{
-//    _stretched = value;
-//    MarkDirty(FudgetLayoutDirtyReason::All, true);
-//}
-
 FudgetLayoutHorzAlign FudgetListLayout::GetSlotHorizontalAlignment(int index) const
 {
     if (!GoodSlotIndex(index))
@@ -59,22 +53,6 @@ void FudgetListLayout::SetSlotVerticalAlignment(int index, FudgetLayoutVertAlign
 
     GetSlot(index)->_vert_align = value;
 }
-
-//bool FudgetListLayout::GetSlotLimitsEnforced(int index) const
-//{
-//    if (!GoodSlotIndex(index))
-//        return false;
-//
-//    return GetSlot(index)->_enforce_limits;
-//}
-//
-//void FudgetListLayout::SetSlotLimitsEnforced(int index, bool value)
-//{
-//    if (!GoodSlotIndex(index))
-//        return;
-//
-//    GetSlot(index)->_enforce_limits = value;
-//}
 
 FudgetPadding& FudgetListLayout::GetSlotPadding(int index) const
 {
