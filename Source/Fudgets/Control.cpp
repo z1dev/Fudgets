@@ -47,8 +47,8 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
         _parent->RemoveChild(_index);
     if (value != nullptr)
         value->AddChild(this, order);
-    if (_parent == nullptr)
-        RegisterToUpdate(false);
+    //if (_parent == nullptr)
+    //    RegisterToUpdate(false);
     _changing = false;
 }
 
@@ -1414,6 +1414,36 @@ void FudgetControl::FudgetControl::DoMouseLeave()
     OnMouseLeave();
 }
 
+void FudgetControl::DoParentChanged(FudgetContainer *old_parent)
+{
+    if (_parent == nullptr)
+    {
+        RegisterToUpdate(false);
+        _guiRoot = nullptr;
+        return;
+    }
+
+    SetState(FudgetControlState::ParentDisabled, !_parent->VirtuallyEnabled());
+    InitializeFlags();
+
+    bool root_change = old_parent == nullptr || old_parent->GetGUIRoot() != _parent->GetGUIRoot();
+    if (root_change)
+        DoRootChanging(_parent->GetGUIRoot());
+
+    _guiRoot = _parent->GetGUIRoot();
+
+    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::Initialized))
+    {
+        Initialize();
+        SetState(FudgetControlState::Initialized, true);
+    }
+
+    if (root_change)
+        DoRootChanged(old_parent != nullptr ? old_parent->GetGUIRoot() : nullptr);
+
+    OnParentChanged(old_parent);
+}
+
 void FudgetControl::SetCursor(CursorType value)
 {
     if (value == _cursor)
@@ -1492,6 +1522,16 @@ void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, Fud
 {
     painter->Initialize(GetActiveTheme(), FudgetThemes::GetStyle(style_token));
     _painters.Add(painter);
+}
+
+void FudgetControl::DoRootChanging(FudgetGUIRoot *new_root)
+{
+    RegisterToUpdate(false);
+}
+
+void FudgetControl::DoRootChanged(FudgetGUIRoot *old_root)
+{
+    RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
 }
 
 void FudgetControl::DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point)

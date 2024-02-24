@@ -693,6 +693,12 @@ public:
 	/// </summary>
 	API_PROPERTY() bool IsUpdateRegistered() const { return (_state_flags & FudgetControlState::Updating) == FudgetControlState::Updating; }
 
+	/// <summary>
+	/// Notification about parent change, when the control is added to a container or removed from one.
+	/// </summary>
+	/// <param name="old_parent">The previous parent which can be null</param>
+	API_PROPERTY() virtual void OnParentChanged(FudgetContainer *old_parent) {}
+
 	// Point transformation
 
 	/// <summary>
@@ -1861,6 +1867,13 @@ public:
 	API_FUNCTION() virtual void DoMouseLeave();
 
 	/// <summary>
+	/// Notification about parent change, when the control is added to a container or removed from one. Override
+	/// OnParentChanged in derived classes
+	/// </summary>
+	/// <param name="old_parent">The previous parent which can be null</param>
+	API_FUNCTION() virtual void DoParentChanged(FudgetContainer *old_parent);
+
+	/// <summary>
 	/// Gets the displayed cursor when the mouse pointer is moved above the control, as long as no other control
 	/// captured the mouse, and this control doesn't ignore mouse movement. If this value is Default, the actual
 	/// cursor shown can be context dependent. Read GetContextCursor for the current value.
@@ -1965,6 +1978,20 @@ protected:
 	/// will be freed once the control is destroyed.
 	/// </summary>
 	API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token);
+
+	/// <summary>
+	/// Used internally to deregister control from OnUpdate calls. This happens after the parent was changed, but the root
+	/// hasn't yet, and the control is not initialized. When overriding, make sure to not access internal data and call
+	/// the base implementation.
+	/// </summary>
+	/// <param name="new_root">The root to be set to the control</param>
+	API_FUNCTION() virtual void DoRootChanging(FudgetGUIRoot *new_root);
+	/// <summary>
+	/// Used internally to register control to OnUpdate calls. This happens after the parent and the root both changed and
+	/// the control was initialized. When overriding, make sure to call the base implementation.
+	/// </summary>
+	/// <param name="new_root">The previous root control</param>
+	API_FUNCTION() virtual void DoRootChanged(FudgetGUIRoot *old_root);
 private:
 
 	void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);

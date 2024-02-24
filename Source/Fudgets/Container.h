@@ -417,6 +417,12 @@ protected:
     /// <inheritdoc />
     void SetParentDisabled(bool value) override;
 
+    /// <inheritdoc />
+    void DoRootChanging(FudgetGUIRoot *new_root)  override;
+
+    /// <inheritdoc />
+    void DoRootChanged(FudgetGUIRoot *old_root) override;
+
 private:
     void SetParentDisabledRecursive();
 

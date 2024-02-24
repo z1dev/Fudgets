@@ -58,22 +58,20 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
         _children.Add(control);
     }
 
+    FudgetContainer *old_parent = control->_parent;
+
+    //if (control->GetGUIRoot() != GetGUIRoot())
+    //    control->RegisterToUpdate(false);
+
     control->_parent = this;
     control->_index = index;
-    control->_guiRoot = GetGUIRoot();
-    control->SetState(FudgetControlState::ParentDisabled, !VirtuallyEnabled());
-    control->InitializeFlags();
-
-    control->RegisterToUpdate(control->HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
+    //control->SetState(FudgetControlState::ParentDisabled, !VirtuallyEnabled());
+    //control->InitializeFlags();
 
     if (_layout != nullptr)
         _layout->ChildAdded(control, index);
 
-    if (_guiRoot != nullptr && !control->HasAnyState(FudgetControlState::Initialized))
-    {
-        control->Initialize();
-        control->SetState(FudgetControlState::Initialized, true);
-    }
+    control->DoParentChanged(old_parent);
 
     _changing = false;
 
@@ -91,16 +89,20 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
     _children.RemoveAtKeepOrder(index);
     control->_parent = nullptr;
     control->_index = -1;
-    control->_guiRoot = nullptr;
+
+    //control->SetGUIRootInternal(nullptr);
     control->SetState(FudgetControlState::ParentDisabled, false);
-    if (!control->_changing)
-        control->RegisterToUpdate(false);
+
+    //if (!control->_changing)
+    //    control->RegisterToUpdate(false);
 
     for (int ix = index, siz = _children.Count(); ix < siz; ++ix)
         _children[ix]->_index = ix;
 
     if (_layout != nullptr)
         _layout->ChildRemoved(index);
+
+    control->DoParentChanged(nullptr);
 
     _changing = false;
 
@@ -607,6 +609,23 @@ void FudgetContainer::SetParentDisabled(bool value)
     Base::SetParentDisabled(value);
     if (enabled != value)
         SetParentDisabledRecursive();
+}
+
+void FudgetContainer::DoRootChanging(FudgetGUIRoot *new_root)
+{
+    Base::DoRootChanging(new_root);
+    for (FudgetControl *c : _children)
+        c->DoRootChanging(new_root);
+}
+
+void FudgetContainer::DoRootChanged(FudgetGUIRoot *old_root)
+{
+    Base::DoRootChanged(old_root);
+    for (FudgetControl *c : _children)
+    {
+        c->_guiRoot = GetGUIRoot();
+        c->DoRootChanged(old_root);
+    }
 }
 
 void FudgetContainer::SetParentDisabledRecursive()

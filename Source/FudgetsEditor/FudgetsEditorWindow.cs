@@ -85,8 +85,8 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
             RenderRoot = new FudgetGUIRoot();
             RootObject = _asset.WidgetData;
 
-            //RootObject.HintSize = _resolution;
-            //RenderRoot.HintSize = _resolution;
+            RootObject.HintSize = _resolution;
+            RenderRoot.HintSize = _resolution;
             RootObject.Parent = RenderRoot;
 
             _selectedControls = new List<FudgetControl>();
@@ -272,8 +272,8 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         _resolution = _imagePanel.Size;
         _texture.Resize((int)_resolution.X, (int)_resolution.Y);
 
-        //RootObject.HintSize = _resolution;
-        //RenderRoot.HintSize = _resolution;
+        RootObject.HintSize = _resolution;
+        RenderRoot.HintSize = _resolution;
         ForceLayout();
     }
 
@@ -281,6 +281,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     {
         Render2D.Begin(context, _texture);
         Render2D.FillRectangle(new Rectangle(0, 0, _resolution), new Color(0, 0, 0, 255));
+        RenderRoot.DoLayout();
         RenderRoot.DoDraw();
         Render2D.End();
     }
