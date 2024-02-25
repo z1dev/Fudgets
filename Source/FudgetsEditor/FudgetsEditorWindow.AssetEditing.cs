@@ -373,9 +373,18 @@ public partial class FudgetsEditorWindow
             var allTypes = Editor.Instance.CodeEditing.All.Get();
             foreach (var type in allTypes)
             {
-                if (controlType.IsAssignableFrom(type))
+                if (controlType.IsAssignableFrom(type) &&
+                    type != new ScriptType(typeof(FudgetAssetPlaceholder)) &&
+                    type != new ScriptType(typeof(FudgetAssetRoot)) &&
+                    type != new ScriptType(typeof(FudgetGUIRoot)) &&
+                    !type.IsAbstract)
                 {
-                    ContextMenuButton button = newMenu.AddButton(FlaxEditor.Utilities.Utils.GetPropertyNameUI(type.Name));
+                    string name = type.Name;
+                    Debug.Log(name);
+                    if (name.StartsWith("Fudget"))
+                        name = name.Remove(0, 6);
+
+                    ContextMenuButton button = newMenu.AddButton(FlaxEditor.Utilities.Utils.GetPropertyNameUI(name));
                     button.Tag = type;
                     button.ButtonClicked += ContextMenuNewClicked;
                 }

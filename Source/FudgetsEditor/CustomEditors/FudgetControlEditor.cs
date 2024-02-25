@@ -71,9 +71,14 @@ namespace FudgetsEditor.CustomEditors
                 var allTypes = Editor.Instance.CodeEditing.All.Get();
                 foreach (var type in allTypes)
                 {
-                    if (controlType.IsAssignableFrom(type))
+                    if (controlType.IsAssignableFrom(type) &&
+                        !type.IsAbstract)
                     {
-                        ContextMenuButton button = newMenu.AddButton(FlaxEditor.Utilities.Utils.GetPropertyNameUI(type.Name));
+                        string name = type.Name;
+                        if (name.StartsWith("Fudget"))
+                            name = name.Remove(0, 6);
+
+                        ContextMenuButton button = newMenu.AddButton(FlaxEditor.Utilities.Utils.GetPropertyNameUI(name));
                         button.Tag = type;
                         button.ButtonClicked += (x) =>
                         {
