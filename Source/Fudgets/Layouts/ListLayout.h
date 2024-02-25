@@ -57,18 +57,26 @@ API_ENUM()
 enum class FudgetDistributedShrinkingRule
 {
     /// <summary>
-    /// Slot keeps its wanted size while there are other slots that can shrink. If every shrinking slot
-    /// reached its minimum size, this slot will shrink together with other Exact slots proportionally.
-    /// </summary>
-    Exact,
-    /// <summary>
-    /// Slot can shrink below its wanted size until it reaches its minimum size.
+    /// Slot can shrink below its wanted size until it reaches its minimum size. Slots with this rule will
+    /// shrink to their minimum size before slots with the LateShrink shrinking rule start changing their size.
+    /// Has no effect when the sizing rule of a slot forces it to be its minimum size.
     /// </summary>
     CanShrink,
     /// <summary>
+    /// Slot keeps its wanted size while there are other slots that can shrink. If every shrinking slot
+    /// reached its minimum size, this slot will shrink together with other LateShrink slots proportionally.
+    /// Has no effect when the sizing rule of a slot forces it to be its minimum size.
+    /// </summary>
+    LateShrink,
+    /// <summary>
     /// Slot behaves like a CanShrink slot while having a minimum size of zero independent of its contents.
     /// </summary>
-    IgnoreMinimum
+    IgnoreMinimum,
+    /// <summary>
+    /// Slots of this rule can't shrink below their wanted size.
+    /// Has no effect when the sizing rule of a slot forces it to be its minimum size.
+    /// </summary>
+    KeepSize,
 };
 
 /// <summary>

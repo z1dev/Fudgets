@@ -123,7 +123,7 @@ FudgetDistributedShrinkingRule FudgetListLayout::GetSlotShrinkingRule(int index)
 {
     auto slot = GetSlot(index);
     if (slot == nullptr)
-        return FudgetDistributedShrinkingRule::Exact;
+        return FudgetDistributedShrinkingRule::CanShrink;
 
     return slot->_shrinking_rule;
 }
@@ -271,25 +271,28 @@ void FudgetListLayout::LayoutChildren(Float2 space)
         return;
 
 
-    // How much the shrinking controls can shrink in total
-    float shrink_sum = 0.f;
-    // How much the exact controls can shrink in total
-    float exact_shrink_sum = 0.f;
-    // Maximum weight of shrinking controls
-    float max_shrink_weight = 0.f;
-    // Maximum weight of exact controls
-    float max_exact_shrink_weight = 0.f;
-    // Maximum weight of all controls
-    float max_weight = 0.f;
-    // Sum of the minimum sizes of the controls
-    float min_sum = 0.f;
-    // Number of shrinking controls
-    int shrink_cnt = 0;
-    // Number of exact controls
-    int exact_shrink_cnt = 0;
+    //// How much the shrinking controls can shrink in total
+    //float shrink_sum = 0.f;
+    //// How much the exact controls can shrink in total
+    //float exact_shrink_sum = 0.f;
+    //// Maximum weight of shrinking controls
+    //float max_shrink_weight = 0.f;
+    //// Maximum weight of exact controls
+    //float max_exact_shrink_weight = 0.f;
+    //// Maximum weight of all controls
+    //float max_weight = 0.f;
+    //// Sum of the minimum sizes of the controls
+    //float min_sum = 0.f;
+    //// Number of shrinking controls
+    //int shrink_cnt = 0;
+    //// Number of exact controls
+    //int exact_shrink_cnt = 0;
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+
+        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
+            RelevantRef(shrink_sizes[ix]) = RelevantRef(wanted_sizes[ix]);
 
         if (_has_expanding || _has_grow_exact || _has_grow_expanding)
         {
@@ -308,26 +311,26 @@ void FudgetListLayout::LayoutChildren(Float2 space)
             }
         }
 
-        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
-            RelevantRef(shrink_sizes[ix]) = RelevantRef(wanted_sizes[ix]);
+        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::KeepSize)
+            RelevantRef(shrink_sizes[ix]) = 0.f;
 
-        // Values when controls need to shrink
+        //// Values when controls need to shrink
 
-        float weight = Relevant(slot->_weight);
-        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::Exact)
-        {
-            exact_shrink_sum += Relevant(shrink_sizes[ix]);
-            max_exact_shrink_weight = Math::Max(max_exact_shrink_weight, weight);
-            ++exact_shrink_cnt;
-        }
-        else
-        {
-            shrink_sum += Relevant(shrink_sizes[ix]);
-            max_shrink_weight = Math::Max(max_shrink_weight, weight);
-            ++shrink_cnt;
-        }
-        min_sum += Relevant(wanted_sizes[ix] - shrink_sizes[ix]);
-        max_weight = Math::Max(max_weight, weight);
+        //float weight = Relevant(slot->_weight);
+        //if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
+        //{
+        //    exact_shrink_sum += Relevant(shrink_sizes[ix]);
+        //    max_exact_shrink_weight = Math::Max(max_exact_shrink_weight, weight);
+        //    ++exact_shrink_cnt;
+        //}
+        //else
+        //{
+        //    shrink_sum += Relevant(shrink_sizes[ix]);
+        //    max_shrink_weight = Math::Max(max_shrink_weight, weight);
+        //    ++shrink_cnt;
+        //}
+        //min_sum += Relevant(wanted_sizes[ix] - shrink_sizes[ix]);
+        //max_weight = Math::Max(max_weight, weight);
     }
 
     //for (int ix = 0; ix < count; ++ix)
@@ -411,126 +414,43 @@ void FudgetListLayout::LayoutChildren(Float2 space)
     }
     else
     {
-
-        // Sum of the weights of the shrinking controls
-        float shrink_weight_sum = 0.f;
-        // Sum of the weights of the exact controls.
-        float exact_shrink_weight_sum = 0.f;
-        // Sum of the weights of the shrinking and exact controls.
-        float weight_sum = 0.f;
+        float shrink_sum = 0.f;
+        float late_shrink_sum = 0.f;
         for (int ix = 0; ix < count; ++ix)
         {
-            FudgetListLayoutSlot *slot = GetSlot(ix);
-            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::Exact)
-            {
-                float weight = max_exact_shrink_weight - Relevant(slot->_weight) + 1.f;
-                exact_shrink_weight_sum += weight;
-            }
-            else
-            {
-                float weight = max_shrink_weight - Relevant(slot->_weight) + 1.f;
-                shrink_weight_sum += weight;
-            }
-
-            float weight = max_weight - Relevant(slot->_weight) + 1.f;
-            weight_sum += weight;
+            float size = Relevant(shrink_sizes[ix]);
+            if (size <= 0.f)
+                continue;
+            auto slot = GetSlot(ix);
+            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::CanShrink || slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
+                shrink_sum += size;
+            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
+                late_shrink_sum += size;
         }
 
-        if (shrink_sum > 0)
+        remaining = Math::Min(-remaining, shrink_sum + late_shrink_sum);
+        for (int ix = 0; ix < count; ++ix)
         {
-            // First shrink the slots with the shrinking rule.
-
-            float shrink = Math::Min(shrink_sum, -remaining);
-            for (int ix = 0; ix < count; ++ix)
-            {
-                FudgetListLayoutSlot *slot = GetSlot(ix);
-                if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::Exact)
-                    continue;
-                float weight = max_shrink_weight - Relevant(slot->_weight) + 1.f;
-                sizes[ix] -= shrink * weight / shrink_weight_sum;
-            }
-            remaining += shrink;
+            float size = Relevant(shrink_sizes[ix]);
+            if (size <= 0.f)
+                continue;
+            auto slot = GetSlot(ix);
+            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::CanShrink || slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
+                sizes[ix] -= Math::Min(remaining, shrink_sum) * (size / shrink_sum);
         }
-        if (Math::NotNearEqual(remaining, 0.f) && exact_shrink_sum > 0)
-        {
-            // More to shrink, use the exact sized controls as well
-
-            float shrink = Math::Min(exact_shrink_sum, -remaining);
-            for (int ix = 0; ix < count; ++ix)
-            {
-                FudgetListLayoutSlot *slot = GetSlot(ix);
-                if (slot->_shrinking_rule != FudgetDistributedShrinkingRule::Exact)
-                    continue;
-                float weight = max_exact_shrink_weight - Relevant(slot->_weight) + 1.f;
-                sizes[ix] -= shrink * weight / exact_shrink_weight_sum;
-            }
-            remaining += shrink;
-        }
-        if (Math::NotNearEqual(remaining, 0.f))
+        remaining -= shrink_sum;
+        if (remaining > 0.f && late_shrink_sum > 0.f && !Math::NearEqual(remaining, 0.f))
         {
             for (int ix = 0; ix < count; ++ix)
             {
-                FudgetListLayoutSlot *slot = GetSlot(ix);
-                if (slot->_shrinking_rule != FudgetDistributedShrinkingRule::Exact)
+                float size = Relevant(shrink_sizes[ix]);
+                if (size <= 0.f)
                     continue;
-                float weight = max_weight - Relevant(slot->_weight) + 1.f;
-                sizes[ix] += remaining * weight / weight_sum;
+                auto slot = GetSlot(ix);
+                if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
+                    sizes[ix] -= Math::Min(remaining, late_shrink_sum) * (size / late_shrink_sum);
             }
         }
-
-        //if (shrink_sum + remaining >= 0.f)
-        //{
-        //    // Only need to shrink the slots with the shrinking rule.
-        //    for (int ix = 0; ix < count; ++ix)
-        //    {
-        //        FudgetListLayoutSlot *slot = GetSlot(ix);
-        //        if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::Exact)
-        //            continue;
-        //        if (shrink_weights != 0.f)
-        //            sizes[ix] += remaining * Relevant(slot->_weight) / shrink_weights;
-        //        else if (shrink_sum != 0.f)
-        //            sizes[ix] += remaining * Relevant(shrink_sizes[ix]) / shrink_sum;
-        //        else
-        //            sizes[ix] += remaining / shrink_cnt;
-        //    }
-        //}
-        //else if (shrink_sum + exact_shrink_sum + remaining >= 0.f)
-        //{
-        //    remaining += shrink_sum;
-        //    // Shrinking slots all reached their minimum size, but the exact shrinking rule slots can
-        //    // make up for it.
-        //    // Only need to shrink the slots with the shrinking rule.
-        //    for (int ix = 0; ix < count; ++ix)
-        //    {
-        //        FudgetListLayoutSlot *slot = GetSlot(ix);
-        //        if (slot->_shrinking_rule != FudgetDistributedShrinkingRule::Exact)
-        //        {
-        //            sizes[ix] += -Relevant(shrink_sizes[ix]);
-        //            continue;
-        //        }
-        //        if (exact_shrink_weights != 0.f)
-        //            sizes[ix] += remaining * Relevant(slot->_weight) / exact_shrink_weights;
-        //        else if (exact_shrink_sum != 0.f)
-        //            sizes[ix] += remaining * Relevant(shrink_sizes[ix]) / exact_shrink_sum;
-        //        else
-        //            sizes[ix] += remaining / exact_shrink_cnt;
-        //    }
-        //}
-        //else
-        //{
-        //    remaining += shrink_sum + exact_shrink_sum;
-        //    // All slots must shrink below the minimum size based on their weight
-        //    for (int ix = 0; ix < count; ++ix)
-        //    {
-        //        FudgetListLayoutSlot *slot = GetSlot(ix);
-        //        if (exact_shrink_weights + shrink_weights != 0.f)
-        //            sizes[ix] += -Relevant(shrink_sizes[ix]) + remaining * Relevant(slot->_weight) / (exact_shrink_weights + shrink_weights);
-        //        else if (min_sum != 0.f)
-        //            sizes[ix] += -Relevant(shrink_sizes[ix]) + remaining * Relevant(wanted_sizes[ix] - shrink_sizes[ix]) / min_sum;
-        //        else
-        //            sizes[ix] += remaining / exact_shrink_cnt;
-        //    }
-        //}
     }
 
     Float2 pos = Float2::Zero;
