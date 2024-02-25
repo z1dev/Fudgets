@@ -63,7 +63,7 @@ public:
 /// control that has very specific layouting needs. Container classes that use this layout should inherit
 /// from the IProxyLayoutContainer interface.
 /// </summary>
-API_CLASS()
+API_CLASS(Attributes="HideInEditor")
 class FUDGETS_API FudgetProxyLayout : public FudgetLayout
 {
     using Base = FudgetLayout;

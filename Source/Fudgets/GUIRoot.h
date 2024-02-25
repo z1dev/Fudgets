@@ -8,7 +8,7 @@ class WindowBase;
 /// <summary>
 /// Root container representing the whole area where UI controls can appear. For example the screen.
 /// </summary>
-API_CLASS()
+API_CLASS(Attributes = "HideInEditor")
 class FUDGETS_API FudgetGUIRoot : public FudgetContainer
 {
     using Base = FudgetContainer;

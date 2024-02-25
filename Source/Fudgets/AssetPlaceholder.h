@@ -6,7 +6,7 @@
 /// <summary>
 /// Placeholder control for asset references to be serialized.
 /// </summary>
-API_CLASS()
+API_CLASS(Attributes = "HideInEditor")
 class FUDGETS_API FudgetAssetPlaceholder : public FudgetControl
 {
     using Base = FudgetControl;

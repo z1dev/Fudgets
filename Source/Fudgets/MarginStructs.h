@@ -55,6 +55,22 @@ struct FUDGETS_API FudgetPadding
 		return *this;
 	}
 
+	FORCE_INLINE bool operator==(const FudgetPadding &other) const
+	{
+		return Math::NearEqual(Left, other.Left) &&
+			Math::NearEqual(Top, other.Top) &&
+			Math::NearEqual(Right, other.Right) &&
+			Math::NearEqual(Bottom, other.Bottom);
+	}
+
+	FORCE_INLINE bool operator!=(const FudgetPadding &other) const
+	{
+		return !Math::NearEqual(Left, other.Left) ||
+			!Math::NearEqual(Top, other.Top) ||
+			!Math::NearEqual(Right, other.Right) ||
+			!Math::NearEqual(Bottom, other.Bottom);
+	}
+
 	/// <summary>
 	/// Converts padding to a Float4 with left, right, top, bottom values in this order, which is the order used in some
 	/// built-in functions that use Float4 for sides.
@@ -151,4 +167,8 @@ struct FUDGETS_API FudgetPadding
 	API_FIELD() float Bottom;
 };
 
-
+template<>
+struct TIsPODType<FudgetPadding>
+{
+	enum { Value = true };
+};

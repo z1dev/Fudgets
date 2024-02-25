@@ -19,14 +19,14 @@ enum class FudgetDistributedSizingRule
     /// <summary>
     /// Slot wants to take up as much space as it can, but only if there is space left. If there are
     /// Expanding slots, the slot will behave like an Expanding slot and the remaining space will be
-    /// distributed among them on their weight. With no Expanding slots, this rule is equivalent to
-    /// GrowExact.
+    /// distributed among them based on their weight. With no Expanding slots, this rule is equivalent
+    /// to GrowExact.
     /// </summary>
     GrowExpanding,
     /// <summary>
     /// Slot wants to take up as much space as it can, but only if there is space left. If there are
     /// Expanding slots, the slot will behave like an Exact slot and will want to keep its contents'
-    /// measured size. If there are multiple GrowExact slots and there is no Expanding slot, the remaining
+    /// measured size. If there are multiple Grow*** slots and there is no Expanding slot, the remaining
     /// space will be distributed based on their weight. With no Expanding slots, this rule is equivalent
     /// to GrowExpanding.
     /// </summary>
@@ -57,14 +57,12 @@ API_ENUM()
 enum class FudgetDistributedShrinkingRule
 {
     /// <summary>
-    /// Slot wants to keep its wanted size while there are other slots that can shrink. If every other slot
-    /// reached its minimum size, this slot will shrink based on its weight until every slot is at their
-    /// minimum size.
+    /// Slot keeps its wanted size while there are other slots that can shrink. If every shrinking slot
+    /// reached its minimum size, this slot will shrink together with other Exact slots proportionally.
     /// </summary>
     Exact,
     /// <summary>
-    /// Slot can shrink below its wanted size until it reaches its minimum size. If every slot reached its
-    /// minimum size, this slot will shrink based on its weight.
+    /// Slot can shrink below its wanted size until it reaches its minimum size.
     /// </summary>
     CanShrink,
     /// <summary>
