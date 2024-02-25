@@ -373,11 +373,15 @@ public partial class FudgetsEditorWindow
             var allTypes = Editor.Instance.CodeEditing.All.Get();
             foreach (var type in allTypes)
             {
+                object[] attrs = type.GetAttributes(false);
+                bool hide = false;
+                foreach (var attr in attrs)
+                    if (attr is HideInEditorAttribute)
+                        hide = true;
+
                 if (controlType.IsAssignableFrom(type) &&
-                    type != new ScriptType(typeof(FudgetAssetPlaceholder)) &&
-                    type != new ScriptType(typeof(FudgetAssetRoot)) &&
-                    type != new ScriptType(typeof(FudgetGUIRoot)) &&
-                    !type.IsAbstract)
+                    !type.IsAbstract &&
+                    !hide)
                 {
                     string name = type.Name;
                     Debug.Log(name);

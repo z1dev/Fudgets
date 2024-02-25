@@ -6,6 +6,7 @@ using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine;
 using Fudgets;
+using System.Linq;
 
 namespace FudgetsEditor.CustomEditors
 {
@@ -71,8 +72,15 @@ namespace FudgetsEditor.CustomEditors
                 var allTypes = Editor.Instance.CodeEditing.All.Get();
                 foreach (var type in allTypes)
                 {
+                    object[] attrs = type.GetAttributes(false);
+                    bool hide = false;
+                    foreach (var attr in attrs)
+                        if (attr is HideInEditorAttribute)
+                            hide = true;
+
                     if (controlType.IsAssignableFrom(type) &&
-                        !type.IsAbstract)
+                        !type.IsAbstract &&
+                        !hide)
                     {
                         string name = type.Name;
                         if (name.StartsWith("Fudget"))
