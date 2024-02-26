@@ -18,11 +18,10 @@
 
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default), _pos(0.f), _size(0.0f),
-    _pos_layout_updated(false), _size_layout_updated(false), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
-    _max_size(MAX_float, MAX_float), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
-    _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
-    _cached_theme(nullptr)
+    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default),
+    _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(MAX_float, MAX_float),
+    _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
+    _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
 
@@ -84,9 +83,12 @@ void FudgetControl::SetHintSize(Float2 value)
         return;
     Float2 old_size = GetHintSize();
     _hint_size = value;
-    if (IsDirectSizeChangePermitted())
+    if (!Float2::NearEqual(value, _size) && IsDirectSizeChangePermitted())
+    {
         _size = _hint_size;
-    if (!Math::NearEqual(GetHintSize(), old_size))
+        SetState(FudgetControlState::SizeUpdated, true);
+    }
+    if (!Float2::NearEqual(GetHintSize(), old_size))
         SizeModified();
 }
 
@@ -1344,12 +1346,12 @@ void FudgetControl::DoDraw()
 {
     SetState(FudgetControlState::Global2LocalCached, false);
 
-    if (_pos_layout_updated || _size_layout_updated)
+    if (HasAnyState(FudgetControlState::PositionUpdated | FudgetControlState::SizeUpdated))
     {
-        bool pos = _pos_layout_updated;
-        bool siz = _size_layout_updated;
-        _pos_layout_updated = false;
-        _size_layout_updated = false;
+        bool pos = HasAnyState(FudgetControlState::PositionUpdated);
+        bool siz = HasAnyState(FudgetControlState::SizeUpdated);
+        SetState(FudgetControlState::PositionUpdated, false);
+        SetState(FudgetControlState::SizeUpdated, false);
 
         if (pos)
             OnPositionChanged();
@@ -1637,12 +1639,12 @@ void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
     if (!Math::NearEqual(pos, _pos))
     {
         _pos = pos;
-        _pos_layout_updated = true;
+        SetState(FudgetControlState::PositionUpdated, true);
     }
     if (!Math::NearEqual(size, _size))
     {
         _size = size;
-        _size_layout_updated = true;
+        SetState(FudgetControlState::SizeUpdated, true);
     }
 }
 

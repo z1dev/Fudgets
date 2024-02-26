@@ -17,7 +17,6 @@
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Platform/Base/WindowBase.h"
 
-//#include "Utils/SmartPointers.h"
 #include "Styling/Token.h"
 #include "Styling/StyleStructs.h"
 #include "Styling/Style.h"
@@ -25,7 +24,6 @@
 
 class FudgetContainer;
 class FudgetGUIRoot;
-//class FudgetStyle;
 class FudgetTheme;
 class TextureBase;
 struct SpriteHandle;
@@ -109,7 +107,7 @@ DECLARE_ENUM_OPERATORS(FudgetLayoutDirtyReason);
 /// Flags describing a control's current state
 /// </summary>
 API_ENUM(Attributes="Flags")
-enum class FudgetControlState : uint8
+enum class FudgetControlState : uint16
 {
 	/// <summary>
 	/// Empty state
@@ -150,6 +148,14 @@ enum class FudgetControlState : uint8
 	/// mouse pointer, when the control is a compound container or the child of a compound container. 
 	/// </summary>
 	ShowHovered = 1 << 7,
+	/// <summary>
+	// Set during layout phase when the control's position was changed by a layout.
+	/// </summary>
+	PositionUpdated = 1 << 8,
+	/// <summary>
+	// Set during layout phase when the control's size was changed by a layout.
+	/// </summary>
+	SizeUpdated = 1 << 9
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
@@ -407,9 +413,9 @@ public:
 	API_FUNCTION() virtual void OnPositionChanged() {}
 
 	/// <summary>
-	/// Called after the control's size changed. Since it's only possible to modify the size of controls through their
-	/// hint size, this is always called as part of a layout change. OnPositionChanged might have been called right
-	/// before if the position was also changed by the layout, and then OnPositionOrSizeChanged is called as well.
+	/// Called after the control's size changed. This is always called before drawing and after the control was laid
+	/// out on the same frame. OnPositionChanged might have been called right before if the position was also changed
+	/// by the layout, and then OnPositionOrSizeChanged is called as well.
 	/// </summary>
 	API_FUNCTION() virtual void OnSizeChanged() {}
 
@@ -2039,13 +2045,6 @@ private:
 
 	Float2 _pos;
 	Float2 _size;
-
-	// TODO: change these bools into some flags value to save space?
-
-	// Set during layout phase when the control's position was changed by a layout.
-	bool _pos_layout_updated;
-	// Set during layout phase when the control's size was changed by a layout.
-	bool _size_layout_updated;
 
 	Float2 _hint_size;
 	Float2 _min_size;

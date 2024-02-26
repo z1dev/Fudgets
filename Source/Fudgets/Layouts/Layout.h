@@ -478,12 +478,6 @@ class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
     DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
 
 public:
-    ///// <summary>
-    ///// Fetches the control that is positioned and sized by the values in this slot
-    ///// </summary>
-    ///// <returns>The control in this slot</returns>
-    //API_PROPERTY(Attributes="HideInEditor") FudgetControl* GetControl() const { return _control; }
-
     /// <summary>
     /// The control placed in the slot. The attributes affect its position and size 
     /// </summary>
