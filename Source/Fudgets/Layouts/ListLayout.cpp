@@ -198,7 +198,7 @@ void FudgetListLayout::PreLayoutChildren(Float2 space)
         _has_exact |= slot->_sizing_rule == FudgetDistributedSizingRule::Exact;
         _has_shrink |= slot->_sizing_rule == FudgetDistributedSizingRule::Shrink;
         _has_minimal |= slot->_sizing_rule == FudgetDistributedSizingRule::Minimal;
-        _space_dependent |= slot->UnrestrictedSizes.SizeFromSpace;
+        _space_dependent |= SlotSizeFromSpace(ix);
 
         // This layout needs to reset the computed bounds at the start, to know for every consecutive
         // iteration what to measure.
@@ -270,23 +270,6 @@ void FudgetListLayout::LayoutChildren(Float2 space)
     if (unrestricted)
         return;
 
-
-    //// How much the shrinking controls can shrink in total
-    //float shrink_sum = 0.f;
-    //// How much the exact controls can shrink in total
-    //float exact_shrink_sum = 0.f;
-    //// Maximum weight of shrinking controls
-    //float max_shrink_weight = 0.f;
-    //// Maximum weight of exact controls
-    //float max_exact_shrink_weight = 0.f;
-    //// Maximum weight of all controls
-    //float max_weight = 0.f;
-    //// Sum of the minimum sizes of the controls
-    //float min_sum = 0.f;
-    //// Number of shrinking controls
-    //int shrink_cnt = 0;
-    //// Number of exact controls
-    //int exact_shrink_cnt = 0;
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
@@ -313,45 +296,11 @@ void FudgetListLayout::LayoutChildren(Float2 space)
 
         if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::KeepSize)
             RelevantRef(shrink_sizes[ix]) = 0.f;
-
-        //// Values when controls need to shrink
-
-        //float weight = Relevant(slot->_weight);
-        //if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
-        //{
-        //    exact_shrink_sum += Relevant(shrink_sizes[ix]);
-        //    max_exact_shrink_weight = Math::Max(max_exact_shrink_weight, weight);
-        //    ++exact_shrink_cnt;
-        //}
-        //else
-        //{
-        //    shrink_sum += Relevant(shrink_sizes[ix]);
-        //    max_shrink_weight = Math::Max(max_shrink_weight, weight);
-        //    ++shrink_cnt;
-        //}
-        //min_sum += Relevant(wanted_sizes[ix] - shrink_sizes[ix]);
-        //max_weight = Math::Max(max_weight, weight);
     }
-
-    //for (int ix = 0; ix < count; ++ix)
-    //{
-    //    float size = Relevant(wanted_sizes[ix]);
-    //    float ratio = _no_padding_space > 0.f ? size / _no_padding_space : 0.f;
-    //    ratio_sum += ratio;
-    //    ratios.Add(ratio);
-    //}
 
     //// The size remaining after all the wanted sizes are subtracted from the available space. This
     //// might be a negative value if the slots need more space.
     float remaining = _no_padding_space;
-
-    //for (int ix = 0; ix < count; ++ix)
-    //{
-    //    float size = Math::Min(Relevant(max_sizes[ix]), ratio_sum != 0.f ? (ratios[ix] / ratio_sum * Relevant(wanted_sizes[ix])) : 0.f);
-    //    sizes.Add(size);
-    //    remaining -= size;
-
-    //}
 
     for (int ix = 0; ix < count; ++ix)
     {

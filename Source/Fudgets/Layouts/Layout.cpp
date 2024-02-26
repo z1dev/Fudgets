@@ -330,11 +330,11 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     {
         for (int ix = 0; ix < count; ++ix)
             PlaceControlInSlotRectangle(ix);
-    }
 
-    _layout_dirty = !_sizes.IsValid && !_unrestricted_sizes.IsValid;
-    if (_layout_dirty)
-        LOG(Warning, "Layout measurements were invalid or were not set with SetMeasuredSizes.");
+        _layout_dirty = !_sizes.IsValid && !_unrestricted_sizes.IsValid;
+        if (_layout_dirty)
+            LOG(Warning, "Layout measurements were invalid or were not set with SetMeasuredSizes.");
+    }
 }
 
 bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max)
@@ -367,9 +367,9 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     {
         slot->UnrestrictedSizes.IsValid = true;
         slot->UnrestrictedSizes.Space = available;
-        wanted_size = slot->UnrestrictedSizes.Size = size;
         wanted_min = slot->UnrestrictedSizes.Min = min;
-        wanted_max = slot->UnrestrictedSizes.Max = max;
+        wanted_max = slot->UnrestrictedSizes.Max = Float2::Max(min, max);
+        wanted_size = slot->UnrestrictedSizes.Size = Float2::Clamp(size, wanted_min, wanted_max);
         slot->UnrestrictedSizes.SizeFromSpace = from_space;
 
         if (!from_space)
@@ -379,13 +379,22 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
     {
         slot->Sizes.IsValid = true;
         slot->Sizes.Space = available;
-        wanted_size = slot->Sizes.Size = size;
         wanted_min = slot->Sizes.Min = min;
-        wanted_max = slot->Sizes.Max = max;
+        wanted_max = slot->Sizes.Max = Float2::Max(min, max);
+        wanted_size = slot->Sizes.Size = Float2::Clamp(size, wanted_min, wanted_max);
         slot->Sizes.SizeFromSpace = from_space;
     }
 
     return from_space;
+}
+
+bool FudgetLayout::SlotSizeFromSpace(int index)
+{
+    auto slot = GetSlot(index);
+    if (slot == nullptr)
+        return false;
+
+    return slot->UnrestrictedSizes.SizeFromSpace;
 }
 
 void FudgetLayout::SetMeasuredSizes(const FudgetLayoutSizeCache &sizes)

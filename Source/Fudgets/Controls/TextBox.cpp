@@ -308,55 +308,53 @@ CursorType FudgetTextBox::GetContextCursor() const
 
 Float2 FudgetTextBox::GetLayoutHintSize() const
 {
-    Float2 size = Base::GetHintSize();
     if (_auto_size != FudgetAutoSizing::None)
     {
         switch (_auto_size)
         {
             case FudgetAutoSizing::Both:
-                size = _cached_size;
+                return _cached_size;
                 break;
             case FudgetAutoSizing::Height:
-                size.Y = _cached_size.Y;
+                return Float2(Base::GetHintSize().X, Math::Max(GetMinSize().Y, _cached_size.Y));
                 break;
             case FudgetAutoSizing::Width:
-                size.X = _cached_size.X;
+                return Float2(Math::Max(GetMinSize().X, _cached_size.X), Base::GetHintSize().Y);
                 break;
         }
     }
 
-    return size;
+    return  Base::GetHintSize();
 }
 
 Float2 FudgetTextBox::GetLayoutMinSize() const
 {
-    return GetLayoutHintSize();
+    return Base::GetMinSize();
 }
 
 Float2 FudgetTextBox::GetLayoutMaxSize() const
 {
-    return GetLayoutHintSize();
+    return Base::GetMaxSize();
 }
 
 bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
 {
-    // TODO:  auto size text all sizes should be same
-
     if (_auto_size == FudgetAutoSizing::None || _text_painter == nullptr)
         return Base::OnMeasure(available, wanted, min_size, max_size);
 
-    if ((!FudgetLayout::IsUnrestrictedSpace(available) && Math::NearEqual(_measure_space, available.X)) || (FudgetLayout::IsUnrestrictedSpace(available) && _measure_space == MAX_float))
+    if ((!FudgetLayout::IsUnrestrictedSpace(available) && Math::NearEqual(_measure_space, available.X)) ||
+        ((FudgetLayout::IsUnrestrictedSpace(available) || !_line_wrap || _auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Width) && _measure_space == MAX_float))
         return Base::OnMeasure(available, wanted, min_size, max_size);
 
     FudgetPadding inner_padding = GetInnerPadding();
     inner_padding.Right += _caret_width * 2.0f;
 
-    if (FudgetLayout::IsUnrestrictedSpace(available))
+    if (FudgetLayout::IsUnrestrictedSpace(available) || !_line_wrap || _auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Width)
     {
         _measure_space = MAX_float;
         FudgetMultilineTextMeasurements tmp;
         FudgetMultiLineTextOptions opt;
-        opt.Wrapping = _line_wrap;
+        opt.Wrapping = false;
         opt.WrapMode = _wrap_mode;
         _text_painter->MeasureLines(this, MAX_float, _text, 1.f, opt, tmp);
         _cached_size = tmp.Size + inner_padding.Size();
@@ -372,92 +370,8 @@ bool FudgetTextBox::OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, A
         _cached_size = tmp.Size + inner_padding.Size();
     }
 
-    Float2 hint = Base::GetHintSize();
-    _cached_size = max_size = min_size = wanted = Float2(_auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Width ? _cached_size.X : hint.X,
-        _auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Height ? _cached_size.Y : hint.Y);
-
-    return SizeDependsOnSpace();
+    return Base::OnMeasure(available, wanted, min_size, max_size);
 }
-
-//void FudgetTextBox::CaretPageUp()
-//{
-//    int caret_pos = GetCaretPos();
-//
-//    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
-//        return;
-//    Float2 scroll_pos = _scroll_pos;
-//
-//    if (_caret_updown_x < 0)
-//        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
-//
-//    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
-//    if (line_index < 1 || line_index >= GetMeasurements().Lines.Count())
-//        return;
-//
-//    Base::CaretPageUp();
-//
-//
-//    FudgetPadding inner_padding = GetInnerPadding();
-//    float height = inner_padding.Padded(GetBounds()).GetHeight();
-//
-//    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
-//
-//    // TODO: make this an option?
-//    // Measure one line height less
-//    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
-//    Float2 test_pos = Float2(_caret_updown_x, Math::Max(0.f, line.Location.Y + line.Size.Y * .5f - height));
-//
-//    _scroll_pos.Y = Math::Max(0.f, scroll_pos.Y - height);
-//
-//    if (_snap_top_line)
-//    {
-//        // Find the line nearest to the scroll pos
-//        line_index = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y + 0.5f);
-//        const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
-//        _scroll_pos.Y = line.Location.Y;
-//    }
-//
-//}
-
-//void FudgetTextBox::CaretPageDown()
-//{
-//    if (_text_painter == nullptr || GetMeasurements().Lines.Count() == 0)
-//        return;
-//
-//    Float2 scroll_pos = _scroll_pos;
-//    int caret_pos = GetCaretPos();
-//
-//    if (_caret_updown_x < 0)
-//        _caret_updown_x = _text_painter->GetCharacterPosition(this, GetMeasurements(), caret_pos).X;
-//
-//    int line_index = _text_painter->GetCharacterLine(GetMeasurements(), caret_pos);
-//    if (line_index < 0 || line_index >= GetMeasurements().Lines.Count() - 1)
-//        return;
-//
-//    Base::CaretPageDown();
-//
-//    const FudgetLineMeasurements &line = GetMeasurements().Lines[line_index];
-//
-//    FudgetPadding inner_padding = GetInnerPadding();
-//    float height = inner_padding.Padded(GetBounds()).GetHeight();
-//    float full_height = height;
-//
-//    height = Math::Max(line.Size.Y * .5f, height - line.Size.Y);
-//
-//    if (_snap_top_line)
-//    {
-//        // Find the nearest line on the top to snap to
-//        int scroll_line_index = _text_painter->LineAtPos(this, GetMeasurements(), scroll_pos.Y + full_height - 0.01f);
-//        const FudgetLineMeasurements &scroll_line = GetMeasurements().Lines[scroll_line_index];
-//
-//        _scroll_pos.Y = scroll_line.Location.Y; //Math::Min(GetMeasurements().Size.Y - full_height, scroll_line.Location.Y);
-//
-//        FixScrollPos();
-//    }
-//    else
-//        _scroll_pos.Y = Math::Min(GetMeasurements().Size.Y - full_height, scroll_pos.Y + height);
-//}
-
 
 void FudgetTextBox::SetLineWrap(bool value)
 {

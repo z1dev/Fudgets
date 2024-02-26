@@ -564,6 +564,15 @@ protected:
     API_FUNCTION() virtual bool MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
 
     /// <summary>
+    /// Checks if the control in the slot might change its size depending on the available space, or it always returns the
+    /// same sizes. Should be called for previously measured slots only, which is true in the LayoutChildren functions. In this
+    /// case has the same effect as calling MeasureSlot with the same index and checking the returned value.
+    /// </summary>
+    /// <param name="index">Slot index</param>
+    /// <returns>Whether the control's size depends from the space in the layout or not</returns>
+    API_FUNCTION() virtual bool SlotSizeFromSpace(int index);
+
+    /// <summary>
     /// Call inside LayoutChildren when the layout calculated its size requirements. If the available space is unrestricted
     /// (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and updating any slot layout data
     /// should be avoided. Care must be taken not to cause float overflow when calculating any of the sizes.

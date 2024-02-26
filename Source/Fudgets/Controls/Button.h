@@ -7,7 +7,7 @@
 /// <summary>
 /// Base class of buttons which handles user input. Derived classes should draw the button and the contents.
 /// </summary>
-API_CLASS()
+API_CLASS(Abstract)
 class FUDGETS_API FudgetButtonBase : public FudgetControl
 {
     using Base = FudgetControl;

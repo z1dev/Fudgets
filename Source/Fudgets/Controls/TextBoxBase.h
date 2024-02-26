@@ -107,7 +107,7 @@ public:
     /// <summary>
     /// Text displayed in the text box.
     /// </summary>
-    API_PROPERTY() virtual StringView GetText() const { return TEXT(""); }
+    API_PROPERTY(Attributes="MultilineText") virtual StringView GetText() const { return TEXT(""); }
     /// <summary>
     /// The text displayed in the text box.
     /// </summary>
@@ -123,7 +123,7 @@ public:
     /// If the text box has selection, the caret will be at the movable end of the selected area.
     /// Changing the caret position will deselect the selected text.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE int GetCaretPos() const { return _caret_pos; }
+    API_PROPERTY(Attributes = "HideInEditor") FORCE_INLINE int GetCaretPos() const { return _caret_pos; }
     /// <summary>
     /// Position in the text where new characters will be inserted or used as the starting point of deletion.
     /// If the text box has selection, the caret will be at the movable end of the selected area.
@@ -135,12 +135,12 @@ public:
     /// Returns the true value of the selection position. If is negative or matches the caret position then nothing is selected.
     /// Otherwise it is the start of the selection. Use GetSelStart to always get the caret position if nothing is selected.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE int GetSelPos() const { return _sel_pos; }
+    API_PROPERTY(Attributes = "HideInEditor") FORCE_INLINE int GetSelPos() const { return _sel_pos; }
     /// <summary>
     /// The starting position or stationary end of the text selection. If there is no selection in the text box, this is the same as
     /// the current caret position. Setting this value to zero or positive number will move the caret and deselect the selected text.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE int GetSelStart() const { return _sel_pos < 0 ? _caret_pos : _sel_pos; }
+    API_PROPERTY(Attributes = "HideInEditor") FORCE_INLINE int GetSelStart() const { return _sel_pos < 0 ? _caret_pos : _sel_pos; }
     /// <summary>
     /// The starting position or stationary end of the text selection. If there is no selection in the text box, this is the same as
     /// the current caret position. Setting this value to zero or positive number will move the caret and deselect the selected text.
@@ -150,7 +150,7 @@ public:
     /// The end position of the text selection. This is always the caret position. Setting this value will change the caret position
     /// and update the selection to be between the text selection's starting position and the caret position.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE int GetSelEnd() const { return _caret_pos; }
+    API_PROPERTY(Attributes = "HideInEditor") FORCE_INLINE int GetSelEnd() const { return _caret_pos; }
     /// <summary>
     /// The end position of the text selection. This is always the caret position. Setting this value will change the caret position
     /// and update the selection to be between the text selection's starting position and the caret position.
@@ -162,7 +162,7 @@ public:
     /// move the caret relative to the text selection's starting position. Call SetSelection to change both the selection's start
     /// and the caret position at the same time.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE int GetSelLength() const { return _sel_pos < 0 ? 0 : _caret_pos - _sel_pos; }
+    API_PROPERTY(Attributes = "HideInEditor") FORCE_INLINE int GetSelLength() const { return _sel_pos < 0 ? 0 : _caret_pos - _sel_pos; }
     /// <summary>
     /// Number of characters between the text selection's starting position to the caret position. This value is negative
     /// if the caret position is in front of the selection's starting position. Changing this value will change the selection and
@@ -312,23 +312,23 @@ public:
     /// The key for word skipping (usually ctrl) is currently held down. Word skipping is moving from word to word instead of
     /// stepping through the text a character at a time.
     /// </summary>
-    API_PROPERTY() bool WordSkipping() const { return _word_skip; }
+    API_PROPERTY(Attributes = "HideInEditor") bool WordSkipping() const { return _word_skip; }
 
     /// <summary>
     /// A key (usually shirt) is pressed down and the text box is in key selection mode. 
     /// </summary>
-    API_PROPERTY() bool KeySelecting() const { return _key_selecting; }
+    API_PROPERTY(Attributes = "HideInEditor") bool KeySelecting() const { return _key_selecting; }
 
     /// <summary>
     /// The mouse button was pressed over the text and the text box is in mouse selection mode.
     /// </summary>
-    API_PROPERTY() bool MouseSelecting() const { return _mouse_selecting; }
+    API_PROPERTY(Attributes = "HideInEditor") bool MouseSelecting() const { return _mouse_selecting; }
 
     /// <summary>
     /// Visibility of the caret when the text box is focused. This will also allow the users to move in the text box
     /// with the keyboard and scroll it if the caret goes outside the visible bounds.
     /// </summary>
-    /// <returns>Whether the caret is shown the focused text box</returns>
+    /// <returns>Whether the caret is shown in the focused text box</returns>
     API_PROPERTY() bool GetCaretVisible() const { return HasAllTextBoxFlags(FudgetTextBoxFlags::CaretVisible); }
 
     /// <summary>
