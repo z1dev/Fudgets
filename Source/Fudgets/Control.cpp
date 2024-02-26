@@ -18,7 +18,7 @@
 
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
-    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlags::ResetFlags), _cursor(CursorType::Default), _pos(0.f), _size(0.0f),
+    _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default), _pos(0.f), _size(0.0f),
     _pos_layout_updated(false), _size_layout_updated(false), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f),
     _max_size(MAX_float, MAX_float), _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f),
     _clipping_count(0), _changing(false), _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid),
@@ -256,37 +256,37 @@ Rectangle FudgetControl::CachedGlobalToLocal(const Rectangle &global) const
     return Rectangle(global.Location + _cached_global_to_local_translation, global.Size);
 }
 
-FudgetControlFlags FudgetControl::GetControlFlags() const
+FudgetControlFlag FudgetControl::GetControlFlags() const
 {
     return _flags;
 }
 
-void FudgetControl::SetControlFlags(FudgetControlFlags flags)
+void FudgetControl::SetControlFlags(FudgetControlFlag flags)
 {
-    FudgetControlFlags tmp = _flags;
+    FudgetControlFlag tmp = _flags;
     _flags = flags;
 
-    if ((_flags & FudgetControlFlags::RegisterToUpdates) != (tmp & FudgetControlFlags::RegisterToUpdates))
+    if ((_flags & FudgetControlFlag::RegisterToUpdates) != (tmp & FudgetControlFlag::RegisterToUpdates))
     {
-        RegisterToUpdate(_parent != nullptr && ((_flags & FudgetControlFlags::RegisterToUpdates) == FudgetControlFlags::RegisterToUpdates));
+        RegisterToUpdate(_parent != nullptr && ((_flags & FudgetControlFlag::RegisterToUpdates) == FudgetControlFlag::RegisterToUpdates));
     }
 
-    if (_parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlags::AlwaysOnTop) != (tmp & FudgetControlFlags::AlwaysOnTop))
+    if (_parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlag::AlwaysOnTop) != (tmp & FudgetControlFlag::AlwaysOnTop))
     {
-        if (_guiRoot->ChangeControlAlwaysOnTop(this, (_flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop) == -1)
-            _flags |= (tmp & FudgetControlFlags::AlwaysOnTop);
+        if (_guiRoot->ChangeControlAlwaysOnTop(this, (_flags & FudgetControlFlag::AlwaysOnTop) == FudgetControlFlag::AlwaysOnTop) == -1)
+            _flags |= (tmp & FudgetControlFlag::AlwaysOnTop);
     }
 
     // Might not need recalculation but we can't be sure.
     SizeOrPosModified(FudgetLayoutDirtyReason::All);
 }
 
-bool FudgetControl::HasAllFlags(FudgetControlFlags flags) const
+bool FudgetControl::HasAllFlags(FudgetControlFlag flags) const
 {
     return (flags & _flags) == flags;
 }
 
-bool FudgetControl::HasAnyFlag(FudgetControlFlags flags) const
+bool FudgetControl::HasAnyFlag(FudgetControlFlag flags) const
 {
     return (int)(flags & _flags) != 0;
 }
@@ -311,7 +311,7 @@ void FudgetControl::PositionModified()
 
 bool FudgetControl::GetAlwaysOnTop() const
 {
-    return _parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop;
+    return _parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlag::AlwaysOnTop) == FudgetControlFlag::AlwaysOnTop;
 }
 
 void FudgetControl::SetAlwaysOnTop(bool value)
@@ -1495,12 +1495,12 @@ void FudgetControl::Initialize()
 
 void FudgetControl::InitializeFlags()
 {
-    if ((_flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
+    if ((_flags & FudgetControlFlag::ResetFlags) == FudgetControlFlag::ResetFlags)
         _flags = GetInitFlags();
 
     // The AlwaysOnTop flag only makes sense when the control is a direct child in the root. In that case, the root
     // can get this flag from GetInitFlags.
-    _flags &= ~FudgetControlFlags::AlwaysOnTop;
+    _flags &= ~FudgetControlFlag::AlwaysOnTop;
 }
 
 void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
@@ -1531,7 +1531,7 @@ void FudgetControl::DoRootChanging(FudgetGUIRoot *new_root)
 
 void FudgetControl::DoRootChanged(FudgetGUIRoot *old_root)
 {
-    RegisterToUpdate(HasAnyFlag(FudgetControlFlags::RegisterToUpdates));
+    RegisterToUpdate(HasAnyFlag(FudgetControlFlag::RegisterToUpdates));
 }
 
 void FudgetControl::DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point)

@@ -119,7 +119,7 @@ public:
     bool WantsNavigationKey(KeyboardKeys key) override;
 protected:
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 private:
     static void InitializeTokens();
 

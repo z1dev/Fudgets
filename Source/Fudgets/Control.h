@@ -158,7 +158,7 @@ DECLARE_ENUM_OPERATORS(FudgetControlState);
 /// Flags for controls that describe their behavior
 /// </summary>
 API_ENUM(Attributes="Flags")
-enum class FudgetControlFlags : uint16
+enum class FudgetControlFlag : uint16
 {
 	/// <summary>
 	/// Empty flag
@@ -245,7 +245,7 @@ enum class FudgetControlFlags : uint16
 	/// </summary>
 	CanHandleNavigationKeys = 1 << 14,
 };
-DECLARE_ENUM_OPERATORS(FudgetControlFlags);
+DECLARE_ENUM_OPERATORS(FudgetControlFlag);
 
 /// <summary>
 /// Which size, if any, will be provided by the control using these values. Controls that can calculate their own sizes will
@@ -783,28 +783,28 @@ public:
 	/// Gets flags describing the control's behavior or appearance.
 	/// </summary>
 	/// <returns>The flags set for the control</returns>
-	API_PROPERTY() virtual FudgetControlFlags GetControlFlags() const;
+	API_PROPERTY(Attributes="HideInEditor") virtual FudgetControlFlag GetControlFlags() const;
 
 	/// <summary>
 	/// Sets flags describing the control's behavior or appearance.
 	/// TODO: this has never been tested. Remove if proves to be useless
 	/// </summary>
 	/// <param name="flags">The new flags</param>
-	API_PROPERTY() virtual void SetControlFlags(FudgetControlFlags flags);
+	API_PROPERTY() virtual void SetControlFlags(FudgetControlFlag flags);
 
 	/// <summary>
 	/// Matches the given flags with those of the control, returning true only if all the flags were found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
 	/// <returns>True  if all the flags were found on the control</returns>
-	API_FUNCTION() virtual bool HasAllFlags(FudgetControlFlags flags) const;
+	API_FUNCTION() virtual bool HasAllFlags(FudgetControlFlag flags) const;
 
 	/// <summary>
 	/// Matches the given flags with those of the control, returning true if any of the flags was found.
 	/// </summary>
 	/// <param name="flags">The flags to look for</param>
 	/// <returns>True if at least one flag was found on the control</returns>
-	API_FUNCTION() virtual bool HasAnyFlag(FudgetControlFlags flags) const;
+	API_FUNCTION() virtual bool HasAnyFlag(FudgetControlFlag flags) const;
 
 	// Input:
 
@@ -968,7 +968,7 @@ public:
 	/// Returns whether this control has the compound control flag. Compound controls hold other controls but behave
 	/// like a single unit.
 	/// </summary>
-	API_PROPERTY() bool IsCompoundControl() const { return HasAnyFlag(FudgetControlFlags::CompoundControl); }
+	API_PROPERTY() bool IsCompoundControl() const { return HasAnyFlag(FudgetControlFlag::CompoundControl); }
 
 	/// <summary>
 	/// For controls that can handle input or be focused, indicates whether this control wants to get keyboard focus
@@ -1940,7 +1940,7 @@ protected:
 	/// Include the result of the base control's GetInitFlags if it's needed for correct behavior.
 	/// </summary>
 	/// <returns>Control flags that should be set to the control.</returns>
-	API_FUNCTION() virtual FudgetControlFlags GetInitFlags() const { return FudgetControlFlags::None; }
+	API_FUNCTION() virtual FudgetControlFlag GetInitFlags() const { return FudgetControlFlag::None; }
 
 	/// <summary>
 	/// Notifies the UI root that the cursor of this control changed. It's only necessary if the cursor change is not
@@ -2032,7 +2032,7 @@ private:
 	int _index;
 	String _name;
 
-	FudgetControlFlags _flags;
+	FudgetControlFlag _flags;
 
 	// Cursor shown for controls that don't let the mouse pass through on mouse move.
 	CursorType _cursor;

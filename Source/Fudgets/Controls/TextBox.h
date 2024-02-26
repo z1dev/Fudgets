@@ -189,7 +189,7 @@ public:
     API_PROPERTY() void SetAutoSize(FudgetAutoSizing value);
 protected:
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 
     /// <inheritdoc />
     void SetTextInternal(const StringView &value) override;

@@ -363,9 +363,9 @@ void FudgetLineEdit::Process(const StringView &value)
     _text = str.ToString();
 }
 
-FudgetControlFlags FudgetLineEdit::GetInitFlags() const
+FudgetControlFlag FudgetLineEdit::GetInitFlags() const
 {
-    return FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
+    return FudgetControlFlag::RegisterToUpdates | Base::GetInitFlags();
 }
 
 void FudgetLineEdit::SetTextInternal(const StringView &value)

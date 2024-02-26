@@ -89,10 +89,10 @@ public:
     API_FUNCTION() void SetControlSizes(const FudgetLayoutSizeCache &sizes);
 protected:
     /// <inheritdoc />
-    void PreLayoutChildren(Float2 space) override;
+    void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
 
     /// <inheritdoc />
-    void LayoutChildren(Float2 space) override;
+    void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
 
     ///// <inheritdoc />
     //bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;

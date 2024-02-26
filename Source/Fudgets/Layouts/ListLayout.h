@@ -237,9 +237,9 @@ public:
 
 protected:
     /// <inheritdoc />
-    void PreLayoutChildren(Float2 space) override;
+    void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
     /// <inheritdoc />
-    void LayoutChildren(Float2 space) override;
+    void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
 
     /// <inheritdoc />
     FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;

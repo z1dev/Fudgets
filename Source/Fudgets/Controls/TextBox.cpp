@@ -551,9 +551,9 @@ void FudgetTextBox::SnapTopLine()
     }
 }
 
-FudgetControlFlags FudgetTextBox::GetInitFlags() const
+FudgetControlFlag FudgetTextBox::GetInitFlags() const
 {
-    return FudgetControlFlags::RegisterToUpdates | Base::GetInitFlags();
+    return FudgetControlFlag::RegisterToUpdates | Base::GetInitFlags();
 }
 
 void FudgetTextBox::SetTextInternal(const StringView &value)

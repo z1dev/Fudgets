@@ -396,7 +396,7 @@ public:
     API_PROPERTY() void SetKeySelectable(bool value);
 protected:
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 
     /// <inheritdoc />
     void InitializeFlags() override;

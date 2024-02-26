@@ -8,11 +8,8 @@ FudgetStackLayout::FudgetStackLayout(const SpawnParams &params) : Base(params)
 
 }
 
-void FudgetStackLayout::LayoutChildren(Float2 space)
+void FudgetStackLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    auto owner = GetOwner();
-    int count = owner->GetChildCount();
-
     Float2 layout_wanted = Float2::Zero;
     Float2 layout_min = Float2::Zero;
     Float2 layout_max = Float2::Zero;

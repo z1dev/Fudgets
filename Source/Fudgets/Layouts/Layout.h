@@ -1,5 +1,132 @@
 #pragma once
 
+// FudgetLayout is a helper type for FudgetContainer objects (container for short) that own the layout. The container
+// contains child FudgetControl objects (control for short), that are displayed relative to the top left corner of the
+// container. The final position and size of controls are usually calculated by the layout, using the sizes provided by
+// the child controls.
+// 
+// The sizes of controls are: the hint size, the minimum size, and the maximum size.
+//     * The hint size is called hint size, because it's not necessarily the size that the control will have in the
+//       layout. This size can be set by the user, but in some cases it is calculated by the control. For example a text
+//       box control might calculate its hint size if it is auto sized.
+//     * The minimum size is the smallest size for the control. Layouts should respect this size when calculating the
+//       control's bounds.
+//     * The maximum size is the largest size for the control. Layouts should respect this size too.
+// 
+// --
+//
+// Step by step custom layout:
+//
+// 1. Derive class from FudgetLayout
+// 
+// 2. Override functions (most of these are optional):
+//    - GetInitFlags
+//    - LayoutChildren
+//    - CreateSlot
+//    - GetSlot (this is technically hiding the original, not overriding)
+//    - PreLayoutChildren
+//    - PlaceControlInSlotRectangle
+//    - IsControlPositionChangePermitted
+//    - IsControlDirectSizeChangePermitted
+// 
+// 3. Write body of GetInitFlags. This should return flags from the enum FudgetLayoutFlag with OR.
+//    This determines what marks a layout dirty, or what sizes will the layout calculate for the owner container.
+//    (See explanation (A) below)
+// 
+// 4. (Optional) Derive a class from FudgetLayoutSlot. It should be a collection of public fields which can store
+//    values relevant to the layout for each control.
+// 
+// 5. (Optional, needed only for previous step) Write body of CreateSlot. It's a factory function for slots, that
+//    should construct a FudgetLayoutSlot object (or in this case derived type), set its Control field to the given
+//    control and return the slot object.
+// 
+// 6. (Optional, needed for previous steps) Write body of GetSlot. This needs to call the base implementation and
+//    cast its return value to the custom slot type created in 4, then return it. This function can hide the original
+//    as it is for convenience only.
+// 
+// 7. (Optional) Write body of IsControlPositionChangePermitted. Most layouts don't need this as the default
+//    implementation returns false. It means that child controls' positions are managed by the layout. Change this
+//    if a layout allows controls to move themselves anywhere, and the layout only wants to manage their size.
+// 
+// 8. (Optional) Write body of IsControlDirectSizeChangePermitted. Most layouts don't need this as the default
+//    implementation returns false. It means that child controls' sizes are managed by the layout. Change this
+//    if a layout allows controls to resize themselves, and the layout only wants to manage their position.
+//
+// 9. Write body of PreLayoutChildren and LayoutChildren. PreLayoutChildren is optional, but if it is overriden, it
+//    should call the base implementation, which resets any old calculated bounds of slots.  This can also be done
+//    in the new function body to avoid calling the base implementation. Check the short function in FudgetLayout.
+//   
+//    PreLayoutChildren can be used to initialize or compute values that need to only be done once when starting
+//    the layout calculations.
+//
+//    LayoutChildren might be called multiple times during layout calculation. This is where a layout has to
+//    calculate its own sizes, and the position and sizes of child layouts. This function MUST call SetMeasuredSizes
+//    at least once. (See explanation (B) below of what these sizes are)
+//    It can access the slots' contents' requested sizes with MeasureSlot. The result can be used to calculate the
+//    size of the layout itself, or the bounds of each slot. (See (C) below for usage of MeasureSlot). If the provided
+//    argument of available `space` is unrestricted (with `IsUnrestrictedSpace(space)`), this function doesn't need
+//    to do anything else. (Space is unrestricted if its sizes are negative)
+//    If the space is not unrestricted, the function should calculate the bounds of each slot. The data for each
+//    slot can be accessed with GetSlot. (If the layout has its own derived slot type, the overriden function from
+//    6. can come in handy here.) When the bounds is calculated, it should be set to the `ComputedBounds` member
+//    of the slot.
+//    The first time LayoutChildren is called during the same frame, the bounds will be unset (unless you forgot it
+//    in PreLayoutChildren). Every other time the bounds will be set if the function set them already. This is useful,
+//    because the MeasureSlot then can be provided with the size of the computed bounds (see (C) below)
+//
+// 10. (Optional) Write body for PlaceControlInSlotRectangle. This function is called after the bounds are calculated
+//    for the slots to place the contained control inside. The default implementation places the control inside the
+//    bounds clamped between the minimum and maximum sizes of the control. By overriding this, the layout might use
+//    some alignment setting to place the control.
+//    If this is overriden, the function should calculate the exact position and size of the control, and set it for
+//    the control by calling SetControlDimensions. The position value is relative to the top left corner of the layout,
+//    and NOT the top left corner of the slot.
+//
+// --
+// 
+// (A) The layout flags returned from GetInitFlags determine when a layout becomes dirty (its calculations are out
+//     of date or invalid). These flags start with LayoutOn*** and ResizeOn***.
+//     
+//     The LayoutOn*** flags tell the layout when it needs to calculate its child controls positions and sizes. For
+//     example a list layout might need to resize its controls when one of them wants to grow twice as big.
+//     The ResizeOn*** flags decide when to notify the parent layout of the owner container, that it might need to
+//     become dirty as well. For example due to the child control growing twice as big, the layout also needs to
+//     grow twice as big, to avoid shrinking its controls below their minimum size (or because it's greedy and can
+//     take more space)
+// 
+//     The CanProvide*** flags on the other hand tell the layout system when a layout can take over its owner
+//     container's size calculations. By default, the containers will want to be the size that their contents need.
+//     Not all layouts can provide the sizes. A layout that allows its controls to move freely might not be able to
+//     determine how big it needs to be. In that case the hint, min and max sizes of the container will be used.
+// 
+// 
+// (B) When a layout calculates its own sizes with SetMeasuredSizes, it will have to specify all the values in a
+//     FudgetLayoutSizeCache struct. There are constructors to make this easier that can be passed to SetMeasuredSizes
+//     directly.
+//     The `Space` value will be the same that the LayoutChildren or PreLayoutChildren get as their first argument.
+//     The `Size` value is the hint size calculated from the controls.
+//     The `Min` and `Max values are the minimum and maximum size equivalent of controls.
+//     The `SizeFromSpace` value needs to be true if a layout's size depends on the available space it is given. For
+//     example a layout that needs to be smaller or larger if its controls are smaller or larger, will have to return
+//     true, if one of its controls' sizes depend on the slot size. This is received from each control by calling
+//     MeasureSlot (see (C)). Another possibility is if the layout is like a "flow layout" which wraps its controls
+//     when there is not enough available width, and this forces it to be taller.
+//
+// (C) MeasureSlot provides to the layout the hint size and the minimum and maximum sizes of a control in each slot.
+//     It also returns the `SizeFromSpace` value from the controls. This function is usually called once per slot in
+//     every iteration of LayoutChildren. Most common way to call it is:
+//         `MeasureSlot(index, slot->ComputedBounds.Size, wanted, min, max);` // with `ref` in front of the returned values in C#
+//     If PreLayoutChildren is not overriden, the ComputedBounds size is unrestricted for the first time. This will
+//     result in MeasureSlot returning the optimal size of the controls. When the ComputedBounds value is set at the
+//     end of LayoutChildren, and LayoutChildren is called a second time, the same line
+//         `MeasureSlot(index, slot->ComputedBounds.Size, wanted, min, max);`
+//     will provide the control with restricted bounds within the slot that was calculated. This gives controls an
+//     opportunity to update the sizes they calculated during measurement. Most controls shouldn't change their sizes.
+//     It's only valid to do so, if they return true in their OnMeasure function (called indirectly by MeasureSlot),
+//     which means their size might depend on the available space.
+//     
+
+
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Scripting/Scripting.h"
 #include "Engine/Core/Math/Vector2.h"
@@ -534,7 +661,9 @@ protected:
     /// </summary>
     /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
     /// value is valid</param>
-    API_FUNCTION() virtual void PreLayoutChildren(Float2 space);
+    /// <param name="owner">The owner container of this layout</param>
+    /// <param name="count">Number of slots in the layout</param>
+    API_FUNCTION() virtual void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count);
 
     /// <summary>
     /// Calculates the bounds of the child controls in the owner container, using the available space and slot size
@@ -543,7 +672,9 @@ protected:
     /// </summary>
     /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
     /// value is valid</param>
-    API_FUNCTION() virtual void LayoutChildren(Float2 space);
+    /// <param name="owner">The owner container of this layout</param>
+    /// <param name="count">Number of slots in the layout</param>
+    API_FUNCTION() virtual void LayoutChildren(Float2 space, FudgetContainer *owner, int count);
 
     /// <summary>
     /// Calculates and sets the child controls' position and size on the owner container, using the available space, and

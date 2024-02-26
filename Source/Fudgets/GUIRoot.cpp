@@ -49,12 +49,12 @@ void FudgetGUIRoot::FudgetInit()
 
 int FudgetGUIRoot::AddChild(FudgetControl *control, int index)
 {
-	FudgetControlFlags flags = control->_flags;
+	FudgetControlFlag flags = control->_flags;
 
-	if ((flags & FudgetControlFlags::ResetFlags) == FudgetControlFlags::ResetFlags)
+	if ((flags & FudgetControlFlag::ResetFlags) == FudgetControlFlag::ResetFlags)
 		flags = control->GetInitFlags();
 
-	bool on_top = (flags & FudgetControlFlags::AlwaysOnTop) == FudgetControlFlags::AlwaysOnTop;
+	bool on_top = (flags & FudgetControlFlag::AlwaysOnTop) == FudgetControlFlag::AlwaysOnTop;
 	if (!on_top)
 	{
 		if (index < 0 || index > GetChildCount() - _on_top_count)
@@ -73,12 +73,12 @@ int FudgetGUIRoot::AddChild(FudgetControl *control, int index)
 	{
 		if ((!on_top && result < GetChildCount() - _on_top_count) || result < GetChildCount() - _on_top_count - 1)
 		{
-			control->_flags &= ~(FudgetControlFlags::AlwaysOnTop);
+			control->_flags &= ~(FudgetControlFlag::AlwaysOnTop);
 		}
 		else
 		{
 			++_on_top_count;
-			control->_flags |= FudgetControlFlags::AlwaysOnTop;
+			control->_flags |= FudgetControlFlag::AlwaysOnTop;
 		}
 	}
 	return result;
@@ -92,7 +92,7 @@ int FudgetGUIRoot::RemoveChild(FudgetControl *control)
 	if (_focus_control == control)
 		SetFocusedControl(nullptr);
 
-	if (control->HasAnyFlag(FudgetControlFlags::AlwaysOnTop))
+	if (control->HasAnyFlag(FudgetControlFlag::AlwaysOnTop))
 		--_on_top_count;
 	return Base::RemoveChild(control);
 }
@@ -121,7 +121,7 @@ bool FudgetGUIRoot::MoveChildToIndex(int from, int to)
 
 int FudgetGUIRoot::FudgetGUIRoot::ChangeControlAlwaysOnTop(FudgetControl *control, bool set_always_on_top, int index)
 {
-	if (control == nullptr || control->_parent != this || control->HasAnyFlag(FudgetControlFlags::AlwaysOnTop) == set_always_on_top)
+	if (control == nullptr || control->_parent != this || control->HasAnyFlag(FudgetControlFlag::AlwaysOnTop) == set_always_on_top)
 		return -1;
 	int cnt = !set_always_on_top ? GetChildCount() - _on_top_count : _on_top_count;
 	if (index < 0 || index > cnt)
@@ -139,12 +139,12 @@ int FudgetGUIRoot::FudgetGUIRoot::ChangeControlAlwaysOnTop(FudgetControl *contro
 		if (set_always_on_top)
 		{
 			++_on_top_count;
-			control->_flags |= FudgetControlFlags::AlwaysOnTop;
+			control->_flags |= FudgetControlFlag::AlwaysOnTop;
 		}
 		else
 		{
 			--_on_top_count;
-			control->_flags &= ~FudgetControlFlags::AlwaysOnTop;
+			control->_flags &= ~FudgetControlFlag::AlwaysOnTop;
 		}
 	}
 	return new_index;
@@ -450,8 +450,8 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 			FudgetInputResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, false);
 			if (result == FudgetInputResult::Consume)
 			{
-				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
-					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
+				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
+					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
 					_mouse_capture_control->SetFocused(true);
 			}
 		}
@@ -459,11 +459,11 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
+		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
 			if (c->WantsMouseEventAtPos(cpos, pos)) 
@@ -480,11 +480,11 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 				FudgetInputResult result = c->OnMouseDown(cpos, pos, button, false);
 				if (result == FudgetInputResult::Consume)
 				{
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseRight)))
+					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
+						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
 						c->CaptureMouseInput();
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
+					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
+						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
 						c->SetFocused(true);
 				}
 
@@ -492,7 +492,7 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 					break;
 			}
 		}
-		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
 			break;
 	}
 }
@@ -519,8 +519,8 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 		{
 			if (_mouse_capture_control->OnMouseUp(cpos, pos, button))
 			{
-				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseLeft)) ||
-					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseRight)))
+				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
+					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
 				{
 					ReleaseMouseCapture();
 				}
@@ -532,11 +532,11 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
+		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
 			if (c->WantsMouseEventAtPos(cpos, pos))
@@ -554,7 +554,7 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 				}
 			}
 		}
-		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
 			break;
 	}
 }
@@ -593,8 +593,8 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 			FudgetInputResult result = _mouse_capture_control->OnMouseDown(cpos, pos, button, true);
 			if (result == FudgetInputResult::Consume)
 			{
-				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
-					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
+				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
+					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
 					_mouse_capture_control->SetFocused(true);
 			}
 		}
@@ -602,12 +602,12 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
 
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseUpDown))
+		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
 			if (c->WantsMouseEventAtPos(cpos, pos))
@@ -621,11 +621,11 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 				FudgetInputResult result = c->OnMouseDown(cpos, pos, button, true);
 				if (result == FudgetInputResult::Consume)
 				{
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::CaptureReleaseMouseRight)))
+					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
+						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
 						c->CaptureMouseInput();
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlags::FocusOnMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlags::FocusOnMouseRight)))
+					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
+						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
 						c->SetFocused(true);
 				}
 
@@ -636,7 +636,7 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 				}
 			}
 		}
-		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
 			break;
 	}
 }
@@ -665,20 +665,20 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 
 	Array<FudgetControl*> controls_for_input;
 
-	ControlsAtPosition(pos, FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::BlockMouseEvents, FudgetControlFlags::None, FudgetControlFlags::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
 
 	bool post_leave = _mouse_over_control != nullptr;
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlags::CanHandleMouseMove))
+		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseMove))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
 			if (c->WantsMouseEventAtPos(cpos, pos))
 			{
 				if (_mouse_over_control != c)
 				{
-					bool wants_enterleave = c->HasAnyFlag(FudgetControlFlags::CanHandleMouseEnterLeave);
+					bool wants_enterleave = c->HasAnyFlag(FudgetControlFlag::CanHandleMouseEnterLeave);
 					FudgetControl *old_mouse_control = _mouse_over_control;
 					// Make sure the old control can check which is the new one.
 					_mouse_over_control = wants_enterleave ? c : nullptr;
@@ -713,7 +713,7 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 				return;
 			}
 		}
-		if (c->HasAnyFlag(FudgetControlFlags::BlockMouseEvents))
+		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
 			break;
 	}
 	if (post_leave)
@@ -767,7 +767,7 @@ void FudgetGUIRoot::HandleKeyDown(KeyboardKeys key)
 	FudgetControl *c = FindKeyboardInputControl(key);
 	while (c != nullptr)
 	{
-		if (IsNavigationKey(key) && (!c->HasAnyFlag(FudgetControlFlags::CanHandleNavigationKeys) || !c->WantsNavigationKey(key) ))
+		if (IsNavigationKey(key) && (!c->HasAnyFlag(FudgetControlFlag::CanHandleNavigationKeys) || !c->WantsNavigationKey(key) ))
 		{
 			NavigateWithKey(key);
 			break;
@@ -834,7 +834,7 @@ FudgetControl* FudgetGUIRoot::FindKeyboardInputControl(KeyboardKeys key) const
 	FudgetControl *c = _focus_control;
 	while (c != nullptr)
 	{
-		if (!c->HasAnyFlag(FudgetControlFlags::CanHandleKeyEvents))
+		if (!c->HasAnyFlag(FudgetControlFlag::CanHandleKeyEvents))
 		{
 			c = c->GetParent();
 			continue;

@@ -93,7 +93,7 @@ public:
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 protected:
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 
     /// <inheritdoc />
     void SetTextInternal(const StringView &value) override;

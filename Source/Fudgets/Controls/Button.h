@@ -56,7 +56,7 @@ protected:
     API_PROPERTY() void SetPressed(bool value);
 
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 
 private:
     // Button is in a state where it's shown pressed
@@ -129,7 +129,7 @@ public:
     API_PROPERTY() static FudgetToken GetContentStyleToken();
 protected:
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 private:
     static void InitializeTokens();
 

@@ -22,20 +22,20 @@ void FudgetProxyLayout::SetControlSizes(const FudgetLayoutSizeCache &sizes)
     SetMeasuredSizes(sizes);
 }
 
-void FudgetProxyLayout::PreLayoutChildren(Float2 space)
+void FudgetProxyLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
+    auto iowner = ToInterface<IProxyLayoutContainer>(GetOwner());
     if (owner == nullptr)
         return;
-    owner->ProxyInterfacePreLayoutChildren(space);
+    iowner->ProxyInterfacePreLayoutChildren(space);
 }
 
-void FudgetProxyLayout::LayoutChildren(Float2 space)
+void FudgetProxyLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
+    auto iowner = ToInterface<IProxyLayoutContainer>(GetOwner());
     if (owner == nullptr)
         return;
-    owner->ProxyInterfaceLayoutChildren(space);
+    iowner->ProxyInterfaceLayoutChildren(space);
 }
 
 //bool FudgetProxyLayout::Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)

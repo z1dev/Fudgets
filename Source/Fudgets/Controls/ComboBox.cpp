@@ -246,11 +246,11 @@ bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
     return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown;
 }
 
-FudgetControlFlags FudgetComboBox::GetInitFlags() const
+FudgetControlFlag FudgetComboBox::GetInitFlags() const
 {
-    return FudgetControlFlags::CanHandleMouseUpDown | FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave |
-        FudgetControlFlags::BlockMouseEvents | FudgetControlFlags::FocusOnMouseLeft | FudgetControlFlags::CaptureReleaseMouseLeft |
-        FudgetControlFlags::CanHandleKeyEvents | FudgetControlFlags::CanHandleNavigationKeys | FudgetControlFlags::CompoundControl | Base::GetInitFlags();
+    return FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave |
+        FudgetControlFlag::BlockMouseEvents | FudgetControlFlag::FocusOnMouseLeft | FudgetControlFlag::CaptureReleaseMouseLeft |
+        FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | FudgetControlFlag::CompoundControl | Base::GetInitFlags();
 }
 
 FudgetPadding FudgetComboBox::GetInnerPadding() const

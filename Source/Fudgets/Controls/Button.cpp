@@ -43,10 +43,10 @@ bool FudgetButtonBase::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton butt
     return true;
 }
 
-FudgetControlFlags FudgetButtonBase::GetInitFlags() const
+FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 {
-    return FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
-        FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::FocusOnMouseLeft | Base::GetInitFlags();
+    return FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave | FudgetControlFlag::CanHandleMouseUpDown |
+        FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::FocusOnMouseLeft | Base::GetInitFlags();
 }
 
 
@@ -184,9 +184,9 @@ FudgetToken FudgetButton::GetContentStyleToken()
     return ContentStyleToken;
 }
 
-FudgetControlFlags FudgetButton::GetInitFlags() const
+FudgetControlFlag FudgetButton::GetInitFlags() const
 {
-    return Base::GetInitFlags() | FudgetControlFlags::RegisterToUpdates;
+    return Base::GetInitFlags() | FudgetControlFlag::RegisterToUpdates;
 }
 
 void FudgetButton::InitializeTokens()

@@ -457,11 +457,11 @@ void FudgetTextBoxBase::SetKeySelectable(bool value)
     _key_selecting = false;
 }
 
-FudgetControlFlags FudgetTextBoxBase::GetInitFlags() const
+FudgetControlFlag FudgetTextBoxBase::GetInitFlags() const
 {
-    return FudgetControlFlags::CanHandleMouseMove | FudgetControlFlags::CanHandleMouseEnterLeave | FudgetControlFlags::CanHandleMouseUpDown |
-        FudgetControlFlags::CaptureReleaseMouseLeft | FudgetControlFlags::FocusOnMouseLeft |
-        FudgetControlFlags::CanHandleKeyEvents | FudgetControlFlags::CanHandleNavigationKeys | Base::GetInitFlags();
+    return FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave | FudgetControlFlag::CanHandleMouseUpDown |
+        FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::FocusOnMouseLeft |
+        FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | Base::GetInitFlags();
 }
 
 void FudgetTextBoxBase::InitializeFlags()

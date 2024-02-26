@@ -201,20 +201,17 @@ void FudgetLayout::FillSlots()
     }
 }
 
-void FudgetLayout::PreLayoutChildren(Float2 space)
+void FudgetLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    for (int ix = 0, siz = _owner->GetChildCount(); ix < siz; ++ix)
+    for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
         slot->ComputedBounds.Size = Float2(-1.f);
     }
 }
 
-void FudgetLayout::LayoutChildren(Float2 space)
+void FudgetLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    auto owner = GetOwner();
-    int count = owner->GetChildCount();
-
     SetMeasuredSizes(FudgetLayoutSizeCache(space));
     if (IsUnrestrictedSpace(space))
         return;
@@ -287,7 +284,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     // Layout and measure until the sizes are determined
 
     // Allow the layout to initialize its values and clean up calculated slots
-    PreLayoutChildren(available);
+    PreLayoutChildren(available, owner, count);
 
     // Keeps track if the layout has controls that need to be measured multiple times for different slot sizes.
     bool need_remeasure = false;
@@ -311,7 +308,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
             compare_cache[pos++] = slot->Sizes;
         }
         // Do the layout
-        LayoutChildren(available);
+        LayoutChildren(available, owner, count);
         // Check if the saved measurements for size changing controls were changed.
         if (!unrestricted && size_from_space_cnt > 0)
         {
@@ -425,7 +422,7 @@ void FudgetLayout::SetMeasuredSizes(const FudgetLayoutSizeCache &sizes)
 void FudgetLayout::PlaceControlInSlotRectangle(int index)
 {
     auto slot = GetSlot(index);
-    SetControlDimensions(index, slot->ComputedBounds.Location, slot->ComputedBounds.Size);
+    SetControlDimensions(index, slot->ComputedBounds.Location, Float2::Clamp(slot->ComputedBounds.Size, slot->Sizes.Min, slot->Sizes.Max));
 }
 
 FudgetLayoutSlot* FudgetLayout::CreateSlot(FudgetControl *control)

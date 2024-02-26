@@ -14,7 +14,7 @@ FudgetAnchorLayout::FudgetAnchorLayout(const SpawnParams &params) : Base(params)
 
 }
 
-void FudgetAnchorLayout::LayoutChildren(Float2 space)
+void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
     // All controls sizes will be their hint size if the anchors don't change the control's size. For anchors that affect
     // the size too, the control's requested sizes are ignored. If the resulting size would be negative, the control will
@@ -24,9 +24,6 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space)
 
     if (IsUnrestrictedSpace(space))
         return;
-
-    FudgetContainer *owner = GetOwner();
-    int count = owner->GetChildCount();
 
     for (int ix = 0; ix < count; ++ix)
     {

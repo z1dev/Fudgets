@@ -312,7 +312,7 @@ public:
     void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags) override final;
 
     /// <inheritdoc />
-    void SetControlFlags(FudgetControlFlags flags) override;
+    void SetControlFlags(FudgetControlFlag flags) override;
 
     /// <summary>
     /// Determines if the control is allowed to update its position directly, instead of being positioned
@@ -355,7 +355,7 @@ public:
     /// <param name="block">Stops checking child controls in the container which has one of these flags.</param>
     /// <param name="result">Receives the controls that match the flags</param>
     /// <returns>List of controls matching at least one request flag and none of the reject flags</returns>
-    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlags request, FudgetControlFlags reject, FudgetControlFlags block, API_PARAM(Ref) Array<FudgetControl*> &result);
+    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlag request, FudgetControlFlag reject, FudgetControlFlag block, API_PARAM(Ref) Array<FudgetControl*> &result);
 
     /// <summary>
     /// Determines which sizes are calculated by the layout and which ones are calculated by the container.
@@ -409,7 +409,7 @@ protected:
     void Initialize() override;
 
     /// <inheritdoc />
-    FudgetControlFlags GetInitFlags() const override;
+    FudgetControlFlag GetInitFlags() const override;
 
     /// <inheritdoc />
     void RequestLayout() override;

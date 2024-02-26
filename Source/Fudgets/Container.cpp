@@ -360,7 +360,7 @@ void FudgetContainer::DoFocusChanged(bool focused, FudgetControl *other)
             {
                 FudgetControl *c = pos->_children[ix];
                 c->SetState(FudgetControlState::ShowFocused, focused);
-                if (c->HasAnyFlag(FudgetControlFlags::ContainerControl))
+                if (c->HasAnyFlag(FudgetControlFlag::ContainerControl))
                 {
                     FudgetContainer *container = dynamic_cast<FudgetContainer*>(c);
                     if (container == nullptr || container->GetChildCount() == 0)
@@ -423,9 +423,9 @@ void FudgetContainer::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
     MarkLayoutDirty(dirt_flags | FudgetLayoutDirtyReason::Container);
 }
 
-void FudgetContainer::SetControlFlags(FudgetControlFlags flags)
+void FudgetContainer::SetControlFlags(FudgetControlFlag flags)
 {
-    flags |= FudgetControlFlags::ContainerControl;
+    flags |= FudgetControlFlag::ContainerControl;
     Base::SetControlFlags(flags);
     //MarkLayoutDirty(FudgetLayoutDirtyReason::All | FudgetLayoutDirtyReason::Container);
     //if (_parent != nullptr)
@@ -467,7 +467,7 @@ void FudgetContainer::GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &resul
     FudgetContainer::GetAllControls(this, result);
 }
 
-void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlags request, FudgetControlFlags reject, FudgetControlFlags block, API_PARAM(Ref) Array<FudgetControl*> &result)
+void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlag request, FudgetControlFlag reject, FudgetControlFlag block, API_PARAM(Ref) Array<FudgetControl*> &result)
 {
     for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
     {
@@ -475,9 +475,9 @@ void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlags request,
         if (!control->GetBoundsInParent().Contains(pos))
             continue;
 
-        if ((request == FudgetControlFlags::None || control->HasAnyFlag(request)) && (reject == FudgetControlFlags::None || !control->HasAnyFlag(reject)))
+        if ((request == FudgetControlFlag::None || control->HasAnyFlag(request)) && (reject == FudgetControlFlag::None || !control->HasAnyFlag(reject)))
             result.Add(control);
-        if (control->HasAnyFlag(FudgetControlFlags::ContainerControl) && (block == FudgetControlFlags::None || !control->HasAnyFlag(block)))
+        if (control->HasAnyFlag(FudgetControlFlag::ContainerControl) && (block == FudgetControlFlag::None || !control->HasAnyFlag(block)))
             dynamic_cast<FudgetContainer*>(control)->ControlsAtPosition(pos - control->_pos, request, reject, block, result);
     }
 }
@@ -591,9 +591,9 @@ void FudgetContainer::Initialize()
     Base::Initialize();
 }
 
-FudgetControlFlags FudgetContainer::GetInitFlags() const
+FudgetControlFlag FudgetContainer::GetInitFlags() const
 {
-    return Base::GetInitFlags() | FudgetControlFlags::ContainerControl | FudgetControlFlags::BlockMouseEvents;
+    return Base::GetInitFlags() | FudgetControlFlag::ContainerControl | FudgetControlFlag::BlockMouseEvents;
 }
 
 void FudgetContainer::RequestLayout()

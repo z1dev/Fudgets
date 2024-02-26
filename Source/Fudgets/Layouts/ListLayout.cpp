@@ -161,13 +161,10 @@ void FudgetListLayout::SetSlotWeight(int index, Float2 value)
     MarkOwnerDirty();
 }
 
-void FudgetListLayout::PreLayoutChildren(Float2 space)
+void FudgetListLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
     if (IsUnrestrictedSpace(space))
         return;
-
-    auto owner = GetOwner();
-    int count = owner->GetChildCount();
 
     // This will hold the available space with cell padding subtracted.
     _no_padding_space = Relevant(space);
@@ -215,12 +212,8 @@ bool FudgetListLayout::IsExpandingRule(FudgetDistributedSizingRule rule) const
         (!_has_expanding && !_has_grow_expanding && !_has_grow_exact && !_has_exact && !_has_shrink);
 }
 
-void FudgetListLayout::LayoutChildren(Float2 space)
+void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
-    auto owner = GetOwner();
-    int count = owner->GetChildCount();
-
-
     // Will hold the calculated size of each slot based on the ratio, without the leftover space.
     Array<float> sizes(count);
 
