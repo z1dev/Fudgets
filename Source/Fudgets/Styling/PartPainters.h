@@ -29,15 +29,6 @@ public:
     /// <param name="style">Style providing the resources for the drawing</param>
     API_FUNCTION() virtual void Initialize(FudgetTheme *theme, FudgetStyle *style);
 
-    // TODO: Change this to not require a control for drawing, but instead separate the control paint functions
-    // and state to be passed around.
-
-    ///// <summary>
-    ///// Draws a part of a control
-    ///// </summary>
-    ///// <param name="control">Control to draw</param>
-    //API_FUNCTION() virtual void Draw(FudgetControl *control) {}
-
     /// <summary>
     /// Updates the drawing state of the painter. Called by controls in OnUpdate if they registered to get updates
     /// </summary>
@@ -527,12 +518,12 @@ public:
     /// </summary>
     API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _inner_padding; }
 private:
-    FudgetDrawArea _field_bg;
-    FudgetDrawArea _hovered_field_bg;
-    FudgetDrawArea _pressed_field_bg;
-    FudgetDrawArea _down_field_bg;
-    FudgetDrawArea _focused_field_bg;
-    FudgetDrawArea _disabled_field_bg;
+    FudgetStyleAreaList *_field_bg;
+    FudgetStyleAreaList *_hovered_field_bg;
+    FudgetStyleAreaList *_pressed_field_bg;
+    FudgetStyleAreaList *_down_field_bg;
+    FudgetStyleAreaList *_focused_field_bg;
+    FudgetStyleAreaList *_disabled_field_bg;
     FudgetPadding _field_padding;
     FudgetPadding _hovered_field_padding;
     FudgetPadding _pressed_field_padding;
@@ -540,12 +531,12 @@ private:
     FudgetPadding _focused_field_padding;
     FudgetPadding _disabled_field_padding;
 
-    FudgetDrawArea _frame_area;
-    FudgetDrawArea _hovered_frame_area;
-    FudgetDrawArea _pressed_frame_area;
-    FudgetDrawArea _down_frame_area;
-    FudgetDrawArea _focused_frame_area;
-    FudgetDrawArea _disabled_frame_area;
+    FudgetStyleAreaList *_frame_area;
+    FudgetStyleAreaList *_hovered_frame_area;
+    FudgetStyleAreaList *_pressed_frame_area;
+    FudgetStyleAreaList *_down_frame_area;
+    FudgetStyleAreaList *_focused_frame_area;
+    FudgetStyleAreaList *_disabled_frame_area;
     FudgetPadding _frame_padding;
     FudgetPadding _hovered_frame_padding;
     FudgetPadding _pressed_frame_padding;
@@ -777,9 +768,9 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static FudgetToken FontToken;
 private:
-    FudgetDrawArea _sel_area;
-    FudgetDrawArea _focused_sel_area;
-    FudgetDrawArea _disabled_sel_area;
+    FudgetStyleAreaList *_sel_area;
+    FudgetStyleAreaList *_focused_sel_area;
+    FudgetStyleAreaList *_disabled_sel_area;
 
     Color _text_color;
     Color _disabled_text_color;

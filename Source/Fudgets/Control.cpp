@@ -830,6 +830,46 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size
     DrawArea(area, Rectangle(pos, size));
 }
 
+void FudgetControl::DrawAreaList(const FudgetStyleAreaList *area, const Rectangle &rect)
+{
+    if (area == nullptr)
+        return;
+    ASSERT(area->Types.Count() == area->Var.Count());
+
+    Rectangle r = rect;
+    for (int ix = 0, siz = area->Types.Count(); ix < siz; ++ix)
+    {
+        switch (area->Types[ix])
+        {
+            case FudgetStyleAreaType::DrawArea:
+                DrawArea(*area->Var[ix].AsStructure<FudgetDrawArea>(), r);
+                break;
+            case FudgetStyleAreaType::Padding:
+            {
+                const FudgetPadding &padding = *area->Var[ix].AsStructure<FudgetPadding>();
+                r = padding.Padded(r);
+                break;
+            }
+            case FudgetStyleAreaType::FillColor:
+                FillRectangle(r, area->Var[ix].AsColor());
+                break;
+            case FudgetStyleAreaType::Blur:
+                DrawBlur(r, area->Var[ix].AsFloat);
+                break;
+            case FudgetStyleAreaType::AreaList:
+            {
+                DrawAreaList(dynamic_cast<FudgetStyleAreaList*>(area->Var[ix].AsObject), r);
+                break;
+            }
+        }
+    }
+}
+
+void FudgetControl::DrawAreaList(const FudgetStyleAreaList *area, Float2 pos, Float2 size)
+{
+    DrawAreaList(area, Rectangle(pos, size));
+}
+
 void FudgetControl::PushClip(const Rectangle &rect)
 {
     CacheGlobalToLocal();
@@ -1243,6 +1283,30 @@ bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(
     }
 
     return style->GetDrawAreaResource(GetActiveTheme(), tokens, result);
+}
+
+bool FudgetControl::GetStyleAreaList(FudgetToken token, API_PARAM(Out) FudgetStyleAreaList* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr; // FudgetStyleAreaList();
+        return false;
+    }
+
+    return style->GetAreaListResource(GetActiveTheme(), token, result);
+}
+
+bool FudgetControl::GetStyleAreaList(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetStyleAreaList* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr; // FudgetStyleAreaList();
+        return false;
+    }
+
+    return style->GetAreaListResource(GetActiveTheme(), tokens, result);
 }
 
 bool FudgetControl::GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBase* &result)

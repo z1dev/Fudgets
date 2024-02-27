@@ -4,6 +4,7 @@
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
 #include "../Control.h"
+#include "StyleAreaBuilder.h"
 
 #include "Engine/Render2D/FontManager.h"
 
@@ -427,17 +428,23 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
             return;
     }
 
-    if (!style->GetDrawAreaResource(theme, FieldBackgroundToken, _field_bg))
-        _field_bg = FudgetDrawArea(Color::White);
-    if (!style->GetDrawAreaResource(theme, HoveredFieldBackgroundToken, _hovered_field_bg))
+    if (!style->GetAreaListResource(theme, FieldBackgroundToken, _field_bg))
+    {
+        FudgetStyleAreaBuilder::Begin();
+        FudgetStyleAreaBuilder::AddColor(Color::White);
+        FudgetStyleAreaBuilder::End();
+
+        _field_bg = FudgetStyleAreaBuilder::GetArea();
+    }
+    if (!style->GetAreaListResource(theme, HoveredFieldBackgroundToken, _hovered_field_bg))
         _hovered_field_bg = _field_bg;
-    if (!style->GetDrawAreaResource(theme, PressedFieldBackgroundToken, _pressed_field_bg))
+    if (!style->GetAreaListResource(theme, PressedFieldBackgroundToken, _pressed_field_bg))
         _pressed_field_bg = _field_bg;
-    if (!style->GetDrawAreaResource(theme, DownFieldBackgroundToken, _down_field_bg))
+    if (!style->GetAreaListResource(theme, DownFieldBackgroundToken, _down_field_bg))
         _down_field_bg = _pressed_field_bg;
-    if (!style->GetDrawAreaResource(theme, FocusedFieldBackgroundToken, _focused_field_bg))
+    if (!style->GetAreaListResource(theme, FocusedFieldBackgroundToken, _focused_field_bg))
         _focused_field_bg = _field_bg;
-    if (!style->GetDrawAreaResource(theme, DisabledFieldBackgroundToken, _disabled_field_bg))
+    if (!style->GetAreaListResource(theme, DisabledFieldBackgroundToken, _disabled_field_bg))
         _disabled_field_bg = _field_bg;
 
     if (!style->GetPaddingResource(theme, FieldPaddingToken, _field_padding))
@@ -453,17 +460,25 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
     if (!style->GetPaddingResource(theme, DisabledFieldPaddingToken, _disabled_field_padding))
         _disabled_field_padding = _field_padding;
 
-    if (!style->GetDrawAreaResource(theme, FrameDrawToken, _frame_area))
-        _frame_area = FudgetDrawArea(FudgetPadding::Max(_field_padding, 1.0f), Color::Gray, FudgetFrameType::Inside);
-    if (!style->GetDrawAreaResource(theme, HoveredFrameDrawToken, _hovered_frame_area))
+    if (!style->GetAreaListResource(theme, FrameDrawToken, _frame_area))
+    {
+        FudgetStyleAreaBuilder::Begin();
+        FudgetStyleAreaBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding::Max(_field_padding, 1.0f), Color::Gray, FudgetFrameType::Inside));
+        FudgetStyleAreaBuilder::End();
+
+
+        _frame_area = FudgetStyleAreaBuilder::GetArea();
+    }
+
+    if (!style->GetAreaListResource(theme, HoveredFrameDrawToken, _hovered_frame_area))
         _hovered_frame_area = _frame_area;
-    if (!style->GetDrawAreaResource(theme, PressedFrameDrawToken, _pressed_frame_area))
+    if (!style->GetAreaListResource(theme, PressedFrameDrawToken, _pressed_frame_area))
         _pressed_frame_area = _frame_area;
-    if (!style->GetDrawAreaResource(theme, DownFrameDrawToken, _down_frame_area))
+    if (!style->GetAreaListResource(theme, DownFrameDrawToken, _down_frame_area))
         _down_frame_area = _pressed_frame_area;
-    if (!style->GetDrawAreaResource(theme, FocusedFrameDrawToken, _focused_frame_area))
+    if (!style->GetAreaListResource(theme, FocusedFrameDrawToken, _focused_frame_area))
         _focused_frame_area = _frame_area;
-    if (!style->GetDrawAreaResource(theme, DisabledFrameDrawToken, _disabled_frame_area))
+    if (!style->GetAreaListResource(theme, DisabledFrameDrawToken, _disabled_frame_area))
         _disabled_frame_area = _frame_area;
 
     if (!style->GetPaddingResource(theme, FramePaddingToken, _frame_padding))
@@ -485,7 +500,7 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
 
 void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state)
 {
-    FudgetDrawArea area = !state.Enabled() ? _disabled_field_bg :
+    FudgetStyleAreaList *area = !state.Enabled() ? _disabled_field_bg :
         state.Down() ? _down_field_bg :
         state.Pressed() ? _pressed_field_bg :
         state.Focused() ? _focused_field_bg :
@@ -498,9 +513,9 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
         state.Hovered() ? _hovered_field_padding :
         _field_padding;
 
-    control->DrawArea(area, field_padding.Padded(bounds));
+    control->DrawAreaList(area, field_padding.Padded(bounds));
 
-    FudgetDrawArea frame = !state.Enabled() ? _disabled_frame_area :
+    FudgetStyleAreaList *frame = !state.Enabled() ? _disabled_frame_area :
         state.Down() ? _down_frame_area :
         state.Pressed() ? _pressed_frame_area :
         state.Focused() ? _focused_frame_area :
@@ -512,7 +527,7 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
         state.Focused() ? _focused_frame_padding :
         state.Hovered() ? _hovered_frame_padding :
         _frame_padding;
-    control->DrawArea(frame, frame_padding.Padded(bounds));
+    control->DrawAreaList(frame, frame_padding.Padded(bounds));
 }
 
 
@@ -579,11 +594,17 @@ void FudgetLineEditTextPainter::Initialize(FudgetTheme *theme, FudgetStyle *styl
             return;
     }
 
-    if (!style->GetDrawAreaResource(theme, SelectionDrawToken, _sel_area))
-        _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!style->GetDrawAreaResource(theme, FocusedSelectionDrawToken, _focused_sel_area))
+    if (!style->GetAreaListResource(theme, SelectionDrawToken, _sel_area))
+    {
+        FudgetStyleAreaBuilder::Begin();
+        FudgetStyleAreaBuilder::AddColor(Color(0.2f, 0.4f, 0.8f, 1.0f));
+        FudgetStyleAreaBuilder::End();
+
+        _sel_area = FudgetStyleAreaBuilder::GetArea();
+    }
+    if (!style->GetAreaListResource(theme, FocusedSelectionDrawToken, _focused_sel_area))
         _focused_sel_area = _sel_area;
-    if (!style->GetDrawAreaResource(theme, DisabledSelectionDrawToken, _disabled_sel_area))
+    if (!style->GetAreaListResource(theme, DisabledSelectionDrawToken, _disabled_sel_area))
         _disabled_sel_area = _sel_area;
 
     if (!style->GetColorResource(theme, TextColorToken, _text_color))
@@ -663,8 +684,8 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         if (range2.StartIndex < range2.EndIndex)
         {
             Float2 selRectSize = _font.Font->MeasureText(text, range2);
-            FudgetDrawArea sel_bg = !state.Enabled() ? _disabled_sel_area : state.Focused() ? _focused_sel_area : _sel_area;
-            control->DrawArea(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
+            FudgetStyleAreaList *sel_bg = !state.Enabled() ? _disabled_sel_area : state.Focused() ? _focused_sel_area : _sel_area;
+            control->DrawAreaList(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
             control->DrawText(_font.Font, text, range2, selTextColor, opt);
 
             if (range2.EndIndex < range.EndIndex && sel_max < range.EndIndex)

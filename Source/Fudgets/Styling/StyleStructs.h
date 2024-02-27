@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Scripting/ScriptingObject.h"
+
 #include "Token.h"
 #include "../MarginStructs.h"
 
@@ -7,6 +9,8 @@
 #include "Engine/Render2D/SpriteAtlas.h"
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Math/Vector4.h"
+#include "Engine/Core/Memory/Allocation.h"
+#include "Engine/Core/Types/Variant.h"
 #include "Engine/Render2D/FontAsset.h"
 #include "Engine/Render2D/TextLayoutOptions.h"
 
@@ -55,6 +59,35 @@ API_STRUCT() struct FUDGETS_API FudgetSpriteHandle
 	{
 		return SpriteHandle(Atlas, Index);
 	}
+};
+
+
+API_ENUM()
+enum class FudgetStyleAreaType
+{
+	Blur,
+	DrawArea,
+	FillColor,
+	Padding,
+	AreaList
+};
+
+
+API_CLASS()
+class FUDGETS_API FudgetStyleAreaList : public ScriptingObject
+{
+	using Base = ScriptingObject;
+	DECLARE_SCRIPTING_TYPE(FudgetStyleAreaList);
+public:
+	API_FIELD() Array<FudgetStyleAreaType> Types;
+
+	API_FIELD() Array<Variant> Var;
+};
+
+template<>
+struct TIsPODType<FudgetStyleAreaList>
+{
+	enum { Value = true };
 };
 
 
@@ -133,6 +166,7 @@ enum class FudgetFrameType
 	/// </summary>
 	Centered
 };
+
 
 /// <summary>
 /// Settings for filling a background or drawing a border with a color or texture with or without 9 slicing. Use with a control's DrawArea function.

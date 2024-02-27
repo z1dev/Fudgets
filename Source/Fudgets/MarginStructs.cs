@@ -1,5 +1,4 @@
-﻿
-using FlaxEngine;
+﻿using FlaxEngine;
 
 namespace Fudgets;
 
@@ -123,4 +122,14 @@ public partial struct FudgetPadding
     /// Sum of the corresponding sides' padding.
     /// </summary>
     public static FudgetPadding operator+(FudgetPadding a, FudgetPadding b) => new FudgetPadding(a.Left + b.Left, a.Top + b.Top, a.Right + b.Right, a.Bottom + b.Bottom);
+
+    /// <summary>
+    /// Compares two padding structures for equality of each side
+    /// </summary>
+    public static bool operator==(FudgetPadding a, FudgetPadding b) => Mathf.NearEqual(a.Left, b.Left) && Mathf.NearEqual(a.Right, b.Right) && Mathf.NearEqual(a.Top, b.Top) && Mathf.NearEqual(a.Bottom, b.Bottom);
+
+    /// <summary>
+    /// Compares two padding structures for unequality of any side
+    /// </summary>
+    public static bool operator!=(FudgetPadding a, FudgetPadding b) => !Mathf.NearEqual(a.Left, b.Left) || !Mathf.NearEqual(a.Right, b.Right) || !Mathf.NearEqual(a.Top, b.Top) || !Mathf.NearEqual(a.Bottom, b.Bottom);
 }

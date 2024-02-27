@@ -3,6 +3,7 @@
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
 #include "PartPainters.h"
+#include "StyleAreaBuilder.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
@@ -100,7 +101,6 @@ void FudgetThemes::Initialize(bool in_game)
 		_data = _edittime_data = new Data;
 	}
 #endif
-
 
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_data->_theme_map[MainThemeToken] = main_theme;
