@@ -8,7 +8,6 @@
 
 
 
-FudgetToken FudgetComboBox::ClassToken = -1;
 FudgetToken FudgetComboBox::FrameDrawToken = -1;
 FudgetToken FudgetComboBox::FocusedFrameDrawToken = -1;
 FudgetToken FudgetComboBox::DisabledFrameDrawToken = -1;
@@ -22,29 +21,14 @@ FudgetToken FudgetComboBox::ButtonHoveredImageToken = -1;
 FudgetToken FudgetComboBox::ButtonDisabledImageToken = -1;
 FudgetToken FudgetComboBox::ButtonWidthToken = -1;
 
-FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _draw_state(), _layout(nullptr), _frame_painter(nullptr),
+FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
     _button_width(0.f), _editor(nullptr), _button(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
 {
 
 }
 
-FudgetToken FudgetComboBox::GetClassToken() { InitializeTokens(); return ClassToken; }
-FudgetToken FudgetComboBox::GetFrameDrawToken() { InitializeTokens(); return FrameDrawToken; }
-FudgetToken FudgetComboBox::GetFocusedFrameDrawToken() { InitializeTokens(); return FocusedFrameDrawToken; }
-FudgetToken FudgetComboBox::GetDisabledFrameDrawToken() { InitializeTokens(); return DisabledFrameDrawToken; }
-FudgetToken FudgetComboBox::GetFramePainterToken() { InitializeTokens(); return FramePainterToken; }
-FudgetToken FudgetComboBox::GetFrameStyleToken() { InitializeTokens(); return FrameStyleToken; }
-FudgetToken FudgetComboBox::GetButtonContentStyleToken() { InitializeTokens(); return ButtonContentStyleToken; }
-FudgetToken FudgetComboBox::GetEditorClassToken() { InitializeTokens(); return EditorClassToken; }
-FudgetToken FudgetComboBox::GetButtonClassToken() { InitializeTokens(); return ButtonClassToken; }
-FudgetToken FudgetComboBox::GetButtonImageToken() { InitializeTokens(); return ButtonImageToken; }
-FudgetToken FudgetComboBox::GetButtonHoveredImageToken() { InitializeTokens(); return ButtonHoveredImageToken; }
-FudgetToken FudgetComboBox::GetButtonDisabledImageToken() { InitializeTokens(); return ButtonDisabledImageToken; }
-FudgetToken FudgetComboBox::GetButtonWidthToken() { InitializeTokens(); return ButtonWidthToken; }
-
 void FudgetComboBox::InitializeTokens()
 {
-    ClassToken = FudgetThemes::RegisterToken(TEXT("FudgetComboBox"));
     FrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FrameDraw"));
     FocusedFrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FocusedFrameDraw"));
     DisabledFrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_DisabledFrameDraw"));
@@ -86,18 +70,18 @@ void FudgetComboBox::OnInitialize()
 void FudgetComboBox::OnDraw()
 {
     if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, GetBounds(), _draw_state);
+        _frame_painter->Draw(this, GetBounds(), GetVisualState());
 }
 
-void FudgetComboBox::OnFocusChanged(bool focused, FudgetControl *other)
-{
-    _draw_state.SetState(FudgetFramedFieldState::Focused, focused);
-}
-
-void FudgetComboBox::OnVirtuallyEnabledChanged()
-{
-    _draw_state.SetState(FudgetFramedFieldState::Disabled, !VirtuallyEnabled());
-}
+//void FudgetComboBox::OnFocusChanged(bool focused, FudgetControl *other)
+//{
+//    _draw_state.SetState(FudgetVisualControlState::Focused, focused);
+//}
+//
+//void FudgetComboBox::OnVirtuallyEnabledChanged()
+//{
+//    _draw_state.SetState(FudgetVisualControlState::Disabled, !VirtuallyEnabled());
+//}
 
 FudgetInputResult FudgetComboBox::OnCharInput(Char ch)
 {

@@ -40,50 +40,52 @@ class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
     DECLARE_SCRIPTING_TYPE(FudgetTextBox);
 public:
     /// <summary>
-    /// Token
+    /// Initializes tokens used by the styles
     /// </summary>
-    API_PROPERTY() static FudgetToken GetClassToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFramePainterToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFrameStyleToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetTextPainterToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetTextStyleToken();
+    API_FUNCTION() static void InitializeTokens();
 
     /// <summary>
-    /// Token
+    /// Frame Painter token, for drawing the outer frame
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretDrawToken();
+    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
     /// <summary>
-    /// Token
+    /// Frame Style token, styling for frame painter
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
+    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
     /// <summary>
-    /// Token
+    /// Text Painter token, to draw and measure text
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretWidthToken();
+    API_FIELD(ReadOnly) static FudgetToken TextPainterToken;
     /// <summary>
-    /// Token
+    /// Text Style token, for styling the text painter
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretScrollCountToken();
+    API_FIELD(ReadOnly) static FudgetToken TextStyleToken;
+
     /// <summary>
-    /// Token
+    /// Caret Draw token, color, draw area or drawable
     /// </summary>
-    API_PROPERTY() static FudgetToken GetBeamCursorToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretDrawToken;
     /// <summary>
-    /// Token
+    /// Caret blink time token, time of visible and invisible caret
     /// </summary>
-    API_PROPERTY() static FudgetToken GetSnapTopLineToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretBlinkTimeToken;
+    /// <summary>
+    /// Caret width token, the size of the caret
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken CaretWidthToken;
+    /// <summary>
+    /// Caret scroll count token, how many characters to scroll sideways in view when caret moves out of bounds
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken CaretScrollCountToken;
+
+    /// <summary>
+    /// Beam cursor token, cursor when mouse is over text
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken BeamCursorToken;
+    /// <summary>
+    /// Snap Top Line token, keep whole top line height in view when scrolling
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken SnapTopLineToken;
 
     /// <inheritdoc />
     void OnInitialize() override;
@@ -112,11 +114,11 @@ public:
     /// <inheritdoc />
     void OnUpdate(float delta_time) override;
 
-    /// <inheritdoc />
-    void OnFocusChanged(bool focused, FudgetControl *other) override;
+    ///// <inheritdoc />
+    //void OnFocusChanged(bool focused, FudgetControl *other) override;
 
-    /// <inheritdoc />
-    void OnVirtuallyEnabledChanged() override;
+    ///// <inheritdoc />
+    //void OnVirtuallyEnabledChanged() override;
 
     /// <inheritdoc />
     void OnMouseMove(Float2 pos, Float2 global_pos) override;
@@ -227,26 +229,9 @@ protected:
     /// <inheritdoc />
     FudgetTextBoxFlags GetTextBoxInitFlags() const override;
 private:
-    static void InitializeTokens();
+    FudgetPadding GetInnerPadding() const;
 
     void MarkTextDirty();
-
-    static FudgetToken ClassToken;
-    static FudgetToken FramePainterToken;
-    static FudgetToken FrameStyleToken;
-    static FudgetToken TextPainterToken;
-    static FudgetToken TextStyleToken;
-
-    static FudgetToken CaretDrawToken;
-    static FudgetToken CaretBlinkTimeToken;
-    static FudgetToken CaretWidthToken;
-    static FudgetToken CaretScrollCountToken;
-
-    static FudgetToken BeamCursorToken;
-
-    static FudgetToken SnapTopLineToken;
-
-    FudgetPadding GetInnerPadding() const;
 
     void ScrollToPos();
     void FixScrollPos();
@@ -257,7 +242,7 @@ private:
     void SnapTopLine();
 
 
-    FudgetPainterStateHelper _draw_state;
+
     FudgetFramedFieldPainter *_frame_painter;
     FudgetMultiLineTextPainter *_text_painter;
     FudgetMultilineTextMeasurements _text_measurements;

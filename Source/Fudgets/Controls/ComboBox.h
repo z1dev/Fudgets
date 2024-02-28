@@ -18,67 +18,39 @@ class FUDGETS_API FudgetComboBox : public FudgetContainer, public IProxyLayoutCo
     DECLARE_SCRIPTING_TYPE(FudgetComboBox);
 public:
     /// <summary>
-    /// Class Token
+    /// Initializes tokens used by the styles
     /// </summary>
-    API_PROPERTY() static FudgetToken GetClassToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFrameDrawToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFocusedFrameDrawToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetDisabledFrameDrawToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFramePainterToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFrameStyleToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonContentStyleToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetEditorClassToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonClassToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonImageToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonHoveredImageToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonDisabledImageToken();
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetButtonWidthToken();
+    API_FUNCTION() static void InitializeTokens();
+
+    API_FIELD(ReadOnly) static FudgetToken FrameDrawToken;
+    API_FIELD(ReadOnly) static FudgetToken FocusedFrameDrawToken;
+    API_FIELD(ReadOnly) static FudgetToken DisabledFrameDrawToken;
+
+    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
+    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
+
+    API_FIELD(ReadOnly) static FudgetToken ButtonContentStyleToken;
+
+    API_FIELD(ReadOnly) static FudgetToken EditorClassToken;
+    API_FIELD(ReadOnly) static FudgetToken ButtonClassToken;
+
+    API_FIELD(ReadOnly) static FudgetToken ButtonImageToken;
+    API_FIELD(ReadOnly) static FudgetToken ButtonHoveredImageToken;
+    API_FIELD(ReadOnly) static FudgetToken ButtonDisabledImageToken;
+
+    API_FIELD(ReadOnly) static FudgetToken ButtonWidthToken;
 
     /// <inheritdoc />
     void OnInitialize() override;
 
     /// <inheritdoc />
     void OnDraw() override;
-    /// <inheritdoc />
-    void OnFocusChanged(bool focused, FudgetControl *other) override;
-    /// <inheritdoc />
-    void OnVirtuallyEnabledChanged() override;
+
+    ///// <inheritdoc />
+    //void OnFocusChanged(bool focused, FudgetControl *other) override;
+    ///// <inheritdoc />
+    //void OnVirtuallyEnabledChanged() override;
+
     /// <inheritdoc />
     FudgetInputResult OnCharInput(Char ch) override;
     /// <inheritdoc />
@@ -121,33 +93,10 @@ protected:
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 private:
-    static void InitializeTokens();
-
-    static FudgetToken ClassToken;
-
-    static FudgetToken FrameDrawToken;
-    static FudgetToken FocusedFrameDrawToken;
-    static FudgetToken DisabledFrameDrawToken;
-
-    static FudgetToken FramePainterToken;
-    static FudgetToken FrameStyleToken;
-
-    static FudgetToken ButtonContentStyleToken;
-
-    static FudgetToken EditorClassToken;
-    static FudgetToken ButtonClassToken;
-
-    static FudgetToken ButtonImageToken;
-    static FudgetToken ButtonHoveredImageToken;
-    static FudgetToken ButtonDisabledImageToken;
-
-    static FudgetToken ButtonWidthToken;
-
     FudgetPadding GetInnerPadding() const;
 
     void HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter);
 
-    FudgetPainterStateHelper _draw_state;
 
     /// <summary>
     /// The layout that lets controls do their own layouts

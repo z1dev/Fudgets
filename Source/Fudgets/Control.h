@@ -1,5 +1,31 @@
 #pragma once
 
+// Documentation in progress. I update this a bit at a time
+// 
+// FudgetControls is the base of everything in Fudgets that need to have a presence on screen in the UI.
+// Every other control type derives from this class. Controls can draw themselves with styles, update themselves
+// on tick and, handle input. Controls with user interaction can have focus, but only one control at a time. This
+// means that when a key is pressed on the keyboard, the one control will receive it and can react in some way.
+// to be continued...
+// 
+// Creating controls:
+// 
+// (WARNING: Styling might change a lot in the future!)
+// Style:
+// 1. Create `API_FIELD(ReadOnly) static FudgetToken _token_name` tokens required to read resources from styles
+// 2. Create a static `API_FUNCTION() void InitializeTokens()` function and assign to them
+// 3. Override `OnInitialize` and read the resource for the tokens into member variables. Sane defaults need
+//    to be provided if the resource does not exist.
+// 
+// Drawing:
+// 1. Create member variables for the different style painters if the control is using styles.  TODO: details
+// 2. Override `OnDraw` and call the painters for the drawing
+// 3. Add any custom painting 
+// 
+// 
+//
+
+
 #include <map>
 
 #include "Engine/Scripting/ScriptingObject.h"
@@ -39,6 +65,9 @@ struct FudgetFontSettings;
 struct FudgetFont;
 class FudgetPartPainter;
 struct FudgetStyleAreaList;
+
+enum class FudgetVisualControlState;
+
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -965,10 +994,15 @@ public:
     API_PROPERTY() virtual bool VirtuallyHovered() const;
 
     /// <summary>
+    /// The control's appearance to the user.
+    /// </summary>
+    API_PROPERTY() FORCE_INLINE FudgetVisualControlState GetVisualState() const { return _visual_state; }
+
+    /// <summary>
     /// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
     /// </summary>
     /// <returns>The root UI container</returns>
-    API_PROPERTY() FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
+    API_PROPERTY() FORCE_INLINE FudgetGUIRoot* GetGUIRoot() const { return _guiRoot; }
 
     /// <summary>
     /// Returns whether this control has the compound control flag. Compound controls hold other controls but behave
@@ -1962,6 +1996,13 @@ protected:
     API_FUNCTION() virtual void SetState(FudgetControlState states, bool value);
 
     /// <summary>
+    /// Adds or removes the passed visual state flag or flags depending on the value.
+    /// </summary>
+    /// <param name="states">The flag or flags to set or unset</param>
+    /// <param name="value">True if the flag should be set, false if it should be unset </param>
+    API_FUNCTION() void SetVisualState(FudgetVisualControlState state, bool value);
+
+    /// <summary>
     /// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
     /// the base Initialize if it is overriden.
     /// </summary>
@@ -2090,6 +2131,8 @@ private:
     Float2 _max_size;
 
     FudgetControlState _state_flags;
+
+    FudgetVisualControlState _visual_state;
 
     // This is reset on each Draw and calculated when needed to simplify GlobalToLocal and LocalToGlobal in draw calls.
     // It's only used during the drawing functions. It can be manually reset when needed

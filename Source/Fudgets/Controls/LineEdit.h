@@ -13,42 +13,42 @@ class FudgetLineEdit : public FudgetTextBoxBase
     DECLARE_SCRIPTING_TYPE(FudgetLineEdit);
 public:
     /// <summary>
-    /// Token
+    /// Initializes tokens used by the styles
     /// </summary>
-    API_PROPERTY() static FudgetToken GetClassToken();
+    API_FUNCTION() static void InitializeTokens();
     /// <summary>
-    /// Token
+    /// Frame Painter token
     /// </summary>
-    API_PROPERTY() static FudgetToken GetFramePainterToken();
+    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
     /// <summary>
-    /// Token
+    /// Frame Style token
     /// </summary>
-    API_PROPERTY() static FudgetToken GetFrameStyleToken();
+    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
     /// <summary>
-    /// Token
+    /// Text Painter token
     /// </summary>
-    API_PROPERTY() static FudgetToken GetTextPainterToken();
+    API_FIELD(ReadOnly) static FudgetToken TextPainterToken;
     /// <summary>
-    /// Token
+    /// Text Style token
     /// </summary>
-    API_PROPERTY() static FudgetToken GetTextStyleToken();
+    API_FIELD(ReadOnly) static FudgetToken TextStyleToken;
 
     /// <summary>
-    /// Token
+    /// Caret Draw token, color, draw area or drawable
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretDrawToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretDrawToken;
     /// <summary>
-    /// Token
+    /// Caret blink time token, time of visible and invisible caret
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretBlinkTimeToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretBlinkTimeToken;
     /// <summary>
-    /// Token
+    /// Caret width token, the size of the caret
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretWidthToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretWidthToken;
     /// <summary>
-    /// Token
+    /// Caret scroll count token, how many characters to scroll sideways in view when caret moves out of bounds
     /// </summary>
-    API_PROPERTY() static FudgetToken GetCaretScrollCountToken();
+    API_FIELD(ReadOnly) static FudgetToken CaretScrollCountToken;
 
     /// <inheritdoc />
     void OnInitialize() override;
@@ -83,11 +83,11 @@ public:
     /// <inheritdoc />
     void OnUpdate(float delta_time) override;
 
-    /// <inheritdoc />
-    void OnFocusChanged(bool focused, FudgetControl *other) override;
+    ///// <inheritdoc />
+    //void OnFocusChanged(bool focused, FudgetControl *other) override;
 
-    /// <inheritdoc />
-    void OnVirtuallyEnabledChanged() override;
+    ///// <inheritdoc />
+    //void OnVirtuallyEnabledChanged() override;
 
     /// <inheritdoc />
     void OnMouseMove(Float2 pos, Float2 global_pos) override;
@@ -122,19 +122,6 @@ protected:
     /// <inheritdoc />
     FudgetTextBoxFlags GetTextBoxInitFlags() const override;
 private:
-    static void InitializeTokens();
-
-    static FudgetToken ClassToken;
-    static FudgetToken FramePainterToken;
-    static FudgetToken FrameStyleToken;
-    static FudgetToken TextPainterToken;
-    static FudgetToken TextStyleToken;
-
-    static FudgetToken CaretDrawToken;
-    static FudgetToken CaretBlinkTimeToken;
-    static FudgetToken CaretWidthToken;
-    static FudgetToken CaretScrollCountToken;
-
     FudgetPadding GetInnerPadding() const;
 
     void ScrollToPos();
@@ -142,7 +129,6 @@ private:
 
     void Process(const StringView &value);
 
-    FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
     FudgetSingleLineTextPainter *_text_painter;
 

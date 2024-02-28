@@ -116,14 +116,14 @@ _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color:
 {
 }
 
-void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
+void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
 {
     if (_font.Font == nullptr)
         return;
 
-    Color selTextColor = !state.Enabled() ? _disabled_selected_text_color : state.Focused() ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = !state.Enabled() ? _disabled_text_color : _text_color;
-    FudgetDrawArea sel_bg = !state.Enabled() ? _disabled_sel_area : state.Focused() ? _focused_sel_area : _sel_area;
+    Color selTextColor = IsDisabled(state) ? _disabled_selected_text_color : IsFocused(state) ? _focused_selected_text_color : _selected_text_color;
+    Color textColor = IsDisabled(state) ? _disabled_text_color : _text_color;
+    FudgetDrawArea sel_bg = IsDisabled(state) ? _disabled_sel_area : IsFocused(state) ? _focused_sel_area : _sel_area;
 
     int sel_min = -1; 
     int sel_max = -1; 
@@ -649,6 +649,6 @@ float FudgetTextBoxPainter::GetFontHeight() const
     if (_font.Font == nullptr)
         return 0.f;
 
-    return _font.Font->GetHeight();
+    return (float)_font.Font->GetHeight();
 }
 

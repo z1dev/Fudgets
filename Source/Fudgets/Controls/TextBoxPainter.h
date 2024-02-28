@@ -155,7 +155,7 @@ public:
     /// <param name="state">State of the control</param>
     /// <param name="options">Options for text, like scale or wrapping mode</param>
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
 
     /// <summary>
     /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
@@ -274,42 +274,6 @@ public:
     /// </summary>
     API_FUNCTION() static void CreateStyle();
 
-    /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
-
-    /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, const FudgetPainterStateHelper &state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
-
-    /// <inheritdoc />
-    float GetKerning(Char a, Char b, float scale) const override;
-
-    /// <inheritdoc />
-    int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) override;
-
-    /// <inheritdoc />
-    int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, float y_position) override;
-
-    /// <inheritdoc />
-    int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, float x_position) override;
-
-    /// <inheritdoc />
-    Float2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
-
-    /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const StringView &text, float scale) override;
-
-    /// <inheritdoc />
-    void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
-
-    /// <inheritdoc />
-    int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const override;
-
-    /// <inheritdoc />
-    float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
-
-    /// <inheritdoc />
-    float GetFontHeight() const override;
-
     /// <summary>
     /// Token
     /// </summary>
@@ -351,6 +315,43 @@ public:
     /// Token for the font used for drawing
     /// </summary>
     API_FIELD(ReadOnly) static FudgetToken FontToken;
+
+    /// <inheritdoc />
+    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+
+    /// <inheritdoc />
+    void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
+
+    /// <inheritdoc />
+    float GetKerning(Char a, Char b, float scale) const override;
+
+    /// <inheritdoc />
+    int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) override;
+
+    /// <inheritdoc />
+    int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, float y_position) override;
+
+    /// <inheritdoc />
+    int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, float x_position) override;
+
+    /// <inheritdoc />
+    Float2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+    /// <inheritdoc />
+    Float2 Measure(FudgetControl *control, const StringView &text, float scale) override;
+
+    /// <inheritdoc />
+    void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
+
+    /// <inheritdoc />
+    int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+    /// <inheritdoc />
+    float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+
+    /// <inheritdoc />
+    float GetFontHeight() const override;
+
 private:
     FudgetDrawArea _sel_area;
     FudgetDrawArea _focused_sel_area;

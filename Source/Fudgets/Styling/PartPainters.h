@@ -13,6 +13,40 @@ class FudgetDrawable;
 
 
 /// <summary>
+/// Supported states for framed field drawing
+/// </summary>
+API_ENUM(Attributes = "Flags")
+enum class FudgetVisualControlState
+{
+    /// <summary>
+    /// Normal state that means no other state is set
+    /// </summary>
+    Normal = 0,
+    /// <summary>
+    /// Pressed appearance of a control, usually for buttons
+    /// </summary>
+    Pressed = 1 << 0,
+    /// <summary>
+    /// Down appearance of a control, usually for buttons
+    /// </summary>
+    Down = 1 << 1,
+    /// <summary>
+    /// Focused appearance of a control that can have the keyboard focus
+    /// </summary>
+    Focused = 1 << 2,
+    /// <summary>
+    /// Disabled appearance of a control that means the users can't interact with it
+    /// </summary>
+    Disabled = 1 << 3,
+    /// <summary>
+    /// Hovered appearance of a control, usually when the mouse pointer is over it
+    /// </summary>
+    Hovered = 1 << 4,
+};
+DECLARE_ENUM_OPERATORS(FudgetVisualControlState);
+
+
+/// <summary>
 /// Base class for objects that paint the standard controls' parts.
 /// </summary>
 API_CLASS(Abstract)
@@ -51,100 +85,18 @@ protected:
     /// </summary>
     /// <returns>A style appropriate for the painter</returns>
     API_PROPERTY() FudgetStyle* GetDefaultStyle() const;
+
+    API_FUNCTION() bool HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const;
+
+    API_FUNCTION() bool IsEnabled(FudgetVisualControlState states) const;
+    API_FUNCTION() bool IsDisabled(FudgetVisualControlState states) const;
+    API_FUNCTION() bool IsHovered(FudgetVisualControlState states) const;
+    API_FUNCTION() bool IsFocused(FudgetVisualControlState states) const;
+    API_FUNCTION() bool IsDown(FudgetVisualControlState states) const;
+    API_FUNCTION() bool IsPressed(FudgetVisualControlState states) const;
 private:
     FudgetTheme *_theme;
     FudgetStyle *_style;
-};
-
-/// <summary>
-/// Supported states for framed field drawing
-/// </summary>
-API_ENUM(Attributes="Flags")
-enum class FudgetFramedFieldState
-{
-    /// <summary>
-    /// Normal state that means no other state is set
-    /// </summary>
-    Normal = 0,
-    /// <summary>
-    /// Pressed appearance of a control, usually for buttons
-    /// </summary>
-    Pressed = 1 << 0,
-    /// <summary>
-    /// Down appearance of a control, usually for buttons
-    /// </summary>
-    Down = 1 << 1,
-    /// <summary>
-    /// Focused appearance of a control that can have the keyboard focus
-    /// </summary>
-    Focused = 1 << 2,
-    /// <summary>
-    /// Disabled appearance of a control that means the users can't interact with it
-    /// </summary>
-    Disabled = 1 << 3,
-    /// <summary>
-    /// Hovered appearance of a control, usually when the mouse pointer is over it
-    /// </summary>
-    Hovered = 1 << 4,
-};
-DECLARE_ENUM_OPERATORS(FudgetFramedFieldState);
-
-/// <summary>
-/// Helper object to pass to painter functions that depend on a control state. Control classes drawn by a painter
-/// object should keep an instance and update it based on their state.
-/// </summary>
-API_STRUCT()
-struct FUDGETS_API FudgetPainterStateHelper
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPainterStateHelper);
-public:
-    FudgetPainterStateHelper();
-
-    /// <summary>
-    /// Changes one or multiple states, setting or unsetting them
-    /// </summary>
-    /// <param name="state">The state to set or unset</param>
-    /// <param name="set">Whether to set the state or unset it</param>
-    void SetState(FudgetFramedFieldState state, bool set = true);
-
-    /// <summary>
-    /// Indicates whether a state or states are set. If multiple states are included, they all need to be set
-    /// </summary>
-    /// <param name="state">The state to check</param>
-    /// <returns>Whether the state is set or unset</returns>
-    FORCE_INLINE bool HasState(FudgetFramedFieldState state) const { return (State & state) == state; }
-
-    /// <summary>
-    /// Enabled state is set
-    /// </summary>
-    FORCE_INLINE bool Enabled() const { return !HasState(FudgetFramedFieldState::Disabled); }
-    /// <summary>
-    /// Hovered state is set
-    /// </summary>
-    FORCE_INLINE bool Hovered() const { return HasState(FudgetFramedFieldState::Hovered); }
-    /// <summary>
-    /// Pressed state is set
-    /// </summary>
-    FORCE_INLINE bool Pressed() const { return HasState(FudgetFramedFieldState::Pressed); }
-    /// <summary>
-    /// Down state is set
-    /// </summary>
-    FORCE_INLINE bool Down() const { return HasState(FudgetFramedFieldState::Down); }
-    /// <summary>
-    /// Focused state is set
-    /// </summary>
-    FORCE_INLINE bool Focused() const { return HasState(FudgetFramedFieldState::Focused); }
-
-    /// <summary>
-    /// Current state of the control drawing the frame
-    /// </summary>
-    API_FIELD() FudgetFramedFieldState State;
-};
-
-template<>
-struct TIsPODType<FudgetPainterStateHelper>
-{
-    enum { Value = true };
 };
 
 /// <summary>
@@ -162,7 +114,7 @@ public:
     /// <param name="control">Control to draw</param>
     /// <param name="bounds">Bounds to draw inside. This is usually the result of padding on the control's bounds.</param>
     /// <param name="state">State to paint</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) {}
 };
 
 // TODO: these alignments might be unified somewhere if there are multiple
@@ -235,7 +187,7 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
 
     /// <summary>
     /// Token
@@ -404,7 +356,7 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
 
     /// <summary>
     /// Token
@@ -656,7 +608,7 @@ public:
     /// <param name="range">Range in the text to limit drawing to</param>
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) {}
 
     /// <summary>
     /// Measures the text passed to the painter. The Range of text_options can be used to specify the part of text
@@ -668,7 +620,7 @@ public:
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <returns>Size of the measured text</returns>
-    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) { return Float2::Zero;  }
+    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) { return Float2::Zero;  }
 
     /// <summary>
     /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
@@ -690,7 +642,7 @@ public:
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <param name="point">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
-    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) { return 0; }
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) { return 0; }
 
     /// <summary>
     /// Returns the height of the font used by the painter.
@@ -717,16 +669,16 @@ public:
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options) override;
+    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
     float GetKerning(Char a, Char b, float scale) const override;
 
     /// <inheritdoc />
-    int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
+    int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
 
     /// <inheritdoc />
     float GetFontHeight() const override;

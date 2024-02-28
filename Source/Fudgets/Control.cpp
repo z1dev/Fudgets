@@ -20,7 +20,7 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default),
     _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(MAX_float, MAX_float),
-    _state_flags(FudgetControlState::Enabled), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
+    _state_flags(FudgetControlState::Enabled), _visual_state(FudgetVisualControlState::Normal), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
     _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
 }
@@ -1412,6 +1412,7 @@ void FudgetControl::DoEnabledChanged()
 
 void FudgetControl::DoVirtuallyEnabledChanged()
 {
+    SetVisualState(FudgetVisualControlState::Disabled, !VirtuallyEnabled());
     OnVirtuallyEnabledChanged();
 }
 
@@ -1423,6 +1424,7 @@ void FudgetControl::DoFocusChanging(bool focused, FudgetControl *other)
 void FudgetControl::DoFocusChanged(bool focused, FudgetControl *other)
 {
     SetState(FudgetControlState::ShowFocused, focused);
+    SetVisualState(FudgetVisualControlState::Focused, focused);
     OnFocusChanged(focused, other);
 }
 
@@ -1441,12 +1443,14 @@ void FudgetControl::DoMouseReleased()
 void FudgetControl::DoMouseEnter(Float2 pos, Float2 global_pos)
 {
     SetState(FudgetControlState::ShowHovered, true);
+    SetVisualState(FudgetVisualControlState::Hovered, true);
     OnMouseEnter(pos, global_pos);
 }
 
 void FudgetControl::FudgetControl::DoMouseLeave()
 {
     SetState(FudgetControlState::ShowHovered, false);
+    SetVisualState(FudgetVisualControlState::Hovered, false);
     OnMouseLeave();
 }
 
@@ -1514,6 +1518,14 @@ void FudgetControl::SetState(FudgetControlState states, bool value)
         _state_flags |= states;
     else
         _state_flags &= ~states;
+}
+
+void FudgetControl::SetVisualState(FudgetVisualControlState states, bool value)
+{
+    if (value)
+        _visual_state |= states;
+    else
+        _visual_state &= ~states;
 }
 
 void FudgetControl::Initialize()

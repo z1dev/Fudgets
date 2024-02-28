@@ -33,22 +33,58 @@ FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
     return FudgetThemes::GetStyle(GetType().Fullname.ToString());
 }
 
+bool FudgetPartPainter::HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const
+{
+    return (states & to_check) == to_check;
+}
+
+bool FudgetPartPainter::IsEnabled(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Disabled) != FudgetVisualControlState::Disabled;
+}
+
+bool FudgetPartPainter::IsDisabled(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Disabled) == FudgetVisualControlState::Disabled;
+}
+
+bool FudgetPartPainter::IsHovered(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Hovered) == FudgetVisualControlState::Hovered;
+}
+
+bool FudgetPartPainter::IsFocused(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Focused) == FudgetVisualControlState::Focused;
+}
+
+bool FudgetPartPainter::IsDown(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Down) == FudgetVisualControlState::Down;
+}
+
+bool FudgetPartPainter::IsPressed(FudgetVisualControlState states) const
+{
+    return (states & FudgetVisualControlState::Pressed) == FudgetVisualControlState::Pressed;
+}
+
 
 // FudgetPainterStateHelper
 
 
-FudgetPainterStateHelper::FudgetPainterStateHelper() : State(FudgetFramedFieldState::Normal)
-{
+//FudgetPainterStateHelper::FudgetPainterStateHelper() : State(FudgetVisualControlState::Normal)
+//{
+//
+//}
+//
+//void FudgetPainterStateHelper::SetState(FudgetVisualControlState value, bool set)
+//{
+//    if (set)
+//        State |= value;
+//    else
+//        State &= ~value;
+//}
 
-}
-
-void FudgetPainterStateHelper::SetState(FudgetFramedFieldState value, bool set)
-{
-    if (set)
-        State |= value;
-    else
-        State &= ~value;
-}
 
 // FudgetStatePainter
 
@@ -249,38 +285,38 @@ void FudgetAlignedImagePainter::Initialize(FudgetTheme *theme, FudgetStyle *styl
         _vert_align = FudgetImageVertAlign::Stretch;
 }
 
-void FudgetAlignedImagePainter::Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state)
+void FudgetAlignedImagePainter::Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state)
 {
 
-    AssetReference<TextureBase> image = !state.Enabled() ? _disabled_image :
-        state.Down() ? _down_image :
-        state.Pressed() ? _pressed_image :
-        state.Focused() ? _focused_image :
-        state.Hovered() ? _hovered_image :
+    AssetReference<TextureBase> image = IsDisabled(state) ? _disabled_image :
+        IsDown(state) ? _down_image :
+        IsPressed(state) ? _pressed_image :
+        IsFocused(state) ? _focused_image :
+        IsHovered(state) ? _hovered_image :
         _image;
 
     if (image.Get() == nullptr)
         return;
 
-    Color tint = !state.Enabled() ? _disabled_image_tint :
-        state.Down() ? _down_image_tint :
-        state.Pressed() ? _pressed_image_tint :
-        state.Focused() ? _focused_image_tint :
-        state.Hovered() ? _hovered_image_tint :
+    Color tint = IsDisabled(state) ? _disabled_image_tint :
+        IsDown(state) ? _down_image_tint :
+        IsPressed(state) ? _pressed_image_tint :
+        IsFocused(state) ? _focused_image_tint :
+        IsHovered(state) ? _hovered_image_tint :
         _image_tint;
 
-    Float2 offset = !state.Enabled() ? _disabled_image_offset :
-        state.Down() ? _down_image_offset :
-        state.Pressed() ? _pressed_image_offset :
-        state.Focused() ? _focused_image_offset :
-        state.Hovered() ? _hovered_image_offset :
+    Float2 offset = IsDisabled(state) ? _disabled_image_offset :
+        IsDown(state) ? _down_image_offset :
+        IsPressed(state) ? _pressed_image_offset :
+        IsFocused(state) ? _focused_image_offset :
+        IsHovered(state) ? _hovered_image_offset :
         _image_offset;
 
-    FudgetPadding image_padding = !state.Enabled() ? _disabled_image_padding :
-        state.Down() ? _down_image_padding :
-        state.Pressed() ? _pressed_image_padding :
-        state.Focused() ? _focused_image_padding :
-        state.Hovered() ? _hovered_image_padding :
+    FudgetPadding image_padding = IsDisabled(state) ? _disabled_image_padding :
+        IsDown(state) ? _down_image_padding :
+        IsPressed(state) ? _pressed_image_padding :
+        IsFocused(state) ? _focused_image_padding :
+        IsHovered(state) ? _hovered_image_padding :
         _image_padding;
 
     Rectangle r = image_padding.Padded(bounds);
@@ -489,34 +525,34 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
         _inner_padding = FudgetPadding(0.0f);
 }
 
-void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bounds, const FudgetPainterStateHelper &state)
+void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state)
 {
-    FudgetDrawable *area = !state.Enabled() ? _disabled_field_bg :
-        state.Down() ? _down_field_bg :
-        state.Pressed() ? _pressed_field_bg :
-        state.Focused() ? _focused_field_bg :
-        state.Hovered() ? _hovered_field_bg :
+    FudgetDrawable *area = IsDisabled(state) ? _disabled_field_bg :
+        IsDown(state) ? _down_field_bg :
+        IsPressed(state) ? _pressed_field_bg :
+        IsFocused(state) ? _focused_field_bg :
+        IsHovered(state) ? _hovered_field_bg :
         _field_bg;
-    FudgetPadding field_padding = !state.Enabled() ? _disabled_field_padding :
-        state.Down() ? _down_field_padding :
-        state.Pressed() ? _pressed_field_padding :
-        state.Focused() ? _focused_field_padding :
-        state.Hovered() ? _hovered_field_padding :
+    FudgetPadding field_padding = IsDisabled(state) ? _disabled_field_padding :
+        IsDown(state) ? _down_field_padding :
+        IsPressed(state) ? _pressed_field_padding :
+        IsFocused(state) ? _focused_field_padding :
+        IsHovered(state) ? _hovered_field_padding :
         _field_padding;
 
     control->DrawDrawable(area, field_padding.Padded(bounds));
 
-    FudgetDrawable *frame = !state.Enabled() ? _disabled_frame_area :
-        state.Down() ? _down_frame_area :
-        state.Pressed() ? _pressed_frame_area :
-        state.Focused() ? _focused_frame_area :
-        state.Hovered() ? _hovered_frame_area :
+    FudgetDrawable *frame = IsDisabled(state) ? _disabled_frame_area :
+        IsDown(state) ? _down_frame_area :
+        IsPressed(state) ? _pressed_frame_area :
+        IsFocused(state) ? _focused_frame_area :
+        IsHovered(state) ? _hovered_frame_area :
         _frame_area;
-    FudgetPadding frame_padding = !state.Enabled() ? _disabled_frame_padding :
-        state.Down() ? _down_frame_padding :
-        state.Pressed() ? _pressed_frame_padding :
-        state.Focused() ? _focused_frame_padding :
-        state.Hovered() ? _hovered_frame_padding :
+    FudgetPadding frame_padding = IsDisabled(state) ? _disabled_frame_padding :
+        IsDown(state) ? _down_frame_padding :
+        IsPressed(state) ? _pressed_frame_padding :
+        IsFocused(state) ? _focused_frame_padding :
+        IsHovered(state) ? _hovered_frame_padding :
         _frame_padding;
     control->DrawDrawable(frame, frame_padding.Padded(bounds));
 }
@@ -616,13 +652,13 @@ FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) 
 {
 }
 
-void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options)
+void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options)
 {
     if (_font.Font == nullptr)
         return;
 
-    Color selTextColor = !state.Enabled() ? _disabled_selected_text_color : state.Focused() ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = !state.Enabled() ? _disabled_text_color : _text_color;
+    Color selTextColor = IsDisabled(state) ? _disabled_selected_text_color : IsFocused(state) ? _focused_selected_text_color : _selected_text_color;
+    Color textColor = IsDisabled(state) ? _disabled_text_color : _text_color;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
@@ -672,7 +708,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         if (range2.StartIndex < range2.EndIndex)
         {
             Float2 selRectSize = _font.Font->MeasureText(text, range2);
-            FudgetDrawable *sel_bg = !state.Enabled() ? _disabled_sel_area : state.Focused() ? _focused_sel_area : _sel_area;
+            FudgetDrawable *sel_bg = IsDisabled(state) ? _disabled_sel_area : IsFocused(state) ? _focused_sel_area : _sel_area;
             control->DrawDrawable(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
             control->DrawText(_font.Font, text, range2, selTextColor, opt);
 
@@ -696,7 +732,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     }
 }
 
-Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options)
+Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options)
 {
     if (_font.Font == nullptr)
         return Float2::Zero;
@@ -721,7 +757,7 @@ float FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
     return _font.Font->GetKerning(a, b) * scale;
 }
 
-int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &options, const Float2 &point)
+int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options, const Float2 &point)
 {
     if (_font.Font == nullptr)
         return 0;
@@ -742,5 +778,5 @@ float FudgetLineEditTextPainter::GetFontHeight() const
     if (_font.Font == nullptr)
         return 0.f;
 
-    return _font.Font->GetHeight();
+    return (float)_font.Font->GetHeight();
 }

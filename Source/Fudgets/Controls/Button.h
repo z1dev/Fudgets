@@ -74,6 +74,39 @@ class FUDGETS_API FudgetButton : public FudgetButtonBase
     using Base = FudgetButtonBase;
     DECLARE_SCRIPTING_TYPE(FudgetButton);
 public:
+    /// <summary>
+    /// Initializes tokens used by the styles
+    /// </summary>
+    API_FUNCTION() static void InitializeTokens();
+    /// <summary>
+    /// Button background token
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken BackgroundToken;
+    /// <summary>
+    /// Button background token in pressed state
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken PressedBackgroundToken;
+    /// <summary>
+    /// Button background token in disabled state
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken DisabledBackgroundToken;
+    /// <summary>
+    /// Frame Painter token
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
+    /// <summary>
+    /// Frame style token
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
+    /// <summary>
+    /// Content Painter token
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken ContentPainterToken;
+    /// <summary>
+    /// Content style token
+    /// </summary>
+    API_FIELD(ReadOnly) static FudgetToken ContentStyleToken;
+
     /// <inheritdoc />
     void OnInitialize() override;
     /// <inheritdoc />
@@ -84,67 +117,27 @@ public:
     void OnPressedChanged() override;
     /// <inheritdoc />
     void OnDownChanged() override;
-    /// <inheritdoc />
-    void OnFocusChanged(bool focused, FudgetControl *other) override;
+
+    ///// <inheritdoc />
+    //void OnFocusChanged(bool focused, FudgetControl *other) override;
+
     /// <inheritdoc />
     void OnMouseMove(Float2 pos, Float2 global_pos) override;
-    /// <inheritdoc />
-    void OnMouseEnter(Float2 pos, Float2 global_pos) override;
-    /// <inheritdoc />
-    void OnMouseLeave() override;
-    /// <inheritdoc />
-    void OnVirtuallyEnabledChanged() override;
 
-    /// <summary>
-    /// Class Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetClassToken();
-    /// <summary>
-    /// Background Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetBackgroundToken();
-    /// <summary>
-    /// Pressed Background Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetPressedBackgroundToken();
-    /// <summary>
-    /// Disabled Background Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetDisabledBackgroundToken();
-    /// <summary>
-    /// Frame Painter Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFramePainterToken();
-    /// <summary>
-    /// Frame Style Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetFrameStyleToken();
-    /// <summary>
-    /// Content Painter Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetContentPainterToken();
-    /// <summary>
-    /// Content Style Token
-    /// </summary>
-    API_PROPERTY() static FudgetToken GetContentStyleToken();
+    ///// <inheritdoc />
+    //void OnMouseEnter(Float2 pos, Float2 global_pos) override;
+    ///// <inheritdoc />
+    //void OnMouseLeave() override;
+
+    ///// <inheritdoc />
+    //void OnVirtuallyEnabledChanged() override;
+
 protected:
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 private:
-    static void InitializeTokens();
-
-    static FudgetToken ClassToken;
-    static FudgetToken BackgroundToken;
-    static FudgetToken PressedBackgroundToken;
-    static FudgetToken DisabledBackgroundToken;
-    static FudgetToken FramePainterToken;
-    static FudgetToken FrameStyleToken;
-    static FudgetToken ContentPainterToken;
-    static FudgetToken ContentStyleToken;
-
     FudgetPadding FudgetButton::GetInnerPadding() const;
 
-    FudgetPainterStateHelper _draw_state;
     FudgetFramedFieldPainter *_frame_painter;
     FudgetStatePainter *_content_painter;
 };

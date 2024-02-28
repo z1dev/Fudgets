@@ -4,8 +4,6 @@
 #include "Engine/Core/Types/StringBuilder.h"
 #include "../Layouts/Layout.h"
 
-FudgetToken FudgetTextBox::ClassToken = -1;
-
 FudgetToken FudgetTextBox::FramePainterToken = -1;
 FudgetToken FudgetTextBox::FrameStyleToken = -1;
 FudgetToken FudgetTextBox::TextPainterToken = -1;
@@ -18,78 +16,9 @@ FudgetToken FudgetTextBox::CaretScrollCountToken = -1;
 FudgetToken FudgetTextBox::BeamCursorToken = -1;
 FudgetToken FudgetTextBox::SnapTopLineToken = -1;
 
-FudgetToken FudgetTextBox::GetClassToken()
-{
-    InitializeTokens();
-    return ClassToken;
-}
-
-FudgetToken FudgetTextBox::GetFramePainterToken()
-{
-    InitializeTokens();
-    return FramePainterToken;
-}
-
-FudgetToken FudgetTextBox::GetFrameStyleToken()
-{
-    InitializeTokens();
-    return FrameStyleToken;
-}
-
-FudgetToken FudgetTextBox::GetTextPainterToken()
-{
-    InitializeTokens();
-    return TextPainterToken;
-}
-
-FudgetToken FudgetTextBox::GetTextStyleToken()
-{
-    InitializeTokens();
-    return TextStyleToken;
-}
-
-FudgetToken FudgetTextBox::GetCaretDrawToken()
-{
-    InitializeTokens();
-    return CaretDrawToken;
-}
-
-FudgetToken FudgetTextBox::GetCaretBlinkTimeToken()
-{
-    InitializeTokens();
-    return CaretBlinkTimeToken;
-}
-FudgetToken FudgetTextBox::GetCaretWidthToken()
-{
-    InitializeTokens();
-    return CaretWidthToken;
-}
-
-FudgetToken FudgetTextBox::GetCaretScrollCountToken()
-{
-    InitializeTokens();
-    return CaretScrollCountToken;
-}
-
-FudgetToken FudgetTextBox::GetBeamCursorToken()
-{
-    InitializeTokens();
-    return BeamCursorToken;
-}
-
-FudgetToken FudgetTextBox::GetSnapTopLineToken()
-{
-    InitializeTokens();
-    return SnapTopLineToken;
-}
 
 void FudgetTextBox::InitializeTokens()
 {
-    if (ClassToken != FudgetToken::Invalid)
-        return;
-
-    ClassToken = FudgetThemes::RegisterToken(TEXT("FudgetTextBox"));
-
     FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_FramePainter"));
     FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_FrameStyle"));
 
@@ -107,16 +36,7 @@ void FudgetTextBox::InitializeTokens()
     SnapTopLineToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_SnapTopLine"));
 }
 
-void FudgetTextBox::MarkTextDirty()
-{
-    _lines_dirty = true;
-
-    _measure_space = -1.f;
-    if (_auto_size != FudgetAutoSizing::None)
-        SizeModified();
-}
-
-FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _draw_state(), _frame_painter(nullptr), _text_painter(nullptr),
+FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
     _text_measurements(), _blink_passed(0.0f), _show_beam_cursor(false), _beam_cursor(CursorType::Default), _character_scroll_count(0),
     _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal), _caret_blink_time(1.0f), _caret_width(2.0f), _caret_updown_x(-1.f),
     _scroll_pos(0.0f), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
@@ -161,7 +81,7 @@ void FudgetTextBox::OnDraw()
 {
     Rectangle bounds = GetBounds();
     if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, bounds, _draw_state);
+        _frame_painter->Draw(this, bounds, GetVisualState());
 
     if (_text_painter == nullptr)
         return;
@@ -188,7 +108,7 @@ void FudgetTextBox::OnDraw()
         options.Spans = Span<FudgetTextRangeSpan>();
     }
 
-    _text_painter->Draw(this, bounds, -_scroll_pos, _draw_state, options, GetMeasurements());
+    _text_painter->Draw(this, bounds, -_scroll_pos, GetVisualState(), options, GetMeasurements());
 
     PopClip();
 
@@ -261,15 +181,15 @@ void FudgetTextBox::OnUpdate(float delta_time)
     _blink_passed += delta_time;
 }
 
-void FudgetTextBox::OnFocusChanged(bool focused, FudgetControl *other)
-{
-    _draw_state.SetState(FudgetFramedFieldState::Focused, focused);
-}
-
-void FudgetTextBox::OnVirtuallyEnabledChanged()
-{
-    _draw_state.SetState(FudgetFramedFieldState::Disabled, !VirtuallyEnabled());
-}
+//void FudgetTextBox::OnFocusChanged(bool focused, FudgetControl *other)
+//{
+//    _draw_state.SetState(FudgetVisualControlState::Focused, focused);
+//}
+//
+//void FudgetTextBox::OnVirtuallyEnabledChanged()
+//{
+//    _draw_state.SetState(FudgetVisualControlState::Disabled, !VirtuallyEnabled());
+//}
 
 void FudgetTextBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
@@ -417,6 +337,15 @@ void FudgetTextBox::SetAutoSize(FudgetAutoSizing value)
         return;
     _auto_size = value;
     SizeModified();
+}
+
+void FudgetTextBox::MarkTextDirty()
+{
+    _lines_dirty = true;
+
+    _measure_space = -1.f;
+    if (_auto_size != FudgetAutoSizing::None)
+        SizeModified();
 }
 
 void FudgetTextBox::ScrollToPos()
