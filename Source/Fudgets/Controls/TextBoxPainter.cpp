@@ -644,3 +644,11 @@ float FudgetTextBoxPainter::GetCharacterLineHeight( const FudgetMultilineTextMea
     return _font.Font->GetHeight() * scale;
 }
 
+float FudgetTextBoxPainter::GetFontHeight() const
+{
+    if (_font.Font == nullptr)
+        return 0.f;
+
+    return _font.Font->GetHeight();
+}
+

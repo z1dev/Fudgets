@@ -685,6 +685,9 @@ protected:
     /// </summary>
     /// <param name="index">Slot index</param>
     /// <param name="available">The available space for the layout contents. Negative values mean unrestricted space</param>
+    /// <param name="wanted_size">Receives the slot's content's requested normal size</param>
+    /// <param name="wanted_min">Receives the slot's content's requested minimal size</param>
+    /// <param name="wanted_max">Receives the slot's content's requested maximum size</param>
     /// <param name="result">Receives the sizes requested by the control in the slot.</param>
     API_FUNCTION() virtual bool MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
 

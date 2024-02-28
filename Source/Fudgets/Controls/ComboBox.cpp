@@ -77,6 +77,7 @@ void FudgetComboBox::OnInitialize()
 
     _button = New<FudgetButton>();
     _button->SetStyle(FudgetThemes::GetStyle(ButtonClassToken));
+    _button->SetMinSize(0.f);
     AddChild(_button);
 
     _layout = CreateLayout<FudgetProxyLayout>();
@@ -188,15 +189,13 @@ void FudgetComboBox::OnMouseReleased()
 
 FudgetLayoutSlot* FudgetComboBox::ProxyInterfaceCreateSlot(FudgetControl *control)
 {
-    FudgetLayoutSlot *slot = New<FudgetLayoutSlot>();
-    slot->Control = control;
-    return slot;
+    return nullptr;
 }
 
 FudgetLayoutFlag FudgetComboBox::ProxyInterfaceGetInitFlags() const
 {
     return FudgetLayoutFlag::LayoutOnContainerResize | FudgetLayoutFlag::LayoutOnContentResize |
-        FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::CanProvideSizes;
+        FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::CanProvideSizeHeight;
 }
 
 void FudgetComboBox::ProxyInterfacePreLayoutChildren(Float2 space)
@@ -208,38 +207,27 @@ void FudgetComboBox::ProxyInterfaceLayoutChildren(Float2 space)
     if (_editor == nullptr || _button == nullptr)
         return;
 
+    Float2 txt_wanted = Float2::Zero;
+    Float2 txt_min = Float2::Zero;
+    Float2 txt_max = Float2::Zero;
+    _layout->GetSlotMeasures(0, Float2(-1.f), txt_wanted, txt_min, txt_max);
+
+    FudgetPadding inner = GetInnerPadding();
+    Float2 min = txt_min + inner.Size() + Float2(_button_width, 0.f);
+    min.X = Math::Max(min.X, Base::GetMinSize().X);
+    Float2 normal = txt_wanted + inner.Size() + Float2(_button_width, 0.f);
+
     if (!_layout->IsUnrestrictedSpace(space))
     {
-        _layout->SetComputedBounds(0, GetInnerPadding().UpperLeft(), GetSize() - Float2(GetInnerPadding().Size().X + _button_width, GetInnerPadding().Size().Y));
-        _layout->SetComputedBounds(1, Float2(GetSize().X - _button_width - GetInnerPadding().Right, 0.0f), Float2(_button_width, GetSize().Y));
+        normal.X = Math::Min(space.X, Base::GetMaxSize().X);
+
+        _layout->SetComputedBounds(0, inner.UpperLeft(), Float2::Max(Float2::Min(space, normal), min) - Float2(inner.Width() + _button_width, inner.Height()));
+        _layout->SetComputedBounds(1, Float2(Math::Max(Math::Min(space.X, normal.X), min.X) - _button_width - inner.Right, 0.0f), Float2(_button_width, Math::Max(Math::Min(space.Y, normal.Y), min.Y)  ));
     }
+    txt_max.Y = normal.Y;
 
-    _layout->SetControlSizes(FudgetLayoutSizeCache(space, FudgetControl::GetHintSize(), FudgetControl::GetMinSize(), FudgetControl::GetMaxSize(), false));
+    _layout->SetControlSizes(FudgetLayoutSizeCache(space, normal, min, AddBigFloats(txt_max, Float2(_button_width, 0.f), inner.Size()), false));
 }
-
-//bool FudgetComboBox::ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
-//{
-//    wanted_size = Float2::Zero;
-//    min_size = Float2::Zero;
-//    max_size = Float2::Zero;
-//    if (_editor != nullptr && _button != nullptr)
-//    {
-//        Float2 editor_wanted = Float2::Zero;
-//        Float2 editor_min = Float2::Zero;
-//        Float2 editor_max = Float2::Zero;
-//        _editor->OnMeasure(available, editor_wanted, editor_min, editor_max);
-//        Float2 button_wanted = Float2::Zero;
-//        Float2 button_min = Float2::Zero;
-//        Float2 button_max = Float2::Zero;
-//        _button->OnMeasure(available, button_wanted, button_min, button_max);
-//    }
-//
-//    wanted_size = FudgetControl::GetHintSize();
-//    min_size = FudgetControl::GetMinSize();
-//    max_size = FudgetControl::GetMaxSize();
-//
-//    return false;
-//}
 
 bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
 {

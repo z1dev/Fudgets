@@ -118,6 +118,26 @@ void FudgetLineEdit::OnInitialize()
         _character_scroll_count = 4;
 }
 
+Float2 FudgetLineEdit::GetLayoutHintSize() const
+{
+    if (_text_painter == nullptr)
+        return Base::GetLayoutHintSize();
+
+    FudgetPadding inner = GetInnerPadding();
+    float h = _text_painter->GetFontHeight();
+    return Float2(inner.Width() + h * 8.f, h + inner.Height());
+}
+
+Float2 FudgetLineEdit::GetLayoutMinSize() const
+{
+    if (_text_painter == nullptr)
+        return Base::GetLayoutMinSize();
+
+    FudgetPadding inner = GetInnerPadding();
+    float h = _text_painter->GetFontHeight();
+    return Float2(inner.Width(), h + inner.Height());
+}
+
 void FudgetLineEdit::OnDraw()
 {
     Rectangle bounds = GetBounds();

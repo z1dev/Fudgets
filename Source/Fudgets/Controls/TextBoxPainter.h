@@ -240,6 +240,12 @@ public:
     /// <param name="char_index">Index of character to look for</param>
     /// <returns>Height of the line at the character's position</returns>
     API_FUNCTION() virtual float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
+
+    /// <summary>
+    /// Returns the height of the font used by the painter.
+    /// </summary>
+    API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
+
 protected:
     /// <summary>
     /// Appends new line measurements to the existing ones.
@@ -301,6 +307,8 @@ public:
     /// <inheritdoc />
     float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
 
+    /// <inheritdoc />
+    float GetFontHeight() const override;
 
     /// <summary>
     /// Token

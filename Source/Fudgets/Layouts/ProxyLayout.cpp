@@ -22,6 +22,11 @@ void FudgetProxyLayout::SetControlSizes(const FudgetLayoutSizeCache &sizes)
     SetMeasuredSizes(sizes);
 }
 
+bool FudgetProxyLayout::GetSlotMeasures(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max)
+{
+    return MeasureSlot(index, available, wanted_size, wanted_min, wanted_max);
+}
+
 void FudgetProxyLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
 {
     auto iowner = ToInterface<IProxyLayoutContainer>(GetOwner());
@@ -61,7 +66,13 @@ FudgetLayoutSlot* FudgetProxyLayout::CreateSlot(FudgetControl *control)
     auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
     if (owner == nullptr)
         return nullptr;
-    return owner->ProxyInterfaceCreateSlot(control);
+    FudgetLayoutSlot *slot = owner->ProxyInterfaceCreateSlot(control);
+    if (slot == nullptr)
+    {
+        slot = New<FudgetLayoutSlot>();
+        slot->Control = control;
+    }
+    return slot;
 }
 
 FudgetLayoutFlag FudgetProxyLayout::GetInitFlags() const

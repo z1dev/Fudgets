@@ -144,6 +144,13 @@ public:
     ~Fudget();
 
     /// <summary>
+    /// Called from both OnDeleteObject and the destructor to make sure one of them activates before the
+    /// scene is deleted. The gui unregisters events here (hopefully) in time.
+    /// </summary>
+    void Dispose();
+
+
+    /// <summary>
     /// True if the game is currently running either in editor or cooked game.
     /// </summary>
     API_PROPERTY() bool IsInRunningGame() const { return _game_plugin_was_initialized; }

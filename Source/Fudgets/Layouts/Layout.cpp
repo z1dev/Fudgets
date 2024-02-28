@@ -19,6 +19,33 @@ float AddBigFloats(float a, float b)
     return a + b;
 }
 
+float AddBigFloats(float a, float b, float c)
+{
+    return AddBigFloats(AddBigFloats(a, b), c);
+}
+
+float AddBigFloats(float a, float b, float c, float d)
+{
+    return AddBigFloats(AddBigFloats(AddBigFloats(a, b), c), d);
+}
+
+Float2 AddBigFloats(Float2 a, Float2 b)
+{
+    // Should be safe:
+    return Float2(AddBigFloats(a.X, b.X), AddBigFloats(a.Y, b.Y));
+}
+
+Float2 AddBigFloats(Float2 a, Float2 b, Float2 c)
+{
+    // Should be safe:
+    return AddBigFloats(AddBigFloats(a, b), c);
+}
+
+Float2 AddBigFloats(Float2 a, Float2 b, Float2 c, Float2 d)
+{
+    // Should be safe:
+    return AddBigFloats(AddBigFloats(AddBigFloats(a, b), c), d);
+}
 
 FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), Control(nullptr), OldSizes(), UnrestrictedSizes(), Sizes(), ComputedBounds(0.f, 0.f)
 {

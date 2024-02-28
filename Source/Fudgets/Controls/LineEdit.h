@@ -54,6 +54,12 @@ public:
     void OnInitialize() override;
 
     /// <inheritdoc />
+    Float2 GetLayoutHintSize() const override;
+
+    /// <inheritdoc />
+    Float2 GetLayoutMinSize() const override;
+
+    /// <inheritdoc />
     StringView GetText() const override { return _text; }
 
     /// <inheritdoc />

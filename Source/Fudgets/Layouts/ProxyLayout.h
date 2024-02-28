@@ -72,7 +72,7 @@ public:
     ~FudgetProxyLayout();
 
     /// <summary>
-    /// Call from an IProxylayoutContainer's ProxyInterfaceLayoutChildren to set the calculated position and size of it controls.
+    /// Call from an IProxyLayoutContainer's ProxyInterfaceLayoutChildren to set the calculated position and size of it controls.
     /// </summary>
     /// <param name="index">Index of the control</param>
     /// <param name="pos">Calculated position of control relative to the IProxyLayoutContainer</param>
@@ -80,13 +80,24 @@ public:
     API_FUNCTION() void SetComputedBounds(int index, Float2 pos, Float2 size);
 
     /// <summary>
-    /// Call from an IProxylayoutContainer's ProxyInterfaceLayoutChildren when the proxy layout calculated its size requirements.
+    /// Call from an IProxyLayoutContainer's ProxyInterfaceLayoutChildren when the proxy layout calculated its size requirements.
     /// If the available space is unrestricted (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and
     /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause float overflow
     /// when calculating any of the sizes.
     /// </summary>
     /// <param name="size">The space used for measurement and the measured sizes of the layout. Every field should be set in the struct.</param>
     API_FUNCTION() void SetControlSizes(const FudgetLayoutSizeCache &sizes);
+
+    /// <summary>
+    /// Call from an IProxyLayoutContainer to get the measurements of child controls. Same as the Layout's MeasureSlot function.
+    /// </summary>
+    /// <param name="index">Slot index</param>
+    /// <param name="available">The available space for the layout contents. Negative values mean unrestricted space</param>
+    /// <param name="wanted_size">Receives the slot's content's requested normal size</param>
+    /// <param name="wanted_min">Receives the slot's content's requested minimal size</param>
+    /// <param name="wanted_max">Receives the slot's content's requested maximum size</param>
+    /// <param name="result">Receives the sizes requested by the control in the slot.</param>
+    API_FUNCTION() bool GetSlotMeasures(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
 protected:
     /// <inheritdoc />
     void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count) override;

@@ -207,12 +207,18 @@ Fudget::Fudget(const SpawnParams& params) : Actor(params), _guiRoot(New<FudgetGU
 
 Fudget::~Fudget()
 {
+
     Delete(NavigateUp);
     Delete(NavigateDown);
     Delete(NavigateLeft);
     Delete(NavigateRight);
     Delete(NavigateSubmit);
 
+    Dispose();
+}
+
+void Fudget::Dispose()
+{
     if (_isRegisteredForTick)
     {
         // TODO: Figure out how to register to Scripting Events.
@@ -226,9 +232,13 @@ Fudget::~Fudget()
             scene->Ticking.Update.RemoveTick(this);
     }
 
-    Delete(_guiRoot);
-    // Set to null or 2d ui drawing blows up.
-    _guiRoot = nullptr;
+    if (_guiRoot != nullptr)
+    {
+        // Set to null or 2d UI drawing blows up.
+
+        Delete(_guiRoot);
+        _guiRoot = nullptr;
+    }
 }
 
 void Fudget::SetRenderMode(FudgetRenderMode value)
@@ -752,6 +762,7 @@ void Fudget::EndPlay()
 
 void Fudget::OnDeleteObject()
 {
+    Dispose();
     Actor::OnDeleteObject();
 }
 

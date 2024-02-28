@@ -691,6 +691,11 @@ public:
     /// <param name="point">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
     API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) { return 0; }
+
+    /// <summary>
+    /// Returns the height of the font used by the painter.
+    /// </summary>
+    API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
 };
 
 /// <summary>
@@ -723,8 +728,8 @@ public:
     /// <inheritdoc />
     int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, const FudgetPainterStateHelper &state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
 
-    ///// <inheritdoc />
-    //FudgetFont GetFont() const override { return _font; }
+    /// <inheritdoc />
+    float GetFontHeight() const override;
 
 
     /// <summary>

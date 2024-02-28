@@ -737,3 +737,10 @@ int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &
     return _font.Font->HitTestText(text, range, point, opt);
 }
 
+float FudgetLineEditTextPainter::GetFontHeight() const
+{
+    if (_font.Font == nullptr)
+        return 0.f;
+
+    return _font.Font->GetHeight();
+}
