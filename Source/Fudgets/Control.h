@@ -38,7 +38,7 @@ struct FudgetPadding;
 struct FudgetFontSettings;
 struct FudgetFont;
 class FudgetPartPainter;
-
+struct FudgetStyleAreaList;
 
 /// <summary>
 /// Used for any function call in controls and layouts that need one specific size of controls.
@@ -1377,7 +1377,7 @@ public:
     /// </summary>
     /// <param name="area">List of styled areas filling the rectangle</param>
     /// <param name="rect">Rectangle to fill</param>
-    API_FUNCTION() void DrawAreaList(const FudgetStyleAreaList *area, const Rectangle &rect);
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect);
 
     /// <summary>
     /// Draws a list of styled areas in a rectangle
@@ -1385,7 +1385,7 @@ public:
     /// <param name="area">List of styled areas filling the rectangle</param>
     /// <param name="pos">Position of the rectangle</param>
     /// <param name="size">Size of the rectangle</param>
-    API_FUNCTION() void DrawAreaList(const FudgetStyleAreaList *area, Float2 pos, Float2 size);
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size);
 
     /// <summary>
     /// Wrapper to Render2D's PushClip
@@ -1767,25 +1767,27 @@ public:
     API_FUNCTION() bool GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result);
 
     /// <summary>
-    /// Tries to get an area list for the passed token. The result will be a valid area list if the original
-    /// value is one of the types that can be drawn and an area list can hold.
+    /// Tries to get a drawable for the passed token. The result will be a valid drawable if the original
+    /// value is a drawable created with FudgetDrawableBuilder or one of the types that can be drawn that
+    /// a drawable can hold.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
     /// <param name="token">Token for an area list value in the active style</param>
     /// <param name="result">The area list that can be passed to DrawAreaList</param>
     /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleAreaList(FudgetToken token, API_PARAM(Out) FudgetStyleAreaList* &result);
+    API_FUNCTION() bool GetStyleDrawable(FudgetToken token, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
-    /// Tries to get an area list for the passed token. The result will be a valid area list if the original
-    /// value is one of the types that can be drawn and an area list can hold.
+    /// Tries to get a drawable for the passed token. The result will be a valid drawable if the original
+    /// value is a drawable created with FudgetDrawableBuilder or one of the types that can be drawn that
+    /// a drawable can hold.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// This version of the function accepts an array, and returns the value for the first token found.
     /// </summary>
     /// <param name="tokens">An array of tokens that are checked in order</param>
     /// <param name="result">The area list that can be passed to DrawAreaList</param>
     /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleAreaList(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetStyleAreaList* &result);
+    API_FUNCTION() bool GetStyleDrawable(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result);
        
     /// <summary>
     /// Tries to get a texture for the passed token. The result will be a valid 
@@ -2036,6 +2038,7 @@ protected:
     API_FUNCTION() virtual void DoRootChanged(FudgetGUIRoot *old_root);
 private:
 
+    void DrawAreaList(const FudgetStyleAreaList &area, const Rectangle &rect);
     void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
     void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
 

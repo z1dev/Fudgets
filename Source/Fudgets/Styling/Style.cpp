@@ -580,23 +580,23 @@ bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken
 	return false;
 }
 
-bool FudgetStyle::GetAreaListResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetStyleAreaList* &result)
+bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawable* &result)
 {
 	Variant var;
 	if (GetResourceValue(theme, token, var))
 	{
-		if (AreaListFromVariant(var, result))
+		if (DrawableFromVariant(theme, var, result))
 			return true;
 	}
 	result = nullptr; // FudgetStyleAreaList();
 	return false;
 }
 
-bool FudgetStyle::GetAreaListResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetStyleAreaList* &result)
+bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result)
 {
 	for (auto t : tokens)
 	{
-		if (GetAreaListResource(theme, t, result))
+		if (GetDrawableResource(theme, t, result))
 			return true;
 	}
 	result = nullptr; // FudgetStyleAreaList();
@@ -736,13 +736,11 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result) co
 	return false;
 }
 
-bool FudgetStyle::AreaListFromVariant(const Variant &var, FudgetStyleAreaList* &result) const
+bool FudgetStyle::DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
 {
 	if (var.Type.Type == VariantType::Color)
 	{
-		result = New<FudgetStyleAreaList>(SpawnParams(Guid::New(), FudgetStyleAreaList::TypeInitializer));
-		result->Types.Add(FudgetStyleAreaType::FillColor);
-		result->Var.Add(Variant(var.AsColor()));
+		result = FudgetDrawable::FromColor(var.AsColor());
 		return true;
 	}
 
@@ -752,41 +750,30 @@ bool FudgetStyle::AreaListFromVariant(const Variant &var, FudgetStyleAreaList* &
 		if (asset.Get() == nullptr)
 			return false;
 
-		result = New<FudgetStyleAreaList>(SpawnParams(Guid::New(), FudgetStyleAreaList::TypeInitializer));
-		result->Types.Add(FudgetStyleAreaType::DrawArea);
-
-		VariantType vtype;
-		vtype.SetTypeName(FudgetDrawArea::TypeInitializer.GetType().Fullname);
-		vtype.Type = VariantType::Types::Structure;
-
-		result->Var.Add(Variant::Structure<FudgetDrawArea>(std::move(vtype), FudgetDrawArea(asset.Get(), true, false)));
+		result = FudgetDrawable::FromDrawArea(FudgetDrawArea(asset.Get(), true, false));
 		return true;
 	}
 
 	if (var.Type.Type == VariantType::Structure)
 	{
 		const FudgetDrawArea *drawarea = var.AsStructure<FudgetDrawArea>();
-		if (drawarea == nullptr)
-			return false;
+		if (drawarea != nullptr)
+		{
+			result = FudgetDrawable::FromDrawArea(*drawarea);
+			return true;
+		}
 
-		VariantType vtype;
-		vtype.SetTypeName(FudgetDrawArea::TypeInitializer.GetType().Fullname);
-		vtype.Type = VariantType::Types::Structure;
+		const FudgetToken *token = var.AsStructure<FudgetToken>();
+		if (token != nullptr)
+		{
+			FudgetStyleAreaList *arealist = FudgetThemes::GetStyleAreaList(*token);
+			if (arealist == nullptr)
+				return false;
+			result = FudgetDrawable::FromStyleAreaList(this, theme, arealist);
+			return true;
+		}
 
-		result = New<FudgetStyleAreaList>(SpawnParams(Guid::New(), FudgetStyleAreaList::TypeInitializer));
-		result->Types.Add(FudgetStyleAreaType::DrawArea);
-		result->Var.Add(Variant::Structure<FudgetDrawArea>(std::move(vtype), *drawarea));
-
-		return true;
-	}
-
-	if (var.Type.Type == VariantType::Object)
-	{
-		FudgetStyleAreaList *area = dynamic_cast<FudgetStyleAreaList*>(var.AsObject);
-		if (area == nullptr)
-			return false;
-		result = area;
-		return true;
+		return false;
 	}
 
 	return false;

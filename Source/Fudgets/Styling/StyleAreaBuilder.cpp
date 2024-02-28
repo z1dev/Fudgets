@@ -1,31 +1,58 @@
 #include "StyleAreaBuilder.h"
+#include "Themes.h"
+#include "Style.h"
 
 #include "Engine/Core/Log.h"
 
 
-FudgetStyleAreaList::FudgetStyleAreaList(const SpawnParams &params) : Base(params)
-{
+// FudgetStyleAreaList
 
+
+FudgetStyleAreaList::~FudgetStyleAreaList()
+{
+    for (auto area : _list)
+        delete area;
+    _list.clear();
 }
 
-bool FudgetStyleAreaBuilder::_building = false;
-FudgetStyleAreaList *FudgetStyleAreaBuilder::_data = nullptr;
-Array<FudgetStyleAreaList*> FudgetStyleAreaBuilder::_sub_data;
+bool FudgetDrawableBuilder::_building = false;
+FudgetToken FudgetDrawableBuilder::_token = -1;
+FudgetStyleAreaList *FudgetDrawableBuilder::_data = nullptr;
+std::vector<FudgetStyleAreaList*> FudgetDrawableBuilder::_sub_data;
 
-void FudgetStyleAreaBuilder::Begin()
+
+// FudgetDrawableBuilder
+
+FudgetToken FudgetDrawableBuilder::Begin(String token_name)
+{
+    FudgetToken token = FudgetThemes::GetToken(token_name);
+    if (token == FudgetToken::Invalid)
+        token = FudgetThemes::RegisterToken(token_name);
+    if (Begin(token))
+        return token;
+    return FudgetToken::Invalid;
+}
+
+bool FudgetDrawableBuilder::Begin(FudgetToken token)
 {
     if (_building)
     {
         LOG(Warning, "Begin: Already building a style area. Ending it and starting a new one.");
-        End();
+        End(true);
     }
-    //if (_data != nullptr)
-    //    Delete(_data);
+    if (FudgetThemes::IsStyleAreaListRegistered(token))
+    {
+        LOG(Error, "Begin: Drawable with token already exists.");
+        return false;
+    }
+
+    _token = token;
     _building = true;
-    _data = New<FudgetStyleAreaList>(ScriptingObject::SpawnParams(Guid::New(), FudgetStyleAreaList::TypeInitializer));
+    _data = new FudgetStyleAreaList();
+    return true;
 }
 
-void FudgetStyleAreaBuilder::End()
+void FudgetDrawableBuilder::End(bool abort)
 {
     if (!_building)
     {
@@ -33,19 +60,16 @@ void FudgetStyleAreaBuilder::End()
         return;
     }
 
-    while (!_sub_data.IsEmpty())
+    while (!_sub_data.empty())
         EndSubData();
     _building = false;
+    if (abort)
+        delete _data;
+    else
+        FudgetThemes::RegisterStyleAreaList(_token, _data);
 }
 
-FudgetStyleAreaList* FudgetStyleAreaBuilder::GetArea()
-{
-    if (_building)
-        End();
-    return _data;
-}
-
-void FudgetStyleAreaBuilder::AddColor(Color color)
+void FudgetDrawableBuilder::AddResource(FudgetToken token)
 {
     if (!_building)
     {
@@ -53,13 +77,23 @@ void FudgetStyleAreaBuilder::AddColor(Color color)
         return;
     }
 
-    FudgetStyleAreaList *data = _sub_data.IsEmpty() ? _data : _sub_data.Last();
-
-    data->Types.Add(FudgetStyleAreaType::FillColor);
-    data->Var.Add(Variant(color));
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetStyleAreaResource(token));
 }
 
-void FudgetStyleAreaBuilder::AddPadding(FudgetPadding padding)
+void FudgetDrawableBuilder::AddColor(Color color)
+{
+    if (!_building)
+    {
+        LOG(Error, "AddColor: Not building a style area.");
+        return;
+    }
+
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetStyleAreaColor(color));
+}
+
+void FudgetDrawableBuilder::AddPadding(FudgetPadding padding)
 {
     if (!_building)
     {
@@ -67,16 +101,11 @@ void FudgetStyleAreaBuilder::AddPadding(FudgetPadding padding)
         return;
     }
 
-    FudgetStyleAreaList *data = _sub_data.IsEmpty() ? _data : _sub_data.Last();
-
-    data->Types.Add(FudgetStyleAreaType::Padding);
-    VariantType vtype;
-    vtype.SetTypeName(FudgetPadding::TypeInitializer.GetType().Fullname);
-    vtype.Type = VariantType::Types::Structure;
-    data->Var.Add(Variant::Structure<FudgetPadding>(std::move(vtype), padding));
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetStyleAreaPadding(padding));
 }
 
-void FudgetStyleAreaBuilder::AddBlur(float blur_strength)
+void FudgetDrawableBuilder::AddBlur(float blur_strength)
 {
     if (!_building)
     {
@@ -84,13 +113,11 @@ void FudgetStyleAreaBuilder::AddBlur(float blur_strength)
         return;
     }
 
-    FudgetStyleAreaList *data = _sub_data.IsEmpty() ? _data : _sub_data.Last();
-
-    data->Types.Add(FudgetStyleAreaType::Blur);
-    data->Var.Add(Variant(blur_strength));
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetStyleAreaFloat(FudgetStyleAreaType::Blur, blur_strength));
 }
 
-void FudgetStyleAreaBuilder::AddDrawArea(FudgetDrawArea area)
+void FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea area)
 {
     if (!_building)
     {
@@ -98,16 +125,11 @@ void FudgetStyleAreaBuilder::AddDrawArea(FudgetDrawArea area)
         return;
     }
 
-    FudgetStyleAreaList *data = _sub_data.IsEmpty() ? _data : _sub_data.Last();
-
-    data->Types.Add(FudgetStyleAreaType::DrawArea);
-    VariantType vtype;
-    vtype.SetTypeName(FudgetDrawArea::TypeInitializer.GetType().Fullname);
-    vtype.Type = VariantType::Types::Structure;
-    data->Var.Add(Variant::Structure<FudgetDrawArea>(std::move(vtype), area));
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetStyleAreaDrawArea(area));
 }
 
-void FudgetStyleAreaBuilder::BeginSubData()
+void FudgetDrawableBuilder::BeginSubData()
 {
     if (!_building)
     {
@@ -115,33 +137,152 @@ void FudgetStyleAreaBuilder::BeginSubData()
         return;
     }
 
-    FudgetStyleAreaList *new_data = New<FudgetStyleAreaList>();
-    _sub_data.Add(new_data);
+    FudgetStyleAreaList *data = _sub_data.empty() ? _data : _sub_data.back();
+    FudgetStyleAreaList *new_list = new FudgetStyleAreaList();
+    data->_list.push_back(new_list);
+    _sub_data.push_back(new_list);
 }
 
-void FudgetStyleAreaBuilder::EndSubData()
+void FudgetDrawableBuilder::EndSubData()
 {
     if (!_building)
     {
         LOG(Error, "EndSubData: Not building a style area.");
         return;
     }
-    if (_sub_data.IsEmpty())
+    if (_sub_data.empty())
     {
         LOG(Error, "EndSubData: Not building sub-data.");
         return;
     }
 
-    FudgetStyleAreaList *last = _sub_data.Last();
-    FudgetStyleAreaList *data = _sub_data.Count() == 1 ? _data : _sub_data[_sub_data.Count() - 2];
-
-    data->Types.Add(FudgetStyleAreaType::AreaList);
-    //VariantType vtype;
-    //vtype.SetTypeName(FudgetStyleAreaList::TypeInitializer.GetType().Fullname);
-    //vtype.Type = VariantType::Types::Structure;
-    data->Var.Add(last);
-
-    _sub_data.RemoveLast();
+    _sub_data.pop_back();
 }
 
 
+// FudgetDrawable
+
+
+FudgetDrawable::FudgetDrawable(const SpawnParams &params) : Base(params), _list(nullptr), _owned(false)
+{
+}
+
+FudgetDrawable::~FudgetDrawable()
+{
+    if (_owned)
+        delete _list;
+}
+
+FudgetDrawable* FudgetDrawable::FromColor(Color color)
+{
+    FudgetDrawable *result = Create();
+    result->_list->_list.push_back(new FudgetStyleAreaColor(color));
+    return result;
+}
+
+FudgetDrawable* FudgetDrawable::FromDrawArea(const FudgetDrawArea &area)
+{
+    FudgetDrawable *result = Create();
+    result->_list->_list.push_back(new FudgetStyleAreaDrawArea(area));
+    return result;
+}
+
+FudgetDrawable* FudgetDrawable::FromStyleAreaList(FudgetStyle *style, FudgetTheme *theme, FudgetStyleAreaList *arealist)
+{
+    // Check first if the area list contains any tokens that must be looked up. If no tokens are found,
+    // the area list can be used as-is and the ownership stays with FudgetThemes.
+
+    if (NoExternalResources(arealist))
+    {
+        FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
+        result->_owned = false;
+        result->_list = arealist;
+        return result;
+    }
+   
+    FudgetDrawable *result = Create();
+    for (auto item : arealist->_list)
+    {
+        FudgetStyleArea *cloned = CloneStyleAreaListItem(style, theme, item);
+        if (cloned != nullptr)
+            result->_list->_list.push_back(cloned);
+    }
+    return result;
+}
+
+bool FudgetDrawable::NoExternalResources(FudgetStyleAreaList *arealist)
+{
+    for (auto item : arealist->_list)
+    {
+        if (item->_type == FudgetStyleAreaType::Resource)
+            return false;
+        if (item->_type == FudgetStyleAreaType::AreaList)
+        {
+            if (!NoExternalResources((FudgetStyleAreaList*)item))
+                return false;
+        }
+    }
+    return true;
+}
+
+FudgetStyleArea* FudgetDrawable::CloneStyleAreaListItem(FudgetStyle *style, FudgetTheme *theme, FudgetStyleArea *item)
+{
+    FudgetStyleArea *result = nullptr;
+    switch (item->_type)
+    {
+        case FudgetStyleAreaType::AreaList:
+            result = new FudgetStyleAreaList();
+            for (auto areaitem : ((FudgetStyleAreaList*)item)->_list)
+            {
+                FudgetStyleArea *cloned = CloneStyleAreaListItem(style, theme, areaitem);
+                if (cloned != nullptr)
+                    ((FudgetStyleAreaList*)result)->_list.push_back(cloned);
+            }
+            break;
+        case FudgetStyleAreaType::Blur:
+            result = new FudgetStyleAreaFloat(FudgetStyleAreaType::Blur,((FudgetStyleAreaFloat*)item)->_value);
+            break;
+        case FudgetStyleAreaType::DrawArea:
+            result = new FudgetStyleAreaDrawArea(((FudgetStyleAreaDrawArea*)item)->_draw_area);
+            break;
+        case FudgetStyleAreaType::FillColor:
+            result = new FudgetStyleAreaColor(((FudgetStyleAreaColor*)item)->_color);
+            break;
+        case FudgetStyleAreaType::Padding:
+            result = new FudgetStyleAreaPadding(((FudgetStyleAreaPadding*)item)->_padding);
+            break;
+        case FudgetStyleAreaType::Resource:
+        {
+            FudgetToken token = ((FudgetStyleAreaResource*)item)->_token;
+            float f;
+            if (style->GetFloatResource(theme, token, f))
+            {
+                result = new FudgetStyleAreaFloat(FudgetStyleAreaType::Blur, f);
+                break;
+            }
+            Color color;
+            if (style->GetColorResource(theme, token, color))
+            {
+                result = new FudgetStyleAreaColor(color);
+                break;
+            }
+            FudgetPadding padding;
+            if (style->GetPaddingResource(theme, token, padding))
+            {
+                result = new FudgetStyleAreaPadding(padding);
+                break;
+            }
+            FudgetDrawArea area;
+            if (style->GetDrawAreaResource(theme, token, area))
+            {
+                result = new FudgetStyleAreaDrawArea(area);
+                break;
+            }
+
+            // GetDrawableResource is not supported to avoid cyclic referencing
+
+            break;
+        }
+    }
+    return result;
+}

@@ -150,6 +150,10 @@ void FudgetThemes::Uninitialize(bool in_game)
 
 	_data->_font_asset_map.clear();
 
+	for (auto p : _data->_style_area_map)
+		delete p.second;
+	_data->_style_area_map.clear();
+
 #if USE_EDITOR
 	if (!in_game)
 	{
@@ -310,6 +314,34 @@ FudgetPartPainter* FudgetThemes::CreatePainter(FudgetToken token)
 		return nullptr;
 
 	return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
+}
+
+bool FudgetThemes::RegisterStyleAreaList(FudgetToken token, FudgetStyleAreaList *style_area)
+{
+	if (style_area == nullptr || IsStyleAreaListRegistered(token))
+		return false;
+
+	for (auto p : _data->_style_area_map)
+	{
+		if (p.second == style_area)
+			return p.first;
+	}
+
+	_data->_style_area_map[token] = style_area;
+	return token;
+}
+
+bool FudgetThemes::IsStyleAreaListRegistered(FudgetToken token)
+{
+	return _data->_style_area_map.find(token) != _data->_style_area_map.end();
+}
+
+FudgetStyleAreaList* FudgetThemes::GetStyleAreaList(FudgetToken token)
+{
+	auto it = _data->_style_area_map.find(token);
+	if (it == _data->_style_area_map.end())
+		return nullptr;
+	return it->second;
 }
 
 #if USE_EDITOR

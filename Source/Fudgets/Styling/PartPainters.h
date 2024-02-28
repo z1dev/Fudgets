@@ -9,6 +9,7 @@
 class FudgetTheme;
 class FudgetStyle;
 class FudgetControl;
+class FudgetDrawable;
 
 
 /// <summary>
@@ -518,12 +519,12 @@ public:
     /// </summary>
     API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _inner_padding; }
 private:
-    FudgetStyleAreaList *_field_bg;
-    FudgetStyleAreaList *_hovered_field_bg;
-    FudgetStyleAreaList *_pressed_field_bg;
-    FudgetStyleAreaList *_down_field_bg;
-    FudgetStyleAreaList *_focused_field_bg;
-    FudgetStyleAreaList *_disabled_field_bg;
+    FudgetDrawable *_field_bg;
+    FudgetDrawable *_hovered_field_bg;
+    FudgetDrawable *_pressed_field_bg;
+    FudgetDrawable *_down_field_bg;
+    FudgetDrawable *_focused_field_bg;
+    FudgetDrawable *_disabled_field_bg;
     FudgetPadding _field_padding;
     FudgetPadding _hovered_field_padding;
     FudgetPadding _pressed_field_padding;
@@ -531,12 +532,12 @@ private:
     FudgetPadding _focused_field_padding;
     FudgetPadding _disabled_field_padding;
 
-    FudgetStyleAreaList *_frame_area;
-    FudgetStyleAreaList *_hovered_frame_area;
-    FudgetStyleAreaList *_pressed_frame_area;
-    FudgetStyleAreaList *_down_frame_area;
-    FudgetStyleAreaList *_focused_frame_area;
-    FudgetStyleAreaList *_disabled_frame_area;
+    FudgetDrawable *_frame_area;
+    FudgetDrawable *_hovered_frame_area;
+    FudgetDrawable *_pressed_frame_area;
+    FudgetDrawable *_down_frame_area;
+    FudgetDrawable *_focused_frame_area;
+    FudgetDrawable *_disabled_frame_area;
     FudgetPadding _frame_padding;
     FudgetPadding _hovered_frame_padding;
     FudgetPadding _pressed_frame_padding;
@@ -768,9 +769,9 @@ public:
     /// </summary>
     API_FIELD(ReadOnly) static FudgetToken FontToken;
 private:
-    FudgetStyleAreaList *_sel_area;
-    FudgetStyleAreaList *_focused_sel_area;
-    FudgetStyleAreaList *_disabled_sel_area;
+    FudgetDrawable *_sel_area;
+    FudgetDrawable *_focused_sel_area;
+    FudgetDrawable *_disabled_sel_area;
 
     Color _text_color;
     Color _disabled_text_color;

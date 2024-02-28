@@ -8,6 +8,7 @@
 #include "Token.h"
 #include "Style.h"
 #include "StyleStructs.h"
+#include "StyleAreaBuilder.h"
 
 #include <map>
 
@@ -326,6 +327,19 @@ public:
     /// </summary>
     API_FUNCTION() static FudgetPartPainter* CreatePainter(FudgetToken token);
 
+    /// <summary>
+    /// Used by FudgetDrawableBuilder to store the style area list it created which can be used to make a FudgetDrawable
+    /// </summary>
+    static bool RegisterStyleAreaList(FudgetToken token, FudgetStyleAreaList *style_area);
+    /// <summary>
+    /// Used by FudgetDrawableBuilder to check if a style area list has been already created with the given token.
+    /// </summary>
+    static bool IsStyleAreaListRegistered(FudgetToken token);
+    /// <summary>
+    /// Returns the style area list registered with RegisterStyleAreaList for the token.
+    /// </summary>
+    static FudgetStyleAreaList* GetStyleAreaList(FudgetToken token);
+
 #ifdef USE_EDITOR
     /// <summary>
     /// True when the game is running inside the editor, and the theme functions refer to the data created for the game.
@@ -354,6 +368,8 @@ private:
         std::map<FudgetToken, FudgetTheme*> _theme_map;
 
         std::map<FudgetToken, FontAsset*> _font_asset_map;
+
+        std::map<FudgetToken, FudgetStyleAreaList*> _style_area_map;
     };
 
 #if USE_EDITOR

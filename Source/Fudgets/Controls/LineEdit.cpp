@@ -82,7 +82,7 @@ void FudgetLineEdit::InitializeTokens()
     TextPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_TextPainter"));
     TextStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_TextStyle"));
 
-    CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretDraw"));
+    CaretDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretDraw"));
     CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretBlinkTime"));
     CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretWidth"));
     CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretScrollCount"));

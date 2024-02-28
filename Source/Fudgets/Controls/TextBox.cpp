@@ -97,7 +97,7 @@ void FudgetTextBox::InitializeTokens()
     TextPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_TextPainter"));
     TextStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_TextStyle"));
 
-    CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretDraw"));
+    CaretDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretDraw"));
     CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretBlinkTime"));
     CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretWidth"));
     CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretScrollCount"));

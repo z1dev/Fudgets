@@ -18,7 +18,7 @@ struct FudgetPadding;
 struct Color;
 struct FudgetFontSettings;
 struct FudgetFont;
-class FudgetStyleAreaList;
+class FudgetDrawable;
 
 struct FudgetStyleResource
 {
@@ -151,7 +151,7 @@ public:
 
     /// <summary>
     /// Looks up a token resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -160,7 +160,7 @@ public:
     API_FUNCTION() bool GetTokenResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetToken &result);
     /// <summary>
     /// Looks up a token resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -171,7 +171,7 @@ public:
 
     /// <summary>
     /// Looks up a color resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -181,7 +181,7 @@ public:
 
     /// <summary>
     /// Looks up a color resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -192,7 +192,7 @@ public:
 
     /// <summary>
     /// Looks up a bool resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -202,7 +202,7 @@ public:
 
     /// <summary>
     /// Looks up a bool resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -213,7 +213,7 @@ public:
 
     /// <summary>
     /// Looks up a float resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -223,7 +223,7 @@ public:
 
     /// <summary>
     /// Looks up a float resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -234,7 +234,7 @@ public:
 
     /// <summary>
     /// Looks up a Float2 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -244,7 +244,7 @@ public:
 
     /// <summary>
     /// Looks up a Float2 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -255,7 +255,7 @@ public:
 
     /// <summary>
     /// Looks up a Float3 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -265,7 +265,7 @@ public:
 
     /// <summary>
     /// Looks up a Float3 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -276,7 +276,7 @@ public:
 
     /// <summary>
     /// Looks up a Float4 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -286,7 +286,7 @@ public:
 
     /// <summary>
     /// Looks up a Float4 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -297,7 +297,7 @@ public:
 
     /// <summary>
     /// Looks up a int resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -307,7 +307,7 @@ public:
 
     /// <summary>
     /// Looks up a int resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -318,7 +318,7 @@ public:
 
     /// <summary>
     /// Looks up a Int2 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -328,7 +328,7 @@ public:
 
     /// <summary>
     /// Looks up a Int2 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -339,7 +339,7 @@ public:
 
     /// <summary>
     /// Looks up a Int3 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -349,7 +349,7 @@ public:
 
     /// <summary>
     /// Looks up a Int3 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -360,7 +360,7 @@ public:
 
     /// <summary>
     /// Looks up a Int4 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -370,7 +370,7 @@ public:
 
     /// <summary>
     /// Looks up a Int4 resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -381,7 +381,7 @@ public:
 
     /// <summary>
     /// Looks up an enum resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <typeparam name="T">Type of the enum</typeparam>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -403,7 +403,7 @@ public:
 
     /// <summary>
     /// Looks up an enum resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <typeparam name="T">Type of the enum</typeparam>
@@ -425,7 +425,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetPadding resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -435,7 +435,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetPadding resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -446,7 +446,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -456,7 +456,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -467,7 +467,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetFontSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -477,7 +477,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetFontSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -488,7 +488,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetFont resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -498,7 +498,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetFont resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -509,7 +509,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetDrawArea resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -519,7 +519,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetDrawArea resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -529,29 +529,29 @@ public:
     API_FUNCTION() bool GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result);
 
     /// <summary>
-    /// Looks up a FudgetStyleAreaList resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// Looks up a FudgetStyleAreaList associated with a token in this style or a parent style using the theme, and sets the result
+    /// to a FudgetDrawable created from it.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
     /// <param name="result">Receives the resource's value if it is found.</param>
     /// <returns>Whether the token was associated with a value of the requested type</returns>
-    API_FUNCTION() bool GetAreaListResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetStyleAreaList* &result);
+    API_FUNCTION() bool GetDrawableResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
-    /// Looks up a FudgetStyleAreaList resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// Looks up a FudgetStyleAreaList associated with a token in this style or a parent style using the theme, and sets the result
+    /// to a FudgetDrawable created from it.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="tokens">Tokens that might be associated with the value in this style.</param>
     /// <param name="result">Receives the resource's value if it is found.</param>
     /// <returns>Whether the token was associated with a value of the requested type</returns>
-    API_FUNCTION() bool GetAreaListResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetStyleAreaList* &result);
+    API_FUNCTION() bool GetDrawableResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
     /// Looks up a texture resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -561,7 +561,7 @@ public:
 
     /// <summary>
     /// Looks up a texture resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -572,7 +572,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="token">Token that might be associated with the value in this style.</param>
@@ -582,7 +582,7 @@ public:
 
     /// <summary>
     /// Looks up a FudgetTextDrawSettings resource associated with a token in this style or a parent style using the theme, and sets the result
-    /// value to it on success.
+    /// to it on success.
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
@@ -599,7 +599,7 @@ private:
     void ParentResourceWasReset(FudgetToken token, FudgetStyleResource *resource);
 
     bool TokenFromVariant(const Variant &var, FudgetToken &result) const;
-    bool AreaListFromVariant(const Variant &var, FudgetStyleAreaList* &result) const;
+    bool DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
     bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
     bool TextureFromVariant(const Variant &var, TextureBase* &result) const;
     bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
