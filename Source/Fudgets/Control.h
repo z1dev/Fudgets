@@ -203,6 +203,26 @@ enum class FudgetControlState : uint16
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
+API_ENUM()
+enum class FudgetControlVisibility
+{
+    /// <summary>
+    /// The control is drawn, can be focused and can react to user input. It'll receive all relevant events. It will
+    /// be positioned in layouts and take up space.
+    /// </summary>
+    Visible,
+    /// <summary>
+    /// The control is not drawn, can't be focused and won't react to user input. It will receive some events
+    /// that are not related to these. If added in a layout, it'll appear as empty space where the control would be.
+    /// </summary>
+    Invisible,
+    /// <summary>
+    /// The control is not drawn, can't be focused and won't react to user input. It won't receive most events.
+    /// It won't appear in layouts and won't take up space. Also the control's OnUpdate will be disabled as well.
+    /// </summary>
+    Hidden
+};
+
 
 /// <summary>
 /// Flags for controls that describe their behavior
@@ -1063,7 +1083,7 @@ public:
     /// if its visibility state was changed with MakeInvisible instead of Hide or SetVisible. To check if a control
     /// is made invisible, check the Invisible state flag.
     /// </summary>
-    API_PROPERTY() bool IsVisible() const;
+    API_PROPERTY(Attributes="HideInEditor") bool IsVisible() const;
     /// <summary>
     /// Whether the control is hidden inside its parent's layout. Invisible but not hidden controls still take up
     /// space in their layout. The result of this property is not always the opposite of IsVisible, which checks
@@ -1082,6 +1102,27 @@ public:
     /// is already hidden, this only sets the state flag.
     /// </summary>
     API_FUNCTION() FORCE_INLINE void Hide() { SetVisible(true); }
+
+    /// <summary>
+    /// Gets one of the visibility values of the control. Controls can be Visible, Invisible or Hidden. Invisible
+    /// controls are not drawn and don't receive user input, but are present in the UI by taking up space in
+    /// their parent's layout. Hidden controls are also not drawn and don't receive input, but they also don't get
+    /// notified about events or updates, and don't have any presence in their parent's layout.
+    /// Visibility will be Visible even if any of the parents are hidden.
+    /// </summary>
+    /// <returns>The visibility state of the control</returns>
+    API_PROPERTY() FudgetControlVisibility GetVisibility() const;
+    /// <summary>
+    /// Sets one of the visibility values of the control. Controls can be Visible, Invisible or Hidden. Invisible
+    /// controls are not drawn and don't receive user input, but are present in the UI by taking up space in
+    /// their parent's layout. Hidden controls are also not drawn and don't receive input, but they also don't get
+    /// notified about events or updates, and don't have any presence in their parent's layout.
+    /// Visibility will be Visible even if any of the parents are hidden.
+    /// Setting this to Invisible when the control was hidden will first make it visible before it is turned invisible.
+    /// </summary>
+    /// <param name="value">The visibility state to set</param>
+    API_PROPERTY() void SetVisibility(FudgetControlVisibility value);
+
     /// <summary>
     /// Changes the visibility state of the control, showing or hiding it. Calling this function with true will
     /// show the control in its layout, and false will make it hidden. The result is equivalent to calling Show or Hide.

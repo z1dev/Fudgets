@@ -413,9 +413,38 @@ bool FudgetControl::IsVisible() const
     return (int)(_state_flags & (FudgetControlState::Invisible | FudgetControlState::Hidden | FudgetControlState::ParentHidden)) == 0;
 }
 
+FudgetControlVisibility FudgetControl::GetVisibility() const
+{
+    if (HasAnyState(FudgetControlState::Invisible))
+        return FudgetControlVisibility::Invisible;
+    if (HasAnyState(FudgetControlState::Hidden))
+        return FudgetControlVisibility::Hidden;
+    return FudgetControlVisibility::Visible;
+}
+
+void FudgetControl::SetVisibility(FudgetControlVisibility value)
+{
+    if (value == FudgetControlVisibility::Visible)
+    {
+        SetVisible(true);
+    }
+    else if (value == FudgetControlVisibility::Invisible)
+    {
+        if (HasAnyState(FudgetControlState::Invisible))
+            return;
+
+        SetVisible(true);
+        MakeInvisible();
+    }
+    else
+    {
+        SetVisible(false);
+    }
+}
+
 void FudgetControl::SetVisible(bool value)
 {
-    if (HasAnyState(FudgetControlState::Hidden) != value)
+    if (!HasAnyState(FudgetControlState::Invisible) && (HasAnyState(FudgetControlState::Hidden) != value))
         return;
 
     bool old_visible = IsVisible();
