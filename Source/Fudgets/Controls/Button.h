@@ -47,7 +47,14 @@ public:
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
+
+    API_FIELD() Action EventPressed;
 protected:
+    /// <summary>
+    /// Called when the button's pressed state was set or unset. Override OnPressedChanged in derived classes.
+    /// </summary>
+    API_FUNCTION() virtual void DoPressedChanged();
+
     /// <summary>
     /// Gets the pressed state of the button. The button's state is pressed if a mouse button was pressed over the button and the mouse
     /// pointer is over the button.

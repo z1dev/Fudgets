@@ -6,6 +6,7 @@
 
 class FudgetLineEdit;
 class FudgetButton;
+class FudgetListBox;
 
 
 /// <summary>
@@ -33,6 +34,7 @@ public:
 
     API_FIELD(ReadOnly) static FudgetToken EditorClassToken;
     API_FIELD(ReadOnly) static FudgetToken ButtonClassToken;
+    API_FIELD(ReadOnly) static FudgetToken ListBoxClassToken;
 
     API_FIELD(ReadOnly) static FudgetToken ButtonImageToken;
     API_FIELD(ReadOnly) static FudgetToken ButtonHoveredImageToken;
@@ -73,6 +75,9 @@ public:
     void OnMouseReleased() override;
 
     /// <inheritdoc />
+    void OnSizeChanged() override;
+
+    /// <inheritdoc />
     FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) override;
     /// <inheritdoc />
     FudgetLayoutFlag ProxyInterfaceGetInitFlags() const override;
@@ -90,6 +95,11 @@ public:
     /// <inheritdoc />
     bool WantsNavigationKey(KeyboardKeys key) override;
 protected:
+    /// <summary>
+    /// Handles the press of the combo box button to show the floating list box.
+    /// </summary>
+    API_FUNCTION() virtual void ButtonPressed();
+
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 private:
@@ -115,6 +125,10 @@ private:
     /// Button for the drop down arrow
     /// </summary>
     FudgetButton *_button;
+    /// <summary>
+    /// List box for combo box items list
+    /// </summary>
+    FudgetListBox *_list_box;
 
     bool _editor_capturing;
     Float2 _last_mouse_pos;

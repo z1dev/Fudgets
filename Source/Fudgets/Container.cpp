@@ -60,13 +60,8 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
 
     FudgetContainer *old_parent = control->_parent;
 
-    //if (control->GetGUIRoot() != GetGUIRoot())
-    //    control->RegisterToUpdate(false);
-
     control->_parent = this;
     control->_index = index;
-    //control->SetState(FudgetControlState::ParentDisabled, !VirtuallyEnabled());
-    //control->InitializeFlags();
 
     if (_layout != nullptr)
         _layout->ChildAdded(control, index);
@@ -90,11 +85,8 @@ int FudgetContainer::RemoveChild(FudgetControl *control)
     control->_parent = nullptr;
     control->_index = -1;
 
-    //control->SetGUIRootInternal(nullptr);
-    control->SetState(FudgetControlState::ParentDisabled, false);
-
-    //if (!control->_changing)
-    //    control->RegisterToUpdate(false);
+    //control->SetState(FudgetControlState::ParentDisabled, false);
+    //control->SetState(FudgetControlState::ParentHidden, false);
 
     for (int ix = index, siz = _children.Count(); ix < siz; ++ix)
         _children[ix]->_index = ix;
@@ -379,6 +371,20 @@ void FudgetContainer::DoFocusChanged(bool focused, FudgetControl *other)
     }
 }
 
+void FudgetContainer::DoShow()
+{
+    if (!HasAnyState(FudgetControlState::ParentHidden))
+        SetParentVisibilityRecursive(true);
+    Base::DoShow();
+}
+
+void FudgetContainer::DoHide()
+{
+    if (!HasAnyState(FudgetControlState::ParentHidden))
+        SetParentVisibilityRecursive(false);
+    Base::DoHide();
+}
+
 void FudgetContainer::ClearStyleCache(bool inherited)
 {
     Base::ClearStyleCache(inherited);
@@ -468,7 +474,8 @@ void FudgetContainer::GetAllControls(API_PARAM(Ref) Array<FudgetControl*> &resul
     FudgetContainer::GetAllControls(this, result);
 }
 
-void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlag request, FudgetControlFlag reject, FudgetControlFlag block, API_PARAM(Ref) Array<FudgetControl*> &result)
+void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlag request_flags, FudgetControlFlag reject_flags, FudgetControlFlag block_flags,
+    FudgetControlState request_state, FudgetControlState reject_state, FudgetControlState block_state, API_PARAM(Ref) Array<FudgetControl*> &result)
 {
     for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
     {
@@ -476,10 +483,11 @@ void FudgetContainer::ControlsAtPosition(Float2 pos, FudgetControlFlag request, 
         if (!control->GetBoundsInParent().Contains(pos))
             continue;
 
-        if ((request == FudgetControlFlag::None || control->HasAnyFlag(request)) && (reject == FudgetControlFlag::None || !control->HasAnyFlag(reject)))
+        if ((request_flags == FudgetControlFlag::None || control->HasAnyFlag(request_flags)) && (reject_flags == FudgetControlFlag::None || !control->HasAnyFlag(reject_flags)) && 
+            (request_state == FudgetControlState::None || control->HasAnyState(request_state)) && (reject_state == FudgetControlState::None || !control->HasAnyState(reject_state)))
             result.Add(control);
-        if (control->HasAnyFlag(FudgetControlFlag::ContainerControl) && (block == FudgetControlFlag::None || !control->HasAnyFlag(block)))
-            dynamic_cast<FudgetContainer*>(control)->ControlsAtPosition(pos - control->_pos, request, reject, block, result);
+        if (control->HasAnyFlag(FudgetControlFlag::ContainerControl) && (block_flags == FudgetControlFlag::None || !control->HasAnyFlag(block_flags)) && (block_state == FudgetControlState::None || !control->HasAnyState(block_state)))
+            dynamic_cast<FudgetContainer*>(control)->ControlsAtPosition(pos - control->_pos, request_flags, reject_flags, block_flags, request_state, reject_state, block_state, result);
     }
 }
 
@@ -570,6 +578,9 @@ void FudgetContainer::Deserialize(DeserializeStream& stream, ISerializeModifier*
 
 void FudgetContainer::DoDraw()
 {
+    if (!IsVisible())
+        return;
+
     Base::DoDraw();
 
     for (FudgetControl *c : _children)
@@ -599,6 +610,9 @@ FudgetControlFlag FudgetContainer::GetInitFlags() const
 
 void FudgetContainer::RequestLayout()
 {
+    if (HasAnyState(FudgetControlState::Hidden))
+        return;
+
     _layout->RequestLayoutChildren(false);
     for (FudgetControl *c : _children)
         c->RequestLayout();
@@ -610,6 +624,17 @@ void FudgetContainer::SetParentDisabled(bool value)
     Base::SetParentDisabled(value);
     if (enabled != value)
         SetParentDisabledRecursive();
+}
+
+void FudgetContainer::SetParentVisibility(bool value)
+{
+    if (((_state_flags & FudgetControlState::ParentHidden) == FudgetControlState::ParentHidden) != value)
+        return;
+
+    Base::SetParentVisibility(value);
+    SetParentVisibilityRecursive(value);
+
+    // TODO: Move the OnShow OnHide calls after the notifications if it turns out to be necessary
 }
 
 void FudgetContainer::DoRootChanging(FudgetGUIRoot *new_root)
@@ -629,10 +654,23 @@ void FudgetContainer::DoRootChanged(FudgetGUIRoot *old_root)
     }
 }
 
+void FudgetContainer::DoParentStateChanged()
+{
+    Base::DoParentStateChanged();
+    for (FudgetControl *c : _children)
+        c->DoParentStateChanged();
+}
+
 void FudgetContainer::SetParentDisabledRecursive()
 {
     for (FudgetControl *c : _children)
         c->SetParentDisabled(!VirtuallyEnabled());
+}
+
+void FudgetContainer::SetParentVisibilityRecursive(bool visible)
+{
+    for (FudgetControl *c : _children)
+        c->SetParentVisibility(visible);
 }
 
 void FudgetContainer::EnsureLayoutParent(FudgetContainer *last_dirty)

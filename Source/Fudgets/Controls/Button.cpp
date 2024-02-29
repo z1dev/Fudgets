@@ -14,12 +14,19 @@ void FudgetButtonBase::SetDown(bool value)
     OnDownChanged();
 }
 
+void FudgetButtonBase::DoPressedChanged()
+{
+    OnPressedChanged();
+    if (_pressed && EventPressed.IsBinded())
+        EventPressed();
+}
+
 void FudgetButtonBase::SetPressed(bool value)
 {
     if (_pressed == value)
         return;
     _pressed = value;
-    OnPressedChanged();
+    DoPressedChanged();
 }
 
 FudgetInputResult FudgetButtonBase::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)

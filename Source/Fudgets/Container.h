@@ -287,6 +287,13 @@ public:
     /// <inheritdoc />
     void DoFocusChanged(bool focused, FudgetControl *other) override;
 
+    /// <inheritdoc />
+    void DoShow() override;
+
+    /// <inheritdoc />
+    void DoHide() override;
+
+
         /// <inheritdoc />
     void ClearStyleCache(bool inherited = true) override;
 
@@ -350,12 +357,16 @@ public:
     /// Containers call this function recursively to find all child controls that match as well.
     /// </summary>
     /// <param name="pos">Position relative to the container's top left corner</param>
-    /// <param name="request">Flags that the control must match with HasAnyFlag</param>
-    /// <param name="reject">Flags that shouldn't be found on the controls. This takes priority over requested flags.</param>
-    /// <param name="block">Stops checking child controls in the container which has one of these flags.</param>
+    /// <param name="request_flags">Flags that controls must match with HasAnyFlag</param>
+    /// <param name="reject_flags">Flags that shouldn't be found on the controls. This takes priority over requested flags.</param>
+    /// <param name="block_flags">Stops checking child controls in the container which has one of these flags.</param>
+    /// <param name="request_state">State flags of controls that must match with HasAnyFlag</param>
+    /// <param name="reject_state">State flags that shouldn't be found on the controls. This takes priority over requested states.</param>
+    /// <param name="block_state">Stops checking child controls in the container which has one of these states.</param>
     /// <param name="result">Receives the controls that match the flags</param>
     /// <returns>List of controls matching at least one request flag and none of the reject flags</returns>
-    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlag request, FudgetControlFlag reject, FudgetControlFlag block, API_PARAM(Ref) Array<FudgetControl*> &result);
+    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlag request_flags, FudgetControlFlag reject_flags, FudgetControlFlag block_flags,
+        FudgetControlState request_state, FudgetControlState reject_state, FudgetControlState block_state, API_PARAM(Ref) Array<FudgetControl*> &result);
 
     /// <summary>
     /// Determines which sizes are calculated by the layout and which ones are calculated by the container.
@@ -418,13 +429,21 @@ protected:
     void SetParentDisabled(bool value) override;
 
     /// <inheritdoc />
+    void SetParentVisibility(bool value) override;
+
+    /// <inheritdoc />
     void DoRootChanging(FudgetGUIRoot *new_root)  override;
 
     /// <inheritdoc />
     void DoRootChanged(FudgetGUIRoot *old_root) override;
 
+    /// <inheritdoc />
+    void DoParentStateChanged() override;
+
 private:
     void SetParentDisabledRecursive();
+
+    void SetParentVisibilityRecursive(bool visible);
 
     // Called from EnsureLayout into parent containers to find one that needs layouting. The passed value is the last
     // container in the chain that has a dirty layout. If the root is reached, the last_dirty container's

@@ -19,6 +19,8 @@ void FudgetStackLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+        if (slot->Control->IsHiddenInLayout())
+            continue;
 
         Float2 wanted = Float2::Zero;
         Float2 min = Float2::Zero;
@@ -38,6 +40,9 @@ void FudgetStackLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+        if (slot->Control->IsHiddenInLayout())
+            continue;
+
         slot->ComputedBounds = Rectangle(Float2::Zero, space);
     }
 }

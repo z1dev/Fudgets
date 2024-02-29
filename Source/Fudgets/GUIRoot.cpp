@@ -459,7 +459,9 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl,
+		FudgetControlState::None, FudgetControlState::Hidden | FudgetControlState::Invisible, FudgetControlState::Hidden | FudgetControlState::Invisible,
+		controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
@@ -532,7 +534,9 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl,
+		FudgetControlState::None, FudgetControlState::Hidden | FudgetControlState::Invisible, FudgetControlState::Hidden | FudgetControlState::Invisible, 
+		controls_for_input);
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
 		FudgetControl *c = controls_for_input[ix];
@@ -602,7 +606,9 @@ void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton butt
 	}
 
 	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl,
+		FudgetControlState::None, FudgetControlState::Hidden | FudgetControlState::Invisible, FudgetControlState::Hidden | FudgetControlState::Invisible,
+		controls_for_input);
 
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
 	{
@@ -665,7 +671,9 @@ void FudgetGUIRoot::HandleMouseMove(const Float2 &__pos)
 
 	Array<FudgetControl*> controls_for_input;
 
-	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl, controls_for_input);
+	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl,
+		FudgetControlState::None, FudgetControlState::Hidden | FudgetControlState::Invisible, FudgetControlState::Hidden | FudgetControlState::Invisible,
+		controls_for_input);
 
 	bool post_leave = _mouse_over_control != nullptr;
 	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)

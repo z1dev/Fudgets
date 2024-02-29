@@ -1,6 +1,7 @@
 #include "ComboBox.h"
 #include "Button.h"
 #include "LineEdit.h"
+#include "ListBox.h"
 
 #include "../Utils/Utils.h"
 
@@ -16,13 +17,14 @@ FudgetToken FudgetComboBox::FrameStyleToken = -1;
 FudgetToken FudgetComboBox::ButtonContentStyleToken = -1;
 FudgetToken FudgetComboBox::EditorClassToken = -1;
 FudgetToken FudgetComboBox::ButtonClassToken = -1;
+FudgetToken FudgetComboBox::ListBoxClassToken = -1;
 FudgetToken FudgetComboBox::ButtonImageToken = -1;
 FudgetToken FudgetComboBox::ButtonHoveredImageToken = -1;
 FudgetToken FudgetComboBox::ButtonDisabledImageToken = -1;
 FudgetToken FudgetComboBox::ButtonWidthToken = -1;
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
-    _button_width(0.f), _editor(nullptr), _button(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
+    _button_width(0.f), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
 {
 
 }
@@ -37,6 +39,7 @@ void FudgetComboBox::InitializeTokens()
     ButtonContentStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonContentStyle"));
     EditorClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_Editor"));
     ButtonClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_Button"));
+    ListBoxClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ListBox"));
     ButtonImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonImage"));
     ButtonHoveredImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonHoveredImage"));
     ButtonDisabledImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonDisabledImage"));
@@ -52,17 +55,26 @@ void FudgetComboBox::OnInitialize()
     _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, frame_style);
 
     // Not using CreateChild makes sure the text box doesn't initialize its styles until AddChild
-    _editor = New<FudgetLineEdit>();
+    _editor = New<FudgetLineEdit>(SpawnParams(Guid::New(), FudgetLineEdit::TypeInitializer));
     _editor->SetStyle(FudgetThemes::GetStyle(EditorClassToken));
     AddChild(_editor);
 
     if (!GetStyleFloat(ButtonWidthToken, _button_width))
         _button_width = 20.f;
 
-    _button = New<FudgetButton>();
+    _button = New<FudgetButton>(SpawnParams(Guid::New(), FudgetButton::TypeInitializer));
     _button->SetStyle(FudgetThemes::GetStyle(ButtonClassToken));
-    _button->SetMinSize(0.f);
+    //_button->SetMinSize(0.f);
     AddChild(_button);
+
+    _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
+
+    _list_box = New<FudgetListBox>(SpawnParams(Guid::New(), FudgetListBox::TypeInitializer));
+    _list_box->SetStyle(FudgetThemes::GetStyle(ListBoxClassToken));
+    FudgetGUIRoot *root = GetGUIRoot();
+    root->AddChild(_list_box);
+    _list_box->SetAlwaysOnTop(true);
+    _list_box->SetVisible(false);
 
     _layout = CreateLayout<FudgetProxyLayout>();
 }
@@ -138,9 +150,9 @@ void FudgetComboBox::OnMouseEnter(Float2 pos, Float2 global_pos)
     HandleEnterLeaveMouse(pos, global_pos, true);
 
     if (pos.X <= GetWidth() - GetInnerPadding().Right - _button_width)
-        _editor->OnMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
+        _editor->DoMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
     else
-        _button->OnMouseEnter(pos - _button->GetPosition(), global_pos);
+        _button->DoMouseEnter(pos - _button->GetPosition(), global_pos);
 }
 
 void FudgetComboBox::OnMouseLeave()
@@ -169,6 +181,15 @@ void FudgetComboBox::OnMouseReleased()
         _editor->DoMouseReleased();
     else
         _button->DoMouseReleased();
+}
+
+void FudgetComboBox::OnSizeChanged()
+{
+    Float2 siz = _list_box->GetHintSize();
+    siz.X = GetSize().X;
+    _list_box->SetHintSize(siz);
+
+    Base::OnSizeChanged();
 }
 
 FudgetLayoutSlot* FudgetComboBox::ProxyInterfaceCreateSlot(FudgetControl *control)
@@ -218,6 +239,11 @@ bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
     return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown;
 }
 
+void FudgetComboBox::ButtonPressed()
+{
+
+}
+
 FudgetControlFlag FudgetComboBox::GetInitFlags() const
 {
     return FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave |
@@ -239,17 +265,17 @@ void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool o
     bool is_editor = pos.X >= 0 && pos.X <= GetWidth() - GetInnerPadding().Right - _button_width;
 
     if (was_editor && !is_editor)
-        _editor->OnMouseLeave();
+        _editor->DoMouseLeave();
     else if (!was_editor && is_editor)
-        _editor->OnMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
+        _editor->DoMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
 
     bool was_button = !on_enter && _last_mouse_pos.X > GetWidth() - GetInnerPadding().Right - _button_width;
     bool is_button = pos.X > GetWidth() - GetInnerPadding().Right - _button_width;
 
     if (was_button && !is_button)
-        _button->OnMouseLeave();
+        _button->DoMouseLeave();
     else if (!was_button && is_button)
-        _button->OnMouseEnter(pos - _button->GetPosition(), global_pos);
+        _button->DoMouseEnter(pos - _button->GetPosition(), global_pos);
 
     _last_mouse_pos = pos;
 }

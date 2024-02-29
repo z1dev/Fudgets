@@ -233,6 +233,8 @@ void FudgetLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int c
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+        if (slot->Control->IsHiddenInLayout())
+            continue;
         slot->ComputedBounds.Size = Float2(-1.f);
     }
 }
@@ -246,7 +248,7 @@ void FudgetLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int coun
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
-        if (!slot->UnrestrictedSizes.IsValid)
+        if (!slot->UnrestrictedSizes.IsValid || slot->Control->IsHiddenInLayout())
             continue;
         slot->Sizes = slot->UnrestrictedSizes;
         slot->Sizes.Space = slot->UnrestrictedSizes.Size;
@@ -264,7 +266,14 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     }
 
     int count = owner->GetChildCount();
-    if (count == 0)
+    bool has_visible_children = false;
+    for (int ix = 0; ix < count && !has_visible_children; ++ix)
+    {
+        auto slot = GetSlot(ix);
+        has_visible_children = !slot->Control->IsHiddenInLayout();
+    }
+
+    if (!has_visible_children)
     {
         // Nothing to do.
 
@@ -284,6 +293,9 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
+        if (slot->Control->IsHiddenInLayout())
+            continue;
+
         if (!slot->UnrestrictedSizes.IsValid)
         {
             slot->UnrestrictedSizes.IsValid = true;
@@ -330,7 +342,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
         for (int ix = 0, pos = 0; !unrestricted && ix < count && pos < size_from_space_cnt; ++ix)
         {
             auto slot = GetSlot(ix);
-            if (!slot->UnrestrictedSizes.SizeFromSpace)
+            if (!slot->UnrestrictedSizes.SizeFromSpace || slot->Control->IsHiddenInLayout())
                 continue;
             compare_cache[pos++] = slot->Sizes;
         }
@@ -342,7 +354,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
             for (int ix = 0, pos = 0; ix < count && pos < size_from_space_cnt && !need_remeasure; ++ix)
             {
                 auto slot = GetSlot(ix);
-                if (!slot->UnrestrictedSizes.SizeFromSpace)
+                if (!slot->UnrestrictedSizes.SizeFromSpace || slot->Control->IsHiddenInLayout())
                     continue;
                 FudgetLayoutSizeCache cached = compare_cache[pos++];
                 need_remeasure = !slot->Sizes.IsValid || !Float2::NearEqual(cached.Size, slot->Sizes.Size) || !Float2::NearEqual(cached.Min, slot->Sizes.Min) || !Float2::NearEqual(cached.Max, slot->Sizes.Max);
@@ -353,7 +365,8 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     if (!unrestricted)
     {
         for (int ix = 0; ix < count; ++ix)
-            PlaceControlInSlotRectangle(ix);
+            if (!GetSlot(ix)->Control->IsHiddenInLayout())
+                PlaceControlInSlotRectangle(ix);
 
         _layout_dirty = !_sizes.IsValid && !_unrestricted_sizes.IsValid;
         if (_layout_dirty)

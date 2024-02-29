@@ -184,7 +184,22 @@ enum class FudgetControlState : uint16
     /// <summary>
     // Set during layout phase when the control's size was changed by a layout.
     /// </summary>
-    SizeUpdated = 1 << 9
+    SizeUpdated = 1 << 9,
+    /// <summary>
+    /// The control is not drawn, can't be focused and won't react to user input. It will receive some events
+    /// that are not related to these. If added in a layout, it'll appear as empty space where the control would be.
+    /// </summary>
+    Invisible = 1 << 11,
+    /// <summary>
+    /// The control is not drawn, can't be focused and won't react to user input. It won't receive most events.
+    /// It won't appear in layouts and won't take up any space.
+    /// </summary>
+    Hidden = 1 << 12,
+    /// <summary>
+    /// A parent container up the chain is hidden which prevents drawing and user interaction.
+    /// </summary>
+    ParentHidden = 1 << 13,
+
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
@@ -264,7 +279,8 @@ enum class FudgetControlFlag : uint16
     /// <summary>
     /// Only for top-level controls which are direct children of the gui root. It's ignored for others. Places
     /// the top-level control above other top-level controls that don't have the AlwaysOnTop flag. Providing the
-    /// flag in GetInitFlags or changing it in SetControlFlags will change the control's position in the root.
+    /// flag in GetInitFlags or changing it in SetControlFlags will change the control's position in the root, but
+    /// only for children of the root. It's best to call SetAlwaysOnTop instead after adding control to the root.
     /// </summary>
     AlwaysOnTop = 1 << 12,
     /// <summary>
@@ -418,6 +434,17 @@ public:
     /// <param name="focused">Whether this control gained the focus or not</param>
     /// <param name="other">The control which lost or gained the focus. Can be null</param>
     API_FUNCTION() virtual void OnFocusChanged(bool focused, FudgetControl *other) {}
+
+    /// <summary>
+    /// Called when a control or its parent became visible, making it appear in the UI.
+    /// </summary>
+    API_FUNCTION() virtual void OnShow() {}
+
+    /// <summary>
+    /// Called when a control or its parent became hidden or invisible. Both hidden and invisible controls don't
+    /// show up in the UI, but invisible controls still take up space in their layout.
+    /// </summary>
+    API_FUNCTION() virtual void OnHide() {}
 
     /// <summary>
     /// Called when the control starts capturing the mouse input.
@@ -704,10 +731,16 @@ public:
     API_PROPERTY() bool GetAlwaysOnTop() const;
     /// <summary>
     /// For controls that are direct child to the GUI root, sets whether the control should always be placed
-    /// above not AlwaysOnTop controls.
+    /// above not AlwaysOnTop controls. Call after adding control to the root.
     /// </summary>
-    /// <param name="valuse"></param>
+    /// <param name="valuse">Set or unset the flag</param>
     API_PROPERTY() void SetAlwaysOnTop(bool value);
+
+    /// <summary>
+    /// Notification about parent change, when the control is added to a container or removed from one.
+    /// </summary>
+    /// <param name="old_parent">The previous parent which can be null</param>
+    API_PROPERTY() virtual void OnParentChanged(FudgetContainer *old_parent) {}
 
     // Update callback
 
@@ -727,12 +760,6 @@ public:
     /// Whether the control is executing its OnUpdate after registering it with RegisterToUpdate.
     /// </summary>
     API_PROPERTY() bool IsUpdateRegistered() const { return (_state_flags & FudgetControlState::Updating) == FudgetControlState::Updating; }
-
-    /// <summary>
-    /// Notification about parent change, when the control is added to a container or removed from one.
-    /// </summary>
-    /// <param name="old_parent">The previous parent which can be null</param>
-    API_PROPERTY() virtual void OnParentChanged(FudgetContainer *old_parent) {}
 
     // Point transformation
 
@@ -1029,6 +1056,45 @@ public:
     /// Returns whether the control is set to be enabled and all its parents in the hierarchy are also enabled.
     /// </summary>
     API_PROPERTY() bool VirtuallyEnabled() const;
+
+
+    /// <summary>
+    /// Whether the control is drawn and can handle user input. The control might still take up space in the UI
+    /// if its visibility state was changed with MakeInvisible instead of Hide or SetVisible. To check if a control
+    /// is made invisible, check the Invisible state flag.
+    /// </summary>
+    API_PROPERTY() bool IsVisible() const;
+    /// <summary>
+    /// Whether the control is hidden inside its parent's layout. Invisible but not hidden controls still take up
+    /// space in their layout. The result of this property is not always the opposite of IsVisible, which checks
+    /// for invisible too, and is influenced by the parent's visibility state as well.
+    /// </summary>
+    /// <returns></returns>
+    API_PROPERTY() FORCE_INLINE bool IsHiddenInLayout() const { return HasAnyState(FudgetControlState::Hidden); }
+    /// <summary>
+    /// Shows the control in its layout. Calling this function for controls that have a hidden or invisible parent
+    /// will only change the visibility state flag for this control, but might not make it visible.
+    /// </summary>
+    API_FUNCTION() FORCE_INLINE void Show() { SetVisible(true); }
+    /// <summary>
+    /// Hides the control in its layout. If the control was hidden with MakeInvisible, the Invisible state is removed
+    /// and the Hidden state is added, causing it to not take up space in its layout anymore. If a parent control
+    /// is already hidden, this only sets the state flag.
+    /// </summary>
+    API_FUNCTION() FORCE_INLINE void Hide() { SetVisible(true); }
+    /// <summary>
+    /// Changes the visibility state of the control, showing or hiding it. Calling this function with true will
+    /// show the control in its layout, and false will make it hidden. The result is equivalent to calling Show or Hide.
+    /// It will have no visible effect if a parent control is already hidden, but it will still change the state flags.
+    /// </summary>
+    /// <param name="value">Whether to show or hide the control</param>
+    API_FUNCTION() virtual void SetVisible(bool value);
+    /// <summary>
+    /// Makes the control invisible in its layout, while still taking up space. It has no effect if the control is already
+    /// hidden. Child controls of invisible controls will appear invisible as well.
+    /// </summary>
+    API_FUNCTION() virtual void MakeInvisible();
+
 
     // Render2D wrapper:
 
@@ -1920,6 +1986,19 @@ public:
     API_FUNCTION() virtual void DoFocusChanged(bool focused, FudgetControl *other);
 
     /// <summary>
+    /// Called when a control or its parent became visible, making it appear in the UI.
+    /// Derived controls should override OnShow instead. 
+    /// </summary>
+    API_FUNCTION() virtual void DoShow();
+
+    /// <summary>
+    /// Called when a control or its parent became hidden or invisible. Both hidden and invisible controls don't
+    /// show up in the UI, but invisible controls still take up space in their layout.
+    /// Derived controls should override OnHide instead. 
+    /// </summary>
+    API_FUNCTION() virtual void DoHide();
+
+    /// <summary>
     /// Called when the control starts capturing the mouse input.
     /// </summary>
     API_FUNCTION() virtual void DoMouseCaptured();
@@ -1943,13 +2022,6 @@ public:
     /// The control needs the CanHandleMouseEnterLeave flag.
     /// </summary>
     API_FUNCTION() virtual void DoMouseLeave();
-
-    /// <summary>
-    /// Notification about parent change, when the control is added to a container or removed from one. Override
-    /// OnParentChanged in derived classes
-    /// </summary>
-    /// <param name="old_parent">The previous parent which can be null</param>
-    API_FUNCTION() virtual void DoParentChanged(FudgetContainer *old_parent);
 
     /// <summary>
     /// Gets the displayed cursor when the mouse pointer is moved above the control, as long as no other control
@@ -2053,10 +2125,21 @@ protected:
     API_FUNCTION() virtual void SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags);
 
     /// <summary>
+    /// Called by inner visibility changing functions to notify the parent about a possible dirty layout.
+    /// </summary>
+    API_FUNCTION() virtual void VisibilityModified();
+
+    /// <summary>
     /// Called by a parent container's SetParentDisabledRecursive to notify its children that they have to be disabled.
     /// </summary>
     /// <param name="value">Whether the parent was disabled</param>
     API_FUNCTION() virtual void SetParentDisabled(bool value);
+
+    /// <summary>
+    /// Called by a parent container's SetParentVisibilityRecursive to notify its children that they have to be disabled.
+    /// </summary>
+    /// <param name="value">Whether the parent is visible</param>
+    API_FUNCTION() virtual void SetParentVisibility(bool value);
 
     /// <summary>
     /// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
@@ -2077,6 +2160,19 @@ protected:
     /// </summary>
     /// <param name="new_root">The previous root control</param>
     API_FUNCTION() virtual void DoRootChanged(FudgetGUIRoot *old_root);
+
+    /// <summary>
+    /// Notification about parent change, when the control is added to a container or removed from one. Override
+    /// OnParentChanged in derived classes
+    /// </summary>
+    /// <param name="old_parent">The previous parent which can be null</param>
+    API_FUNCTION() virtual void DoParentChanged(FudgetContainer *old_parent);
+
+    /// <summary>
+    /// Notification when a state changed in the parent that the control needs to know of. The default implementation
+    /// sets or unsets ParentDisabled and ParentHidden flats.
+    /// </summary>
+    API_FUNCTION() virtual void DoParentStateChanged();
 private:
 
     void DrawAreaList(const FudgetStyleAreaList &area, const Rectangle &rect);

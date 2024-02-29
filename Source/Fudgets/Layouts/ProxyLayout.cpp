@@ -43,24 +43,6 @@ void FudgetProxyLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int
     iowner->ProxyInterfaceLayoutChildren(space);
 }
 
-//bool FudgetProxyLayout::Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size)
-//{
-//    auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());
-//    if (owner == nullptr)
-//    {
-//        CacheHintSize(Float2::Zero);
-//        CacheMinSize(Float2::Zero);
-//        CacheMaxSize(Float2::Zero);
-//        return false;
-//    }
-//    bool result = owner->ProxyInterfaceMeasure(available, wanted_size, min_size, max_size);
-//    CacheHintSize(wanted_size);
-//    CacheMinSize(min_size);
-//    CacheMaxSize(max_size);
-//    CacheMeasureSpace(available);
-//    return result;
-//}
-
 FudgetLayoutSlot* FudgetProxyLayout::CreateSlot(FudgetControl *control)
 {
     auto owner = ToInterface<IProxyLayoutContainer>(GetOwner());

@@ -19,7 +19,7 @@
 
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default),
-    _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(30.f, 30.f), _max_size(MAX_float, MAX_float),
+    _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(0.f), _max_size(MAX_float, MAX_float),
     _state_flags(FudgetControlState::Enabled), _visual_state(FudgetVisualControlState::Normal), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
     _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
 {
@@ -273,7 +273,9 @@ void FudgetControl::SetControlFlags(FudgetControlFlag flags)
         RegisterToUpdate(_parent != nullptr && ((_flags & FudgetControlFlag::RegisterToUpdates) == FudgetControlFlag::RegisterToUpdates));
     }
 
-    if (_parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlag::AlwaysOnTop) != (tmp & FudgetControlFlag::AlwaysOnTop))
+    if (_parent != _guiRoot && (_flags & FudgetControlFlag::AlwaysOnTop) == FudgetControlFlag::AlwaysOnTop)
+        _flags &= ~FudgetControlFlag::AlwaysOnTop;
+    else if (_parent == _guiRoot && _parent != nullptr && (_flags & FudgetControlFlag::AlwaysOnTop) != (tmp & FudgetControlFlag::AlwaysOnTop))
     {
         if (_guiRoot->ChangeControlAlwaysOnTop(this, (_flags & FudgetControlFlag::AlwaysOnTop) == FudgetControlFlag::AlwaysOnTop) == -1)
             _flags |= (tmp & FudgetControlFlag::AlwaysOnTop);
@@ -404,6 +406,45 @@ void FudgetControl::SetEnabled(bool value)
 bool FudgetControl::VirtuallyEnabled() const
 {
     return ((_state_flags & (FudgetControlState::Enabled | FudgetControlState::ParentDisabled)) == FudgetControlState::Enabled);
+}
+
+bool FudgetControl::IsVisible() const
+{
+    return (int)(_state_flags & (FudgetControlState::Invisible | FudgetControlState::Hidden | FudgetControlState::ParentHidden)) == 0;
+}
+
+void FudgetControl::SetVisible(bool value)
+{
+    if (HasAnyState(FudgetControlState::Hidden) != value)
+        return;
+
+    bool old_visible = IsVisible();
+
+    if (value)
+    {
+        SetState(FudgetControlState::Hidden | FudgetControlState::Invisible, false);
+        if (!old_visible && !HasAnyState(FudgetControlState::ParentHidden))
+            DoShow();
+    }
+    else
+    {
+        bool invisible = HasAnyState(FudgetControlState::Invisible);
+        SetState(FudgetControlState::Invisible, false);
+        SetState(FudgetControlState::Hidden, true);
+        if (old_visible)
+            DoHide();
+        else if (invisible)
+            VisibilityModified();
+    }
+}
+
+void FudgetControl::MakeInvisible()
+{
+    if (HasAnyState(FudgetControlState::Invisible | FudgetControlState::Hidden))
+        return;
+
+    SetState(FudgetControlState::Invisible, true);
+    DoHide();
 }
 
 void FudgetControl::FillRectangle(Float2 pos, Float2 size, Color color)
@@ -1378,6 +1419,9 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
 
 void FudgetControl::DoDraw()
 {
+    if (!IsVisible())
+        return;
+
     SetState(FudgetControlState::Global2LocalCached, false);
 
     if (HasAnyState(FudgetControlState::PositionUpdated | FudgetControlState::SizeUpdated))
@@ -1428,6 +1472,18 @@ void FudgetControl::DoFocusChanged(bool focused, FudgetControl *other)
     OnFocusChanged(focused, other);
 }
 
+void FudgetControl::DoShow()
+{
+    VisibilityModified();
+    OnShow();
+}
+
+void FudgetControl::DoHide()
+{
+    VisibilityModified();
+    OnHide();
+}
+
 void FudgetControl::DoMouseCaptured()
 {
     SetState(FudgetControlState::MouseIsCaptured, true);
@@ -1452,36 +1508,6 @@ void FudgetControl::FudgetControl::DoMouseLeave()
     SetState(FudgetControlState::ShowHovered, false);
     SetVisualState(FudgetVisualControlState::Hovered, false);
     OnMouseLeave();
-}
-
-void FudgetControl::DoParentChanged(FudgetContainer *old_parent)
-{
-    if (_parent == nullptr)
-    {
-        RegisterToUpdate(false);
-        _guiRoot = nullptr;
-        return;
-    }
-
-    SetState(FudgetControlState::ParentDisabled, !_parent->VirtuallyEnabled());
-    InitializeFlags();
-
-    bool root_change = old_parent == nullptr || old_parent->GetGUIRoot() != _parent->GetGUIRoot();
-    if (root_change)
-        DoRootChanging(_parent->GetGUIRoot());
-
-    _guiRoot = _parent->GetGUIRoot();
-
-    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::Initialized))
-    {
-        Initialize();
-        SetState(FudgetControlState::Initialized, true);
-    }
-
-    if (root_change)
-        DoRootChanged(old_parent != nullptr ? old_parent->GetGUIRoot() : nullptr);
-
-    OnParentChanged(old_parent);
 }
 
 void FudgetControl::SetCursor(CursorType value)
@@ -1557,13 +1583,32 @@ void FudgetControl::SizeOrPosModified(FudgetLayoutDirtyReason dirt_flags)
         _parent->MarkLayoutDirty(dirt_flags, this);
 }
 
+void FudgetControl::VisibilityModified()
+{
+    if (_parent != nullptr)
+        _parent->MarkLayoutDirty(FudgetLayoutDirtyReason::Container | FudgetLayoutDirtyReason::Size, this);
+}
+
 void FudgetControl::SetParentDisabled(bool value)
 {
-    if (((_state_flags & FudgetControlState::ParentDisabled) == FudgetControlState::ParentDisabled) == value)
+    if (HasAnyState(FudgetControlState::ParentDisabled) == value)
         return;
     SetState(FudgetControlState::ParentDisabled, value);
-    if ((_state_flags & FudgetControlState::Enabled) == FudgetControlState::Enabled)
+    if (HasAnyState(FudgetControlState::Enabled))
         DoVirtuallyEnabledChanged();
+}
+
+void FudgetControl::SetParentVisibility(bool value)
+{
+    if (HasAnyState(FudgetControlState::ParentHidden) != value)
+        return;
+    SetState(FudgetControlState::ParentHidden, !value);
+    if (HasAnyState(FudgetControlState::Hidden | FudgetControlState::Invisible) != value)
+        return;
+    if (value)
+        OnShow();
+    else
+        OnHide();
 }
 
 void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token)
@@ -1580,6 +1625,50 @@ void FudgetControl::DoRootChanging(FudgetGUIRoot *new_root)
 void FudgetControl::DoRootChanged(FudgetGUIRoot *old_root)
 {
     RegisterToUpdate(HasAnyFlag(FudgetControlFlag::RegisterToUpdates));
+}
+
+void FudgetControl::DoParentChanged(FudgetContainer *old_parent)
+{
+    if (_parent == nullptr)
+    {
+        RegisterToUpdate(false);
+        DoParentStateChanged();
+        _guiRoot = nullptr;
+        return;
+    }
+
+    DoParentStateChanged();
+    InitializeFlags();
+
+    bool root_change = old_parent == nullptr || old_parent->GetGUIRoot() != _parent->GetGUIRoot();
+    if (root_change)
+        DoRootChanging(_parent->GetGUIRoot());
+
+    _guiRoot = _parent->GetGUIRoot();
+
+    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::Initialized))
+    {
+        Initialize();
+        SetState(FudgetControlState::Initialized, true);
+    }
+
+    if (root_change)
+        DoRootChanged(old_parent != nullptr ? old_parent->GetGUIRoot() : nullptr);
+
+    OnParentChanged(old_parent);
+}
+
+void FudgetControl::DoParentStateChanged()
+{
+    if (_parent == nullptr)
+    {
+        SetState(FudgetControlState::ParentDisabled, false);
+        SetState(FudgetControlState::ParentHidden, false);
+        return;
+    }
+
+    SetState(FudgetControlState::ParentDisabled, !_parent->VirtuallyEnabled());
+    SetState(FudgetControlState::ParentHidden, !_parent->IsVisible());
 }
 
 void FudgetControl::DrawAreaList(const FudgetStyleAreaList &area, const Rectangle &rect)
