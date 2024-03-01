@@ -1610,9 +1610,10 @@ public:
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
     /// <param name="token">Token associated with the value in the active style</param>
+    /// <param name="check_theme">Whether to try to get a resource from the active theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="result">Variable that receives the value</param>
     /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result);
+    API_FUNCTION() bool GetStyleValue(FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
     /// Returns a value for the control based on a theme token.
@@ -1620,9 +1621,10 @@ public:
     /// This version of the function accepts an array, and returns the value for the first token found.
     /// </summary>
     /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="check_theme">Whether to try to get a resource from the active theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="result">Variable that receives the value</param>
     /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result);
+    API_FUNCTION() bool GetStyleValue(const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
     /// Returns a token for the control based on a theme token.

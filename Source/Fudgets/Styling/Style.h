@@ -109,10 +109,11 @@ public:
     /// were set.
     /// </summary>
     /// <param name="theme">The theme to check for values if no direct value override was set</param>
+    /// <param name="check_theme">Whether to try to get a resource from the theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="token">The token to look up in this style for overrides</param>
     /// <param name="result">The retrieved value associated with the token</param>
     /// <returns>Whether a value with the token was found and stored in result</returns>
-    API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Variant &result);
+    API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
     /// Retrieves the resource's value associated with a token in this style. If this style has no override for the token,
@@ -122,10 +123,11 @@ public:
     /// This version of the function checks multiple tokens until one matches.
     /// </summary>
     /// <param name="theme">The theme to check for values if no direct value override was set</param>
+    /// <param name="check_theme">Whether to try to get a resource from the theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="tokens">The token to look up in this style for overrides</param>
     /// <param name="result">The retrieved value associated with the token</param>
     /// <returns>Whether a value with the token was found and stored in result</returns>
-    API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result);
+    API_FUNCTION() bool GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
     /// Sets value as the override for the passed token. Calling GetResourceValue will return this value directly, unless
@@ -392,7 +394,7 @@ public:
     bool GetEnumResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) T &result)
     {
         Variant var;
-        if (GetResourceValue(theme, token, var))
+        if (GetResourceValue(theme, token, true, var))
         {
             if (EnumFromVariant<T>(var, result))
                 return true;

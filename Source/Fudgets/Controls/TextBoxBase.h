@@ -213,7 +213,7 @@ public:
     API_FUNCTION() virtual void DoTextEdited(int old_caret_pos, int old_sel_pos);
 
     /// <summary>
-    /// Finds the character index at the control's local position
+    /// Gets the index of the closest character at the control's local position
     /// </summary>
     /// <param name="pos">Local position in the control</param>
     /// <returns>Index of character in the text</returns>

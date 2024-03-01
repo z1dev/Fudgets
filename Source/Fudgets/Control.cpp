@@ -989,7 +989,7 @@ FudgetTheme* FudgetControl::GetActiveTheme()
     return _cached_theme;
 }
 
-bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &result)
+bool FudgetControl::GetStyleValue(FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -998,10 +998,10 @@ bool FudgetControl::GetStyleValue(FudgetToken token, API_PARAM(Out) Variant &res
         return false;
     }
 
-    return style->GetResourceValue(GetActiveTheme(), token, result);
+    return style->GetResourceValue(GetActiveTheme(), token, check_theme, result);
 }
 
-bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result)
+bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1010,7 +1010,7 @@ bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, API_PARAM(Out
         return false;
     }
 
-    return style->GetResourceValue(GetActiveTheme(), tokens, result);
+    return style->GetResourceValue(GetActiveTheme(), tokens, check_theme, result);
 }
 
 bool FudgetControl::GetStyleToken(FudgetToken token, API_PARAM(Out) FudgetToken &result)

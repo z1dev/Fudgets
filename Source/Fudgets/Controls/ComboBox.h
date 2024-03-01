@@ -7,7 +7,7 @@
 class FudgetLineEdit;
 class FudgetButton;
 class FudgetListBox;
-
+class FudgetStringListProvider;
 
 /// <summary>
 /// Standard combo box control that has an editable part, a button and opens a drop down window with a list of choices.
@@ -41,6 +41,8 @@ public:
     API_FIELD(ReadOnly) static FudgetToken ButtonDisabledImageToken;
 
     API_FIELD(ReadOnly) static FudgetToken ButtonWidthToken;
+
+    ~FudgetComboBox();
 
     /// <inheritdoc />
     void OnInitialize() override;
@@ -129,6 +131,8 @@ private:
     /// List box for combo box items list
     /// </summary>
     FudgetListBox *_list_box;
+
+    FudgetStringListProvider *_list_data;
 
     bool _editor_capturing;
     Float2 _last_mouse_pos;

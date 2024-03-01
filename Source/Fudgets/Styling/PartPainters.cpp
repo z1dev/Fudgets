@@ -30,7 +30,10 @@ void FudgetPartPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
 
 FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
 {
-    return FudgetThemes::GetStyle(GetType().Fullname.ToString());
+    FudgetStyle *style = FudgetThemes::GetStyle(GetType().Fullname.ToString());
+    if (style == nullptr)
+        style = FudgetThemes::CreateStyle(FudgetThemes::RegisterToken(GetType().Fullname.ToString()));
+    return style;
 }
 
 bool FudgetPartPainter::HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const
@@ -416,7 +419,7 @@ void FudgetFramedFieldPainter::CreateStyle()
 
     ContentPaddingToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetFramedFieldPainter_ContentPadding"));
 
-    FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
+    /*FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
     if (style == nullptr)
         return;
 
@@ -447,7 +450,7 @@ void FudgetFramedFieldPainter::CreateStyle()
     style->SetResourceOverride(FocusedFramePaddingToken, FocusedFramePaddingToken);
     style->SetResourceOverride(DisabledFramePaddingToken, DisabledFramePaddingToken);
 
-    style->SetResourceOverride(ContentPaddingToken, ContentPaddingToken);
+    style->SetResourceOverride(ContentPaddingToken, ContentPaddingToken);*/
 }
 
 FudgetFramedFieldPainter::FudgetFramedFieldPainter(const SpawnParams &params) : Base(params)
@@ -458,11 +461,7 @@ void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
 {
     Base::Initialize(theme, style);
     if (style == nullptr)
-    {
         style = GetStyle();
-        if (style == nullptr)
-            return;
-    }
 
     if (!style->GetDrawableResource(theme, FieldBackgroundToken, _field_bg))
     {
@@ -595,7 +594,7 @@ void FudgetLineEditTextPainter::CreateStyle()
     DisabledSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_DisabledSelectedTextColorToken"));
     FontToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetLineEditTextPainter_FontToken"));
 
-    FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
+    /*FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
     if (style == nullptr)
         return;
 
@@ -608,18 +607,14 @@ void FudgetLineEditTextPainter::CreateStyle()
     style->SetResourceOverride(FocusedSelectedTextColorToken, FocusedSelectedTextColorToken);
     style->SetResourceOverride(DisabledSelectedTextColorToken, DisabledSelectedTextColorToken);
 
-    style->SetResourceOverride(FontToken, FontToken);
+    style->SetResourceOverride(FontToken, FontToken);*/
 }
 
 void FudgetLineEditTextPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
 {
     Base::Initialize(theme, style);
     if (style == nullptr)
-    {
         style = GetStyle();
-        if (style == nullptr)
-            return;
-    }
 
     if (!style->GetDrawableResource(theme, SelectionDrawToken, _sel_area))
     {
@@ -780,3 +775,13 @@ float FudgetLineEditTextPainter::GetFontHeight() const
 
     return (float)_font.Font->GetHeight();
 }
+
+
+// FudgetListItemPainter
+
+
+FudgetListItemPainter::FudgetListItemPainter(const SpawnParams &params) : Base(params)
+{
+
+}
+

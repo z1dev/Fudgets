@@ -52,7 +52,7 @@ namespace Fudgets
         public bool GetEnumResource<T>(FudgetTheme theme, FudgetToken token, out T result) where T : Enum
         {
 
-            if (GetResourceValue(theme, token, out var res))
+            if (GetResourceValue(theme, token, true, out var res))
             {
                 if (res.GetType() == typeof(T))
                 {

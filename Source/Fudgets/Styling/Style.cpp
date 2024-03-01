@@ -92,14 +92,19 @@ FudgetStyleResource* FudgetStyle::GetResource(FudgetToken token)
 	return nullptr;
 }
 
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Variant &result)
+bool FudgetStyle::GetResourceValue(FudgetTheme *theme, FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result)
 {
 	if (!token.IsValid())
 		return false;
 
 	FudgetStyleResource *res = GetResource(token);
 	if (res == nullptr)
+	{
+		if (check_theme)
+			return theme->GetResource(token, result);
 		return false;
+	}
+	
 
 	if (res->_value_override != Variant::Null)
 	{
@@ -112,11 +117,11 @@ bool FudgetStyle::GetResourceValue(FudgetTheme *theme, FudgetToken token, API_PA
 	return false;
 }
 
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Variant &result)
+bool FudgetStyle::GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result)
 {
 	for (auto t : tokens)
 	{
-		if (GetResourceValue(theme, t, result))
+		if (GetResourceValue(theme, t, check_theme, result))
 			return true;
 	}
 
@@ -216,7 +221,7 @@ void FudgetStyle::ResetResourceOverride(FudgetToken token)
 bool FudgetStyle::GetTokenResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetToken &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (TokenFromVariant(var, result))
 			return true;
@@ -238,7 +243,7 @@ bool FudgetStyle::GetTokenResource(FudgetTheme *theme, const Span<FudgetToken> &
 bool FudgetStyle::GetColorResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Color &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (ColorFromVariant(var, result))
 			return true;
@@ -261,7 +266,7 @@ bool FudgetStyle::GetColorResource(FudgetTheme *theme, const Span<FudgetToken> &
 bool FudgetStyle::GetBoolResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) bool &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (BoolFromVariant(var, result))
 			return true;
@@ -284,7 +289,7 @@ bool FudgetStyle::GetBoolResource(FudgetTheme *theme, const Span<FudgetToken> &t
 bool FudgetStyle::GetFloatResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) float &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (FloatFromVariant(var, result))
 			return true;
@@ -307,7 +312,7 @@ bool FudgetStyle::GetFloatResource(FudgetTheme *theme, const Span<FudgetToken> &
 bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float2 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Float2FromVariant(var, result))
 			return true;
@@ -330,7 +335,7 @@ bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, const Span<FudgetToken> 
 bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float3 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Float3FromVariant(var, result))
 			return true;
@@ -353,7 +358,7 @@ bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, const Span<FudgetToken> 
 bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float4 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Float4FromVariant(var, result))
 			return true;
@@ -376,7 +381,7 @@ bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, const Span<FudgetToken> 
 bool FudgetStyle::GetIntResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) int &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (IntFromVariant(var, result))
 			return true;
@@ -399,7 +404,7 @@ bool FudgetStyle::GetIntResource(FudgetTheme *theme, const Span<FudgetToken> &to
 bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int2 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Int2FromVariant(var, result))
 			return true;
@@ -422,7 +427,7 @@ bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, const Span<FudgetToken> &t
 bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int3 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Int3FromVariant(var, result))
 			return true;
@@ -445,7 +450,7 @@ bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, const Span<FudgetToken> &t
 bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int4 &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (Int4FromVariant(var, result))
 			return true;
@@ -468,7 +473,7 @@ bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, const Span<FudgetToken> &t
 bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetPadding &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (PaddingFromVariant(var, result))
 			return true;
@@ -491,7 +496,7 @@ bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, const Span<FudgetToken>
 bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (TextDrawSettingsFromVariant(var, result))
 			return true;
@@ -514,7 +519,7 @@ bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, const Span<FudgetToken
 bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (FontSettingsFromVariant(var, result))
 			return true;
@@ -537,7 +542,7 @@ bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, const Span<FudgetT
 bool FudgetStyle::GetFontResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFont &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (FontFromVariant(var, result))
 			return true;
@@ -560,7 +565,7 @@ bool FudgetStyle::GetFontResource(FudgetTheme *theme, const Span<FudgetToken> &t
 bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (AreaFromVariant(var, result))
 			return true;
@@ -583,7 +588,7 @@ bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken
 bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawable* &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (DrawableFromVariant(theme, var, result))
 			return true;
@@ -606,7 +611,7 @@ bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, const Span<FudgetToken
 bool FudgetStyle::GetTextureResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) TextureBase* &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (TextureFromVariant(var, result))
 			return true;
@@ -629,7 +634,7 @@ bool FudgetStyle::GetTextureResource(FudgetTheme *theme, const Span<FudgetToken>
 bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
 	Variant var;
-	if (GetResourceValue(theme, token, var))
+	if (GetResourceValue(theme, token, true, var))
 	{
 		if (TextDrawSettingsFromVariant(var, result))
 			return true;

@@ -739,3 +739,38 @@ private:
     FudgetFont _font;
 };
 
+
+
+class IListDataProvider;
+
+/// <summary>
+/// Base class for painter objects that paint items in list controls
+/// </summary>
+API_CLASS(Abstract)
+class FUDGETS_API FudgetListItemPainter : public FudgetPartPainter
+{
+    using Base = FudgetPartPainter;
+    DECLARE_SCRIPTING_TYPE(FudgetListItemPainter);
+public:
+    /// <summary>
+    /// Draws a single list item.
+    /// </summary>
+    /// <param name="control">Control used for drawing</param>
+    /// <param name="bounds">Bounds to draw inside and used for clipping.</param>
+    /// <param name="offset">Where to paint, relative to the top left corner of bounds</param>
+    /// <param name="item_index">Index of item in data</param>
+    /// <param name="data">Source of item data</param>
+    /// <param name="state">State of control</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state) {}
+
+    /// <summary>
+    /// Measures the list item at index.
+    /// </summary>
+    /// <param name="control">Control used for measuring</param>
+    /// <param name="item_index">Index of item in data</param>
+    /// <param name="data">Source of item data</param>
+    /// <param name="state">State of control</param>
+    /// <returns>Dimensions of the requested item</returns>
+    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) { return Float2::Zero; }
+};
+

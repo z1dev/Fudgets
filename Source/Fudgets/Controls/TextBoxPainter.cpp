@@ -62,7 +62,7 @@ void FudgetTextBoxPainter::CreateStyle()
     DisabledSelectedTextColorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetTextBoxPainter_DisabledSelectedTextColorToken"));
     FontToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetTextBoxPainter_FontToken"));
 
-    FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
+    /*FudgetStyle *style = FudgetThemes::CreateStyle(SelfToken);
     if (style == nullptr)
         return;
 
@@ -75,18 +75,14 @@ void FudgetTextBoxPainter::CreateStyle()
     style->SetResourceOverride(FocusedSelectedTextColorToken, FocusedSelectedTextColorToken);
     style->SetResourceOverride(DisabledSelectedTextColorToken, DisabledSelectedTextColorToken);
 
-    style->SetResourceOverride(FontToken, FontToken);
+    style->SetResourceOverride(FontToken, FontToken);*/
 }
 
 void FudgetTextBoxPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
 {
     Base::Initialize(theme, style);
     if (style == nullptr)
-    {
         style = GetStyle();
-        if (style == nullptr)
-            return;
-    }
 
     if (!style->GetDrawAreaResource(theme, SelectionDrawToken, _sel_area))
         _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));

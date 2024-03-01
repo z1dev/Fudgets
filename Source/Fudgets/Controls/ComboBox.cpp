@@ -29,6 +29,11 @@ FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layou
 
 }
 
+FudgetComboBox::~FudgetComboBox()
+{
+    Delete(_list_data);
+}
+
 void FudgetComboBox::InitializeTokens()
 {
     FrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FrameDraw"));
@@ -75,6 +80,9 @@ void FudgetComboBox::OnInitialize()
     root->AddChild(_list_box);
     _list_box->SetAlwaysOnTop(true);
     _list_box->SetVisible(false);
+
+    _list_data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
+    _list_box->SetDataProvider(_list_data);
 
     _layout = CreateLayout<FudgetProxyLayout>();
 }
