@@ -56,6 +56,8 @@ class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
 {
     using Base = FudgetTextBoxBase;
     DECLARE_SCRIPTING_TYPE(FudgetTextBox);
+    API_AUTO_SERIALIZATION();
+
 public:
     /// <inheritdoc />
     void OnInitialize() override;
