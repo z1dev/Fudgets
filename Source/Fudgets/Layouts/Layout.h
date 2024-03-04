@@ -472,16 +472,17 @@ struct FUDGETS_API FudgetLayoutSizeCache
 /// Base class for "slots" in a layout that can be used to assign properties for controls for layouting
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetLayoutSlot : public ScriptingObject
+class FUDGETS_API FudgetLayoutSlot : public ScriptingObject, public ISerializable
 {
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetLayoutSlot);
+    API_AUTO_SERIALIZATION();
 
 public:
     /// <summary>
     /// The control placed in the slot. The attributes affect its position and size 
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor") FudgetControl *Control;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") FudgetControl *Control;
 
     /// <summary>
     /// Size of the control at the start of layouting. Used for determining if the control needs to update its
@@ -516,6 +517,7 @@ public:
 API_CLASS(Abstract)
 class FUDGETS_API FudgetLayout : public ScriptingObject, public ISerializable
 {
+    friend FudgetControl;
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetLayout);
 public:

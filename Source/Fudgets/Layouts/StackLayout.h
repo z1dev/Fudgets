@@ -12,6 +12,7 @@ class FUDGETS_API FudgetStackLayout : public FudgetLayout
 {
 	using Base = FudgetLayout;
 	DECLARE_SCRIPTING_TYPE(FudgetStackLayout);
+	API_AUTO_SERIALIZATION();
 
 protected:
 	/// <inheritdoc />

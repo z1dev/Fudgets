@@ -13,6 +13,7 @@ class FUDGETS_API FudgetContainerLayout : public FudgetLayout
 {
     using Base = FudgetLayout;
     DECLARE_SCRIPTING_TYPE(FudgetContainerLayout);
+    API_AUTO_SERIALIZATION();
 protected:
     /// <inheritdoc />
     bool IsControlPositionChangePermitted(const FudgetControl *control) const override { return true; }

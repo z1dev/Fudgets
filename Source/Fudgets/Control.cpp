@@ -6,6 +6,7 @@
 #include "Styling/Themes.h"
 #include "Styling/StyleStructs.h"
 #include "Styling/PartPainters.h"
+#include "Layouts/Layout.h"
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Render2D/TextLayoutOptions.h"
@@ -1454,6 +1455,16 @@ void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
     SERIALIZE_MEMBER(HintSize, _hint_size);
     SERIALIZE_MEMBER(MinSize, _min_size);
     SERIALIZE_MEMBER(MaxSize, _max_size);
+
+    FudgetLayout* layout = _parent ? _parent->GetLayout() : nullptr;
+    if (layout)
+    {
+        stream.JKEY("SlotProperties");
+        stream.StartObject();
+        // Serialize slot
+        layout->GetSlot(GetIndexInParent())->Serialize(stream, nullptr);
+        stream.EndObject();
+    }
 }
 
 void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* modifier)
@@ -1479,6 +1490,22 @@ void FudgetControl::Deserialize(DeserializeStream& stream, ISerializeModifier* m
         FudgetContainer* parent = Scripting::FindObject<FudgetContainer>(parentId);
         if (parent != nullptr)
             SetParent(parent);
+    }
+    else
+    {
+        // Can't deserialize layout slot properties without a parent.
+        return;
+    }
+
+    const auto& layoutSlotMember = stream.FindMember("SlotProperties");
+    if (layoutSlotMember != stream.MemberEnd() && layoutSlotMember->value.IsObject())
+    {
+        DeserializeStream& slotProperties = layoutSlotMember->value;
+        FudgetLayout* layout = _parent ? _parent->GetLayout() : nullptr;
+        if (layout)
+        {
+            layout->GetSlot(GetIndexInParent())->Deserialize(slotProperties, modifier);
+        }
     }
 }
 

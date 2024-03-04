@@ -87,8 +87,9 @@ class FUDGETS_API FudgetListLayoutSlot : public FudgetLayoutSlot
 {
     using Base = FudgetLayoutSlot;
     DECLARE_SCRIPTING_TYPE(FudgetListLayoutSlot);
+    API_AUTO_SERIALIZATION();
 
-public:    
+public:
     /// <summary>
     /// Horizontal alignment of control in its column or row
     /// </summary>

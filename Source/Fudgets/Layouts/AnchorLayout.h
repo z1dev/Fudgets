@@ -51,6 +51,7 @@ class FUDGETS_API FudgetAnchorLayoutSlot : public FudgetLayoutSlot
 {
     using Base = FudgetLayoutSlot;
     DECLARE_SCRIPTING_TYPE(FudgetAnchorLayoutSlot);
+    API_AUTO_SERIALIZATION();
 
 public:
     /// <summary>

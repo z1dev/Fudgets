@@ -3,15 +3,17 @@
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Core/Math/Rectangle.h"
+#include "Engine/Core/ISerializable.h"
 
 
 /// <summary>
 /// Padding inside any element that contains others, like a slot in a layout or a drawn border in a style.
 /// </summary>
 API_STRUCT(NoDefault)
-struct FUDGETS_API FudgetPadding
+struct FUDGETS_API FudgetPadding : public ISerializable
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPadding)
+	API_AUTO_SERIALIZATION();
 
 	FORCE_INLINE FudgetPadding() : Left(0.0f), Top(0.0f), Right(0.0f), Bottom(0.0f)
 	{
