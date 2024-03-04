@@ -6,7 +6,7 @@ using FlaxEditor.GUI.ContextMenu;
 using FlaxEditor.Scripting;
 using FlaxEngine;
 using Fudgets;
-using System.Linq;
+
 
 namespace FudgetsEditor.CustomEditors
 {

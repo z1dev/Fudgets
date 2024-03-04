@@ -9,19 +9,6 @@
 
 
 
-FudgetToken FudgetComboBox::FrameDrawToken = -1;
-FudgetToken FudgetComboBox::FocusedFrameDrawToken = -1;
-FudgetToken FudgetComboBox::DisabledFrameDrawToken = -1;
-FudgetToken FudgetComboBox::FramePainterToken = -1;
-FudgetToken FudgetComboBox::FrameStyleToken = -1;
-FudgetToken FudgetComboBox::ButtonContentStyleToken = -1;
-FudgetToken FudgetComboBox::EditorClassToken = -1;
-FudgetToken FudgetComboBox::ButtonClassToken = -1;
-FudgetToken FudgetComboBox::ListBoxClassToken = -1;
-FudgetToken FudgetComboBox::ButtonImageToken = -1;
-FudgetToken FudgetComboBox::ButtonHoveredImageToken = -1;
-FudgetToken FudgetComboBox::ButtonDisabledImageToken = -1;
-FudgetToken FudgetComboBox::ButtonWidthToken = -1;
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
     _button_width(0.f), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
@@ -34,48 +21,21 @@ FudgetComboBox::~FudgetComboBox()
     Delete(_list_data);
 }
 
-void FudgetComboBox::InitializeTokens()
-{
-    FrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FrameDraw"));
-    FocusedFrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FocusedFrameDraw"));
-    DisabledFrameDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_DisabledFrameDraw"));
-    FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FramePainter"));
-    FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_FrameStyle"));
-    ButtonContentStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonContentStyle"));
-    EditorClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_Editor"));
-    ButtonClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_Button"));
-    ListBoxClassToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ListBox"));
-    ButtonImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonImage"));
-    ButtonHoveredImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonHoveredImage"));
-    ButtonDisabledImageToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonDisabledImage"));
-    ButtonWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ComboBox_ButtonWidth"));
-}
-
 void FudgetComboBox::OnInitialize()
 {
-    FudgetToken frame_style;
-    if (!GetStyleToken(FrameStyleToken, frame_style))
-        frame_style = FudgetToken::Invalid;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetComboBoxIds::FramePainter);
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, frame_style);
+    _editor = CreateChild<FudgetLineEdit>();
+    _editor->SetShowBorder(false);
 
-    // Not using CreateChild makes sure the text box doesn't initialize its styles until AddChild
-    _editor = New<FudgetLineEdit>(SpawnParams(Guid::New(), FudgetLineEdit::TypeInitializer));
-    _editor->SetStyle(FudgetThemes::GetStyle(EditorClassToken));
-    AddChild(_editor);
-
-    if (!GetStyleFloat(ButtonWidthToken, _button_width))
+    if (!GetStyleFloat((int)FudgetComboBoxIds::ButtonWidth, _button_width))
         _button_width = 20.f;
 
-    _button = New<FudgetButton>(SpawnParams(Guid::New(), FudgetButton::TypeInitializer));
-    _button->SetStyle(FudgetThemes::GetStyle(ButtonClassToken));
-    //_button->SetMinSize(0.f);
-    AddChild(_button);
-
+    _button = CreateChild<FudgetButton>();
     _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
 
-    _list_box = New<FudgetListBox>(SpawnParams(Guid::New(), FudgetListBox::TypeInitializer));
-    _list_box->SetStyle(FudgetThemes::GetStyle(ListBoxClassToken));
+    _list_box = CreateChild<FudgetListBox>();
+
     FudgetGUIRoot *root = GetGUIRoot();
     root->AddChild(_list_box);
     _list_box->SetAlwaysOnTop(true);
@@ -85,6 +45,28 @@ void FudgetComboBox::OnInitialize()
     _list_box->SetDataProvider(_list_data);
 
     _layout = CreateLayout<FudgetProxyLayout>();
+}
+
+void FudgetComboBox::OnStyleInitialize()
+{
+    FudgetStyle *frame_style;
+    if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
+        frame_style = nullptr;
+    InitializeStylePainter(_frame_painter, frame_style);
+
+    FudgetStyle *editor_style = _editor->GetActiveStyle();
+    if (editor_style != nullptr)
+    {
+        FudgetStyle *editor_style_override = editor_style->CreateInheritedStyle(TypeInitializer.GetType().Fullname.ToString().Append(TEXT(".") + editor_style->GetName()));
+        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretDraw, (int)FudgetComboBoxIds::CaretDraw);
+        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretBlinkTime, (int)FudgetComboBoxIds::CaretBlinkTime);
+        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretWidth, (int)FudgetComboBoxIds::CaretWidth);
+        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretScrollCount, (int)FudgetComboBoxIds::CaretScrollCount);
+
+        _editor->SetStyle(editor_style_override);
+    }
+
+
 }
 
 void FudgetComboBox::OnDraw()

@@ -89,6 +89,8 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
             RenderRoot.HintSize = _resolution;
             RootObject.Parent = RenderRoot;
 
+            RenderRoot.FudgetInit();
+
             _selectedControls = new List<FudgetControl>();
 
             _editor = editor;

@@ -19,7 +19,7 @@ public:
 
     ~FudgetGUIRoot();
 
-    void FudgetInit();
+    API_FUNCTION() void FudgetInit();
 
     /// <summary>
     /// Inserts a control into the layout of the gui root as a top-level control. If an index is provided,

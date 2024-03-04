@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Token.h"
 #include "../MarginStructs.h"
 
 //#include "Engine/Scripting/ScriptingObject.h"
@@ -357,19 +356,19 @@ struct FUDGETS_API FudgetFontSettings
 	/// <summary>
 	/// Default empty constructor that sets invalid settings
 	/// </summary>
-	FudgetFontSettings() : FontToken(FudgetToken::Invalid), Size(12.f), Bold(false), Italics(false)
+	FudgetFontSettings() : FontId(-1), Size(12.f), Bold(false), Italics(false)
 	{}
 
 	/// <summary>
 	/// Initializer for every member of the struct
 	/// </summary>
-	FudgetFontSettings(FudgetToken fontToken, float size, bool bold = false, bool italics = false) : FontToken(fontToken), Size(size), Bold(bold), Italics(italics)
+	FudgetFontSettings(int fontId, float size, bool bold = false, bool italics = false) : FontId(fontId), Size(size), Bold(bold), Italics(italics)
 	{
 	}
 
 	FudgetFontSettings(const FudgetFontSettings &other)
 	{
-		FontToken = other.FontToken;
+		FontId = other.FontId;
 		Size = other.Size;
 		Bold = other.Bold;
 		Italics = other.Italics;
@@ -377,7 +376,7 @@ struct FUDGETS_API FudgetFontSettings
 
 	FudgetFontSettings& operator=(const FudgetFontSettings &other)
 	{
-		FontToken = other.FontToken;
+		FontId = other.FontId;
 		Size = other.Size;
 		Bold = other.Bold;
 		Italics = other.Italics;
@@ -386,8 +385,8 @@ struct FUDGETS_API FudgetFontSettings
 
 	FudgetFontSettings(FudgetFontSettings &&other) noexcept
 	{
-		FontToken = other.FontToken;
-		other.FontToken = FudgetToken::Invalid;
+		FontId = other.FontId;
+		other.FontId = -1;
 		Size = other.Size;
 		Bold = other.Bold;
 		Italics = other.Italics;
@@ -395,8 +394,8 @@ struct FUDGETS_API FudgetFontSettings
 
 	FudgetFontSettings& operator=(FudgetFontSettings &&other) noexcept
 	{
-		FontToken = other.FontToken;
-		other.FontToken = FudgetToken::Invalid;
+		FontId = other.FontId;
+		other.FontId = -1;
 		Size = other.Size;
 		Bold = other.Bold;
 		Italics = other.Italics;
@@ -404,9 +403,9 @@ struct FUDGETS_API FudgetFontSettings
 	}
 
 	/// <summary>
-	/// Token for the font asset in FudgetThemes.
+	/// Id for the font asset in FudgetThemes.
 	/// </summary>
-	API_FIELD() FudgetToken FontToken;
+	API_FIELD() int FontId;
 	/// <summary>
 	/// Size to display the font at.
 	/// </summary>
@@ -429,24 +428,24 @@ struct FUDGETS_API FudgetTextDrawSettings
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextDrawSettings)
 
-	FudgetTextDrawSettings() : FudgetTextDrawSettings(0.f, Color::White, TextAlignment::Near, TextAlignment::Center, 0.0f, FudgetToken::Invalid)
+	FudgetTextDrawSettings() : FudgetTextDrawSettings(0.f, Color::White, TextAlignment::Near, TextAlignment::Center, 0.0f, -1)
 	{
 	}
 
-	FudgetTextDrawSettings(Color color, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), FudgetToken material_token = FudgetToken::Invalid) :
-		FudgetTextDrawSettings(0.f, color, horz_align, vert_align, padding, material_token)
-	{
-
-	}
-
-	FudgetTextDrawSettings(FudgetPadding padding, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetToken material_token = FudgetToken::Invalid) :
-		FudgetTextDrawSettings(0.f, Color::White, horz_align, vert_align, padding, material_token)
+	FudgetTextDrawSettings(Color color, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), int material_id = -1) :
+		FudgetTextDrawSettings(0.f, color, horz_align, vert_align, padding, material_id)
 	{
 
 	}
 
-	FudgetTextDrawSettings(Float2 offset, Color color = Color::White, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), FudgetToken material_token = FudgetToken::Invalid) :
-		Offset(offset), Color(color), HorizontalAlignment(horz_align), VerticalAlignment(vert_align), Padding(padding), MaterialToken(material_token)
+	FudgetTextDrawSettings(FudgetPadding padding, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, int material_id = -1) :
+		FudgetTextDrawSettings(0.f, Color::White, horz_align, vert_align, padding, material_id)
+	{
+
+	}
+
+	FudgetTextDrawSettings(Float2 offset, Color color = Color::White, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), int material_id = -1) :
+		Offset(offset), Color(color), HorizontalAlignment(horz_align), VerticalAlignment(vert_align), Padding(padding), MaterialId(material_id)
 	{
 
 	}
@@ -455,7 +454,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	{
 		Offset = other.Offset;
 		Color = other.Color;
-		MaterialToken = other.MaterialToken;
+		MaterialId = other.MaterialId;
 		HorizontalAlignment = other.HorizontalAlignment;
 		VerticalAlignment = other.VerticalAlignment;
 		Padding = other.Padding;
@@ -465,7 +464,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	{
 		Offset = other.Offset;
 		Color = other.Color;
-		MaterialToken = other.MaterialToken;
+		MaterialId = other.MaterialId;
 		HorizontalAlignment = other.HorizontalAlignment;
 		VerticalAlignment = other.VerticalAlignment;
 		Padding = other.Padding;
@@ -475,7 +474,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	{
 		Offset = other.Offset;
 		Color = other.Color;
-		MaterialToken = other.MaterialToken;
+		MaterialId = other.MaterialId;
 		HorizontalAlignment = other.HorizontalAlignment;
 		VerticalAlignment = other.VerticalAlignment;
 		Padding = other.Padding;
@@ -485,7 +484,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	{
 		Offset = other.Offset;
 		Color = other.Color;
-		MaterialToken = other.MaterialToken;
+		MaterialId = other.MaterialId;
 		HorizontalAlignment = other.HorizontalAlignment;
 		VerticalAlignment = other.VerticalAlignment;
 		Padding = other.Padding;
@@ -515,7 +514,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	/// <summary>
 	/// Material on the text. Must be a material made for UI
 	/// </summary>
-	API_FIELD() FudgetToken MaterialToken;
+	API_FIELD() int MaterialId;
 };
 
 /// <summary>

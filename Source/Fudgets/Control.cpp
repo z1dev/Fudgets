@@ -21,7 +21,7 @@ FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default),
     _pos(0.f), _size(0.0f), _hint_size(120.f, 60.0f), _min_size(0.f), _max_size(MAX_float, MAX_float),
     _state_flags(FudgetControlState::Enabled), _visual_state(FudgetVisualControlState::Normal), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
-    _style(nullptr), _cached_style(nullptr), _theme_id(FudgetToken::Invalid), _cached_theme(nullptr)
+    _style(nullptr), _cached_style(nullptr), _theme(nullptr), _cached_theme(nullptr)
 {
 }
 
@@ -43,7 +43,7 @@ void FudgetControl::SetParent(FudgetContainer *value, int order)
 
     _changing = true;
     if (_parent != nullptr)
-        _parent->RemoveChild(_index);
+        _parent->RemoveChild(this);
     if (value != nullptr)
         value->AddChild(this, order);
     //if (_parent == nullptr)
@@ -939,10 +939,16 @@ void FudgetControl::SetStyle(FudgetStyle *value)
         return;
     _style = value;
     _cached_style = nullptr;
+    if (/*_style != nullptr &&*/ HasAnyState(FudgetControlState::Initialized))
+        DoStyleInitialize();
+    SizeModified();
 }
 
 FudgetStyle* FudgetControl::GetActiveStyle()
 {
+    if (!HasAnyState(FudgetControlState::Initialized))
+        return nullptr;
+
     if (_style != nullptr)
         return _style;
     if (_cached_style != nullptr)
@@ -950,24 +956,25 @@ FudgetStyle* FudgetControl::GetActiveStyle()
 
     // No style was found, let's resolve one and save it to cached.
 
-    CreateClassTokens();
+    CreateClassNames();
 #if USE_EDITOR
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
 #endif
-    _cached_style = FudgetThemes::GetControlStyleOrDefault(_class_token);
+    _cached_style = FudgetThemes::FindFirstStyle(_class_names);
+    SizeModified();
 
     return _cached_style;
 }
 
-void FudgetControl::SetThemeId(FudgetToken value)
+void FudgetControl::SetTheme(FudgetTheme *value)
 {
 #if USE_EDITOR
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
 #endif
-    if (_theme_id == value || FudgetThemes::GetTheme(value) == nullptr)
+    if (_theme == value)
         return;
 
-    _theme_id = value;
+    _theme = value;
     ClearStyleCache(true);
 }
 
@@ -979,17 +986,22 @@ FudgetTheme* FudgetControl::GetActiveTheme()
 #if USE_EDITOR
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
 #endif
-    if (_theme_id.IsValid())
-        _cached_theme = FudgetThemes::GetTheme(_theme_id);
+    if (_theme != nullptr)
+        _cached_theme = _theme;
     else if (_parent != nullptr)
         _cached_theme = _parent->GetActiveTheme();
     if (_cached_theme == nullptr)
-        _cached_theme = FudgetThemes::GetTheme(FudgetThemes::MainThemeToken);
+        _cached_theme = FudgetThemes::GetTheme(FudgetThemes::MainThemeName);
 
     return _cached_theme;
 }
 
-bool FudgetControl::GetStyleValue(FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result)
+void FudgetControl::InitializeStylePainter(FudgetPartPainter *painter, FudgetStyle *style)
+{
+    painter->Initialize(GetActiveTheme(), style);
+}
+
+bool FudgetControl::GetStyleValue(int id, bool check_theme, API_PARAM(Out) Variant &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -998,10 +1010,10 @@ bool FudgetControl::GetStyleValue(FudgetToken token, bool check_theme, API_PARAM
         return false;
     }
 
-    return style->GetResourceValue(GetActiveTheme(), token, check_theme, result);
+    return style->GetResourceValue(GetActiveTheme(), id, check_theme, result);
 }
 
-bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result)
+bool FudgetControl::GetStyleValue(const Span<int> &ids, bool check_theme, API_PARAM(Out) Variant &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1010,34 +1022,58 @@ bool FudgetControl::GetStyleValue(const Span<FudgetToken> &tokens, bool check_th
         return false;
     }
 
-    return style->GetResourceValue(GetActiveTheme(), tokens, check_theme, result);
+    return style->GetResourceValue(GetActiveTheme(), ids, check_theme, result);
 }
 
-bool FudgetControl::GetStyleToken(FudgetToken token, API_PARAM(Out) FudgetToken &result)
+bool FudgetControl::GetStyleStyle(int id, API_PARAM(Out) FudgetStyle* &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
     {
-        result = FudgetToken::Invalid;
+        result = nullptr;
         return false;
     }
 
-    return style->GetTokenResource(GetActiveTheme(), token, result);
+    return style->GetStyleResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleToken(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetToken &result)
+bool FudgetControl::GetStyleStyle(const Span<int> &ids, API_PARAM(Out) FudgetStyle* &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
     {
-        result = FudgetToken::Invalid;
+        result = nullptr;
         return false;
     }
 
-    return style->GetTokenResource(GetActiveTheme(), tokens, result);
+    return style->GetStyleResource(GetActiveTheme(), ids, style);
 }
 
-bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result)
+bool FudgetControl::GetStyleString(int id, API_PARAM(Out) String &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = String();
+        return false;
+    }
+
+    return style->GetStringResource(GetActiveTheme(), id, result);
+}
+
+bool FudgetControl::GetStyleString(const Span<int> &ids, API_PARAM(Out) String &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = String();
+        return false;
+    }
+
+    return style->GetStringResource(GetActiveTheme(), ids, result);
+}
+
+bool FudgetControl::GetStyleColor(int id, API_PARAM(Out) Color &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1046,10 +1082,10 @@ bool FudgetControl::GetStyleColor(FudgetToken token, API_PARAM(Out) Color &resul
         return false;
     }
 
-    return style->GetColorResource(GetActiveTheme(), token, result);
+    return style->GetColorResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out) Color &result)
+bool FudgetControl::GetStyleColor(const Span<int> &ids, API_PARAM(Out) Color &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1058,10 +1094,10 @@ bool FudgetControl::GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out
         return false;
     }
 
-    return style->GetColorResource(GetActiveTheme(), tokens, result);
+    return style->GetColorResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleBool(FudgetToken token, API_PARAM(Out) bool &result)
+bool FudgetControl::GetStyleBool(int id, API_PARAM(Out) bool &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1070,10 +1106,10 @@ bool FudgetControl::GetStyleBool(FudgetToken token, API_PARAM(Out) bool &result)
         return false;
     }
 
-    return style->GetBoolResource(GetActiveTheme(), token, result);
+    return style->GetBoolResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleBool(const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result)
+bool FudgetControl::GetStyleBool(const Span<int> &ids, API_PARAM(Out) bool &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1082,10 +1118,10 @@ bool FudgetControl::GetStyleBool(const Span<FudgetToken> &tokens, API_PARAM(Out)
         return false;
     }
 
-    return style->GetBoolResource(GetActiveTheme(), tokens, result);
+    return style->GetBoolResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result)
+bool FudgetControl::GetStyleFloat(int id, API_PARAM(Out) float &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1094,10 +1130,10 @@ bool FudgetControl::GetStyleFloat(FudgetToken token, API_PARAM(Out) float &resul
         return false;
     }
 
-    return style->GetFloatResource(GetActiveTheme(), token, result);
+    return style->GetFloatResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out) float &result)
+bool FudgetControl::GetStyleFloat(const Span<int> &ids, API_PARAM(Out) float &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1106,10 +1142,10 @@ bool FudgetControl::GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out
         return false;
     }
 
-    return style->GetFloatResource(GetActiveTheme(), tokens, result);
+    return style->GetFloatResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &result)
+bool FudgetControl::GetStyleFloat2(int id, API_PARAM(Out) Float2 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1118,10 +1154,10 @@ bool FudgetControl::GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &res
         return false;
     }
 
-    return style->GetFloat2Resource(GetActiveTheme(), token, result);
+    return style->GetFloat2Resource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Out) Float2 &result)
+bool FudgetControl::GetStyleFloat2(const Span<int> &ids, API_PARAM(Out) Float2 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1130,10 +1166,10 @@ bool FudgetControl::GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Ou
         return false;
     }
 
-    return style->GetFloat2Resource(GetActiveTheme(), tokens, result);
+    return style->GetFloat2Resource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFloat3(FudgetToken token, API_PARAM(Out) Float3 &result)
+bool FudgetControl::GetStyleFloat3(int id, API_PARAM(Out) Float3 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1142,10 +1178,10 @@ bool FudgetControl::GetStyleFloat3(FudgetToken token, API_PARAM(Out) Float3 &res
         return false;
     }
 
-    return style->GetFloat3Resource(GetActiveTheme(), token, result);
+    return style->GetFloat3Resource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleFloat3(const Span<FudgetToken> &tokens, API_PARAM(Out) Float3 &result)
+bool FudgetControl::GetStyleFloat3(const Span<int> &ids, API_PARAM(Out) Float3 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1154,10 +1190,10 @@ bool FudgetControl::GetStyleFloat3(const Span<FudgetToken> &tokens, API_PARAM(Ou
         return false;
     }
 
-    return style->GetFloat3Resource(GetActiveTheme(), tokens, result);
+    return style->GetFloat3Resource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFloat4(FudgetToken token, API_PARAM(Out) Float4 &result)
+bool FudgetControl::GetStyleFloat4(int id, API_PARAM(Out) Float4 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1166,10 +1202,10 @@ bool FudgetControl::GetStyleFloat4(FudgetToken token, API_PARAM(Out) Float4 &res
         return false;
     }
 
-    return style->GetFloat4Resource(GetActiveTheme(), token, result);
+    return style->GetFloat4Resource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleFloat4(const Span<FudgetToken> &tokens, API_PARAM(Out) Float4 &result)
+bool FudgetControl::GetStyleFloat4(const Span<int> &ids, API_PARAM(Out) Float4 &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1178,10 +1214,10 @@ bool FudgetControl::GetStyleFloat4(const Span<FudgetToken> &tokens, API_PARAM(Ou
         return false;
     }
 
-    return style->GetFloat4Resource(GetActiveTheme(), tokens, result);
+    return style->GetFloat4Resource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
+bool FudgetControl::GetStyleInt(int id, API_PARAM(Out) int &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1190,10 +1226,10 @@ bool FudgetControl::GetStyleInt(FudgetToken token, API_PARAM(Out) int &result)
         return false;
     }
 
-    return style->GetIntResource(GetActiveTheme(), token, result);
+    return style->GetIntResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleInt(const Span<FudgetToken> &tokens, API_PARAM(Out) int &result)
+bool FudgetControl::GetStyleInt(const Span<int> &ids, API_PARAM(Out) int &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1202,10 +1238,10 @@ bool FudgetControl::GetStyleInt(const Span<FudgetToken> &tokens, API_PARAM(Out) 
         return false;
     }
 
-    return style->GetIntResource(GetActiveTheme(), tokens, result);
+    return style->GetIntResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadding &result)
+bool FudgetControl::GetStylePadding(int id, API_PARAM(Out) FudgetPadding &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1214,10 +1250,10 @@ bool FudgetControl::GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadd
         return false;
     }
 
-    return style->GetPaddingResource(GetActiveTheme(), token, result);
+    return style->GetPaddingResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStylePadding(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetPadding &result)
+bool FudgetControl::GetStylePadding(const Span<int> &ids, API_PARAM(Out) FudgetPadding &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1226,10 +1262,10 @@ bool FudgetControl::GetStylePadding(const Span<FudgetToken> &tokens, API_PARAM(O
         return false;
     }
 
-    return style->GetPaddingResource(GetActiveTheme(), tokens, result);
+    return style->GetPaddingResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
+bool FudgetControl::GetStyleFontSettings(int id, API_PARAM(Out) FudgetFontSettings &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1238,10 +1274,10 @@ bool FudgetControl::GetStyleFontSettings(FudgetToken token, API_PARAM(Out) Fudge
         return false;
     }
 
-    return style->GetFontSettingsResource(GetActiveTheme(), token, result);
+    return style->GetFontSettingsResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleFontSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFontSettings &result)
+bool FudgetControl::GetStyleFontSettings(const Span<int> &ids, API_PARAM(Out) FudgetFontSettings &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1250,18 +1286,18 @@ bool FudgetControl::GetStyleFontSettings(const Span<FudgetToken> &tokens, API_PA
         return false;
     }
 
-    return style->GetFontSettingsResource(GetActiveTheme(), tokens, result);
+    return style->GetFontSettingsResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &result)
+bool FudgetControl::GetStyleFont(int id, API_PARAM(Out) FudgetFont &result)
 {
-    if (!token.IsValid())
+    if (id < 0)
     {
         result = FudgetFont();
         return false;
     }
 
-    auto it = _cached_fonts.find(token);
+    auto it = _cached_fonts.find(id);
     if (it != _cached_fonts.end())
     {
         result = it->second;
@@ -1276,9 +1312,9 @@ bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &r
     }
 
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
-    if (style->GetFontResource(GetActiveTheme(), token, result))
+    if (style->GetFontResource(GetActiveTheme(), id, result))
     {
-        _cached_fonts[token] = result;
+        _cached_fonts[id] = result;
         return true;
     }
 
@@ -1286,11 +1322,11 @@ bool FudgetControl::GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &r
     return false;
 }
 
-bool FudgetControl::GetStyleFont(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFont &result)
+bool FudgetControl::GetStyleFont(const Span<int> &ids, API_PARAM(Out) FudgetFont &result)
 {
-    for (auto t : tokens)
+    for (auto id : ids)
     {
-        if (GetStyleFont(t, result))
+        if (GetStyleFont(id, result))
             return true;
     }
     return false;
@@ -1301,7 +1337,7 @@ void FudgetControl::ResetCreatedFonts()
     _cached_fonts.clear();
 }
 
-bool FudgetControl::GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
+bool FudgetControl::GetStyleDrawArea(int id, API_PARAM(Out) FudgetDrawArea &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1310,10 +1346,10 @@ bool FudgetControl::GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDra
         return false;
     }
 
-    return style->GetDrawAreaResource(GetActiveTheme(), token, result);
+    return style->GetDrawAreaResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result)
+bool FudgetControl::GetStyleDrawArea(const Span<int> &ids, API_PARAM(Out) FudgetDrawArea &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1322,34 +1358,10 @@ bool FudgetControl::GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(
         return false;
     }
 
-    return style->GetDrawAreaResource(GetActiveTheme(), tokens, result);
+    return style->GetDrawAreaResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleDrawable(FudgetToken token, API_PARAM(Out) FudgetDrawable* &result)
-{
-    FudgetStyle *style = GetActiveStyle();
-    if (style == nullptr)
-    {
-        result = nullptr; // FudgetStyleAreaList();
-        return false;
-    }
-
-    return style->GetDrawableResource(GetActiveTheme(), token, result);
-}
-
-bool FudgetControl::GetStyleDrawable(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result)
-{
-    FudgetStyle *style = GetActiveStyle();
-    if (style == nullptr)
-    {
-        result = nullptr; // FudgetStyleAreaList();
-        return false;
-    }
-
-    return style->GetDrawableResource(GetActiveTheme(), tokens, result);
-}
-
-bool FudgetControl::GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBase* &result)
+bool FudgetControl::GetStyleDrawable(int id, API_PARAM(Out) FudgetDrawable* &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1358,10 +1370,10 @@ bool FudgetControl::GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBas
         return false;
     }
 
-    return style->GetTextureResource(GetActiveTheme(), token, result);
+    return style->GetDrawableResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleTexture(const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result)
+bool FudgetControl::GetStyleDrawable(const Span<int> &ids, API_PARAM(Out) FudgetDrawable* &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1370,10 +1382,34 @@ bool FudgetControl::GetStyleTexture(const Span<FudgetToken> &tokens, API_PARAM(O
         return false;
     }
 
-    return style->GetTextureResource(GetActiveTheme(), tokens, result);
+    return style->GetDrawableResource(GetActiveTheme(), ids, result);
 }
 
-bool FudgetControl::GetStyleTextDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetControl::GetStyleTexture(int id, API_PARAM(Out) TextureBase* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr;
+        return false;
+    }
+
+    return style->GetTextureResource(GetActiveTheme(), id, result);
+}
+
+bool FudgetControl::GetStyleTexture(const Span<int> &ids, API_PARAM(Out) TextureBase* &result)
+{
+    FudgetStyle *style = GetActiveStyle();
+    if (style == nullptr)
+    {
+        result = nullptr;
+        return false;
+    }
+
+    return style->GetTextureResource(GetActiveTheme(), ids, result);
+}
+
+bool FudgetControl::GetStyleTextDrawSettings(int id, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1382,10 +1418,10 @@ bool FudgetControl::GetStyleTextDrawSettings(FudgetToken token, API_PARAM(Out) F
         return false;
     }
 
-    return style->GetTextDrawSettingsResource(GetActiveTheme(), token, result);
+    return style->GetTextDrawSettingsResource(GetActiveTheme(), id, result);
 }
 
-bool FudgetControl::GetStyleTextDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetControl::GetStyleTextDrawSettings(const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     FudgetStyle *style = GetActiveStyle();
     if (style == nullptr)
@@ -1394,7 +1430,7 @@ bool FudgetControl::GetStyleTextDrawSettings(const Span<FudgetToken> &tokens, AP
         return false;
     }
 
-    return style->GetTextDrawSettingsResource(GetActiveTheme(), tokens, result);
+    return style->GetTextDrawSettingsResource(GetActiveTheme(), ids, result);
 }
 
 void FudgetControl::Serialize(SerializeStream& stream, const void* otherObj)
@@ -1583,17 +1619,30 @@ void FudgetControl::SetVisualState(FudgetVisualControlState states, bool value)
         _visual_state &= ~states;
 }
 
-void FudgetControl::Initialize()
+void FudgetControl::DoInitialize()
 {
     if (_guiRoot == nullptr)
         return;
 #if USE_EDITOR
-    // Making sure the painters used by the control use the correct style. The painters can't access the control and
-    // can't check if it is set up in a running game.
+    // Making sure the control uses the correct theme data for style initializations.
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
 #endif
     OnInitialize();
     SetState(FudgetControlState::Initialized, true);
+}
+
+void FudgetControl::DoStyleInitialize()
+{
+    if (_guiRoot == nullptr || HasAnyState(FudgetControlState::StyleInitialized) || (_parent != nullptr && !_parent->HasAnyState(FudgetControlState::StyleInitialized)))
+        return;
+#if USE_EDITOR
+    // Making sure the control uses the correct theme data for style initializations.
+    FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
+    // Set the initialized flag early because this is required to access the current style.
+    SetState(FudgetControlState::StyleInitialized, true);
+    OnStyleInitialize();
+    SizeModified();
 }
 
 void FudgetControl::InitializeFlags()
@@ -1640,9 +1689,9 @@ void FudgetControl::SetParentVisibility(bool value)
         OnHide();
 }
 
-void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token)
+void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter)
 {
-    painter->Initialize(GetActiveTheme(), FudgetThemes::GetStyle(style_token));
+    //painter->Initialize(GetActiveTheme(), style);
     _painters.Add(painter);
 }
 
@@ -1662,6 +1711,7 @@ void FudgetControl::DoParentChanged(FudgetContainer *old_parent)
     {
         RegisterToUpdate(false);
         DoParentStateChanged();
+        SetState(FudgetControlState::StyleInitialized, false);
         _guiRoot = nullptr;
         return;
     }
@@ -1675,11 +1725,13 @@ void FudgetControl::DoParentChanged(FudgetContainer *old_parent)
 
     _guiRoot = _parent->GetGUIRoot();
 
-    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::Initialized))
+    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::Initialized) && (_parent == nullptr || _parent->HasAnyState(FudgetControlState::Initialized)))
     {
-        Initialize();
+        DoInitialize();
         SetState(FudgetControlState::Initialized, true);
     }
+    if (_guiRoot != nullptr && !HasAnyState(FudgetControlState::StyleInitialized) && (_parent == nullptr || _parent->HasAnyState(FudgetControlState::StyleInitialized)))
+        DoStyleInitialize();
 
     if (root_change)
         DoRootChanged(old_parent != nullptr ? old_parent->GetGUIRoot() : nullptr);
@@ -1700,27 +1752,27 @@ void FudgetControl::DoParentStateChanged()
     SetState(FudgetControlState::ParentHidden, !_parent->IsVisible());
 }
 
-void FudgetControl::DrawAreaList(const FudgetStyleAreaList &area, const Rectangle &rect)
+void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect)
 {
     Rectangle r = rect;
     for (const auto item : area._list)
     {
         switch (item->_type)
         {
-            case FudgetStyleAreaType::DrawArea:
-                DrawArea(((FudgetStyleAreaDrawArea*)(item))->_draw_area, r);
+            case FudgetDrawInstructionType::DrawArea:
+                DrawArea(((FudgetDrawInstructionDrawArea*)(item))->_draw_area, r);
                 break;
-            case FudgetStyleAreaType::Padding:
-                r = ((FudgetStyleAreaPadding*)(item))->_padding.Padded(r);
+            case FudgetDrawInstructionType::Padding:
+                r = ((FudgetDrawInstructionPadding*)(item))->_padding.Padded(r);
                 break;
-            case FudgetStyleAreaType::FillColor:
-                FillRectangle(r, ((FudgetStyleAreaColor*)(item))->_color);
+            case FudgetDrawInstructionType::FillColor:
+                FillRectangle(r, ((FudgetDrawInstructionColor*)(item))->_color);
                 break;
-            case FudgetStyleAreaType::Blur:
-                DrawBlur(r, ((FudgetStyleAreaFloat*)(item))->_value);
+            case FudgetDrawInstructionType::Blur:
+                DrawBlur(r, ((FudgetDrawInstructionFloat*)(item))->_value);
                 break;
-            case FudgetStyleAreaType::AreaList:
-                DrawAreaList(*((FudgetStyleAreaList*)(item)), r);
+            case FudgetDrawInstructionType::AreaList:
+                DrawAreaList(*((FudgetDrawInstructionList*)(item)), r);
                 break;
         }
     }
@@ -1838,19 +1890,19 @@ void FudgetControl::LayoutUpdate(Float2 pos, Float2 size)
     }
 }
 
-void FudgetControl::CreateClassTokens()
+void FudgetControl::CreateClassNames()
 {
-    if (_class_token.Count() > 0)
+    if (_class_names.Count() > 0)
         return;
 
     auto thisclass = GetClass();
-    StringAnsiView class_name = thisclass->GetName();
+    StringAnsiView class_name = thisclass->GetFullName();
     while (thisclass != nullptr && class_name != "Object")
     {
 #if USE_EDITOR
         FudgetThemes::SetRuntimeUse(IsInRunningGame());
 #endif
-        _class_token.Add(FudgetThemes::RegisterToken(class_name.ToString()));
+        _class_names.Add(class_name.ToString());
         thisclass = thisclass->GetBaseClass();
         if (thisclass != nullptr)
             class_name = thisclass->GetName();

@@ -44,7 +44,8 @@ void FudgetGUIRoot::FudgetInit()
 {
 	if (IsInRunningGame())
 		InitializeEvents();
-	Base::Initialize();
+	Base::DoInitialize();
+	Base::DoStyleInitialize();
 }
 
 int FudgetGUIRoot::AddChild(FudgetControl *control, int index)

@@ -106,14 +106,6 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 
 // FudgetListBoxItemPainter
 
-FudgetToken FudgetListBoxItemPainter::TextPainterToken = -1;
-FudgetToken FudgetListBoxItemPainter::TextStyleToken = -1;
-
-void FudgetListBoxItemPainter::CreateStyle()
-{
-    TextPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBoxItemPainter_TextPainter"));
-    TextStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBoxItemPainter_TextStyle"));
-}
 
 FudgetListBoxItemPainter::FudgetListBoxItemPainter(const SpawnParams &params) : Base(params), _text_painter(nullptr)
 {
@@ -135,11 +127,11 @@ void FudgetListBoxItemPainter::Initialize(FudgetTheme *theme, FudgetStyle *style
             return;
     }
 
-    FudgetToken text_style;
-    if (!style->GetTokenResource(theme, TextStyleToken, text_style))
-        text_style = FudgetToken::Invalid;
+    String text_style;
+    if (!style->GetStringResource(theme, (int)FudgetListBoxItemPainterIds::TextStyle, text_style))
+        text_style = String();
 
-    _text_painter = style->CreatePainter<FudgetSingleLineTextPainter>(theme, TextPainterToken);
+    _text_painter = style->CreatePainter<FudgetSingleLineTextPainter>(theme, (int)FudgetListBoxItemPainterIds::TextPainter);
 
     if (_text_painter != nullptr)
         _text_painter->Initialize(theme, FudgetThemes::GetStyle(text_style));
@@ -181,19 +173,6 @@ Float2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index,
 // FudgetListBox
 
 
-FudgetToken FudgetListBox::FramePainterToken;
-FudgetToken FudgetListBox::FrameStyleToken;
-FudgetToken FudgetListBox::ItemPainterToken;
-FudgetToken FudgetListBox::ItemStyleToken;
-
-void FudgetListBox::InitializeTokens()
-{
-    FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBox_FramePainter"));
-    FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBox_FrameStyle"));
-    ItemPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBox_ItemPainter"));
-    ItemStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_ListBox_ItemStyle"));
-}
-
 FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _item_painter(nullptr),
     _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0.f), _fixed_item_size(true), _default_size(Float2(-1.f)), _size_processed(0)
 {
@@ -208,18 +187,23 @@ FudgetListBox::~FudgetListBox()
 
 void FudgetListBox::OnInitialize()
 {
-    FudgetToken frame_style;
-    if (!GetStyleToken(FrameStyleToken, frame_style))
-        frame_style = FudgetToken::Invalid;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetListBoxIds::FramePainter);
+    _item_painter = CreateStylePainter<FudgetListItemPainter, FudgetListBoxItemPainter>((int)FudgetListBoxIds::ItemPainter);
+}
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, frame_style);
+void FudgetListBox::OnStyleInitialize()
+{
+    FudgetStyle *frame_style;
+    if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
+        frame_style = nullptr;
 
-    FudgetToken item_style;
-    if (!GetStyleToken(ItemStyleToken, item_style))
-        item_style = FudgetToken::Invalid;
+    
+    FudgetStyle *item_style;
+    if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
+        item_style = nullptr;
 
-    _item_painter = CreateStylePainter<FudgetListItemPainter>(ItemPainterToken, item_style);
-
+    InitializeStylePainter(_frame_painter, frame_style);
+    InitializeStylePainter(_item_painter, item_style);
 }
 
 void FudgetListBox::OnDraw()

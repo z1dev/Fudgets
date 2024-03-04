@@ -12,9 +12,8 @@
 // 
 // (WARNING: Styling might change a lot in the future!)
 // Style:
-// 1. Create `API_FIELD(ReadOnly) static FudgetToken _token_name` tokens required to read resources from styles
-// 2. Create a static `API_FUNCTION() void InitializeTokens()` function and assign to them
-// 3. Override `OnInitialize` and read the resource for the tokens into member variables. Sane defaults need
+// 1. Create enum of ids required to read resources from styles. The values MUST be distinct from other ids.
+// 2. Override `OnInitialize` and read the resource for the ids into member variables. Sane defaults need
 //    to be provided if the resource does not exist.
 // 
 // Drawing:
@@ -43,7 +42,6 @@
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Platform/Base/WindowBase.h"
 
-#include "Styling/Token.h"
 #include "Styling/StyleStructs.h"
 #include "Styling/Style.h"
 
@@ -64,7 +62,7 @@ struct FudgetPadding;
 struct FudgetFontSettings;
 struct FudgetFont;
 class FudgetPartPainter;
-struct FudgetStyleAreaList;
+struct FudgetDrawInstructionList;
 
 enum class FudgetVisualControlState;
 
@@ -143,48 +141,53 @@ enum class FudgetControlState : uint16
     /// </summary>
     None = 0,
     /// <summary>
-    /// Set to true after the Initialize function ran once
+    /// Set after the OnInitialize function ran once
     /// </summary>
     Initialized = 1 << 0,
     /// <summary>
+    /// Set when the styles were processed and the OnStyleInitialized function ran. This will be removed when moving
+    /// the control to a different parent to make sure the theme is updated.
+    /// </summary>
+    StyleInitialized = 1 << 1,
+    /// <summary>
     /// The control gets update notifies by having its Update function called
     /// </summary>
-    Updating = 1 << 1,
+    Updating = 1 << 2,
     /// <summary>
     /// Enabled controls can be interacted with, they can get focus and might be drawn different to disabled. For a
     /// control to be enabled, it needs to be set to enabled and must not have a disabled parent in the hierarchy.
     /// </summary>
-    Enabled = 1 << 2,
+    Enabled = 1 << 3,
     /// <summary>
     /// Whether one of the parents of this control in the hierarchy are disabled.
     /// </summary>
-    ParentDisabled = 1 << 3,
+    ParentDisabled = 1 << 4,
     /// <summary>
     /// The control has the appearance like it is focused. This can be different from being focused when the control is
     /// the child of a compound container
     /// </summary>
-    ShowFocused = 1 << 4,
+    ShowFocused = 1 << 5,
     /// <summary>
     /// True when _cached_global_to_local_translation is valid.
     /// </summary>
-    Global2LocalCached = 1 << 5,
+    Global2LocalCached = 1 << 6,
     /// <summary>
     /// Whether the mouse input is currently captured by this control
     /// </summary>
-    MouseIsCaptured = 1 << 6,
+    MouseIsCaptured = 1 << 7,
     /// <summary>
     /// The control has the appearance like the mouse pointer is over it. This can be different from the real state of the
     /// mouse pointer, when the control is a compound container or the child of a compound container. 
     /// </summary>
-    ShowHovered = 1 << 7,
+    ShowHovered = 1 << 8,
     /// <summary>
     // Set during layout phase when the control's position was changed by a layout.
     /// </summary>
-    PositionUpdated = 1 << 8,
+    PositionUpdated = 1 << 9,
     /// <summary>
     // Set during layout phase when the control's size was changed by a layout.
     /// </summary>
-    SizeUpdated = 1 << 9,
+    SizeUpdated = 1 << 10,
     /// <summary>
     /// The control is not drawn, can't be focused and won't react to user input. It will receive some events
     /// that are not related to these. If added in a layout, it'll appear as empty space where the control would be.
@@ -414,9 +417,15 @@ public:
     ~FudgetControl();
 
     /// <summary>
-    /// Called the first time the control is added to a parent. Call the original implementation in derived types.
+    /// Called the first time the control is added to a parent. Derived types might need to call their base implementation.
     /// </summary>
     API_FUNCTION() virtual void OnInitialize() {}
+
+    /// <summary>
+    /// Called when the control's style is first accessed, or after the style changes. Derived types might need to call their
+    /// base implementation.
+    /// </summary>
+    API_FUNCTION() virtual void OnStyleInitialize() {}
 
     /// <summary>
     /// Draws the control's surface. Derived controls can call Render2D methods here.
@@ -1551,12 +1560,13 @@ public:
     API_FUNCTION() virtual void ClearStyleCache(bool inherited = true);
     
     /// <summary>
-    /// Gets the style that was set explicitly, that decides the look of the control
+    /// Gets the style set explicitly for the control, that decides the look of the control. Use GetActiveStyle to get the style
+    /// currently in use with this control, which returns this style, or the default style if this wasn't set.
     /// </summary>
     API_PROPERTY() FudgetStyle* GetStyle() const { return _style; }
 
     /// <summary>
-    /// Sets the style that decides the look of the control. Set to null to use the default style.
+    /// Sets the style for the control to use a different style from the class default. Call with null to use the default style.
     /// </summary>
     API_PROPERTY() void SetStyle(FudgetStyle *value);
 
@@ -1568,13 +1578,14 @@ public:
     API_PROPERTY() FudgetStyle* GetActiveStyle();
 
     /// <summary>
-    /// Get the token for the theme which gives the colors and other values used for styling the controls
+    /// Gets the theme if one is set for this control, which is the storage for colors and other resources used for styling
+    /// the control. A theme is in effect even if this is null.
     /// </summary>
-    API_PROPERTY() FudgetToken GetThemeId() const { return _theme_id; }
+    API_PROPERTY() FudgetTheme* GetTheme() const { return _theme; }
     /// <summary>
-    /// Sets the token for the theme which gives the colors and other values used for styling the controls
+    /// Sets the theme which gives the colors and other values used for styling the controls
     /// </summary>
-    API_PROPERTY() void SetThemeId(FudgetToken value);
+    API_PROPERTY() void SetTheme(FudgetTheme *value);
 
     /// <summary>
     /// The theme data which is retrieved using the theme id set to this control, or if not set, the theme in the closets
@@ -1583,211 +1594,241 @@ public:
     API_PROPERTY() FudgetTheme* GetActiveTheme();
 
     /// <summary>
-    /// Constructs a painter object based on a type and the style of the control
+    /// Constructs a painter object based on a type and the style of the control.
     /// </summary>
     /// <typeparam name="T">Base type of the painter</typeparam>
-    /// <param name="token">Associated token in the control's style</param>
-    /// <param name="style_token">Token in the control's style that refers to a style to be used with the painter</param>
-    /// <returns>The created painter, or null if the token is not matching a painter or the painter is not derived from the template argument</returns>
-    template<typename T>
-    T* CreateStylePainter(FudgetToken token, FudgetToken style_token)
+    /// <typeparam name="DEFAULT">Type of the painter if the id does not correspond to a painter's type name in the theme</typeparam>
+    /// <param name="painter_id">Id of the painter in the control's style</param>
+    /// <param name="painter_style">The style providing resources for the painter</param>
+    /// <returns>The created painter, or null if the id is not matching a painter or the painter is not derived from the template argument</returns>
+    template<typename T, typename DEFAULT = T>
+    T* CreateStylePainter(int painter_id)
     {
         FudgetStyle *style = GetActiveStyle();
-        if (style == nullptr)
-            return nullptr;
+        T* painter = nullptr;
+        if (style != nullptr)
+            T *painter = style->CreatePainter<T>(GetActiveTheme(), painter_id);
 
-        T *painter = style->CreatePainter<T>(GetActiveTheme(), token);
+        if (T::TypeInitializer.IsAssignableFrom((DEFAULT::TypeInitializer)))
+            painter = New<DEFAULT>(SpawnParams(Guid::New(), DEFAULT::TypeInitializer));
 
         if (painter != nullptr)
-            RegisterStylePainterInternal(painter, style_token);
+            RegisterStylePainterInternal(painter);
 
         return painter;
     }
 
+    /// <summary>
+    /// Updates the style of a painter.
+    /// </summary>
+    /// <param name="painter">Painter to update</param>
+    /// <param name="style">Style to set to the painter</param>
+    API_FUNCTION() void InitializeStylePainter(FudgetPartPainter *painter, FudgetStyle *style);
 
     /// <summary>
-    /// Returns a value for the control based on a theme token.
+    /// Returns a value for an id in the control's style.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the value in the active style</param>
+    /// <param name="id">Id associated with the value in the active style</param>
     /// <param name="check_theme">Whether to try to get a resource from the active theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="result">Variable that receives the value</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleValue(FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleValue(int id, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
-    /// Returns a value for the control based on a theme token.
+    /// Returns a value for an id in the control's style.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id from the array.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="check_theme">Whether to try to get a resource from the active theme directly, if neither the style nor a parent style has an override</param>
     /// <param name="result">Variable that receives the value</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleValue(const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleValue(const Span<int> &ids, bool check_theme, API_PARAM(Out) Variant &result);
 
     /// <summary>
-    /// Returns a token for the control based on a theme token.
+    /// Returns a style for an id in the control's style. The id should refer to a string resource in the theme
+    /// that will be used as the style name to look up.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the token in the active style</param>
-    /// <param name="result">Variable that receives the token</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleToken(FudgetToken token, API_PARAM(Out) FudgetToken &result);
+    /// <param name="id">Id associated with the string in the active style</param>
+    /// <param name="result">Variable that receives the style</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleStyle(int id, API_PARAM(Out) FudgetStyle* &result);
 
     /// <summary>
-    /// Returns a token for the control based on a theme token.
+    /// Returns a style for an id in the control's style. The id should refer to a string resource in the theme
+    /// that will be used as the style name to look up.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first string found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
-    /// <param name="result">Variable that receives the token</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleToken(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetToken &result);
+    /// <param name="ids">An array of ids that are checked in order</param>
+    /// <param name="result">Variable that receives the style</param>
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleStyle(const Span<int> &ids, API_PARAM(Out) FudgetStyle* &result);
 
     /// <summary>
-    /// Returns a color for the control based on a theme token.
+    /// Returns a string for an id in the control's style.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the color in the active style</param>
+    /// <param name="id">Id associated with the string in the active style</param>
+    /// <param name="result">Variable that receives the string</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleString(int id, API_PARAM(Out) String &result);
+
+    /// <summary>
+    /// Returns a string for an id in the control's style.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// This version of the function accepts an array, and returns the value for the first string found.
+    /// </summary>
+    /// <param name="ids">An array of ids that are checked in order</param>
+    /// <param name="result">Variable that receives the string</param>
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleString(const Span<int> &ids, API_PARAM(Out) String &result);
+
+    /// <summary>
+    /// Returns a color for the control based on an id.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// </summary>
+    /// <param name="id">Id associated with the color in the active style</param>
     /// <param name="result">Variable that receives the color</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleColor(FudgetToken token, API_PARAM(Out) Color &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleColor(int id, API_PARAM(Out) Color &result);
 
     /// <summary>
-    /// Returns a color for the control based on a theme token.
+    /// Returns a color for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the color</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleColor(const Span<FudgetToken> &tokens, API_PARAM(Out) Color &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleColor(const Span<int> &ids, API_PARAM(Out) Color &result);
 
     /// <summary>
-    /// Returns a bool value for the control based on a theme token.
+    /// Returns a bool value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the bool in the active style</param>
+    /// <param name="id">Id associated with the bool in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleBool(FudgetToken token, API_PARAM(Out) bool &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleBool(int id, API_PARAM(Out) bool &result);
 
     /// <summary>
-    /// Returns a bool value for the control based on a theme token.
+    /// Returns a bool value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleBool(const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleBool(const Span<int> &ids, API_PARAM(Out) bool &result);
 
     /// <summary>
-    /// Returns a float value for the control based on a theme token.
-    /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// </summary>
-    /// <param name="token">Token associated with the float in the active style</param>
-    /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFloat(FudgetToken token, API_PARAM(Out) float &result);
-
-    /// <summary>
-    /// Returns a float value for the control based on a theme token.
-    /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
-    /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
-    /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFloat(const Span<FudgetToken> &tokens, API_PARAM(Out) float &result);
-
-    /// <summary>
-    /// Returns a Float2 value for the control based on a theme token.
+    /// Returns a float value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the Float2 in the active style</param>
+    /// <param name="id">Id associated with the float in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFloat2(FudgetToken token, API_PARAM(Out) Float2 &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFloat(int id, API_PARAM(Out) float &result);
 
     /// <summary>
-    /// Returns a Float2 value for the control based on a theme token.
+    /// Returns a float value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFloat2(const Span<FudgetToken> &tokens, API_PARAM(Out) Float2 &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFloat(const Span<int> &ids, API_PARAM(Out) float &result);
 
     /// <summary>
-    /// Returns a Float3 value for the control based on a theme token.
-    /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// </summary>
-    /// <param name="token">Token associated with the Float3 in the active style</param>
-    /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFloat3(FudgetToken token, API_PARAM(Out) Float3 &result);
-
-    /// <summary>
-    /// Returns a Float3 value for the control based on a theme token.
-    /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
-    /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
-    /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFloat3(const Span<FudgetToken> &tokens, API_PARAM(Out) Float3 &result);
-
-    /// <summary>
-    /// Returns a Float4 value for the control based on a theme token.
+    /// Returns a Float2 value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the Float4 in the active style</param>
+    /// <param name="id">Id associated with the Float2 in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFloat4(FudgetToken token, API_PARAM(Out) Float4 &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFloat2(int id, API_PARAM(Out) Float2 &result);
 
     /// <summary>
-    /// Returns a Float4 value for the control based on a theme token.
+    /// Returns a Float2 value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFloat4(const Span<FudgetToken> &tokens, API_PARAM(Out) Float4 &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFloat2(const Span<int> &ids, API_PARAM(Out) Float2 &result);
 
     /// <summary>
-    /// Returns an int value for the control based on a theme token.
+    /// Returns a Float3 value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the int in the active style</param>
+    /// <param name="id">Id associated with the Float3 in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleInt(FudgetToken token, API_PARAM(Out) int &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFloat3(int id, API_PARAM(Out) Float3 &result);
 
     /// <summary>
-    /// Returns an int value for the control based on a theme token.
+    /// Returns a Float3 value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleInt(const Span<FudgetToken> &tokens, API_PARAM(Out) int &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFloat3(const Span<int> &ids, API_PARAM(Out) Float3 &result);
 
     /// <summary>
-    /// Returns an enum value for the control based on a theme token.
+    /// Returns a Float4 value for the control based on an id.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// </summary>
+    /// <param name="id">Id associated with the Float4 in the active style</param>
+    /// <param name="result">Variable that receives the result</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFloat4(int id, API_PARAM(Out) Float4 &result);
+
+    /// <summary>
+    /// Returns a Float4 value for the control based on an id.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// This version of the function accepts an array, and returns the value for the first id found.
+    /// </summary>
+    /// <param name="ids">An array of ids that are checked in order</param>
+    /// <param name="result">Variable that receives the result</param>
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFloat4(const Span<int> &ids, API_PARAM(Out) Float4 &result);
+
+    /// <summary>
+    /// Returns an int value for the control based on an id.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// </summary>
+    /// <param name="id">Id associated with the int in the active style</param>
+    /// <param name="result">Variable that receives the result</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleInt(int id, API_PARAM(Out) int &result);
+
+    /// <summary>
+    /// Returns an int value for the control based on an id.
+    /// The resulting value depends on both the active style and the theme currently set for this control.
+    /// This version of the function accepts an array, and returns the value for the first id found.
+    /// </summary>
+    /// <param name="ids">An array of ids that are checked in order</param>
+    /// <param name="result">Variable that receives the result</param>
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleInt(const Span<int> &ids, API_PARAM(Out) int &result);
+
+    /// <summary>
+    /// Returns an enum value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
     /// <typeparam name="T">The enum type</typeparam>
-    /// <param name="token">Token associated with the int in the active style</param>
+    /// <param name="id">Id associated with the int in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
+    /// <returns>Whether a valid value was found for the id</returns>
     template<typename T>
-    bool GetStyleEnum(FudgetToken token, API_PARAM(Out) T &result)
+    bool GetStyleEnum(int id, API_PARAM(Out) T &result)
     {
         FudgetStyle *style = GetActiveStyle();
         if (style == nullptr)
@@ -1796,69 +1837,69 @@ public:
             return false;
         }
 
-        return style->GetEnumResource<T>(GetActiveTheme(), token, result);
+        return style->GetEnumResource<T>(GetActiveTheme(), id, result);
     }
 
     /// <summary>
-    /// Returns an enum value for the control based on a theme token.
+    /// Returns an enum value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
     /// <typeparam name="T">The enum type</typeparam>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
+    /// <returns>Whether a valid value was found for one of the ids</returns>
     template<typename T>
-    bool GetStyleEnum(const Span<FudgetToken> &tokens, API_PARAM(Out) T &result)
+    bool GetStyleEnum(const Span<int> &ids, API_PARAM(Out) T &result)
     {
-        for (auto t : tokens)
-            if (GetStyleEnum<T>(t, result))
+        for (auto id : ids)
+            if (GetStyleEnum<T>(id, result))
                 return true;
         return false;
     }
 
 
     /// <summary>
-    /// Returns a padding value for the control based on a theme token.
+    /// Returns a padding value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token associated with the padding value in the active style</param>
+    /// <param name="id">Id associated with the padding value in the active style</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStylePadding(FudgetToken token, API_PARAM(Out) FudgetPadding &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStylePadding(int id, API_PARAM(Out) FudgetPadding &result);
 
     /// <summary>
-    /// Returns a padding value for the control based on a theme token.
+    /// Returns a padding value for the control based on an id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Variable that receives the result</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStylePadding(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetPadding &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStylePadding(const Span<int> &ids, API_PARAM(Out) FudgetPadding &result);
 
     /// <summary>
     /// Use this function to check settings for a font in the style, when font creation is not necessary.
     /// To create the font and get its cached value directly, call GetStyleFont instead.
-    /// Returns settings for a font asset, which includes its type token, size and styles. 
+    /// Returns settings for a font asset, which includes its type id, size and styles. 
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for the FudgetFontSettings value in the active style</param>
+    /// <param name="id">Id for the FudgetFontSettings value in the active style</param>
     /// <param name="result">Structure with font creation settings</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFontSettings(FudgetToken token, API_PARAM(Out) FudgetFontSettings &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFontSettings(int id, API_PARAM(Out) FudgetFontSettings &result);
 
     /// <summary>
     /// Use this function to check settings for a font in the style, when font creation is not necessary.
     /// To create the font and get its cached value directly, call GetStyleFont instead.
-    /// Returns settings for a font asset, which includes its type token, size and styles. 
+    /// Returns settings for a font asset, which includes its type id, size and styles. 
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Structure with font creation settings</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFontSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFontSettings &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFontSettings(const Span<int> &ids, API_PARAM(Out) FudgetFontSettings &result);
 
     /// <summary>
     /// Sets result to a font object and the settings that were used to create it. The control might have
@@ -1866,22 +1907,22 @@ public:
     /// call ResetCreatedFonts.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for a FudgetFontSettings value in the active style</param>
+    /// <param name="Id">Id of a FudgetFontSettings value in the active style</param>
     /// <param name="result">Structure with font object and its settings</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleFont(FudgetToken token, API_PARAM(Out) FudgetFont &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleFont(int id, API_PARAM(Out) FudgetFont &result);
 
     /// <summary>
     /// Sets result to a font object and the settings that were used to create it. The control might have
     /// to create the font the first time this function is called. In case any font data should be updated,
     /// call ResetCreatedFonts.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">Structure with font object and its settings</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleFont(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFont &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleFont(const Span<int> &ids, API_PARAM(Out) FudgetFont &result);
 
     /// <summary>
     /// Clears cached font data that was generated by calls to GetStyleFont.
@@ -1889,88 +1930,88 @@ public:
     API_FUNCTION() void ResetCreatedFonts();
 
     /// <summary>
-    /// Tries to get a draw area settings for the passed token. The result will be a valid draw area
+    /// Tries to get a draw area settings for the passed id. The result will be a valid draw area
     /// whether the original value is a draw area, a color, a texture or a struct holding these values.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for a draw area value in the active style</param>
+    /// <param name="Id">Id of a draw area value in the active style</param>
     /// <param name="result">The draw area that can be passed to DrawArea</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleDrawArea(FudgetToken token, API_PARAM(Out) FudgetDrawArea &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleDrawArea(int id, API_PARAM(Out) FudgetDrawArea &result);
 
     /// <summary>
-    /// Tries to get a draw area settings for the passed token. The result will be a valid draw area
+    /// Tries to get a draw area settings for one of the passed ids. The result will be a valid draw area
     /// whether the original value is a draw area, a color, a texture or a struct holding these values.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">The draw area that can be passed to Drawrea</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleDrawArea(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleDrawArea(const Span<int> &ids, API_PARAM(Out) FudgetDrawArea &result);
 
     /// <summary>
-    /// Tries to get a drawable for the passed token. The result will be a valid drawable if the original
+    /// Tries to get a drawable for the passed id. The result will be a valid drawable if the original
     /// value is a drawable created with FudgetDrawableBuilder or one of the types that can be drawn that
     /// a drawable can hold.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for an area list value in the active style</param>
+    /// <param name="Id">Id of an area list value in the active style</param>
     /// <param name="result">The area list that can be passed to DrawAreaList</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleDrawable(FudgetToken token, API_PARAM(Out) FudgetDrawable* &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleDrawable(int id, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
-    /// Tries to get a drawable for the passed token. The result will be a valid drawable if the original
+    /// Tries to get a drawable for one of the passed ids. The result will be a valid drawable if the original
     /// value is a drawable created with FudgetDrawableBuilder or one of the types that can be drawn that
     /// a drawable can hold.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">The area list that can be passed to DrawAreaList</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleDrawable(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleDrawable(const Span<int> &ids, API_PARAM(Out) FudgetDrawable* &result);
        
     /// <summary>
-    /// Tries to get a texture for the passed token. The result will be a valid 
+    /// Tries to get a texture for the passed id. The result will be a valid 
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for a draw area value in the active style</param>
+    /// <param name="Id">Id of a draw area value in the active style</param>
     /// <param name="result">The texture asset reference to receive the result</param>
-    /// <returns>Whether a texture was found for the token</returns>
-    API_FUNCTION() bool GetStyleTexture(FudgetToken token, API_PARAM(Out) TextureBase* &result);
+    /// <returns>Whether a texture was found for the id</returns>
+    API_FUNCTION() bool GetStyleTexture(int id, API_PARAM(Out) TextureBase* &result);
 
     /// <summary>
-    /// Tries to get a texture for the passed token. The result will be a valid 
+    /// Tries to get a texture for one of the passed ids. The result will be a valid 
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">The texture asset reference to receive the result</param>
-    /// <returns>Whether a texture was found for a token</returns>
-    API_FUNCTION() bool GetStyleTexture(const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result);
+    /// <returns>Whether a texture was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleTexture(const Span<int> &ids, API_PARAM(Out) TextureBase* &result);
 
     /// <summary>
-    /// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
-    /// whether the original value is a draw setting, a Float2, a color or a token of a material.
+    /// Tries to get the font draw settings for the passed id. The result will be a valid draw settings
+    /// whether the original value is a draw setting, a Float2, a color or a material id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
     /// </summary>
-    /// <param name="token">Token for a font draw settings value in the active style</param>
+    /// <param name="id">Id of a font draw settings value in the active style</param>
     /// <param name="result">The settings for font drawing</param>
-    /// <returns>Whether a valid value was found for the token</returns>
-    API_FUNCTION() bool GetStyleTextDrawSettings(FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result);
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleTextDrawSettings(int id, API_PARAM(Out) FudgetTextDrawSettings &result);
 
     /// <summary>
-    /// Tries to get the font draw settings for the passed token. The result will be a valid draw settings
-    /// whether the original value is a draw setting, a Float2, a color or a token of a material.
+    /// Tries to get the font draw settings for one of the passed ids. The result will be a valid draw settings
+    /// whether the original value is a draw setting, a Float2, a color or a material id.
     /// The resulting value depends on both the active style and the theme currently set for this control.
-    /// This version of the function accepts an array, and returns the value for the first token found.
+    /// This version of the function accepts an array, and returns the value for the first id found.
     /// </summary>
-    /// <param name="tokens">An array of tokens that are checked in order</param>
+    /// <param name="ids">An array of ids that are checked in order</param>
     /// <param name="result">The settings for font drawing</param>
-    /// <returns>Whether a valid value was found for a token</returns>
-    API_FUNCTION() bool GetStyleTextDrawSettings(const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result);
+    /// <returns>Whether a valid value was found for one of the ids</returns>
+    API_FUNCTION() bool GetStyleTextDrawSettings(const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result);
 
     // Serialization
 
@@ -1984,7 +2025,14 @@ public:
     /// initializes controls after deserialization is over. During manual control creation, Initialize is called
     /// once the control has been added oo a parent that is in the gui hierarchy
     /// </summary>
-    API_FUNCTION() bool IsInitialized() const { return (_state_flags & FudgetControlState::Initialized) == FudgetControlState::Initialized; }
+    API_PROPERTY() FORCE_INLINE bool IsInitialized() const { return (_state_flags & FudgetControlState::Initialized) == FudgetControlState::Initialized; }
+
+    /// <summary>
+    /// Returns whether the Initialize function has been called once on this control. By default, the main Fudget
+    /// initializes controls after deserialization is over. During manual control creation, Initialize is called
+    /// once the control has been added oo a parent that is in the gui hierarchy
+    /// </summary>
+    API_PROPERTY() FORCE_INLINE bool IsStyleInitialized() const { return (_state_flags & FudgetControlState::StyleInitialized) == FudgetControlState::StyleInitialized; }
 
     /// <summary>
     /// Called when redrawing the control. Derived controls should override OnDraw instead. 
@@ -2118,10 +2166,18 @@ protected:
     API_FUNCTION() void SetVisualState(FudgetVisualControlState state, bool value);
 
     /// <summary>
-    /// Called recursively by the gui root when the deserialization was complete on a Fudget object. Make sure to call
-    /// the base Initialize if it is overriden.
+    /// Called recursively by the gui root when the deserialization was complete on a Fudget object. This function shouldn't
+    /// do anything if there is no gui root set. Override OnInitialize for class initialization in derived types. Make sure
+    /// to call the base implementation if overriden.
     /// </summary>
-    API_FUNCTION() virtual void Initialize();
+    API_FUNCTION() virtual void DoInitialize();
+
+    /// <summary>
+    /// Called when the parent changes and the styles have not been initialized yet. This function shouldn't do anything if
+    /// there is no parent or no gui root set. Override OnStyleInitialize for initializing style of child controls and to
+    /// cache style values to avoid looking them up every draw frame. Make sure to call the base implementation if overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DoStyleInitialize();
 
     /// <summary>
     /// Called each time the control is added to a parent. The base implementation checks for the presence of the ResetFlags
@@ -2188,7 +2244,7 @@ protected:
     /// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
     /// will be freed once the control is destroyed.
     /// </summary>
-    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter, FudgetToken style_token);
+    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
 
     /// <summary>
     /// Used internally to deregister control from OnUpdate calls. This happens after the parent was changed, but the root
@@ -2218,7 +2274,7 @@ protected:
     API_FUNCTION() virtual void DoParentStateChanged();
 private:
 
-    void DrawAreaList(const FudgetStyleAreaList &area, const Rectangle &rect);
+    void DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect);
     void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
     void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
 
@@ -2248,8 +2304,8 @@ private:
     /// <param name="size">The new size</param>
     virtual void LayoutUpdate(Float2 pos, Float2 size);
 
-    // Creates an array of tokens based on the control's and its ancestor classes' type names, starting with the most derived class.
-    void CreateClassTokens();
+    // Creates an array of names based on the control's type and its ancestor classes' type names, starting with the most derived class.
+    void CreateClassNames();
 
     // Functions to get style values
 
@@ -2291,19 +2347,19 @@ private:
     // is used, but it might lack required settings.
     FudgetStyle *_cached_style;
 
-    // The token for the theme set for this control. If not set, nearest parent's theme is used with a set theme. If none
+    // The theme set for this control. If not set, nearest parent's theme is used with a set theme. If none
     // found, the main theme is assumed.
-    FudgetToken _theme_id;
+    FudgetTheme *_theme;
 
     // The theme used for drawing determined by the _theme_id or the nearest parent's theme id. Resolved once on draw.
     FudgetTheme *_cached_theme;
 
-    // A list of tokens created for this control that includes tokens for the name of every control in the inheritance
+    // A list of strings created for this control that includes the name of every control in the inheritance
     // chain, up to FudgetControl. It is mainly used to get a style appropriate for this control when drawing.
-    // The tokens might not be created until the control needs to access the active style.
-    Array<FudgetToken> _class_token;
+    // The list might not be created until the control needs to access the active style.
+    Array<String> _class_names;
 
-    std::map<FudgetToken, FudgetFont> _cached_fonts;
+    std::map<int, FudgetFont> _cached_fonts;
 
     Array<FudgetPartPainter*> _painters;
 

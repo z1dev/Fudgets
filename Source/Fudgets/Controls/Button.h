@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Control.h"
-#include "../Styling/Token.h"
 #include "../Styling/PartPainters.h"
 
 /// <summary>
@@ -72,6 +71,23 @@ private:
     bool _pressed;
 };
 
+
+API_ENUM()
+enum class FudgetButtonIds
+{
+    First = 1000,
+
+    Background = First,
+    PressedBackground,
+    DisabledBackground,
+
+    FramePainter,
+    FrameStyle,
+
+    ContentPainter,
+    ContentStyle,
+};
+
 /// <summary>
 /// A general button class which can draw anything inside its frame
 /// </summary>
@@ -81,41 +97,10 @@ class FUDGETS_API FudgetButton : public FudgetButtonBase
     using Base = FudgetButtonBase;
     DECLARE_SCRIPTING_TYPE(FudgetButton);
 public:
-    /// <summary>
-    /// Initializes tokens used by the styles
-    /// </summary>
-    API_FUNCTION() static void InitializeTokens();
-    /// <summary>
-    /// Button background token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken BackgroundToken;
-    /// <summary>
-    /// Button background token in pressed state
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedBackgroundToken;
-    /// <summary>
-    /// Button background token in disabled state
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledBackgroundToken;
-    /// <summary>
-    /// Frame Painter token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
-    /// <summary>
-    /// Frame style token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
-    /// <summary>
-    /// Content Painter token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ContentPainterToken;
-    /// <summary>
-    /// Content style token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ContentStyleToken;
-
     /// <inheritdoc />
     void OnInitialize() override;
+    /// <inheritdoc />
+    void OnStyleInitialize() override;
     /// <inheritdoc />
     void OnUpdate(float delta_time) override;
     /// <inheritdoc />

@@ -1,23 +1,14 @@
 #include "Themes.h"
-#include "Token.h"
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
 #include "PartPainters.h"
-#include "StyleAreaBuilder.h"
+#include "DrawableBuilder.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
 #include "Engine/Content/Assets/Texture.h"
 #include "Engine/Core/Log.h"
 #include "Engine/Scripting/Scripting.h"
-
-std::map<String, FudgetToken> FudgetThemes::_token_map;
-std::map<FudgetToken, String> FudgetThemes::_string_map;
-int FudgetThemes::_highest_token = 0;
-
-//std::map<FudgetToken, FudgetStyle*> FudgetThemes::_style_map;
-//std::map<FudgetToken, FudgetTheme*> FudgetThemes::_theme_map;
-//std::map<FudgetToken, FontAsset*> FudgetThemes::_font_asset_map;
 
 #if USE_EDITOR
 bool FudgetThemes::_runtime_use = false;
@@ -28,9 +19,8 @@ bool FudgetThemes::_edittime_initialized = false;
 bool FudgetThemes::_initialized = false;
 FudgetThemes::Data* FudgetThemes::_data = nullptr;
 
-const FudgetToken FudgetThemes::MainThemeToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_MainTheme"));
-const FudgetToken FudgetThemes::DefaultStyleToken = FudgetThemes::RegisterToken(TEXT("FudgetThemes_DefaultStyle"));
 
+const String FudgetThemes::MainThemeName = TEXT("MainTheme");
 
 // FudgetTheme
 
@@ -45,19 +35,49 @@ FudgetTheme::FudgetTheme(const FudgetTheme &ori) : FudgetTheme()
 	_resources = ori._resources;
 }
 
-bool FudgetTheme::GetResource(FudgetToken token, API_PARAM(Out) Variant &result) const
+bool FudgetTheme::GetResource(int res_id, API_PARAM(Out) Variant &result) const
 {
-	auto it = _resources.find(token);
+	auto it = _resources.find(res_id);
 	if (it == _resources.end())
+	{
+		result = Variant();
 		return false;
+	}
+
+	if (it->second.Type.Type == VariantType::Structure)
+	{
+		HashSet<int> found;
+		while (it->second.Type.Type == VariantType::Structure)
+		{
+			const FudgetResourceId *id = it->second.AsStructure<FudgetResourceId>();
+			if (id == nullptr)
+				break;
+
+			if (found.Find(id->Id) != found.End())
+			{
+				result = Variant();
+				return false;
+			}
+			int next = id->Id;
+			found.Add(next);
+			it = _resources.find(next);
+			if (it == _resources.end())
+			{
+				result = Variant();
+				return false;
+			}
+		}
+	}
 
 	result = it->second;
+
+
 	return true;
 }
 
-void FudgetTheme::SetResource(FudgetToken token, Variant value)
+void FudgetTheme::SetResource(int res_id, Variant value)
 {
-	_resources[token] = value;
+	_resources[res_id] = value;
 }
 
 FudgetTheme* FudgetTheme::Duplicate() const
@@ -103,7 +123,7 @@ void FudgetThemes::Initialize(bool in_game)
 #endif
 
 	FudgetTheme *main_theme = New<FudgetTheme>();
-	_data->_theme_map[MainThemeToken] = main_theme;
+	_data->_theme_map[MainThemeName] = main_theme;
 }
 
 void FudgetThemes::Uninitialize(bool in_game)
@@ -138,21 +158,21 @@ void FudgetThemes::Uninitialize(bool in_game)
 	}
 
 
-	for (const auto &st : _data->_style_map)
-		if (st.second != nullptr)
-			Delete(st.second);
-	_data->_style_map.clear();
+	//for (const auto &st : _data->_style_map)
+	//	if (st.Value != nullptr)
+	//		Delete(st.Value);
+	_data->_style_map.ClearDelete();
 	
-	for (auto p : _data->_theme_map)
-		if (p.second != nullptr)
-			Delete(p.second);
-	_data->_theme_map.clear();
+	//for (auto p : _data->_theme_map)
+	//	if (p.Value != nullptr)
+	//		Delete(p.Value);
+	_data->_theme_map.ClearDelete();
 
-	_data->_font_asset_map.clear();
+	_data->_font_asset_map.Clear();
 
-	for (auto p : _data->_style_area_map)
-		delete p.second;
-	_data->_style_area_map.clear();
+	for (auto p : _data->_style_area_list)
+		delete p;
+	_data->_style_area_list.clear();
 
 #if USE_EDITOR
 	if (!in_game)
@@ -175,137 +195,102 @@ void FudgetThemes::Uninitialize(bool in_game)
 #endif
 }
 
-FudgetToken FudgetThemes::GetToken(String token_name)
+
+bool FudgetThemes::RegisterFontAsset(int font_id, FontAsset *asset)
 {
-	auto it = _token_map.find(token_name);
-	if (it == _token_map.end())
-		return FudgetToken::Invalid;
-
-	return it->second;
-}
-
-String FudgetThemes::GetTokenName(FudgetToken token)
-{
-	auto it = _string_map.find(token);
-	if (it == _string_map.end())
-		return TEXT("");
-	return it->second;
-}
-
-FudgetToken FudgetThemes::RegisterToken(String token_name, bool duplicate_is_error)
-{
-	if (token_name.IsEmpty())
-		return FudgetToken::Invalid;
-
-	auto it = _token_map.find(token_name);
-	if (it != _token_map.end())
-	{
-		if (duplicate_is_error)
-			return FudgetToken::Invalid;
-		return it->second;
-	}
-	_token_map[token_name] = ++_highest_token;
-	_string_map[_highest_token] = token_name;
-	return _highest_token;
-}
-
-bool FudgetThemes::RegisterFontAsset(FudgetToken token, FontAsset *asset)
-{
-	if (!token.IsValid())
+	if (font_id < 0)
 		return false;
-	auto it = _data->_font_asset_map.find(token);
-	if (it != _data->_font_asset_map.end())
+	auto it = _data->_font_asset_map.Find(font_id);
+	if (it != _data->_font_asset_map.End())
 		return false;
-	_data->_font_asset_map[token] = asset;
+	_data->_font_asset_map[font_id] = asset;
 	return true;
 }
 
-FontAsset* FudgetThemes::GetFontAsset(FudgetToken token)
+FontAsset* FudgetThemes::GetFontAsset(int font_id)
 {
-	if (!token.IsValid())
+	if (font_id < 0)
 		return nullptr;
-	auto it = _data->_font_asset_map.find(token);
-	if (it == _data->_font_asset_map.end())
+	auto it = _data->_font_asset_map.Find(font_id);
+	if (it == _data->_font_asset_map.End())
 		return nullptr;
-	return it->second;
+	return it->Value;
 }
 
 
-FudgetTheme* FudgetThemes::GetTheme(FudgetToken token)
+FudgetTheme* FudgetThemes::GetTheme(const String &theme_name)
 {
-	if (!token.IsValid())
+	if (theme_name.IsEmpty())
 		return nullptr;
-	auto it = _data->_theme_map.find(token);
-	if (it == _data->_theme_map.end())
+	auto it = _data->_theme_map.Find(theme_name);
+	if (it == _data->_theme_map.End())
 		return nullptr;
-	return it->second;
+	return it->Value;
 }
 
-FudgetTheme* FudgetThemes::DuplicateTheme(FudgetToken source_token, FudgetToken dest_token)
+FudgetTheme* FudgetThemes::DuplicateTheme(const String &src_name, const String &dest_name)
 {
-	if (!source_token.IsValid() || !dest_token.IsValid())
+	if (src_name.IsEmpty() || dest_name.IsEmpty())
 		return nullptr;
-	auto it_src = _data->_theme_map.find(source_token);
-	auto it_dst = _data->_theme_map.find(dest_token);
-	if (it_src == _data->_theme_map.end() || it_dst != _data->_theme_map.end())
+	auto it_src = _data->_theme_map.Find(src_name);
+	auto it_dst = _data->_theme_map.Find(dest_name);
+	if (it_src == _data->_theme_map.End() || it_dst != _data->_theme_map.End())
 		return nullptr;
 
-	FudgetTheme *theme = it_src->second->Duplicate();
-	_data->_theme_map[dest_token] = theme;
+	FudgetTheme *theme = it_src->Value->Duplicate();
+	_data->_theme_map[dest_name] = theme;
 	return theme;
 }
 
-FudgetStyle* FudgetThemes::CreateStyle(String name)
+FudgetStyle* FudgetThemes::CreateStyle(const String &style_name)
 {
-	return CreateStyle(RegisterToken(name));
-}
-
-FudgetStyle* FudgetThemes::CreateStyle(FudgetToken token)
-{
-	if (!token.IsValid() || GetStyle(token) != nullptr)
+	if (style_name.IsEmpty() || GetStyle(style_name) != nullptr)
 		return nullptr;
 
 	FudgetStyle *style = New<FudgetStyle>();
-	_data->_style_map[token] = style;
+	style->_name = style_name;
+	_data->_style_map[style_name] = style;
 	return style;
-
 }
 
-FudgetStyle* FudgetThemes::GetStyle(String name)
+FudgetStyle* FudgetThemes::CreateOrGetStyle(const String &style_name)
 {
-	return GetStyle(RegisterToken(name));
-}
-
-FudgetStyle* FudgetThemes::GetStyle(FudgetToken token)
-{
-	if (!token.IsValid())
+	if (style_name.IsEmpty())
 		return nullptr;
-	auto it = _data->_style_map.find(token);
+
+	FudgetStyle *style = CreateStyle(style_name);
+	if (style != nullptr)
+		return style;
+
+	return GetStyle(style_name);
+}
+
+FudgetStyle* FudgetThemes::GetStyle(const String &style_name)
+{
+	if (style_name.IsEmpty())
+		return nullptr;
+	auto it = _data->_style_map.Find(style_name);
 	if (it == _data->_style_map.end())
 		return nullptr;
-	return it->second;
+	return it->Value;
 }
 
-FudgetStyle* FudgetThemes::GetControlStyleOrDefault(const Array<FudgetToken> &class_tokens)
+FudgetStyle* FudgetThemes::FindFirstStyle(const Array<String> &class_names)
 {
-	for (int ix = 0, siz = class_tokens.Count(); ix < siz; ++ix)
+	for (int ix = 0, siz = class_names.Count(); ix < siz; ++ix)
 	{
-		FudgetStyle *style = GetStyle(class_tokens[ix]);
+		FudgetStyle *style = GetStyle(class_names[ix]);
 		if (style != nullptr)
 			return style;
 	}
-	return GetStyle(DefaultStyleToken);
+	return nullptr;
 }
 
-FudgetPartPainter* FudgetThemes::CreatePainter(FudgetToken token)
+FudgetPartPainter* FudgetThemes::CreatePainter(const StringAnsi &painter_name)
 {
-	if (!token.IsValid())
+	if (painter_name.IsEmpty())
 		return nullptr;
 
-	auto it = _string_map.find(token);
-	if (it == _string_map.end())
-		return nullptr;
-	StringAnsi painter_name = it->second.ToStringAnsi();
 	const ScriptingTypeHandle type = Scripting::FindScriptingType(painter_name);
 	if (!type)
 		return nullptr;
@@ -316,32 +301,25 @@ FudgetPartPainter* FudgetThemes::CreatePainter(FudgetToken token)
 	return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
 }
 
-bool FudgetThemes::RegisterStyleAreaList(FudgetToken token, FudgetStyleAreaList *style_area)
+int FudgetThemes::RegisterDrawInstructionList(FudgetDrawInstructionList *style_area)
 {
-	if (style_area == nullptr || IsStyleAreaListRegistered(token))
-		return false;
+	if (style_area == nullptr || IsDrawInstructionListRegistered(style_area))
+		return -1;
 
-	for (auto p : _data->_style_area_map)
-	{
-		if (p.second == style_area)
-			return p.first;
-	}
-
-	_data->_style_area_map[token] = style_area;
-	return token;
+	_data->_style_area_list.push_back(style_area);
+	return (int)_data->_style_area_list.size() - 1;
 }
 
-bool FudgetThemes::IsStyleAreaListRegistered(FudgetToken token)
+bool FudgetThemes::IsDrawInstructionListRegistered(FudgetDrawInstructionList *arealist)
 {
-	return _data->_style_area_map.find(token) != _data->_style_area_map.end();
+	return std::find(_data->_style_area_list.begin(), _data->_style_area_list.end(), arealist) != _data->_style_area_list.end();
 }
 
-FudgetStyleAreaList* FudgetThemes::GetStyleAreaList(FudgetToken token)
+FudgetDrawInstructionList* FudgetThemes::GetDrawInstructionList(int arealist_index)
 {
-	auto it = _data->_style_area_map.find(token);
-	if (it == _data->_style_area_map.end())
+	if (arealist_index < 0 || arealist_index >= _data->_style_area_list.size())
 		return nullptr;
-	return it->second;
+	return _data->_style_area_list[arealist_index];
 }
 
 #if USE_EDITOR

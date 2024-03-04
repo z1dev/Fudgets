@@ -11,17 +11,6 @@
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Graphics/Textures/TextureBase.h"
 
-//FudgetStyle::FudgetStyle(String name) : FudgetStyle(FudgetThemes::RegisterToken(name))
-//{
-//
-//}
-//
-//FudgetStyle::FudgetStyle(FudgetToken name_token) : Base(SpawnParams(Guid::New(), TypeInitializer)),
-//	_style_name(name_token), _parent(nullptr)
-//{
-//	if (!FudgetThemes::RegisterStyle(_style_name, this))
-//		LOG(Error, "Invalid token for FudgetStyle. Style wasn't registered.");
-//}
 
 FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _parent(nullptr)
 {
@@ -30,971 +19,971 @@ FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _
 
 FudgetStyle::~FudgetStyle()
 {
+    for (auto p : _resources)
+        Delete(p.second);
 }
 
-FudgetStyle* FudgetStyle::CreateInheritedStyle(FudgetToken name_token)
+FudgetStyle* FudgetStyle::CreateInheritedStyle(const String &name)
 {
-	if (!name_token.IsValid())
-		return nullptr;
+    if (name.IsEmpty())
+        return nullptr;
 
-	FudgetStyle *result = FudgetThemes::CreateStyle(name_token);
-	if (result == nullptr)
-		return nullptr;
+    FudgetStyle *result = FudgetThemes::CreateStyle(name);
+    if (result == nullptr)
+        return nullptr;
 
-	result->_parent = this;
-	_derived.Add(result);
-	return result;
+    result->_parent = this;
+    _derived.Add(result);
+    return result;
 }
 
-FudgetStyleResource* FudgetStyle::GetResource(FudgetToken token)
+bool FudgetStyle::GetResourceValue(FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result)
 {
-	if (!token.IsValid())
-		return nullptr;
+    if (id < 0)
+        return false;
 
-	auto it = _resources.find(token);
-	if (it != _resources.end())
-	{
-		FudgetStyleResource *res = &it->second;
-		bool first = true;
-		while (res != nullptr)
-		{
-			if (res->_resource_id.IsValid() || res->_value_override != Variant::Null)
-			{
-				if (!first)
-				{
-					// "Inherit" the resource here.
-					FudgetStyleResource tmp;
-					tmp._inherited_resource = res;
-					_resources[token] = tmp;
-				}
-				return res;
-			}
+    FudgetStyleResource *res = GetResource(id);
+    if (res == nullptr)
+    {
+        if (check_theme)
+            return theme->GetResource(id, result);
+        return false;
+    }
+    
 
-			res = res->_inherited_resource;
-			first = false;
-		}
-	}
+    if (res->_value_override != Variant::Null)
+    {
+        result = res->_value_override;
+        return true;
+    }
 
-	if (_parent != nullptr)
-	{
-		FudgetStyleResource tmp;
-
-		FudgetStyleResource *res = _parent->GetResource(token);
-		if (res != nullptr)
-		{
-			// "Inherit" the resource here.
-			tmp._inherited_resource = res;
-		}
-		_resources[token] = tmp;
-		return res;
-	}
-
-	return nullptr;
+    if (res->_resource_id >= 0 && theme != nullptr)
+        return theme->GetResource(res->_resource_id, result);
+    return false;
 }
 
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, FudgetToken token, bool check_theme, API_PARAM(Out) Variant &result)
+bool FudgetStyle::GetResourceValue(FudgetTheme *theme, const Span<int> &ids, bool check_theme, API_PARAM(Out) Variant &result)
 {
-	if (!token.IsValid())
-		return false;
+    for (auto id : ids)
+    {
+        if (GetResourceValue(theme, id, check_theme, result))
+            return true;
+    }
 
-	FudgetStyleResource *res = GetResource(token);
-	if (res == nullptr)
-	{
-		if (check_theme)
-			return theme->GetResource(token, result);
-		return false;
-	}
-	
-
-	if (res->_value_override != Variant::Null)
-	{
-		result = res->_value_override;
-		return true;
-	}
-
-	if (res->_resource_id.IsValid() && theme != nullptr)
-		return theme->GetResource(res->_resource_id, result);
-	return false;
+    result = Variant();
+    return false;
 }
 
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, const Span<FudgetToken> &tokens, bool check_theme, API_PARAM(Out) Variant &result)
+void FudgetStyle::SetValueOverride(int id, const Variant &value)
 {
-	for (auto t : tokens)
-	{
-		if (GetResourceValue(theme, t, check_theme, result))
-			return true;
-	}
+    if (id < 0 || value == Variant::Null)
+        return;
 
-	result = Variant();
-	return false;
+    auto it = _resources.find(id);
+
+    if (it == _resources.end())
+    {
+        if (_parent != nullptr)
+        {
+            // GetResource will create an override resource with no values set.
+            GetResource(id);
+            it = _resources.find(id);
+        }
+        else
+        {
+            // "Inherit" the resource here.
+            it = _resources.insert(std::make_pair(id, New<FudgetStyleResource>(this))).first;
+        }
+    }
+
+    FudgetStyleResource *res = it->second;
+    if (res->_value_override == value)
+        return;
+
+    res->_resource_id = -1;
+    res->_value_override = value;
+
+    for (FudgetStyle *style : _derived)
+        style->ParentResourceChanged(id, res);
 }
 
-void FudgetStyle::SetValueOverride(FudgetToken token, const Variant &value)
+void FudgetStyle::SetResourceOverride(int id, int resource_id)
 {
-	if (!token.IsValid() || value == Variant::Null)
-		return;
+    if (id < 0 || resource_id < 0)
+        return;
 
-	auto it = _resources.find(token);
+    auto it = _resources.find(id);
 
-	if (it == _resources.end())
-	{
-		if (_parent != nullptr)
-		{
-			// GetResource will create an override resource with no values set.
-			GetResource(token);
-			it = _resources.find(token);
-		}
-		else
-		{
-			// "Inherit" the resource here.
-			FudgetStyleResource tmp;
-			_resources[token] = tmp;
-			it = _resources.find(token);
-		}
-	}
+    if (it == _resources.end())
+    {
+        if (_parent != nullptr)
+        {
+            // GetResource will create an override resource with no values set.
+            GetResource(id);
+            it = _resources.find(id);
+        }
+        else
+        {
+            // "Inherit" the resource here.
+            it = _resources.insert(std::make_pair(id, New<FudgetStyleResource>(this))).first;
+        }
+    }
 
-	FudgetStyleResource &res = it->second;
-	if (res._value_override == value)
-		return;
+    FudgetStyleResource *res = it->second;
+    if (res->_resource_id == resource_id)
+        return;
 
-	res._resource_id = FudgetToken::Invalid;
-	res._value_override = value;
+    res->_resource_id = resource_id;
+    res->_value_override = Variant();
 
-	for (FudgetStyle *style : _derived)
-		style->ParentResourceChanged(token, &res);
+    for (FudgetStyle *style : _derived)
+        style->ParentResourceChanged(id, res);
 }
 
-void FudgetStyle::SetResourceOverride(FudgetToken token, FudgetToken resource_token)
+void FudgetStyle::ResetResourceOverride(int id)
 {
-	if (!token.IsValid() || !resource_token.IsValid())
-		return;
+    if (id < 0)
+        return;
 
-	auto it = _resources.find(token);
+    auto it = _resources.find(id);
+    if (it == _resources.end())
+        return;
+    FudgetStyleResource *res = it->second;
+    if (res->_value_override == Variant::Null || res->_resource_id < 0)
+        return;
 
-	if (it == _resources.end())
-	{
-		if (_parent != nullptr)
-		{
-			// GetResource will create an override resource with no values set.
-			GetResource(token);
-			it = _resources.find(token);
-		}
-		else
-		{
-			// "Inherit" the resource here.
-			FudgetStyleResource tmp;
-			_resources[token] = tmp;
-			it = _resources.find(token);
-		}
-	}
+    res->_value_override = Variant();
+    res->_resource_id = -1;
 
-	FudgetStyleResource &res = it->second;
-	if (res._resource_id == resource_token)
-		return;
-
-	res._resource_id = resource_token;
-	res._value_override = Variant::Null;
-
-	for (FudgetStyle *style : _derived)
-		style->ParentResourceChanged(token, &res);
+    for (FudgetStyle *style : _derived)
+        style->ParentResourceWasReset(id, res);
 }
 
-void FudgetStyle::ResetResourceOverride(FudgetToken token)
+bool FudgetStyle::GetStyleResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetStyle* &result)
 {
-	if (!token.IsValid())
-		return;
-
-	auto it = _resources.find(token);
-	if (it == _resources.end())
-		return;
-	FudgetStyleResource &res = it->second;
-	if (res._value_override == Variant::Null || !res._resource_id.IsValid())
-		return;
-
-	res._value_override = Variant::Null;
-	res._resource_id = FudgetToken::Invalid;
-
-	for (FudgetStyle *style : _derived)
-		style->ParentResourceWasReset(token, &res);
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        String style_name;
+        if (StringFromVariant(var, style_name))
+        {
+            result = FudgetThemes::GetStyle(style_name);
+            return result != nullptr;
+        }
+    }
+    result = nullptr;
+    return false;
 }
 
-bool FudgetStyle::GetTokenResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetToken &result)
+bool FudgetStyle::GetStyleResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetStyle* &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (TokenFromVariant(var, result))
-			return true;
-	}
-	result = FudgetToken();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetStyleResource(theme, id, result))
+            return true;
+    }
+    return false;
 }
 
-bool FudgetStyle::GetTokenResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetToken &result)
+bool FudgetStyle::GetStringResource(FudgetTheme *theme, int id, API_PARAM(Out) String &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetTokenResource(theme, t, result))
-			return true;
-	}
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (StringFromVariant(var, result))
+            return true;
+    }
+    result = String();
+    return false;
 }
 
-bool FudgetStyle::GetColorResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Color &result)
+bool FudgetStyle::GetStringResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) String &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (ColorFromVariant(var, result))
-			return true;
-	}
-	result = Color();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetStringResource(theme, id, result))
+            return true;
+    }
+    return false;
 }
 
-bool FudgetStyle::GetColorResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Color &result)
+bool FudgetStyle::GetColorResource(FudgetTheme *theme, int id, API_PARAM(Out) Color &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetColorResource(theme, t, result))
-			return true;
-	}
-	result = Color();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (ColorFromVariant(var, result))
+            return true;
+    }
+    result = Color();
+    return false;
 }
 
-bool FudgetStyle::GetBoolResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) bool &result)
+bool FudgetStyle::GetColorResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Color &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (BoolFromVariant(var, result))
-			return true;
-	}
-	result = 0.0f;
-	return false;
+    for (auto id : ids)
+    {
+        if (GetColorResource(theme, id, result))
+            return true;
+    }
+    result = Color();
+    return false;
 }
 
-bool FudgetStyle::GetBoolResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) bool &result)
+bool FudgetStyle::GetBoolResource(FudgetTheme *theme, int id, API_PARAM(Out) bool &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetBoolResource(theme, t, result))
-			return true;
-	}
-	result = 0.0f;
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (BoolFromVariant(var, result))
+            return true;
+    }
+    result = 0.0f;
+    return false;
 }
 
-bool FudgetStyle::GetFloatResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) float &result)
+bool FudgetStyle::GetBoolResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) bool &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (FloatFromVariant(var, result))
-			return true;
-	}
-	result = 0.0f;
-	return false;
+    for (auto id : ids)
+    {
+        if (GetBoolResource(theme, id, result))
+            return true;
+    }
+    result = 0.0f;
+    return false;
 }
 
-bool FudgetStyle::GetFloatResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) float &result)
+bool FudgetStyle::GetFloatResource(FudgetTheme *theme, int id, API_PARAM(Out) float &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFloatResource(theme, t, result))
-			return true;
-	}
-	result = 0.0f;
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (FloatFromVariant(var, result))
+            return true;
+    }
+    result = 0.0f;
+    return false;
 }
 
-bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float2 &result)
+bool FudgetStyle::GetFloatResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) float &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Float2FromVariant(var, result))
-			return true;
-	}
-	result = Float2();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFloatResource(theme, id, result))
+            return true;
+    }
+    result = 0.0f;
+    return false;
 }
 
-bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Float2 &result)
+bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float2 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFloat2Resource(theme, t, result))
-			return true;
-	}
-	result = Float2();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Float2FromVariant(var, result))
+            return true;
+    }
+    result = Float2();
+    return false;
 }
 
-bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float3 &result)
+bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float2 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Float3FromVariant(var, result))
-			return true;
-	}
-	result = Float3();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFloat2Resource(theme, id, result))
+            return true;
+    }
+    result = Float2();
+    return false;
 }
 
-bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Float3 &result)
+bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float3 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFloat3Resource(theme, t, result))
-			return true;
-	}
-	result = Float3();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Float3FromVariant(var, result))
+            return true;
+    }
+    result = Float3();
+    return false;
 }
 
-bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Float4 &result)
+bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float3 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Float4FromVariant(var, result))
-			return true;
-	}
-	result = Float4();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFloat3Resource(theme, id, result))
+            return true;
+    }
+    result = Float3();
+    return false;
 }
 
-bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Float4 &result)
+bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float4 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFloat4Resource(theme, t, result))
-			return true;
-	}
-	result = Float4();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Float4FromVariant(var, result))
+            return true;
+    }
+    result = Float4();
+    return false;
 }
 
-bool FudgetStyle::GetIntResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) int &result)
+bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float4 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (IntFromVariant(var, result))
-			return true;
-	}
-	result = 0;
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFloat4Resource(theme, id, result))
+            return true;
+    }
+    result = Float4();
+    return false;
 }
 
-bool FudgetStyle::GetIntResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) int &result)
+bool FudgetStyle::GetIntResource(FudgetTheme *theme, int id, API_PARAM(Out) int &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetIntResource(theme, t, result))
-			return true;
-	}
-	result = 0;
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (IntFromVariant(var, result))
+            return true;
+    }
+    result = 0;
+    return false;
 }
 
-bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int2 &result)
+bool FudgetStyle::GetIntResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) int &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Int2FromVariant(var, result))
-			return true;
-	}
-	result = Int2();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetIntResource(theme, id, result))
+            return true;
+    }
+    result = 0;
+    return false;
 }
 
-bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Int2 &result)
+bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int2 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetInt2Resource(theme, t, result))
-			return true;
-	}
-	result = Int2();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Int2FromVariant(var, result))
+            return true;
+    }
+    result = Int2();
+    return false;
 }
 
-bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int3 &result)
+bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int2 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Int3FromVariant(var, result))
-			return true;
-	}
-	result = Int3();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetInt2Resource(theme, id, result))
+            return true;
+    }
+    result = Int2();
+    return false;
 }
 
-bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Int3 &result)
+bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int3 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetInt3Resource(theme, t, result))
-			return true;
-	}
-	result = Int3();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Int3FromVariant(var, result))
+            return true;
+    }
+    result = Int3();
+    return false;
 }
 
-bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) Int4 &result)
+bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int3 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (Int4FromVariant(var, result))
-			return true;
-	}
-	result = Int4();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetInt3Resource(theme, id, result))
+            return true;
+    }
+    result = Int3();
+    return false;
 }
 
-bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) Int4 &result)
+bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int4 &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetInt4Resource(theme, t, result))
-			return true;
-	}
-	result = Int4();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (Int4FromVariant(var, result))
+            return true;
+    }
+    result = Int4();
+    return false;
 }
 
-bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetPadding &result)
+bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int4 &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (PaddingFromVariant(var, result))
-			return true;
-	}
-	result = FudgetPadding();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetInt4Resource(theme, id, result))
+            return true;
+    }
+    result = Int4();
+    return false;
 }
 
-bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetPadding &result)
+bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetPadding &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetPaddingResource(theme, t, result))
-			return true;
-	}
-	result = FudgetPadding();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (PaddingFromVariant(var, result))
+            return true;
+    }
+    result = FudgetPadding();
+    return false;
 }
 
-bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetPadding &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (TextDrawSettingsFromVariant(var, result))
-			return true;
-	}
-	result = FudgetTextDrawSettings();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetPaddingResource(theme, id, result))
+            return true;
+    }
+    result = FudgetPadding();
+    return false;
 }
 
-bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetTextDrawResource(theme, t, result))
-			return true;
-	}
-	result = FudgetTextDrawSettings();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (TextDrawSettingsFromVariant(var, result))
+            return true;
+    }
+    result = FudgetTextDrawSettings();
+    return false;
 }
 
-bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFontSettings &result)
+bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (FontSettingsFromVariant(var, result))
-			return true;
-	}
-	result = FudgetFontSettings();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetTextDrawResource(theme, id, result))
+            return true;
+    }
+    result = FudgetTextDrawSettings();
+    return false;
 }
 
-bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFontSettings &result)
+bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetFontSettings &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFontSettingsResource(theme, t, result))
-			return true;
-	}
-	result = FudgetFontSettings();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (FontSettingsFromVariant(var, result))
+            return true;
+    }
+    result = FudgetFontSettings();
+    return false;
 }
 
-bool FudgetStyle::GetFontResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetFont &result)
+bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetFontSettings &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (FontFromVariant(var, result))
-			return true;
-	}
-	result = FudgetFont();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFontSettingsResource(theme, id, result))
+            return true;
+    }
+    result = FudgetFontSettings();
+    return false;
 }
 
-bool FudgetStyle::GetFontResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetFont &result)
+bool FudgetStyle::GetFontResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetFont &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetFontResource(theme, t, result))
-			return true;
-	}
-	result = FudgetFont();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (FontFromVariant(var, result))
+            return true;
+    }
+    result = FudgetFont();
+    return false;
 }
 
-bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawArea &result)
+bool FudgetStyle::GetFontResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetFont &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (AreaFromVariant(var, result))
-			return true;
-	}
-	result = FudgetDrawArea();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetFontResource(theme, id, result))
+            return true;
+    }
+    result = FudgetFont();
+    return false;
 }
 
-bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawArea &result)
+bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetDrawArea &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetDrawAreaResource(theme, t, result))
-			return true;
-	}
-	result = FudgetDrawArea();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (AreaFromVariant(var, result))
+            return true;
+    }
+    result = FudgetDrawArea();
+    return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetDrawArea &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (DrawableFromVariant(theme, var, result))
-			return true;
-	}
-	result = nullptr; // FudgetStyleAreaList();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetDrawAreaResource(theme, id, result))
+            return true;
+    }
+    result = FudgetDrawArea();
+    return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetDrawable* &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetDrawableResource(theme, t, result))
-			return true;
-	}
-	result = nullptr; // FudgetStyleAreaList();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (DrawableFromVariant(theme, var, result))
+            return true;
+    }
+    result = nullptr; // FudgetDrawInstructionList();
+    return false;
 }
 
-bool FudgetStyle::GetTextureResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) TextureBase* &result)
+bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetDrawable* &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (TextureFromVariant(var, result))
-			return true;
-	}
-	result = nullptr;
-	return false;
+    for (auto id : ids)
+    {
+        if (GetDrawableResource(theme, id, result))
+            return true;
+    }
+    result = nullptr; // FudgetDrawInstructionList();
+    return false;
 }
 
-bool FudgetStyle::GetTextureResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) TextureBase* &result)
+bool FudgetStyle::GetTextureResource(FudgetTheme *theme, int id, API_PARAM(Out) TextureBase* &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetTextureResource(theme, t, result))
-			return true;
-	}
-	result = nullptr;
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (TextureFromVariant(var, result))
+            return true;
+    }
+    result = nullptr;
+    return false;
 }
 
-bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, FudgetToken token, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetTextureResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) TextureBase* &result)
 {
-	Variant var;
-	if (GetResourceValue(theme, token, true, var))
-	{
-		if (TextDrawSettingsFromVariant(var, result))
-			return true;
-	}
-	result = FudgetTextDrawSettings();
-	return false;
+    for (auto id : ids)
+    {
+        if (GetTextureResource(theme, id, result))
+            return true;
+    }
+    result = nullptr;
+    return false;
 }
 
-bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, const Span<FudgetToken> &tokens, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	for (auto t : tokens)
-	{
-		if (GetTextDrawSettingsResource(theme, t, result))
-			return true;
-	}
-	result = FudgetTextDrawSettings();
-	return false;
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (TextDrawSettingsFromVariant(var, result))
+            return true;
+    }
+    result = FudgetTextDrawSettings();
+    return false;
 }
 
-void FudgetStyle::ParentResourceChanged(FudgetToken token, FudgetStyleResource *resource)
+bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
-	auto it = _resources.find(token);
-	if (it != _resources.end())
-	{
-		FudgetStyleResource &res = it->second;
-		res._inherited_resource = resource;
-		if (res._resource_id.IsValid() || res._value_override != Variant::Null)
-			return;
-	}
-
-	for (FudgetStyle *style : _derived)
-		style->ParentResourceChanged(token, resource);
+    for (auto id : ids)
+    {
+        if (GetTextDrawSettingsResource(theme, id, result))
+            return true;
+    }
+    result = FudgetTextDrawSettings();
+    return false;
 }
 
-void FudgetStyle::ParentResourceWasReset(FudgetToken token, FudgetStyleResource *resource)
+FudgetStyleResource* FudgetStyle::GetResource(int id)
 {
-	auto it = _resources.find(token);
-	if (it != _resources.end())
-	{
-		FudgetStyleResource &res = it->second;
-		res._inherited_resource = resource->_inherited_resource;
-		if (res._resource_id.IsValid() || res._value_override != Variant::Null)
-			return;
-	}
+    if (id < 0)
+        return nullptr;
 
-	for (FudgetStyle *style : _derived)
-		style->ParentResourceWasReset(token, resource);
+    auto it = _resources.find(id);
+    if (it != _resources.end())
+    {
+        FudgetStyleResource *owned = it->second;
+        FudgetStyleResource *res = owned;
+        while (res != nullptr)
+        {
+            if (res->_resource_id >= 0 || res->_value_override != Variant::Null)
+            {
+                if (res != owned)
+                {
+                    // "Inherit" the resource here.
+                    owned->_inherited_resource = res;
+                }
+                return res;
+            }
+
+            res = res->_inherited_resource;
+        }
+    }
+
+    if (_parent != nullptr)
+    {
+        FudgetStyleResource *tmp = it != _resources.end() ? it->second : New<FudgetStyleResource>(this);
+
+        FudgetStyleResource *res = _parent->GetResource(id);
+        if (res != nullptr)
+        {
+            // "Inherit" the resource here.
+            tmp->_inherited_resource = res;
+        }
+        if (it == _resources.end())
+            _resources[id] = tmp;
+        return res;
+    }
+
+    return nullptr;
 }
 
-bool FudgetStyle::TokenFromVariant(const Variant &var, FudgetToken &result) const
+void FudgetStyle::ParentResourceChanged(int id, FudgetStyleResource *resource)
 {
-	if (var.Type.Type == VariantType::Int)
-	{
-		result = FudgetToken(var.AsInt);
-		return true;
-	}
+    auto it = _resources.find(id);
+    if (it != _resources.end())
+    {
+        FudgetStyleResource *res = it->second;
+        res->_inherited_resource = resource;
+        if (res->_resource_id >= 0 || res->_value_override != Variant::Null)
+            return;
+    }
 
-	if (var.Type.Type == VariantType::Uint)
-	{
-		result = FudgetToken(var.AsUint);
-		return true;
-	}
+    for (FudgetStyle *style : _derived)
+        style->ParentResourceChanged(id, resource);
+}
 
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetToken *area = var.AsStructure<FudgetToken>();
-		if (area == nullptr)
-			return false;
-		result = *area;
-		return true;
-	}
+void FudgetStyle::ParentResourceWasReset(int id, FudgetStyleResource *resource)
+{
+    auto it = _resources.find(id);
+    if (it != _resources.end())
+    {
+        FudgetStyleResource *res = it->second;
+        res->_inherited_resource = resource->_inherited_resource;
+        if (res->_resource_id >= 0 || res->_value_override != Variant::Null)
+            return;
+    }
 
-	return false;
+    for (FudgetStyle *style : _derived)
+        style->ParentResourceWasReset(id, resource);
+}
+
+bool FudgetStyle::StringFromVariant(const Variant &var, String &result) const
+{
+    if (var.Type.Type == VariantType::String)
+    {
+        result = var.ToString();
+        return true;
+    }
+
+    return false;
 }
 
 
 bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result) const
 {
-	if (var.Type.Type == VariantType::Color)
-	{
-		result = FudgetDrawArea(var.AsColor());
-		return true;
-	}
+    if (var.Type.Type == VariantType::Color)
+    {
+        result = FudgetDrawArea(var.AsColor());
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Asset)
-	{
-		AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
-		if (asset.Get() == nullptr)
-			return false;
+    if (var.Type.Type == VariantType::Asset)
+    {
+        AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
+        if (asset.Get() == nullptr)
+            return false;
 
-		result = FudgetDrawArea(asset.Get(), true, false);
-		return true;
-	}
+        result = FudgetDrawArea(asset.Get(), true, false);
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
-		if (area == nullptr)
-			return false;
-		result = *area;
-		return true;
-	}
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetDrawArea *area = var.AsStructure<FudgetDrawArea>();
+        if (area == nullptr)
+            return false;
+        result = *area;
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 bool FudgetStyle::DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
 {
-	if (var.Type.Type == VariantType::Color)
-	{
-		result = FudgetDrawable::FromColor(var.AsColor());
-		return true;
-	}
+    if (var.Type.Type == VariantType::Color)
+    {
+        result = FudgetDrawable::FromColor(var.AsColor());
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Asset)
-	{
-		AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
-		if (asset.Get() == nullptr)
-			return false;
+    if (var.Type.Type == VariantType::Asset)
+    {
+        AssetReference<Texture> asset = dynamic_cast<Texture*>(var.AsAsset);
+        if (asset.Get() == nullptr)
+            return false;
 
-		result = FudgetDrawable::FromDrawArea(FudgetDrawArea(asset.Get(), true, false));
-		return true;
-	}
+        result = FudgetDrawable::FromDrawArea(FudgetDrawArea(asset.Get(), true, false));
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetDrawArea *drawarea = var.AsStructure<FudgetDrawArea>();
-		if (drawarea != nullptr)
-		{
-			result = FudgetDrawable::FromDrawArea(*drawarea);
-			return true;
-		}
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetDrawArea *drawarea = var.AsStructure<FudgetDrawArea>();
+        if (drawarea != nullptr)
+        {
+            result = FudgetDrawable::FromDrawArea(*drawarea);
+            return true;
+        }
 
-		const FudgetToken *token = var.AsStructure<FudgetToken>();
-		if (token != nullptr)
-		{
-			FudgetStyleAreaList *arealist = FudgetThemes::GetStyleAreaList(*token);
-			if (arealist == nullptr)
-				return false;
-			result = FudgetDrawable::FromStyleAreaList(this, theme, arealist);
-			return true;
-		}
+        const FudgetDrawableIndex *drawindex = var.AsStructure<FudgetDrawableIndex>();
+        if (drawindex != nullptr)
+        {
+            FudgetDrawInstructionList *arealist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
+            if (arealist == nullptr)
+                return false;
+            result = FudgetDrawable::FromDrawInstructionList(this, theme, arealist);
+            return true;
+        }
+    }
 
-		return false;
-	}
-
-	return false;
+    return false;
 }
 
 bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result) const
 {
-	if (var.Type.Type == VariantType::Asset)
-	{
-		AssetReference<TextureBase> asset = dynamic_cast<TextureBase*>(var.AsAsset);
-		result = asset.Get();
-		return result != nullptr;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Asset)
+    {
+        AssetReference<TextureBase> asset = dynamic_cast<TextureBase*>(var.AsAsset);
+        result = asset.Get();
+        return result != nullptr;
+    }
+    return false;
 }
 
 bool FudgetStyle::TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const
 {
-	if (var.Type.Type == VariantType::Color)
-	{
-		result = FudgetTextDrawSettings(var.AsColor());
-		return true;
-	}
+    if (var.Type.Type == VariantType::Color)
+    {
+        result = FudgetTextDrawSettings(var.AsColor());
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Float2)
-	{
-		result = FudgetTextDrawSettings(var.AsFloat2());
-		return true;
-	}
+    if (var.Type.Type == VariantType::Float2)
+    {
+        result = FudgetTextDrawSettings(var.AsFloat2());
+        return true;
+    }
 
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetTextDrawSettings *settings = var.AsStructure<FudgetTextDrawSettings>();
-		if (settings != nullptr)
-		{
-			result = *settings;
-			return true;
-		}
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetTextDrawSettings *settings = var.AsStructure<FudgetTextDrawSettings>();
+        if (settings != nullptr)
+        {
+            result = *settings;
+            return true;
+        }
 
-		const FudgetToken *material_token = var.AsStructure<FudgetToken>();
-		if (material_token != nullptr)
-		{
-			result = FudgetTextDrawSettings();
-			result.MaterialToken = *material_token;
-			return true;
-		}
 
-		const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
-		if (padding != nullptr)
-		{
-			result = FudgetTextDrawSettings();
-			result.Padding = *padding;
-			return true;
-		}
-	}
+        // TODO: materials to draw text with
+         
+        const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+        if (padding != nullptr)
+        {
+            result = FudgetTextDrawSettings();
+            result.Padding = *padding;
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool FudgetStyle::FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const
 {
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetFontSettings *ptr = var.AsStructure<FudgetFontSettings>();
-		if (ptr != nullptr)
-		{
-			result = *ptr;
-			return true;
-		}
-	}
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetFontSettings *ptr = var.AsStructure<FudgetFontSettings>();
+        if (ptr != nullptr)
+        {
+            result = *ptr;
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 bool FudgetStyle::FontFromVariant(const Variant &var, FudgetFont &result) const
 {
-	if (!FontSettingsFromVariant(var, result.Settings))
-	{
-		result = FudgetFont();
-		return false;
-	}
+    if (!FontSettingsFromVariant(var, result.Settings))
+    {
+        result = FudgetFont();
+        return false;
+    }
 
-	FontAsset *asset = FudgetThemes::GetFontAsset(result.Settings.FontToken);
-	if (asset == nullptr)
-	{
-		result = FudgetFont();
-		return false;
-	}
+    FontAsset *asset = FudgetThemes::GetFontAsset(result.Settings.FontId);
+    if (asset == nullptr)
+    {
+        result = FudgetFont();
+        return false;
+    }
 
-	if (result.Settings.Bold)
-		asset = asset->GetBold();
-	else if (result.Settings.Italics)
-		asset = asset->GetItalic();
-	// TODO: No bold and italic at the same time? asset doesn't seem to support it.
-	result.Font = asset->CreateFont(result.Settings.Size);
+    if (result.Settings.Bold)
+        asset = asset->GetBold();
+    else if (result.Settings.Italics)
+        asset = asset->GetItalic();
+    // TODO: No bold and italic at the same time? asset doesn't seem to support it.
+    result.Font = asset->CreateFont(result.Settings.Size);
 
-	return true;
+    return true;
 }
 
 bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result) const
 {
-	if (var.Type.Type == VariantType::Structure)
-	{
-		const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
-		if (padding == nullptr)
-		{
-			result = FudgetPadding();
-			return false;
-		}
-		result = *padding;
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetPadding *padding = var.AsStructure<FudgetPadding>();
+        if (padding == nullptr)
+        {
+            result = FudgetPadding();
+            return false;
+        }
+        result = *padding;
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::BoolFromVariant(const Variant &var, bool &result) const
 {
-	if (var.Type.Type == VariantType::Bool)
-	{
-		result = var.AsBool;
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Bool)
+    {
+        result = var.AsBool;
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::FloatFromVariant(const Variant &var, float &result) const
 {
-	if (var.Type.Type == VariantType::Float)
-	{
-		result = var.AsFloat;
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Float)
+    {
+        result = var.AsFloat;
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Float2FromVariant(const Variant &var, Float2 &result) const
 {
-	if (var.Type.Type == VariantType::Float2)
-	{
-		result = var.AsFloat2();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Float2)
+    {
+        result = var.AsFloat2();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Float3FromVariant(const Variant &var, Float3 &result) const
 {
-	if (var.Type.Type == VariantType::Float3)
-	{
-		result = var.AsFloat3();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Float3)
+    {
+        result = var.AsFloat3();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Float4FromVariant(const Variant &var, Float4 &result) const
 {
-	if (var.Type.Type == VariantType::Float4)
-	{
-		result = var.AsFloat4();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Float4)
+    {
+        result = var.AsFloat4();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::IntFromVariant(const Variant &var, int &result) const
 {
-	if (var.Type.Type == VariantType::Int)
-	{
-		result = var.AsInt;
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Int)
+    {
+        result = var.AsInt;
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Int2FromVariant(const Variant &var, Int2 &result) const
 {
-	if (var.Type.Type == VariantType::Int2)
-	{
-		result = var.AsInt2();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Int2)
+    {
+        result = var.AsInt2();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Int3FromVariant(const Variant &var, Int3 &result) const
 {
-	if (var.Type.Type == VariantType::Int3)
-	{
-		result = var.AsInt3();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Int3)
+    {
+        result = var.AsInt3();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::Int4FromVariant(const Variant &var, Int4 &result) const
 {
-	if (var.Type.Type == VariantType::Int4)
-	{
-		result = var.AsInt4();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Int4)
+    {
+        result = var.AsInt4();
+        return true;
+    }
+    return false;
 }
 
 bool FudgetStyle::ColorFromVariant(const Variant &var, Color &result) const
 {
-	if (var.Type.Type == VariantType::Color)
-	{
-		result = var.AsColor();
-		return true;
-	}
-	return false;
+    if (var.Type.Type == VariantType::Color)
+    {
+        result = var.AsColor();
+        return true;
+    }
+    return false;
 }
 
-FudgetPartPainter* FudgetStyle::CreatePainterInternal(FudgetToken token) const
+FudgetPartPainter* FudgetStyle::CreatePainterInternal(const String &painter_name) const
 {
-	return FudgetThemes::CreatePainter(token);
+    return FudgetThemes::CreatePainter(painter_name.ToStringAnsi());
 }

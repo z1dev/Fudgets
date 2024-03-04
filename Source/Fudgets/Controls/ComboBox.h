@@ -9,6 +9,27 @@ class FudgetButton;
 class FudgetListBox;
 class FudgetStringListProvider;
 
+API_ENUM()
+enum class FudgetComboBoxIds
+{
+    First = 2000,
+
+    FrameDraw = First,
+    FocusedFrameDraw,
+    DisabledFrameDraw,
+    FramePainter,
+    FrameStyle,
+    ButtonImage,
+    ButtonHoveredImage,
+    ButtonDisabledImage,
+    ButtonWidth,
+
+    CaretDraw,
+    CaretBlinkTime,
+    CaretWidth,
+    CaretScrollCount,
+};
+
 /// <summary>
 /// Standard combo box control that has an editable part, a button and opens a drop down window with a list of choices.
 /// </summary>
@@ -18,34 +39,12 @@ class FUDGETS_API FudgetComboBox : public FudgetContainer, public IProxyLayoutCo
     using Base = FudgetContainer;
     DECLARE_SCRIPTING_TYPE(FudgetComboBox);
 public:
-    /// <summary>
-    /// Initializes tokens used by the styles
-    /// </summary>
-    API_FUNCTION() static void InitializeTokens();
-
-    API_FIELD(ReadOnly) static FudgetToken FrameDrawToken;
-    API_FIELD(ReadOnly) static FudgetToken FocusedFrameDrawToken;
-    API_FIELD(ReadOnly) static FudgetToken DisabledFrameDrawToken;
-
-    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
-    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
-
-    API_FIELD(ReadOnly) static FudgetToken ButtonContentStyleToken;
-
-    API_FIELD(ReadOnly) static FudgetToken EditorClassToken;
-    API_FIELD(ReadOnly) static FudgetToken ButtonClassToken;
-    API_FIELD(ReadOnly) static FudgetToken ListBoxClassToken;
-
-    API_FIELD(ReadOnly) static FudgetToken ButtonImageToken;
-    API_FIELD(ReadOnly) static FudgetToken ButtonHoveredImageToken;
-    API_FIELD(ReadOnly) static FudgetToken ButtonDisabledImageToken;
-
-    API_FIELD(ReadOnly) static FudgetToken ButtonWidthToken;
-
     ~FudgetComboBox();
 
     /// <inheritdoc />
     void OnInitialize() override;
+    /// <inheritdoc />
+    void OnStyleInitialize() override;
 
     /// <inheritdoc />
     void OnDraw() override;

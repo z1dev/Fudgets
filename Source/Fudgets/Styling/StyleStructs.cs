@@ -59,9 +59,9 @@ public partial struct FudgetFontSettings
     /// <summary>
     /// Initializes the font settings
     /// </summary>
-    public FudgetFontSettings(FudgetToken fontToken, float size, bool bold, bool italics)
+    public FudgetFontSettings(int fontId, float size, bool bold, bool italics)
     {
-        FontToken = fontToken;
+        FontId = fontId;
         Size = size;
         Bold = bold;
         Italics = italics;
@@ -80,14 +80,14 @@ public partial struct FudgetTextDrawSettings
     /// <summary>
     /// Initialize structure with every setting
     /// </summary>
-    public FudgetTextDrawSettings(Float2 offset, Color color, TextAlignment horzAlign, TextAlignment vertAlign, FudgetPadding padding, FudgetToken material_token)
+    public FudgetTextDrawSettings(Float2 offset, Color color, TextAlignment horzAlign, TextAlignment vertAlign, FudgetPadding padding, int material_id)
     {
         Offset = offset;
         Color = color;
         HorizontalAlignment = horzAlign;
         VerticalAlignment = vertAlign;
         Padding = padding;
-        MaterialToken = material_token;
+        MaterialId = material_id;
     }
 
     /// <summary>

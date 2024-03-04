@@ -57,27 +57,7 @@ FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 }
 
 
-FudgetToken FudgetButton::BackgroundToken = -1;
-FudgetToken FudgetButton::PressedBackgroundToken = -1;
-FudgetToken FudgetButton::DisabledBackgroundToken = -1;
 
-FudgetToken FudgetButton::FramePainterToken = -1;
-FudgetToken FudgetButton::FrameStyleToken = -1;
-
-FudgetToken FudgetButton::ContentPainterToken = -1;
-FudgetToken FudgetButton::ContentStyleToken = -1;
-
-void FudgetButton::InitializeTokens()
-{
-    BackgroundToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_BackgroundToken"));
-    PressedBackgroundToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_PressedBackgroundToken"));
-    DisabledBackgroundToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_DisabledBackgroundToken"));
-    FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_FramePainter"));
-    FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_FrameStyle"));
-    ContentPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_ContentPainter"));
-    ContentStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_FudgetButton_ContentStyle"));
-
-}
 FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr)
 {
 
@@ -85,17 +65,21 @@ FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_pai
 
 void FudgetButton::OnInitialize()
 {
-    FudgetToken frame_style;
-    if (!GetStyleToken(FrameStyleToken, frame_style))
-        frame_style = FudgetToken::Invalid;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetButtonIds::FramePainter);
+    _content_painter = CreateStylePainter<FudgetStatePainter>((int)FudgetButtonIds::ContentPainter);
+}
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, frame_style);
+void FudgetButton::OnStyleInitialize()
+{
+    FudgetStyle *frame_style = nullptr;
+    if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
+        frame_style = nullptr;
+    FudgetStyle *content_style = nullptr;
+    if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
+        content_style = nullptr;
 
-    FudgetToken content_style;
-    if (!GetStyleToken(ContentStyleToken, content_style))
-        content_style = FudgetToken::Invalid;
-
-    _content_painter = CreateStylePainter<FudgetStatePainter>(ContentPainterToken, content_style);
+    InitializeStylePainter(_frame_painter, frame_style);
+    InitializeStylePainter(_content_painter, content_style);
 }
 
 FudgetPadding FudgetButton::GetInnerPadding() const
@@ -126,32 +110,12 @@ void FudgetButton::OnDownChanged()
     SetVisualState(FudgetVisualControlState::Down, GetPressed());
 }
 
-//void FudgetButton::OnFocusChanged(bool focused, FudgetControl *other)
-//{
-//    _draw_state.SetState(FudgetVisualControlState::Focused, focused);
-//}
-
 void FudgetButton::OnMouseMove(Float2 pos, Float2 global_pos)
 {
     if (!GetPressed() || !MouseIsCaptured())
         return;
     SetVisualState(FudgetVisualControlState::Pressed, WantsMouseEventAtPos(pos, global_pos));
 }
-
-//void FudgetButton::OnMouseEnter(Float2 pos, Float2 global_pos)
-//{
-//    _draw_state.SetState(FudgetVisualControlState::Hovered);
-//}
-//
-//void FudgetButton::OnMouseLeave()
-//{
-//    _draw_state.SetState(FudgetVisualControlState::Hovered, false);
-//}
-
-//void FudgetButton::OnVirtuallyEnabledChanged()
-//{
-//    _draw_state.SetState(FudgetVisualControlState::Disabled, !VirtuallyEnabled());
-//}
 
 FudgetControlFlag FudgetButton::GetInitFlags() const
 {

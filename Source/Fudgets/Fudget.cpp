@@ -16,10 +16,6 @@
 #include "Engine/Engine/Screen.h"
 
 
-//Renderer::FudgetRenderer(const SpawnParams &params) : PostProcessEffect(params)
-//{
-//}
-
 bool FudgetRenderer::CanRender() const
 {
     // This is a const in the base class, but C# files can somehow declare it non-const.

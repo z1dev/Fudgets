@@ -2,58 +2,41 @@
 #include "../Styling/Themes.h"
 #include "Engine/Core/Types/StringBuilder.h"
 
-FudgetToken FudgetLineEdit::FramePainterToken = -1;
-FudgetToken FudgetLineEdit::FrameStyleToken = -1;
-FudgetToken FudgetLineEdit::TextPainterToken = -1;
-FudgetToken FudgetLineEdit::TextStyleToken = -1;
 
-FudgetToken FudgetLineEdit::CaretDrawToken = -1;
-FudgetToken FudgetLineEdit::CaretBlinkTimeToken = -1;
-FudgetToken FudgetLineEdit::CaretWidthToken = -1;
-FudgetToken FudgetLineEdit::CaretScrollCountToken = -1;
-
-void FudgetLineEdit::InitializeTokens()
-{
-    FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_FramePainter"));
-    FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_FrameStyle"));
-
-
-    TextPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_TextPainter"));
-    TextStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_TextStyle"));
-
-    CaretDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretDraw"));
-    CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretBlinkTime"));
-    CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretWidth"));
-    CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_LineEdit_CaretScrollCount"));
-}
 
 FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
-    _blink_passed(0.0f), _character_scroll_count(0), _caret_blink_time(1.0f), _caret_width(2.0f), _scroll_pos(0.0f)
+    _blink_passed(0.0f), _character_scroll_count(0), _caret_blink_time(1.0f), _caret_width(2.0f), _scroll_pos(0.0f), _show_border(true)
 {
 
 }
 
 void FudgetLineEdit::OnInitialize()
 {
-    FudgetToken background_style;
-    if (!GetStyleToken(FrameStyleToken, background_style))
-        background_style = FudgetToken::Invalid;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetLineEditIds::FramePainter);
+    _text_painter = CreateStylePainter<FudgetSingleLineTextPainter, FudgetLineEditTextPainter>((int)FudgetLineEditIds::TextPainter);
+}
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, background_style);
+void FudgetLineEdit::OnStyleInitialize()
+{
+    FudgetStyle *background_style;
+    if (!GetStyleStyle((int)FudgetLineEditIds::FrameStyle, background_style))
+        background_style = nullptr;
 
-    FudgetToken text_style;
-    if (!GetStyleToken(TextStyleToken, text_style))
-        text_style = FudgetToken::Invalid;
+    FudgetStyle *text_style;
+    if (!GetStyleStyle((int)FudgetLineEditIds::TextStyle, text_style))
+        text_style = nullptr;
 
-    _text_painter = CreateStylePainter<FudgetSingleLineTextPainter>(TextPainterToken, text_style);
+    InitializeStylePainter(_frame_painter, background_style);
+    InitializeStylePainter(_text_painter, text_style);
 
-    if (!GetStyleDrawArea(CaretDrawToken, _caret_draw))
+
+    if (!GetStyleDrawArea((int)FudgetLineEditIds::CaretDraw, _caret_draw))
         _caret_draw = FudgetDrawArea(Color::Black);
-    if (!GetStyleFloat(CaretBlinkTimeToken, _caret_blink_time))
+    if (!GetStyleFloat((int)FudgetLineEditIds::CaretBlinkTime, _caret_blink_time))
         _caret_blink_time = 1.0f;
-    if (!GetStyleFloat(CaretWidthToken, _caret_width))
+    if (!GetStyleFloat((int)FudgetLineEditIds::CaretWidth, _caret_width))
         _caret_width = 2.0f;
-    if (!GetStyleInt(CaretScrollCountToken, _character_scroll_count))
+    if (!GetStyleInt((int)FudgetLineEditIds::CaretScrollCount, _character_scroll_count))
         _character_scroll_count = 4;
 }
 
@@ -81,7 +64,7 @@ Float2 FudgetLineEdit::GetLayoutMinSize() const
 void FudgetLineEdit::OnDraw()
 {
     Rectangle bounds = GetBounds();
-    if (_frame_painter != nullptr)
+    if (_show_border && _frame_painter != nullptr)
         _frame_painter->Draw(this, bounds, GetVisualState());
 
     if (_text_painter == nullptr)
@@ -146,7 +129,7 @@ void FudgetLineEdit::OnSizeChanged()
 
 FudgetPadding FudgetLineEdit::GetInnerPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
+    return _show_border && _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
 }
 
 int FudgetLineEdit::CharIndexAt(Float2 pos)
@@ -215,6 +198,14 @@ FudgetInputResult FudgetLineEdit::OnMouseDown(Float2 pos, Float2 global_pos, Mou
 bool FudgetLineEdit::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
     return Base::OnMouseUp(pos, global_pos, button);
+}
+
+void FudgetLineEdit::SetShowBorder(bool value)
+{
+    if (_show_border == value)
+        return;
+    _show_border = value;
+    SizeModified();
 }
 
 void FudgetLineEdit::ScrollToPos()

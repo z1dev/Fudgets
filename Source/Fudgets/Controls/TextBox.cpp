@@ -4,37 +4,8 @@
 #include "Engine/Core/Types/StringBuilder.h"
 #include "../Layouts/Layout.h"
 
-FudgetToken FudgetTextBox::FramePainterToken = -1;
-FudgetToken FudgetTextBox::FrameStyleToken = -1;
-FudgetToken FudgetTextBox::TextPainterToken = -1;
-FudgetToken FudgetTextBox::TextStyleToken = -1;
-
-FudgetToken FudgetTextBox::CaretDrawToken = -1;
-FudgetToken FudgetTextBox::CaretBlinkTimeToken = -1;
-FudgetToken FudgetTextBox::CaretWidthToken = -1;
-FudgetToken FudgetTextBox::CaretScrollCountToken = -1;
-FudgetToken FudgetTextBox::BeamCursorToken = -1;
-FudgetToken FudgetTextBox::SnapTopLineToken = -1;
 
 
-void FudgetTextBox::InitializeTokens()
-{
-    FramePainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_FramePainter"));
-    FrameStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_FrameStyle"));
-
-
-    TextPainterToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_TextPainter"));
-    TextStyleToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_TextStyle"));
-
-    CaretDrawToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretDraw"));
-    CaretBlinkTimeToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretBlinkTime"));
-    CaretWidthToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretWidth"));
-    CaretScrollCountToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_CaretScrollCount"));
-
-    BeamCursorToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_BeamCursor"));
-
-    SnapTopLineToken = FudgetThemes::RegisterToken(TEXT("Fudgets_TextBox_SnapTopLine"));
-}
 
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
     _text_measurements(), _blink_passed(0.0f), _show_beam_cursor(false), _beam_cursor(CursorType::Default), _character_scroll_count(0),
@@ -47,34 +18,39 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_p
 
 void FudgetTextBox::OnInitialize()
 {
-    FudgetToken background_style;
-    if (!GetStyleToken(FrameStyleToken, background_style))
-        background_style = FudgetToken::Invalid;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetTextBoxIds::FramePainter);
+    _text_painter = CreateStylePainter<FudgetMultiLineTextPainter, FudgetTextBoxPainter>((int)FudgetTextBoxIds::TextPainter);
+}
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(FramePainterToken, background_style);
+void FudgetTextBox::OnStyleInitialize()
+{
+    FudgetStyle *background_style;
+    if (!GetStyleStyle((int)FudgetTextBoxIds::FrameStyle, background_style))
+        background_style = nullptr;
 
-    FudgetToken text_style;
-    if (!GetStyleToken(TextStyleToken, text_style))
-        text_style = FudgetToken::Invalid;
+    FudgetStyle *text_style;
+    if (!GetStyleStyle((int)FudgetTextBoxIds::TextStyle, text_style))
+        text_style = nullptr;
 
-    _text_painter = CreateStylePainter<FudgetMultiLineTextPainter>(TextPainterToken, text_style);
+    InitializeStylePainter(_frame_painter, background_style);
+    InitializeStylePainter(_text_painter, text_style);
 
-    if (!GetStyleDrawArea(CaretDrawToken, _caret_draw))
+    if (!GetStyleDrawArea((int)FudgetTextBoxIds::CaretDraw, _caret_draw))
         _caret_draw = FudgetDrawArea(Color::Black);
-    if (!GetStyleFloat(CaretBlinkTimeToken, _caret_blink_time))
+    if (!GetStyleFloat((int)FudgetTextBoxIds::CaretBlinkTime, _caret_blink_time))
         _caret_blink_time = 1.0f;
-    if (!GetStyleFloat(CaretWidthToken, _caret_width))
+    if (!GetStyleFloat((int)FudgetTextBoxIds::CaretWidth, _caret_width))
         _caret_width = 2.0f;
-    if (!GetStyleInt(CaretScrollCountToken, _character_scroll_count))
+    if (!GetStyleInt((int)FudgetTextBoxIds::CaretScrollCount, _character_scroll_count))
         _character_scroll_count = 4;
 
-    if (!GetStyleEnum<CursorType>(BeamCursorToken, _beam_cursor))
+    if (!GetStyleEnum<CursorType>((int)FudgetTextBoxIds::BeamCursor, _beam_cursor))
         _beam_cursor = CursorType::IBeam;
 
-    if (!GetStyleBool(SnapTopLineToken, _snap_top_line))
+    if (!GetStyleBool((int)FudgetTextBoxIds::SnapTopLine, _snap_top_line))
         _snap_top_line = false;
 
-    
+    MarkTextDirty();
 }
 
 void FudgetTextBox::OnDraw()

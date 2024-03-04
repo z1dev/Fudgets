@@ -28,6 +28,24 @@ enum class FudgetTextBoxSizingMode
 };
 
 
+API_ENUM()
+enum class FudgetTextBoxIds
+{
+    First = 6000,
+
+    FramePainter = First,
+    FrameStyle,
+    TextPainter,
+    TextStyle,
+
+    CaretDraw,
+    CaretBlinkTime,
+    CaretWidth,
+    CaretScrollCount,
+    BeamCursor,
+    SnapTopLine,
+};
+
 /// <summary>
 /// Multiline input box for unformatted basic text. Text can span over multiple lines either
 /// when lines are too long and word wrapping is enabled, or if there are newline characters
@@ -39,56 +57,11 @@ class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
     using Base = FudgetTextBoxBase;
     DECLARE_SCRIPTING_TYPE(FudgetTextBox);
 public:
-    /// <summary>
-    /// Initializes tokens used by the styles
-    /// </summary>
-    API_FUNCTION() static void InitializeTokens();
-
-    /// <summary>
-    /// Frame Painter token, for drawing the outer frame
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
-    /// <summary>
-    /// Frame Style token, styling for frame painter
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
-    /// <summary>
-    /// Text Painter token, to draw and measure text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextPainterToken;
-    /// <summary>
-    /// Text Style token, for styling the text painter
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextStyleToken;
-
-    /// <summary>
-    /// Caret Draw token, color, draw area or drawable
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken CaretDrawToken;
-    /// <summary>
-    /// Caret blink time token, time of visible and invisible caret
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken CaretBlinkTimeToken;
-    /// <summary>
-    /// Caret width token, the size of the caret
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken CaretWidthToken;
-    /// <summary>
-    /// Caret scroll count token, how many characters to scroll sideways in view when caret moves out of bounds
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken CaretScrollCountToken;
-
-    /// <summary>
-    /// Beam cursor token, cursor when mouse is over text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken BeamCursorToken;
-    /// <summary>
-    /// Snap Top Line token, keep whole top line height in view when scrolling
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SnapTopLineToken;
-
     /// <inheritdoc />
     void OnInitialize() override;
+
+    /// <inheritdoc />
+    void OnStyleInitialize() override;
 
     /// <inheritdoc />
     StringView GetText() const override { return _text; }

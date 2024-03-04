@@ -1,11 +1,38 @@
-﻿using FlaxEngine;
+﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace Fudgets
 {
 
     /// <inheritdoc />
+    partial class FudgetTheme
+    {
+        /// <summary>
+        /// Sets or creates a resource for an integer id. The resource can be of any type. Its use only depends on the
+        /// styles and controls that can use it.
+        /// Warning: This function accepts any enum value, but only works with int backed enums
+        /// </summary>
+        /// <typeparam name="T">Enum type with int backing used as the id</typeparam>
+        /// <param name="enum_value">Unique id of the resource</param>
+        /// <param name="resource">The value of the resource</param>
+        public unsafe void SetResource<T>(T enum_value, object resource) where T: unmanaged, Enum
+        {
+            SetResource(*(int*)(&enum_value), resource);
+        }
+
+        /// <summary>
+        /// Gets a resource for an integer id. The resource can be of any type. Its use only depends on the
+        /// styles and controls that can use it.
+        /// Warning: This function accepts any enum value, but only works with int backed enums
+        /// </summary>
+        /// <typeparam name="T">Enum type with int backing used as the id</typeparam>
+        /// <param name="enum_value">Unique id of the resource</param>
+        /// <param name="resource">The value of the resource</param>
+        public unsafe bool GetResource<T>(T enum_value, out object resource) where T : unmanaged, Enum
+        {
+            return GetResource(*(int*)(&enum_value), out resource);
+        }
+    }
 
     /// <inheritdoc />
     partial class FudgetThemes
@@ -18,25 +45,16 @@ namespace Fudgets
         private static bool initialized = false;
 
         /// <summary>
-        /// 
+        /// Creates a style with the given name. The function fails if another style with the same name
+        /// already exists.
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static FudgetStyle CreateStyle(string name)
+        /// <param name="style_name">Name of the new style. Must be unique</param>
+        /// <returns>The created style or null</returns>
+        public static FudgetStyle CreateStyle(string style_name)
         {
-            return CreateStyle(RegisterToken(name));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="style_token"></param>
-        /// <returns></returns>
-        public static FudgetStyle CreateStyle(FudgetToken style_token)
-        {
-            if (GetStyle(style_token) != null)
+            if (style_name.Length == 0 || GetStyle(style_name) != null)
                 return null;
-            FudgetStyle style = Internal_CreateStyle(ref style_token);
+            FudgetStyle style = Internal_CreateStyle(style_name);
 
 #if FLAX_EDITOR
             if (!RuntimeUse)
@@ -45,6 +63,34 @@ namespace Fudgets
 #endif
             registeredStyles.Add(style);
             return style;
+        }
+
+        /// <summary>
+        /// Creates a style for a class' full name. The function fails if another style with the same name already exists.
+        /// </summary>
+        /// <typeparam name="T">Type to create a style for</typeparam>
+        /// <returns>The created style or null</returns>
+        public static FudgetStyle CreateStyle<T>() where T: class
+        {
+            string style_name = typeof(T).FullName;
+            return CreateStyle(style_name);
+        }
+
+        /// <summary>
+        /// Returns a style based on a class' full name, creating it if it doesn't exist. The style can be accessed with GetStyle later
+        /// with the same name. Styles with a name matching a control's or painter's full class name will be used for that control or
+        /// painter by default.
+        /// </summary>
+        /// <typeparam name="T">Name of class to get the style for</typeparam>
+        /// <returns>A style with the same name as the full name of the generic class</returns>
+        public static FudgetStyle CreateOrGetStyle<T>() where T: class
+        {
+            string style_name = typeof(T).FullName;
+            FudgetStyle result = CreateStyle(style_name);
+            if (result != null)
+                return result;
+
+            return GetStyle(style_name);
         }
 
         /// <summary>

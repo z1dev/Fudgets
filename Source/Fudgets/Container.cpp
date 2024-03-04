@@ -25,8 +25,13 @@ FUDGET_FACTORY(FudgetLayout, layout);
 
 int FudgetContainer::AddChild(FudgetControl *control, int index)
 {
-    if (control == nullptr || control->GetParent() != nullptr)
+    if (control == nullptr || control->GetParent() == this)
         return -1;
+    if (control->GetParent() != nullptr)
+    {
+        control->GetParent()->RemoveChild(control);
+    }
+
 
     if (_changing)
     {
@@ -587,20 +592,31 @@ void FudgetContainer::DoDraw()
         c->DoDraw();
 }
 
-void FudgetContainer::Initialize()
+void FudgetContainer::DoInitialize()
 {
     if (_guiRoot == nullptr)
         return;
 
+    Base::DoInitialize();
+
     for (FudgetControl *c : _children)
     {
         if (!c->IsInitialized())
-        {
-            c->Initialize();
-            c->SetState(FudgetControlState::Initialized, true);
-        }
+            c->DoInitialize();
     }
-    Base::Initialize();
+}
+
+void FudgetContainer::DoStyleInitialize()
+{
+    if (_guiRoot == nullptr || HasAnyState(FudgetControlState::StyleInitialized) || (_parent != nullptr && !_parent->HasAnyState(FudgetControlState::StyleInitialized)))
+        return;
+    Base::DoStyleInitialize();
+
+    for (FudgetControl *c : _children)
+    {
+        if (!c->IsStyleInitialized())
+            c->DoStyleInitialize();
+    }
 }
 
 FudgetControlFlag FudgetContainer::GetInitFlags() const

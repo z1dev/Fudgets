@@ -417,7 +417,10 @@ public:
     void DoDraw() override;
 protected:
     /// <inheritdoc />
-    void Initialize() override;
+    void DoInitialize() override;
+
+    /// <inheritdoc />
+    void DoStyleInitialize() override;
 
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;

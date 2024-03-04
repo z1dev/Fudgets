@@ -72,26 +72,21 @@ private:
 };
 
 
+API_ENUM()
+enum class FudgetListBoxItemPainterIds
+{
+    First = 4000,
+
+    TextPainter = First,
+    TextStyle,
+};
+
 API_CLASS()
 class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter
 {
     using Base = FudgetListItemPainter;
     DECLARE_SCRIPTING_TYPE(FudgetListBoxItemPainter);
 public:
-    /// <summary>
-    /// Text Painter token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextPainterToken;
-    /// <summary>
-    /// Text Style token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextStyleToken;
-
-    /// <summary>
-    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
-    /// </summary>
-    API_FUNCTION() static void CreateStyle();
-
     ~FudgetListBoxItemPainter();
 
     /// <inheritdoc />
@@ -102,6 +97,18 @@ public:
     Float2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
 private:
     FudgetSingleLineTextPainter *_text_painter;
+};
+
+
+API_ENUM()
+enum class FudgetListBoxIds
+{
+    First = 5000,
+
+    FramePainter = First,
+    FrameStyle,
+    ItemPainter,
+    ItemStyle,
 };
 
 /// <summary>
@@ -116,29 +123,12 @@ class FUDGETS_API FudgetListBox : public FudgetListControl
 public:
     ~FudgetListBox();
 
-    /// <summary>
-    /// Initializes tokens used by the styles
-    /// </summary>
-    API_FUNCTION() static void InitializeTokens();
-    /// <summary>
-    /// Frame Painter token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FramePainterToken;
-    /// <summary>
-    /// Frame Style token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FrameStyleToken;
-    /// <summary>
-    /// Frame Painter token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ItemPainterToken;
-    /// <summary>
-    /// Frame Style token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ItemStyleToken;
 
     /// <inheritdoc />
     void OnInitialize() override;
+
+    /// <inheritdoc />
+    void OnStyleInitialize() override;
 
     /// <inheritdoc />
     void OnDraw() override;

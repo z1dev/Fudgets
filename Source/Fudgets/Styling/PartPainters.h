@@ -12,6 +12,19 @@ class FudgetControl;
 class FudgetDrawable;
 
 
+API_ENUM()
+enum class FudgetPainterIds
+{
+    First = 1000000,
+
+    AlignedImagePainter = First,
+    FramedFieldPainter,
+    LineEditTextPainter,
+    TextBoxPainter,
+    ListBoxItemPainter,
+};
+
+
 /// <summary>
 /// Supported states for framed field drawing
 /// </summary>
@@ -76,7 +89,7 @@ public:
     API_PROPERTY() FORCE_INLINE FudgetTheme* GetTheme() const { return _theme; }
 
     /// <summary>
-    /// The style used for drawing. In derived classes requres GetStyleToken to return a valid style token
+    /// The style used for drawing. In derived classes requres GetStyle to return a valid style.
     /// </summary>
     API_PROPERTY() FORCE_INLINE FudgetStyle* GetStyle() const { return _style != nullptr ? _style : GetDefaultStyle(); }
 protected:
@@ -168,6 +181,43 @@ enum class FudgetImageVertAlign
 };
 
 
+API_ENUM()
+enum class FudgetAlignedImagePainterIds
+{
+    First = 8000,
+
+    Image = First,
+    HoveredImage,
+    PressedImage,
+    DownImage,
+    FocusedImage,
+    DisabledImage,
+
+    ImageTint,
+    HoveredImageTint,
+    PressedImageTint,
+    DownImageTint,
+    FocusedImageTint,
+    DisabledImageTint,
+
+    ImageOffset,
+    HoveredImageOffset,
+    PressedImageOffset,
+    DownImageOffset,
+    FocusedImageOffset,
+    DisabledImageOffset,
+
+    ImagePadding,
+    HoveredImagePadding,
+    PressedImagePadding,
+    DownImagePadding,
+    FocusedImagePadding,
+    DisabledImagePadding,
+
+    HorzAlign,
+    VertAlign,
+};
+
 /// <summary>
 /// Painter for controls that have a background and a frame around a field. For text editors
 /// list boxes, drop down menus.
@@ -178,130 +228,11 @@ class FUDGETS_API FudgetAlignedImagePainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetAlignedImagePainter);
 public:
-    /// <summary>
-    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
-    /// </summary>
-    API_FUNCTION() static void CreateStyle();
-
     /// <inheritdoc />
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelfToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ImageToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredImageToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedImageToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedImageToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownImageToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledImageToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ImageTintToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredImageTintToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedImageTintToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedImageTintToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownImageTintToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledImageTintToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ImageOffsetToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredImageOffsetToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedImageOffsetToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedImageOffsetToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownImageOffsetToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledImageOffsetToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ImagePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredImagePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedImagePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownImagePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedImagePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledImagePaddingToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HorzAlignToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken VertAlignToken;
 private:
     AssetReference<TextureBase> _image;
     AssetReference<TextureBase> _hovered_image;
@@ -336,6 +267,39 @@ private:
 };
 
 
+API_ENUM()
+enum class FudgetFramedFieldPainterIds
+{
+    First = 9000,
+
+    FieldBackground = First,
+    HoveredFieldBackground,
+    PressedFieldBackground,
+    DownFieldBackground,
+    DisabledFieldBackground,
+    FocusedFieldBackground,
+    FieldPadding,
+    HoveredFieldPadding,
+    PressedFieldPadding,
+    DownFieldPadding,
+    DisabledFieldPadding,
+    FocusedFieldPadding,
+
+    FrameDraw,
+    HoveredFrameDraw,
+    PressedFrameDraw,
+    DownFrameDraw,
+    FocusedFrameDraw,
+    DisabledFrameDraw,
+    FramePadding,
+    HoveredFramePadding,
+    PressedFramePadding,
+    DownFramePadding,
+    FocusedFramePadding,
+    DisabledFramePadding,
+
+    ContentPadding,
+};
 
 /// <summary>
 /// Painter for controls that have a background and a frame around a field. For text editors
@@ -347,10 +311,6 @@ class FUDGETS_API FudgetFramedFieldPainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
 public:
-    /// <summary>
-    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
-    /// </summary>
-    API_FUNCTION() static void CreateStyle();
 
     /// <inheritdoc />
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
@@ -358,113 +318,6 @@ public:
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
 
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelfToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredFieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedFieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownFieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedFieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledFieldBackgroundToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FieldPaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredFieldPaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedFieldPaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownFieldPaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedFieldPaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledFieldPaddingToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredFrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedFrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedFrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownFrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledFrameDrawToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FramePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken HoveredFramePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken PressedFramePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DownFramePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedFramePaddingToken;
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledFramePaddingToken;
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken ContentPaddingToken;
 
     /// <summary>
     /// Padding inside the rectangle of the painted frame that restricts the size of the contents inside the frame
@@ -650,6 +503,23 @@ public:
     API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
 };
 
+
+API_ENUM()
+enum class FudgetLineEditTextPainterIds
+{
+    First = 10000,
+
+    SelectionDraw = First,
+    FocusedSelectionDraw,
+    DisabledSelectionDraw,
+    TextColor,
+    DisabledTextColor,
+    SelectedTextColor,
+    FocusedSelectedTextColor,
+    DisabledSelectedTextColor,
+    Font,
+};
+
 /// <summary>
 /// Painter of unformatted text drawn with a single font, that can have spans which should be drawn
 /// as selectable
@@ -660,11 +530,6 @@ class FUDGETS_API FudgetLineEditTextPainter : public FudgetSingleLineTextPainter
     using Base = FudgetSingleLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
 public:
-    /// <summary>
-    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
-    /// </summary>
-    API_FUNCTION() static void CreateStyle();
-
     /// <inheritdoc />
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
@@ -683,48 +548,6 @@ public:
     /// <inheritdoc />
     float GetFontHeight() const override;
 
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelfToken;
-
-    /// <summary>
-    /// Token for background area of selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelectionDrawToken;
-    /// <summary>
-    /// Token for background area of focused and selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedSelectionDrawToken;
-    /// <summary>
-    /// Token for background area of disabled and selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledSelectionDrawToken;
-    /// <summary>
-    /// Token for normal text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextColorToken;
-    /// <summary>
-    /// Token for disabled text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledTextColorToken;
-    /// <summary>
-    /// Token for selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelectedTextColorToken;
-    /// <summary>
-    /// Token for focused and selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedSelectedTextColorToken;
-    /// <summary>
-    /// Token for disabled and selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledSelectedTextColorToken;
-    /// <summary>
-    /// Token for the font used for drawing
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FontToken;
 private:
     FudgetDrawable *_sel_area;
     FudgetDrawable *_focused_sel_area;

@@ -137,10 +137,11 @@ struct TIsPODType<FudgetMultiLineTextOptions>
     enum { Value = true };
 };
 
+
 /// <summary>
 /// Base class for text painters of multi-line text.
 /// </summary>
-API_CLASS()
+API_CLASS(Abstract)
 class FUDGETS_API FudgetMultiLineTextPainter : public FudgetPartPainter
 {
     using Base = FudgetPartPainter;
@@ -260,6 +261,23 @@ protected:
 };
 
 
+API_ENUM()
+enum class FudgetTextBoxPainterIds
+{
+    First = 7000,
+
+    SelectionDraw = First,
+    FocusedSelectionDraw,
+    DisabledSelectionDraw,
+    TextColor,
+    DisabledTextColor,
+    SelectedTextColor,
+    FocusedSelectedTextColor,
+    DisabledSelectedTextColor,
+    Font,
+};
+
+
 /// <summary>
 /// Text painter for multi-line text boxes with unformatted text.
 /// </summary>
@@ -269,53 +287,6 @@ class FUDGETS_API FudgetTextBoxPainter : public FudgetMultiLineTextPainter
     using Base = FudgetMultiLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetTextBoxPainter);
 public:
-    /// <summary>
-    /// Creates the default style for drawing, filling the resources to use that will be looked up in the current theme.
-    /// </summary>
-    API_FUNCTION() static void CreateStyle();
-
-    /// <summary>
-    /// Token
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelfToken;
-
-    /// <summary>
-    /// Token for background area of selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelectionDrawToken;
-    /// <summary>
-    /// Token for background area of focused and selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedSelectionDrawToken;
-    /// <summary>
-    /// Token for background area of disabled and selected text
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledSelectionDrawToken;
-    /// <summary>
-    /// Token for normal text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken TextColorToken;
-    /// <summary>
-    /// Token for disabled text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledTextColorToken;
-    /// <summary>
-    /// Token for selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken SelectedTextColorToken;
-    /// <summary>
-    /// Token for focused and selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FocusedSelectedTextColorToken;
-    /// <summary>
-    /// Token for disabled and selected text color
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken DisabledSelectedTextColorToken;
-    /// <summary>
-    /// Token for the font used for drawing
-    /// </summary>
-    API_FIELD(ReadOnly) static FudgetToken FontToken;
-
     /// <inheritdoc />
     void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
 
