@@ -194,7 +194,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         List<FudgetControlNode> nodes = RecurseAndGetSubset(_tree, (node) => { return true; });
         foreach (TreeNode node in nodes)
         {
-            if (node.Tag is not FudgetControl control)
+            if (node.Tag is not FudgetControl control || node.Tag is FudgetAssetRoot)
             {
                 continue;
             }

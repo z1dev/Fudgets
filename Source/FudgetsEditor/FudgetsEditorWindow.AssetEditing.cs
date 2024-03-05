@@ -202,7 +202,6 @@ public partial class FudgetsEditorWindow
         FudgetControlNode rootNode = new FudgetControlNode(RootObject);
         TreeNode localNode = _tree.AddChild(rootNode);
         localNode.Text = Path.GetFileNameWithoutExtension(_asset != null ? _asset.Path : "Fudget UI");
-        localNode.Tag = null;
         newExpandedNodes.Add(localNode);
 
         BuildForControl(RootObject, rootNode, expandedControls, ref newExpandedNodes, oldControlSelection, ref newSelectedNodes);
@@ -629,7 +628,7 @@ public partial class FudgetsEditorWindow
             int newOrder = -1;
 
             // Check if has no control (rules out the Root Control)
-            if (myControl == null)
+            if (myControl is FudgetAssetRoot)
             {
                 return result;
             }
@@ -847,7 +846,7 @@ public class DragFudgets<U> : DragHelper<FudgetControlNode, U> where U : DragEve
         foreach (var item in items)
         {
             object value = item.Tag;
-            if (value == null || value is not FudgetControl control)
+            if (value == null || value is FudgetAssetRoot || value is not FudgetControl control)
                 continue;
 
             text += control.ID.ToString("N") + '\n';

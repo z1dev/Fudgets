@@ -28,41 +28,41 @@ namespace FudgetsEditor.CustomEditors
                 return;
 
             FudgetControl control = (FudgetControl)Values[0];
-            if (control.Parent == null)
-                return;
-
-            FudgetContainer parent = control.Parent;
-            FudgetLayout fudgetLayout = parent.Layout;
-
-            FudgetLayoutSlot slot = fudgetLayout.GetSlotInternal(control.IndexInParent);
-
-            // TODO: I might be doing this wrong. Investigate further.
-            CustomValueContainer values = new CustomValueContainer(new ScriptType(typeof(FudgetLayoutSlot)), (instance, index) => 
+            if (control.Parent != null && control is not FudgetAssetRoot)
             {
-                FudgetControl control = instance as FudgetControl;
-                if (control.Parent == null)
-                    return null;
+                FudgetContainer parent = control.Parent;
+                FudgetLayout fudgetLayout = parent.Layout;
 
-                FudgetContainer container = control.Parent;
-                FudgetLayout fudgetLayout = container.Layout;
+                FudgetLayoutSlot slot = fudgetLayout.GetSlotInternal(control.IndexInParent);
 
-                return fudgetLayout.GetSlotInternal(control.IndexInParent);
-            });
-            values.Add(slot);
+                // TODO: I might be doing this wrong. Investigate further.
+                CustomValueContainer values = new CustomValueContainer(new ScriptType(typeof(FudgetLayoutSlot)), (instance, index) =>
+                {
+                    FudgetControl control = instance as FudgetControl;
+                    if (control.Parent == null)
+                        return null;
 
-            GenericEditor editor = new GenericEditor();
-            _group = layout.Group("Layout Properties", null);
-            CustomEditor newEditor = _group.Object(values, editor);
+                    FudgetContainer container = control.Parent;
+                    FudgetLayout fudgetLayout = container.Layout;
 
-            newEditor.Refresh();
-            newEditor.RebuildLayout();
-            RebuildLayout();
+                    return fudgetLayout.GetSlotInternal(control.IndexInParent);
+                });
+                values.Add(slot);
+
+                GenericEditor editor = new GenericEditor();
+                _group = layout.Group("Layout Properties", null);
+                CustomEditor newEditor = _group.Object(values, editor);
+
+                newEditor.Refresh();
+                newEditor.RebuildLayout();
+                RebuildLayout();
+            }
 
             if (control is not FudgetContainer container)
                 return;
 
             _group = layout.Group("Layout", null);
-            _label = _group.Label($"Current Layout: {FlaxEditor.Utilities.Utils.GetPropertyNameUI(new ScriptType(fudgetLayout.GetType()).Name)}");
+            _label = _group.Label($"Current Layout: {FlaxEditor.Utilities.Utils.GetPropertyNameUI(new ScriptType(container.Layout.GetType()).Name)}");
             _button = _group.Button("Change Layout");
             _button.Button.Clicked += () =>
             {
