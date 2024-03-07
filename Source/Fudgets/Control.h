@@ -1110,7 +1110,7 @@ public:
     /// and the Hidden state is added, causing it to not take up space in its layout anymore. If a parent control
     /// is already hidden, this only sets the state flag.
     /// </summary>
-    API_FUNCTION() FORCE_INLINE void Hide() { SetVisible(true); }
+    API_FUNCTION() FORCE_INLINE void Hide() { SetVisible(false); }
 
     /// <summary>
     /// Gets one of the visibility values of the control. Controls can be Visible, Invisible or Hidden. Invisible
