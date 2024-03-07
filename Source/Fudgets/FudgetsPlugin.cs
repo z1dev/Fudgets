@@ -51,6 +51,8 @@ namespace Fudgets
 
             FudgetThemes.Initialize(true);
             FudgetThemes.InitializeManaged(true);
+
+            FudgetThemes.CreateDefaultThemesAndStyles();
         }
 
         /// <inheritdoc />

@@ -3,6 +3,7 @@
 #include "StyleStructs.h"
 #include "PartPainters.h"
 #include "DrawableBuilder.h"
+#include "../Controls/Button.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
@@ -81,6 +82,11 @@ void FudgetTheme::SetResource(int res_id, Variant value)
 	_resources[res_id] = value;
 }
 
+void FudgetTheme::SetForwarding(int res_id, int forward_id)
+{
+	_resources[res_id] = StructToVariant(FudgetResourceId(forward_id));
+}
+
 FudgetTheme* FudgetTheme::Duplicate() const
 {
 	FudgetTheme *result = New<FudgetTheme>(*this);
@@ -122,10 +128,54 @@ void FudgetThemes::Initialize(bool in_game)
 		_data = _edittime_data = new Data;
 	}
 #endif
+}
 
+void FudgetThemes::CreateDefaultThemesAndStyles()
+{
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_data->_theme_map[MainThemeName] = main_theme;
+
+	// Basic
+
+	main_theme->SetResource((int)FudgetBasicPainterIds::Background, Color::White);
+	main_theme->SetResource((int)FudgetBasicPainterIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::FrameEdge, Color(.5f, .5f, .5f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::FocusedFrameEdge, Color(.5f, .5f, .7f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::FramePadding, FudgetPadding(3.f));
+
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonHoveredSurface, Color(.85f, .85f, .85f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonDisabledSurface, Color(.6f, .6f, .6f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonFocusedSurface, Color(.75f, .75f, .85f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonPressedSurface, Color(.65f, .65f, .65f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonContentPressedOffset, Float2(0.f, 1.f));
+
+	// Button
+
+	/*
+	FramePainter,
+	FrameStyle,
+
+	ContentPainter,
+	ContentStyle,
+
+	ContentImage,
+	ContentHoveredImage,
+	ContentPressedImage,
+	ContentDisabledImage,
+	*/
+	main_theme->SetForwarding((int)FudgetButtonIds::Background, (int)FudgetBasicPainterIds::ButtonSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::HoveredBackground, (int)FudgetBasicPainterIds::ButtonHoveredSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::PressedBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::DownBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::DisabledBackground, (int)FudgetBasicPainterIds::ButtonDisabledSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::Focusedbackground, (int)FudgetBasicPainterIds::ButtonFocusedSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::ContentPadding, (int)FudgetBasicPainterIds::FramePadding);
+
+	main_theme->SetForwarding((int)FudgetButtonIds::ContentPressedOffset, (int)FudgetBasicPainterIds::ButtonContentPressedOffset);
+
 }
+
 
 void FudgetThemes::Uninitialize(bool in_game)
 {

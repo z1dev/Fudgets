@@ -34,6 +34,7 @@ FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
 bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetStyle* &result) const
 {
     FudgetTheme *theme = control->GetActiveTheme();
+
     int values[2] = { mapped_value, painter_id };
     result = nullptr;
     bool success = false;
@@ -43,6 +44,19 @@ bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, FudgetStyle *styl
             success = style_override->GetStyleResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleStyle(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+            {
+                String str;
+                if (FudgetStyle::StringFromVariant(values[ix], str))
+                {
+                    result = FudgetThemes::GetStyle(str);
+                    success = result != nullptr;
+                }
+            }
+        }
     }
 
     return success;
@@ -59,6 +73,12 @@ bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *st
             style_override->GetTextureResource(theme, values[ix], tex);
         if (tex == nullptr)
             control->GetStyleTexture(values[ix], tex);
+        if (tex == nullptr)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                FudgetStyle::TextureFromVariant(var, tex);
+        }
     }
     result = tex;
     return tex != nullptr;
@@ -75,6 +95,12 @@ bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *st
             style_override->GetTextureResource(theme, values[ix], result);
         if (result == nullptr)
             control->GetStyleTexture(values[ix], result);
+        if (result == nullptr)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                FudgetStyle::TextureFromVariant(var, result);
+        }
     }
 
     return result != nullptr;
@@ -109,6 +135,12 @@ bool FudgetPartPainter::GetMappedString(FudgetControl *control, FudgetStyle *sty
             success = style_override->GetStringResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleString(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::StringFromVariant(var, result);
+        }
     }
 
     return success;
@@ -126,6 +158,12 @@ bool FudgetPartPainter::GetMappedFloat(FudgetControl *control, FudgetStyle *styl
             success = style_override->GetFloatResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleFloat(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::FloatFromVariant(var, result);
+        }
     }
 
     return success;
@@ -143,6 +181,12 @@ bool FudgetPartPainter::GetMappedFloat2(FudgetControl *control, FudgetStyle *sty
             success = style_override->GetFloat2Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleFloat2(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Float2FromVariant(var, result);
+        }
     }
 
     return success;
@@ -160,6 +204,12 @@ bool FudgetPartPainter::GetMappedFloat3(FudgetControl *control, FudgetStyle *sty
             success = style_override->GetFloat3Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleFloat3(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Float3FromVariant(var, result);
+        }
     }
 
     return success;
@@ -177,6 +227,12 @@ bool FudgetPartPainter::GetMappedFloat4(FudgetControl *control, FudgetStyle *sty
             success = style_override->GetFloat4Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleFloat4(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Float4FromVariant(var, result);
+        }
     }
 
     return success;
@@ -194,6 +250,12 @@ bool FudgetPartPainter::GetMappedInt(FudgetControl *control, FudgetStyle *style_
             success = style_override->GetIntResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleInt(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::IntFromVariant(var, result);
+        }
     }
 
     return success;
@@ -211,6 +273,12 @@ bool FudgetPartPainter::GetMappedInt2(FudgetControl *control, FudgetStyle *style
             success = style_override->GetInt2Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleInt2(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Int2FromVariant(var, result);
+        }
     }
 
     return success;
@@ -228,6 +296,12 @@ bool FudgetPartPainter::GetMappedInt3(FudgetControl *control, FudgetStyle *style
             success = style_override->GetInt3Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleInt3(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Int3FromVariant(var, result);
+        }
     }
 
     return success;
@@ -245,6 +319,12 @@ bool FudgetPartPainter::GetMappedInt4(FudgetControl *control, FudgetStyle *style
             success = style_override->GetInt4Resource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleInt4(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::Int4FromVariant(var, result);
+        }
     }
 
     return success;
@@ -262,6 +342,12 @@ bool FudgetPartPainter::GetMappedPadding(FudgetControl *control, FudgetStyle *st
             success = style_override->GetPaddingResource(theme, values[ix], result);
         if (!success)
             success = control->GetStylePadding(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::PaddingFromVariant(var, result);
+        }
     }
 
     return success;
@@ -279,8 +365,13 @@ bool FudgetPartPainter::GetMappedDrawable(FudgetControl *control, FudgetStyle *s
             success = style_override->GetDrawableResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleDrawable(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::DrawableFromVariant(nullptr, theme, var, result);
+        }
     }
-
     return success;
 }
 
@@ -296,8 +387,13 @@ bool FudgetPartPainter::GetMappedDrawArea(FudgetControl *control, FudgetStyle *s
             success = style_override->GetDrawAreaResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleDrawArea(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::AreaFromVariant(var, result);
+        }
     }
-
     return success;
 }
 
@@ -313,6 +409,12 @@ bool FudgetPartPainter::GetMappedFont(FudgetControl *control, FudgetStyle *style
             success = style_override->GetFontResource(theme, values[ix], result);
         if (!success)
             success = control->GetStyleFont(values[ix], result);
+        if (!success)
+        {
+            Variant var;
+            if (theme->GetResource(values[ix], var))
+                success = FudgetStyle::FontFromVariant(var, result);
+        }
     }
 
     return success;

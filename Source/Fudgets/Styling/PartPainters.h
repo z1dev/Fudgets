@@ -6,6 +6,60 @@
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
 
+
+API_ENUM()
+enum class FudgetBasicPainterIds
+{
+    First = 1,
+
+    /// <summary>
+    /// Background drawable or color, used for the standard framed controls
+    /// </summary>
+    Background = First,
+    /// <summary>
+    /// Disabled background drawable or color, used for the standard framed controls
+    /// </summary>
+    DisabledBackground,
+    /// <summary>
+    /// Frame edge drawable or color, used for the standard framed controls
+    /// </summary>
+    FrameEdge,
+    /// <summary>
+    /// Focused frame edge drawable or color, used for the standard framed controls
+    /// </summary>
+    FocusedFrameEdge,
+    /// <summary>
+    /// Padding inside the frame, used for the standard framed controls
+    /// </summary>
+    FramePadding,
+
+    /// <summary>
+    /// Button surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonSurface,
+    /// <summary>
+    /// Button hovered surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonHoveredSurface,
+    /// <summary>
+    /// Button disabled surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonDisabledSurface,
+    /// <summary>
+    /// Button focused surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonFocusedSurface,
+    /// <summary>
+    /// Button pressed or down surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonPressedSurface,
+    /// <summary>
+    /// Button offset to move contents visually when the button is pressed.
+    /// </summary>
+    ButtonContentPressedOffset,
+};
+
+
 class FudgetTheme;
 class FudgetStyle;
 class FudgetControl;

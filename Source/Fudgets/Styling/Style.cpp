@@ -587,7 +587,7 @@ bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, int id, API_PARAM(Out)
     Variant var;
     if (GetResourceValue(theme, id, true, var))
     {
-        if (DrawableFromVariant(theme, var, result))
+        if (DrawableFromVariant(this, theme, var, result))
             return true;
     }
     result = nullptr; // FudgetDrawInstructionList();
@@ -752,7 +752,7 @@ void FudgetStyle::ParentResourceWasReset(int id, FudgetStyleResource *resource)
         style->ParentResourceWasReset(id, resource);
 }
 
-bool FudgetStyle::PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result) const
+bool FudgetStyle::PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result)
 {
     if (var.Type.Type == VariantType::Structure)
     {
@@ -776,7 +776,7 @@ bool FudgetStyle::PainterMappingFromVariant(const Variant &var, FudgetPartPainte
     return false;
 }
 
-bool FudgetStyle::StringFromVariant(const Variant &var, String &result) const
+bool FudgetStyle::StringFromVariant(const Variant &var, String &result)
 {
     if (var.Type.Type == VariantType::String)
     {
@@ -788,7 +788,7 @@ bool FudgetStyle::StringFromVariant(const Variant &var, String &result) const
 }
 
 
-bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result) const
+bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
@@ -818,7 +818,7 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result) co
     return false;
 }
 
-bool FudgetStyle::DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
+bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
@@ -851,7 +851,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetTheme *theme, const Variant &var, Fu
             FudgetDrawInstructionList *arealist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
             if (arealist == nullptr)
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(this, theme, arealist);
+            result = FudgetDrawable::FromDrawInstructionList(style, theme, arealist);
             return true;
         }
     }
@@ -859,7 +859,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetTheme *theme, const Variant &var, Fu
     return false;
 }
 
-bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result) const
+bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result)
 {
     if (var.Type.Type == VariantType::Asset)
     {
@@ -870,7 +870,7 @@ bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result) c
     return false;
 }
 
-bool FudgetStyle::TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const
+bool FudgetStyle::TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
@@ -908,7 +908,7 @@ bool FudgetStyle::TextDrawSettingsFromVariant(const Variant &var, FudgetTextDraw
     return false;
 }
 
-bool FudgetStyle::FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const
+bool FudgetStyle::FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result)
 {
     if (var.Type.Type == VariantType::Structure)
     {
@@ -923,7 +923,7 @@ bool FudgetStyle::FontSettingsFromVariant(const Variant &var, FudgetFontSettings
     return false;
 }
 
-bool FudgetStyle::FontFromVariant(const Variant &var, FudgetFont &result) const
+bool FudgetStyle::FontFromVariant(const Variant &var, FudgetFont &result)
 {
     if (!FontSettingsFromVariant(var, result.Settings))
     {
@@ -948,7 +948,7 @@ bool FudgetStyle::FontFromVariant(const Variant &var, FudgetFont &result) const
     return true;
 }
 
-bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result) const
+bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result)
 {
     if (var.Type.Type == VariantType::Structure)
     {
@@ -964,7 +964,7 @@ bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result) 
     return false;
 }
 
-bool FudgetStyle::BoolFromVariant(const Variant &var, bool &result) const
+bool FudgetStyle::BoolFromVariant(const Variant &var, bool &result)
 {
     if (var.Type.Type == VariantType::Bool)
     {
@@ -974,7 +974,7 @@ bool FudgetStyle::BoolFromVariant(const Variant &var, bool &result) const
     return false;
 }
 
-bool FudgetStyle::FloatFromVariant(const Variant &var, float &result) const
+bool FudgetStyle::FloatFromVariant(const Variant &var, float &result)
 {
     if (var.Type.Type == VariantType::Float)
     {
@@ -984,7 +984,7 @@ bool FudgetStyle::FloatFromVariant(const Variant &var, float &result) const
     return false;
 }
 
-bool FudgetStyle::Float2FromVariant(const Variant &var, Float2 &result) const
+bool FudgetStyle::Float2FromVariant(const Variant &var, Float2 &result)
 {
     if (var.Type.Type == VariantType::Float2)
     {
@@ -994,7 +994,7 @@ bool FudgetStyle::Float2FromVariant(const Variant &var, Float2 &result) const
     return false;
 }
 
-bool FudgetStyle::Float3FromVariant(const Variant &var, Float3 &result) const
+bool FudgetStyle::Float3FromVariant(const Variant &var, Float3 &result)
 {
     if (var.Type.Type == VariantType::Float3)
     {
@@ -1004,7 +1004,7 @@ bool FudgetStyle::Float3FromVariant(const Variant &var, Float3 &result) const
     return false;
 }
 
-bool FudgetStyle::Float4FromVariant(const Variant &var, Float4 &result) const
+bool FudgetStyle::Float4FromVariant(const Variant &var, Float4 &result)
 {
     if (var.Type.Type == VariantType::Float4)
     {
@@ -1014,7 +1014,7 @@ bool FudgetStyle::Float4FromVariant(const Variant &var, Float4 &result) const
     return false;
 }
 
-bool FudgetStyle::IntFromVariant(const Variant &var, int &result) const
+bool FudgetStyle::IntFromVariant(const Variant &var, int &result)
 {
     if (var.Type.Type == VariantType::Int)
     {
@@ -1024,7 +1024,7 @@ bool FudgetStyle::IntFromVariant(const Variant &var, int &result) const
     return false;
 }
 
-bool FudgetStyle::Int2FromVariant(const Variant &var, Int2 &result) const
+bool FudgetStyle::Int2FromVariant(const Variant &var, Int2 &result)
 {
     if (var.Type.Type == VariantType::Int2)
     {
@@ -1034,7 +1034,7 @@ bool FudgetStyle::Int2FromVariant(const Variant &var, Int2 &result) const
     return false;
 }
 
-bool FudgetStyle::Int3FromVariant(const Variant &var, Int3 &result) const
+bool FudgetStyle::Int3FromVariant(const Variant &var, Int3 &result)
 {
     if (var.Type.Type == VariantType::Int3)
     {
@@ -1044,7 +1044,7 @@ bool FudgetStyle::Int3FromVariant(const Variant &var, Int3 &result) const
     return false;
 }
 
-bool FudgetStyle::Int4FromVariant(const Variant &var, Int4 &result) const
+bool FudgetStyle::Int4FromVariant(const Variant &var, Int4 &result)
 {
     if (var.Type.Type == VariantType::Int4)
     {
@@ -1054,7 +1054,7 @@ bool FudgetStyle::Int4FromVariant(const Variant &var, Int4 &result) const
     return false;
 }
 
-bool FudgetStyle::ColorFromVariant(const Variant &var, Color &result) const
+bool FudgetStyle::ColorFromVariant(const Variant &var, Color &result)
 {
     if (var.Type.Type == VariantType::Color)
     {

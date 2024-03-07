@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using FlaxEngine;
 using FlaxEditor;
 using FlaxEditor.Content;
-using static FlaxEditor.GUI.Docking.DockHintWindow;
 using Fudgets;
 
 namespace FudgetsEditor;
@@ -40,6 +39,7 @@ public class TestEditorPlugin : EditorPlugin
         FudgetThemes.Initialize(false);
         FudgetThemes.InitializeManaged(false);
 
+        FudgetThemes.CreateDefaultThemesAndStyles();
     }
 
     /// <inheritdoc />

@@ -630,6 +630,27 @@ public:
     /// <param name="result">Receives the resource's value if it is found.</param>
     /// <returns>Whether a value with an id was found that was stored in result</returns>
     API_FUNCTION() bool GetTextDrawSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result);
+
+    static bool PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result);
+    static bool StringFromVariant(const Variant &var, String &result);
+    static bool DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
+    static bool AreaFromVariant(const Variant &var, FudgetDrawArea &result);
+    static bool TextureFromVariant(const Variant &var, TextureBase* &result);
+    static bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result);
+    static bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result);
+    static bool FontFromVariant(const Variant &var, FudgetFont &result);
+    static bool PaddingFromVariant(const Variant &var, FudgetPadding &result);
+    static bool BoolFromVariant(const Variant &var, bool &result);
+    static bool FloatFromVariant(const Variant &var, float &result);
+    static bool Float2FromVariant(const Variant &var, Float2 &result);
+    static bool Float3FromVariant(const Variant &var, Float3 &result);
+    static bool Float4FromVariant(const Variant &var, Float4 &result);
+    static bool IntFromVariant(const Variant &var, int &result);
+    static bool Int2FromVariant(const Variant &var, Int2 &result);
+    static bool Int3FromVariant(const Variant &var, Int3 &result);
+    static bool Int4FromVariant(const Variant &var, Int4 &result);
+    static bool ColorFromVariant(const Variant &var, Color &result);
+
 protected:
     /// <summary>
     /// Creates a new style that inherits all its values from this one, or null if the name is empty or is already taken.
@@ -656,28 +677,8 @@ private:
     // Called from a parent style when a resource override was reset or set to null.
     void ParentResourceWasReset(int id, FudgetStyleResource *resource);
 
-    bool PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result) const;
-    bool StringFromVariant(const Variant &var, String &result) const;
-    bool DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
-    bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
-    bool TextureFromVariant(const Variant &var, TextureBase* &result) const;
-    bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result) const;
-    bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result) const;
-    bool FontFromVariant(const Variant &var, FudgetFont &result) const;
-    bool PaddingFromVariant(const Variant &var, FudgetPadding &result) const;
-    bool BoolFromVariant(const Variant &var, bool &result) const;
-    bool FloatFromVariant(const Variant &var, float &result) const;
-    bool Float2FromVariant(const Variant &var, Float2 &result) const;
-    bool Float3FromVariant(const Variant &var, Float3 &result) const;
-    bool Float4FromVariant(const Variant &var, Float4 &result) const;
-    bool IntFromVariant(const Variant &var, int &result) const;
-    bool Int2FromVariant(const Variant &var, Int2 &result) const;
-    bool Int3FromVariant(const Variant &var, Int3 &result) const;
-    bool Int4FromVariant(const Variant &var, Int4 &result) const;
-    bool ColorFromVariant(const Variant &var, Color &result) const;
-
     template<typename T>
-    bool EnumFromVariant(const Variant &var, T &result) const
+    static bool EnumFromVariant(const Variant &var, T &result)
     {
         auto name = StaticType<T>().GetType().Fullname;
         if (var.Type.Type == VariantType::Enum && name == var.Type.GetTypeName())

@@ -25,6 +25,13 @@ struct FUDGETS_API FudgetResourceId
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetResourceId);
 
+    FudgetResourceId() : Id(0) {}
+    FudgetResourceId(int forwarded_id) : Id(forwarded_id) {}
+    FudgetResourceId(const FudgetResourceId &other) : Id(other.Id) {}
+    FudgetResourceId(FudgetResourceId &&other) noexcept : Id(other.Id) {}
+    FudgetResourceId& operator=(const FudgetResourceId &other) { Id = other.Id; return *this; }
+    FudgetResourceId& operator=(FudgetResourceId &&other) noexcept  { Id = other.Id; return *this; }
+
     /// <summary>
     /// The associated id.
     /// </summary>
@@ -74,6 +81,41 @@ public:
     /// <param name="res_id">Unique id of the resource</param>
     /// <param name="value">The value of the resource</param>
     API_FUNCTION() void SetResource(int res_id, Variant value);
+
+
+    /// <summary>
+    /// Sets forwarding for an integer id to another integer id. When GetResource is called with the id, the forwarded
+    /// id will be looked up instead and the resource found there will be returned. Chaining multiple forwarded ids
+    /// is possible, but cyclic forwarding results in undefined behavior. (Hopefully just returns false)
+    /// </summary>
+    /// <param name="res_id">Unique id of the resource</param>
+    /// <param name="forward_id">The value of the resource</param>
+    API_FUNCTION() void SetForwarding(int res_id, int forward_id);
+
+
+    template<typename T>
+    static Variant StructToVariant(const T &s)
+    {
+        VariantType t;
+        t.Type = VariantType::Structure;
+        t.SetTypeName(T::TypeInitializer.GetType().Fullname);
+        return Variant::Structure(std::move(t), s);
+    }
+
+
+    template<typename T>
+    typename std::enable_if<std::is_class<T>::value && !std::is_same<Variant, T>::value && !std::is_same<String, T>::value && !std::is_same<StringView, T>::value &&
+        !std::is_same<StringAnsi, T>::value && !std::is_same<StringAnsiView, T>::value && !std::is_same<Guid, T>::value && !std::is_same<Float2, T>::value &&
+        !std::is_same<Float3, T>::value && !std::is_same<Float4, T>::value && !std::is_same<Int2, T>::value && !std::is_same<Int3, T>::value &&
+        !std::is_same<Int4, T>::value && !std::is_same<Double2, T>::value && !std::is_same<Double3, T>::value && !std::is_same<Double4, T>::value &&
+        !std::is_same<Color, T>::value && !std::is_same<Quaternion, T>::value && !std::is_same<BoundingSphere, T>::value &&
+        !std::is_same<Rectangle, T>::value && !std::is_same<BoundingBox, T>::value && !std::is_same<Transform, T>::value && !std::is_same<Ray, T>::value &&
+        !std::is_same<Matrix, T>::value && !std::is_same<Array<Variant, HeapAllocation>, T>::value && !std::is_same<Dictionary<Variant, Variant, HeapAllocation>, T>::value &&
+        !std::is_same<Span<byte>, T>::value && !std::is_same<CommonValue, T>::value && !std::is_same<class AssetReference<T>, T>::value, void>::type SetResource(int res_id, const T &value)
+    {
+        SetResource(res_id, StructToVariant(value));
+    }
+
 private:
     /// <summary>
     /// Creates a theme that is a duplicate of this theme. All values will be matching. This also means that if an object
@@ -105,7 +147,10 @@ class FUDGETS_API FudgetThemes
     DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetThemes);
 public:
     /// <summary>
-    /// Initializes main themes and styles if they haven't been initializeds
+    /// Initializes the themes by allocating the main data structures. Call Uninitialize to free them. There are
+    /// two sets of data when run in the editor, to make sure the running game is not corrupted when editing.
+    /// Use the argument to specify which one is initialized. Set it to true from the normal plugin and false
+    /// in the editor plugin.
     /// </summary>
     /// <param name="in_game">Whether called by the game plugin instead of the editor plugin</param>
     API_FUNCTION() static void Initialize(bool in_game);
@@ -116,6 +161,12 @@ public:
     /// </summary>
     /// <param name="in_game">Whether called by the game plugin instead of the editor plugin</param>
     API_FUNCTION() static void Uninitialize(bool in_game);
+
+    /// <summary>
+    /// Sets up the main theme and adds the default styles.
+    /// </summary>
+    /// <returns></returns>
+    API_FUNCTION() static void CreateDefaultThemesAndStyles();
 
     // Name for the base theme that's guaranteed to be present. "MainTheme"
     API_FIELD(ReadOnly) static const String MainThemeName;
