@@ -10,9 +10,9 @@
 #include "Engine/Core/Math/Vector3.h"
 #include "Engine/Core/Math/Vector4.h"
 #include "Engine/Graphics/Textures/TextureBase.h"
+#include "Engine/Scripting/Scripting.h"
 
-
-FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _parent(nullptr)
+FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _parent(nullptr), _owned_style(false)
 {
 
 }
@@ -21,20 +21,27 @@ FudgetStyle::~FudgetStyle()
 {
     for (auto p : _resources)
         Delete(p.second);
+
+    for (auto s : _owned)
+        Delete(s);
 }
 
-FudgetStyle* FudgetStyle::CreateInheritedStyle(const String &name)
+FudgetStyle* FudgetStyle::CreateOwnedStyle(const String &name)
 {
-    if (name.IsEmpty())
-        return nullptr;
+    return InheritStyleInternal(name, true);
+}
 
-    FudgetStyle *result = FudgetThemes::CreateStyle(name);
-    if (result == nullptr)
-        return nullptr;
+FudgetStyle* FudgetStyle::GetOwnedStyle(const String &name) const
+{
+    const FudgetStyle *check_style = this;
 
-    result->_parent = this;
-    _derived.Add(result);
-    return result;
+    for (auto style : _owned)
+    {
+        if (style->_name == name)
+            return style;
+    }
+
+    return nullptr;
 }
 
 bool FudgetStyle::GetResourceValue(FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result)
@@ -103,7 +110,7 @@ void FudgetStyle::SetValueOverride(int id, const Variant &value)
     res->_resource_id = -1;
     res->_value_override = value;
 
-    for (FudgetStyle *style : _derived)
+    for (FudgetStyle *style : _inherited)
         style->ParentResourceChanged(id, res);
 }
 
@@ -136,7 +143,7 @@ void FudgetStyle::SetResourceOverride(int id, int resource_id)
     res->_resource_id = resource_id;
     res->_value_override = Variant();
 
-    for (FudgetStyle *style : _derived)
+    for (FudgetStyle *style : _inherited)
         style->ParentResourceChanged(id, res);
 }
 
@@ -155,7 +162,7 @@ void FudgetStyle::ResetResourceOverride(int id)
     res->_value_override = Variant();
     res->_resource_id = -1;
 
-    for (FudgetStyle *style : _derived)
+    for (FudgetStyle *style : _inherited)
         style->ParentResourceWasReset(id, res);
 }
 
@@ -180,6 +187,28 @@ bool FudgetStyle::GetStyleResource(FudgetTheme *theme, const Span<int> &ids, API
     for (auto id : ids)
     {
         if (GetStyleResource(theme, id, result))
+            return true;
+    }
+    return false;
+}
+
+bool FudgetStyle::GetPainterMappingResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetPartPainterMapping &result)
+{
+    Variant var;
+    if (GetResourceValue(theme, id, true, var))
+    {
+        if (PainterMappingFromVariant(var, result))
+            return true;
+    }
+    result = FudgetPartPainterMapping();
+    return false;
+}
+
+bool FudgetStyle::GetPainterMappingResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetPartPainterMapping &result)
+{
+    for (auto id : ids)
+    {
+        if (GetPainterMappingResource(theme, id, result))
             return true;
     }
     return false;
@@ -621,6 +650,33 @@ bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, const Span<int
     return false;
 }
 
+FudgetStyle* FudgetStyle::InheritStyleInternal(const String &name, bool owned)
+{
+    String trimmed_name = name.TrimTrailing();
+    if (name.IsEmpty() || name.Contains(TEXT("/")))
+        return nullptr;
+
+    FudgetStyle *result = nullptr;
+    if (!owned)
+        result = FudgetThemes::CreateStyle(trimmed_name);
+    else if (GetOwnedStyle(trimmed_name) == nullptr)
+    {
+        result = New<FudgetStyle>();
+        result->_owned_style = true;
+        result->_name = trimmed_name;
+    }
+
+    if (result == nullptr)
+        return nullptr;
+
+    result->_parent = this;
+
+    _inherited.Add(result);
+    if (owned)
+        _owned.Add(result);
+    return result;
+}
+
 FudgetStyleResource* FudgetStyle::GetResource(int id)
 {
     if (id < 0)
@@ -676,7 +732,7 @@ void FudgetStyle::ParentResourceChanged(int id, FudgetStyleResource *resource)
             return;
     }
 
-    for (FudgetStyle *style : _derived)
+    for (FudgetStyle *style : _inherited)
         style->ParentResourceChanged(id, resource);
 }
 
@@ -691,8 +747,32 @@ void FudgetStyle::ParentResourceWasReset(int id, FudgetStyleResource *resource)
             return;
     }
 
-    for (FudgetStyle *style : _derived)
+    for (FudgetStyle *style : _inherited)
         style->ParentResourceWasReset(id, resource);
+}
+
+bool FudgetStyle::PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result) const
+{
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetPartPainterMapping *mapping = var.AsStructure<FudgetPartPainterMapping>();
+        if (mapping != nullptr)
+        {
+            const ScriptingTypeHandle type = Scripting::FindScriptingType(mapping->PainterType);
+
+            if (!type || !FudgetPartPainter::TypeInitializer.IsAssignableFrom(type))
+            {
+                result = FudgetPartPainterMapping();
+                return false;
+            }
+
+            result = *mapping;
+            return true;
+        }
+    }
+
+    result = FudgetPartPainterMapping();
+    return false;
 }
 
 bool FudgetStyle::StringFromVariant(const Variant &var, String &result) const
@@ -981,9 +1061,4 @@ bool FudgetStyle::ColorFromVariant(const Variant &var, Color &result) const
         return true;
     }
     return false;
-}
-
-FudgetPartPainter* FudgetStyle::CreatePainterInternal(const String &painter_name) const
-{
-    return FudgetThemes::CreatePainter(painter_name.ToStringAnsi());
 }

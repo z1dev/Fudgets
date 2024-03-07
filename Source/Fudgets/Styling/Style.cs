@@ -16,41 +16,9 @@ namespace Fudgets
         /// <returns>The created style or null if style with a clashing name exists</returns>
         public FudgetStyle CreateInheritedStyle<T>() where T: class
         {
-            return CreateInheritedStyle(typeof(T).FullName);
+            return InheritStyleInternal(typeof(T).FullName, IsOwnedStyle);
         }
 
-
-        /// <summary>
-        /// Creates a painter object associated with an id in the theme. The theme must hold a name as a
-        /// resource for this id, which was created from the full name of the painter. The type passed as
-        /// the type parameter can be a base class that the to-be-created painter is derived from, or the
-        /// result will be null.
-        /// </summary>
-        /// <typeparam name="T">The base type of the painter to be created</typeparam>
-        /// <param name="theme">Theme holding the painter's name for the passed id</param>
-        /// <param name="painter_id">The id to look up in the theme</param>
-        /// <returns>The newly created painter object, or null if the id doesn't refer to a valid painter type derived from the requested type</returns>
-        public T CreatePainter<T>(FudgetTheme theme, int painter_id) where T : FudgetPartPainter
-        {
-            if (painter_id < 0)
-                return null;
-
-            if (!GetStringResource(theme, painter_id, out var painter_name))
-                return null;
-            if (painter_name == "")
-                return null;
-
-            FudgetPartPainter painter = FudgetThemes.CreatePainter(painter_name);
-            if (painter == null)
-                return null;
-            if (painter is not T)
-            {
-                Destroy(painter);
-                return null;
-            }
-
-            return painter as T;
-        }
 
         /// <summary>
         /// Looks up an enum resource associated with an id in this style or a parent style using the theme, and sets the result

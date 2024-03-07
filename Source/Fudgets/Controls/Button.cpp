@@ -14,6 +14,16 @@ void FudgetButtonBase::SetDown(bool value)
     OnDownChanged();
 }
 
+void FudgetButtonBase::OnDownChanged()
+{
+    SetVisualState(FudgetVisualControlState::Down, GetPressed());
+}
+
+void FudgetButtonBase::OnPressedChanged()
+{
+    SetVisualState(FudgetVisualControlState::Pressed, GetPressed());
+}
+
 void FudgetButtonBase::DoPressedChanged()
 {
     OnPressedChanged();
@@ -50,6 +60,13 @@ bool FudgetButtonBase::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton butt
     return true;
 }
 
+void FudgetButtonBase::OnMouseMove(Float2 pos, Float2 global_pos)
+{
+    if (!GetPressed() || !MouseIsCaptured())
+        return;
+    SetVisualState(FudgetVisualControlState::Pressed, WantsMouseEventAtPos(pos, global_pos));
+}
+
 FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 {
     return FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave | FudgetControlFlag::CanHandleMouseUpDown |
@@ -65,8 +82,27 @@ FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_pai
 
 void FudgetButton::OnInitialize()
 {
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetButtonIds::FramePainter);
-    _content_painter = CreateStylePainter<FudgetStatePainter>((int)FudgetButtonIds::ContentPainter);
+    FudgetFramedFieldPainterResources frame_res;
+    frame_res.FrameDraw = (int)FudgetButtonIds::Background;
+    frame_res.HoveredFrameDraw = (int)FudgetButtonIds::HoveredBackground;
+    frame_res.PressedFrameDraw = (int)FudgetButtonIds::PressedBackground;
+    frame_res.DownFrameDraw = (int)FudgetButtonIds::PressedBackground;
+    frame_res.DisabledFrameDraw = (int)FudgetButtonIds::DisabledBackground;
+    frame_res.FocusedFrameDraw = (int)FudgetButtonIds::Focusedbackground;
+    frame_res.ContentPadding = (int)FudgetButtonIds::ContentPadding;
+    _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+
+    FudgetAlignedImagePainterResources content_res;
+    content_res.Image = (int)FudgetButtonIds::ContentImage;
+    content_res.HoveredImage = (int)FudgetButtonIds::ContentHoveredImage;
+    content_res.PressedImage = (int)FudgetButtonIds::ContentPressedImage;
+    content_res.DownImage = (int)FudgetButtonIds::ContentPressedImage;
+    content_res.FocusedImage = (int)FudgetButtonIds::ContentImage;
+    content_res.DisabledImage = (int)FudgetButtonIds::ContentDisabledImage;
+
+    content_res.PressedImageOffset = (int)FudgetButtonIds::ContentPressedOffset;
+    content_res.DownImageOffset = (int)FudgetButtonIds::ContentPressedOffset;
+    _default_content_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(content_res);
 }
 
 void FudgetButton::OnStyleInitialize()
@@ -74,22 +110,20 @@ void FudgetButton::OnStyleInitialize()
     FudgetStyle *frame_style = nullptr;
     if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
         frame_style = nullptr;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetButtonIds::FramePainter, frame_style, &_default_frame_painter_mapping);
+
     FudgetStyle *content_style = nullptr;
     if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
         content_style = nullptr;
+    _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetButtonIds::ContentPainter, content_style, &_default_content_painter_mapping);
 
-    InitializeStylePainter(_frame_painter, frame_style);
-    InitializeStylePainter(_content_painter, content_style);
+
 }
 
 FudgetPadding FudgetButton::GetInnerPadding() const
 {
     return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
 } 
-
-void FudgetButton::OnUpdate(float delta_time)
-{
-}
 
 void FudgetButton::OnDraw()
 {
@@ -100,25 +134,8 @@ void FudgetButton::OnDraw()
         _content_painter->Draw(this, bounds, GetVisualState());
 }
 
-void FudgetButton::OnPressedChanged()
-{
-    SetVisualState(FudgetVisualControlState::Pressed, GetPressed());
-}
-
-void FudgetButton::OnDownChanged()
-{
-    SetVisualState(FudgetVisualControlState::Down, GetPressed());
-}
-
-void FudgetButton::OnMouseMove(Float2 pos, Float2 global_pos)
-{
-    if (!GetPressed() || !MouseIsCaptured())
-        return;
-    SetVisualState(FudgetVisualControlState::Pressed, WantsMouseEventAtPos(pos, global_pos));
-}
-
-FudgetControlFlag FudgetButton::GetInitFlags() const
-{
-    return Base::GetInitFlags() | FudgetControlFlag::RegisterToUpdates;
-}
+//FudgetControlFlag FudgetButton::GetInitFlags() const
+//{
+//    return Base::GetInitFlags() | FudgetControlFlag::RegisterToUpdates;
+//}
 

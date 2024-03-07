@@ -34,17 +34,20 @@ public:
     /// Called when the button's down state was set or unset
     /// </summary>
     /// <returns></returns>
-    API_FUNCTION() virtual void OnDownChanged() {}
+    API_FUNCTION() virtual void OnDownChanged();
     /// <summary>
     /// Called when the button's pressed state was set or unset
     /// </summary>
-    API_FUNCTION() virtual void OnPressedChanged() {}
+    API_FUNCTION() virtual void OnPressedChanged();
 
     /// <inheritdoc />
     FudgetInputResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
 
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+
+    /// <inheritdoc />
+    void OnMouseMove(Float2 pos, Float2 global_pos) override;
 
 
     API_FIELD() Action EventPressed;
@@ -78,14 +81,26 @@ enum class FudgetButtonIds
     First = 1000,
 
     Background = First,
+    HoveredBackground,
     PressedBackground,
+    DownBackground,
     DisabledBackground,
+    Focusedbackground,
+
+    ContentPadding,
 
     FramePainter,
     FrameStyle,
 
     ContentPainter,
     ContentStyle,
+
+    ContentImage,
+    ContentHoveredImage,
+    ContentPressedImage,
+    ContentDisabledImage,
+
+    ContentPressedOffset,
 };
 
 /// <summary>
@@ -102,36 +117,17 @@ public:
     /// <inheritdoc />
     void OnStyleInitialize() override;
     /// <inheritdoc />
-    void OnUpdate(float delta_time) override;
-    /// <inheritdoc />
     void OnDraw() override;
-    /// <inheritdoc />
-    void OnPressedChanged() override;
-    /// <inheritdoc />
-    void OnDownChanged() override;
-
-    ///// <inheritdoc />
-    //void OnFocusChanged(bool focused, FudgetControl *other) override;
-
-    /// <inheritdoc />
-    void OnMouseMove(Float2 pos, Float2 global_pos) override;
-
-    ///// <inheritdoc />
-    //void OnMouseEnter(Float2 pos, Float2 global_pos) override;
-    ///// <inheritdoc />
-    //void OnMouseLeave() override;
-
-    ///// <inheritdoc />
-    //void OnVirtuallyEnabledChanged() override;
-
 protected:
-    /// <inheritdoc />
-    FudgetControlFlag GetInitFlags() const override;
+    ///// <inheritdoc />
+    //FudgetControlFlag GetInitFlags() const override;
 private:
     FudgetPadding FudgetButton::GetInnerPadding() const;
 
     FudgetFramedFieldPainter *_frame_painter;
+    FudgetPartPainterMapping _default_frame_painter_mapping;
     FudgetStatePainter *_content_painter;
+    FudgetPartPainterMapping _default_content_painter_mapping;
 };
 
 

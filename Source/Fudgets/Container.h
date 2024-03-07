@@ -294,8 +294,8 @@ public:
     void DoHide() override;
 
 
-        /// <inheritdoc />
-    void ClearStyleCache(bool inherited = true) override;
+    /// <inheritdoc />
+    bool ClearStyleCache(bool forced = false) override;
 
     /// <summary>
     /// The current layout set for the container, or null if no layout was set.

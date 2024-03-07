@@ -73,7 +73,7 @@ struct FUDGETS_API FudgetMultilineTextMeasurements
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetMultilineTextMeasurements);
 
-    FudgetMultilineTextMeasurements() : Lines(), Size(0.f) {}
+    FudgetMultilineTextMeasurements() : Scale(1.f), Lines(), Size(0.f) {}
 
     /// <summary>
     /// The text that was measured. The original text buffer or string must persist while this measurement is used.
@@ -278,6 +278,22 @@ enum class FudgetTextBoxPainterIds
 };
 
 
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetTextBoxPainterResources
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextBoxPainterResources);
+
+    API_FIELD() int SelectionDraw = 0;
+    API_FIELD() int FocusedSelectionDraw = 0;
+    API_FIELD() int DisabledSelectionDraw = 0;
+    API_FIELD() int TextColor = 0;
+    API_FIELD() int DisabledTextColor = 0;
+    API_FIELD() int SelectedTextColor = 0;
+    API_FIELD() int FocusedSelectedTextColor = 0;
+    API_FIELD() int DisabledSelectedTextColor = 0;
+    API_FIELD() int Font = 0;
+};
+
 /// <summary>
 /// Text painter for multi-line text boxes with unformatted text.
 /// </summary>
@@ -287,8 +303,10 @@ class FUDGETS_API FudgetTextBoxPainter : public FudgetMultiLineTextPainter
     using Base = FudgetMultiLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetTextBoxPainter);
 public:
+    using ResourceMapping = FudgetTextBoxPainterResources;
+
     /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;

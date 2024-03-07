@@ -38,31 +38,35 @@ void FudgetMultiLineTextPainter::AddLine(API_PARAM(Ref) Float2 &pos, int start_i
 
 
 
-void FudgetTextBoxPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
-    Base::Initialize(theme, style);
-    if (style == nullptr)
-        style = GetStyle();
+    if (control == nullptr)
+        return;
 
-    if (!style->GetDrawAreaResource(theme, (int)FudgetTextBoxPainterIds::SelectionDraw, _sel_area))
+    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
+    ResourceMapping res;
+    if (ptrres != nullptr)
+        res = *ptrres;
+
+    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::SelectionDraw, res.SelectionDraw, _sel_area))
         _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!style->GetDrawAreaResource(theme, (int)FudgetTextBoxPainterIds::FocusedSelectionDraw, _focused_sel_area))
+    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::FocusedSelectionDraw, res.FocusedSelectionDraw, _focused_sel_area))
         _focused_sel_area = _sel_area;
-    if (!style->GetDrawAreaResource(theme, (int)FudgetTextBoxPainterIds::DisabledSelectionDraw, _disabled_sel_area))
+    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::DisabledSelectionDraw, res.DisabledSelectionDraw, _disabled_sel_area))
         _disabled_sel_area = _sel_area;
 
-    if (!style->GetColorResource(theme, (int)FudgetTextBoxPainterIds::TextColor, _text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::TextColor, res.TextColor, _text_color))
         _text_color = Color::Black;
-    if (!style->GetColorResource(theme, (int)FudgetTextBoxPainterIds::DisabledTextColor, _disabled_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::DisabledTextColor, res.DisabledTextColor, _disabled_text_color))
         _disabled_text_color = _text_color;
-    if (!style->GetColorResource(theme, (int)FudgetTextBoxPainterIds::SelectedTextColor, _selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::SelectedTextColor, res.SelectedTextColor, _selected_text_color))
         _selected_text_color = Color::White;
-    if (!style->GetColorResource(theme, (int)FudgetTextBoxPainterIds::FocusedSelectedTextColor, _focused_selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::FocusedSelectedTextColor, res.FocusedSelectedTextColor, _focused_selected_text_color))
         _focused_selected_text_color = _selected_text_color;
-    if (!style->GetColorResource(theme, (int)FudgetTextBoxPainterIds::DisabledSelectedTextColor, _disabled_selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::DisabledSelectedTextColor, res.DisabledSelectedTextColor, _disabled_selected_text_color))
         _disabled_selected_text_color = _selected_text_color;
 
-    if (!style->GetFontResource(theme, (int)FudgetTextBoxPainterIds::Font, _font))
+    if (!GetMappedFont(control, style_override, (int)FudgetTextBoxPainterIds::Font, res.Font, _font))
     {
         _font.Settings = FudgetFontSettings(-1, 10.f, false, false);
         FontAsset *font_asset = Content::LoadAsyncInternal<FontAsset>(TEXT("Editor/Fonts/Roboto-Regular"));

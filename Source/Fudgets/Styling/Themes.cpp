@@ -9,6 +9,7 @@
 #include "Engine/Content/Assets/Texture.h"
 #include "Engine/Core/Log.h"
 #include "Engine/Scripting/Scripting.h"
+#include "Engine/Scripting/ScriptingObject.h"
 
 #if USE_EDITOR
 bool FudgetThemes::_runtime_use = false;
@@ -249,6 +250,7 @@ FudgetStyle* FudgetThemes::CreateStyle(const String &style_name)
 
 	FudgetStyle *style = New<FudgetStyle>();
 	style->_name = style_name;
+	style->_owned = false;
 	_data->_style_map[style_name] = style;
 	return style;
 }
@@ -275,14 +277,40 @@ FudgetStyle* FudgetThemes::GetStyle(const String &style_name)
 	return it->Value;
 }
 
-FudgetStyle* FudgetThemes::FindFirstStyle(const Array<String> &class_names)
+FudgetStyle* FudgetThemes::FindMatchingStyle(const Array<String> &class_names, const String &styling_name)
 {
+	FudgetStyle *first_class_style = nullptr;
+
+	Array<String> names;
+	styling_name.Split(Char('/'), names);
+
 	for (int ix = 0, siz = class_names.Count(); ix < siz; ++ix)
 	{
 		FudgetStyle *style = GetStyle(class_names[ix]);
 		if (style != nullptr)
+		{
+			if (first_class_style == nullptr)
+				first_class_style = style;
+			if (!styling_name.IsEmpty() && !names.IsEmpty())
+			{
+				style = style->GetOwnedStyle(names[0]);
+				for (int ix = 1, cnt = names.Count(); style != nullptr && ix < cnt; ++ix)
+					style = style->GetOwnedStyle(names[ix]);
+			}
+			if (style != nullptr)
+				return style;
+		}
+	}
+	if (!styling_name.IsEmpty() && !names.IsEmpty())
+	{
+		FudgetStyle *style = GetStyle(names[0]);
+		for (int ix = 1, cnt = names.Count(); style != nullptr && ix < cnt; ++ix)
+			style = style->GetOwnedStyle(names[ix]);
+		if (style != nullptr)
 			return style;
 	}
+	if (first_class_style != nullptr)
+		return first_class_style;
 	return nullptr;
 }
 

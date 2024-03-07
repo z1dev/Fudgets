@@ -19,6 +19,7 @@ struct FudgetFontSettings;
 struct FudgetFont;
 class FudgetDrawable;
 class FudgetStyle;
+struct FudgetPartPainterMapping;
 
 struct FudgetStyleResource
 {
@@ -62,51 +63,37 @@ public:
 
     /// <summary>
     /// Creates a new style that inherits all its values from this one, or null if the name is empty or is already taken.
+    /// If this style is destroyed, the inherited style will be destroyed as well.
     /// </summary>
+    /// <param name="name">Name of the style to create.</param>
     /// <returns>The created style or null on wrong name</returns>
-    API_FUNCTION() FudgetStyle* CreateInheritedStyle(const String &name);
+    API_FUNCTION() FudgetStyle* CreateOwnedStyle(const String &name);
 
     /// <summary>
-    /// Creates a new style that inherits all its values from this one, named as the template parameter class' full name, or
-    /// null if the name is already taken.
+    /// Returns a style inherited from this style by name.
+    /// </summary>
+    /// <param name="name">Name of the style to return</param>
+    /// <returns>The owned style with the name or null</returns>
+    API_FUNCTION() FudgetStyle* GetOwnedStyle(const String &name) const;
+
+    API_PROPERTY() bool IsOwnedStyle() const { return _owned_style; }
+
+    /// <summary>
+    /// Creates a new style that inherits all its values from this one, named as the template argument class' full name, or
+    /// null if the name is already taken. The style will be registered in the main theme database and will be associated
+    /// with the template argument's type.
     /// </summary>
     /// <returns>The created style or null if style with a clashing name exists</returns>
     template<typename T>
     FudgetStyle* CreateInheritedStyle()
     {
-        return CreateInheritedStyle(T::TypeInitializer.GetType().Fullname);
+        return InheritStyleInternal(T::TypeInitializer.GetType().Fullname.ToString(), _owned_style);
     }
 
     /// <summary>
     /// The name of the style that was used to create it.
     /// </summary>
     API_PROPERTY() const String& GetName() const { return _name; }
-
-    /// <summary>
-    /// Creates a painter object associated with an id in the theme. The theme must hold the full name of the painter
-    /// as a resource set for this id. The type passed as the template argument must be a base class of the new
-    /// painter, or the result will be null.
-    /// </summary>
-    /// <typeparam name="T">The base type of the painter to be created</typeparam>
-    /// <param name="theme">Theme holding the painter's name for the passed id</param>
-    /// <param name="painter_id">The id to look up in the theme for the painter class' full name</param>
-    /// <returns>The newly created painter object, or null if the id doesn't refer to a valid painter name derived from the requested type</returns>
-    template<typename T>
-    T* CreatePainter(FudgetTheme *theme, int painter_id)
-    {
-        if (painter_id < 0)
-            return nullptr;
-
-        String name;
-        if (!GetStringResource(theme, painter_id, name))
-            return nullptr;
-        if (name.IsEmpty())
-            return nullptr;
-
-        T *result = dynamic_cast<T*>(CreatePainterInternal(name));
-
-        return result;
-    }
 
     /// <summary>
     /// Retrieves the resource's value associated with an id in this style. If this style has no override for the id,
@@ -178,8 +165,29 @@ public:
     /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
     /// <param name="ids">Array of ids that might be associated with the value in this style.</param>
     /// <param name="result">Receives the style if it was found.</param>
-    /// <returns>Whether the id was associated with a string representing a style or not</returns>
+    /// <returns>Whether one of the ids was associated with a string representing a style or not</returns>
     API_FUNCTION() bool GetStyleResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetStyle* &result);
+
+    /// <summary>
+    /// Looks up a painter mapping resource associated with an id in this style or a parent style using the theme.
+    /// Returns whether the mapping was found.
+    /// </summary>
+    /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+    /// <param name="id">Id that might be associated with the value in this style.</param>
+    /// <param name="result">Receives the style if it was found.</param>
+    /// <returns>Whether the id was associated with a painter mapping or not</returns>
+    API_FUNCTION() bool GetPainterMappingResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetPartPainterMapping &result);
+
+    /// <summary>
+    /// Looks up a painter mapping resource associated with an id in this style or a parent style using the theme.
+    /// Returns whether the mapping was found.
+    /// This version of the function checks multiple ids until one matches.
+    /// </summary>
+    /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
+    /// <param name="ids">Array of ids that might be associated with the value in this style.</param>
+    /// <param name="result">Receives the painter mapping if it was found.</param>
+    /// <returns>Whether one of the ids was associated with a painter mapping or not</returns>
+    API_FUNCTION() bool GetPainterMappingResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetPartPainterMapping &result);
 
     /// <summary>
     /// Looks up a string resource associated with an id in this style or a parent style using the theme, and sets the result
@@ -622,6 +630,16 @@ public:
     /// <param name="result">Receives the resource's value if it is found.</param>
     /// <returns>Whether a value with an id was found that was stored in result</returns>
     API_FUNCTION() bool GetTextDrawSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result);
+protected:
+    /// <summary>
+    /// Creates a new style that inherits all its values from this one, or null if the name is empty or is already taken.
+    /// If named is true, the new style will be owned by this one and destroyed when this style is destroyed. The name only needs
+    /// to be unique in its parent or in the theme for non owned styles.
+    /// </summary>
+    /// <param name="name">Name of the new style..</param>
+    /// <param name="named">Whether the new style is a named style owned by this style and is not a style for a control class.</param>
+    /// <returns>The created style or null if the name was empty or taken</returns>
+    API_FUNCTION() FudgetStyle* InheritStyleInternal(const String &name, bool owned);
 private:
     /// <summary>
     /// Retrieves the resource associated with an id. If the resource in this style is not overriden, the one
@@ -638,6 +656,7 @@ private:
     // Called from a parent style when a resource override was reset or set to null.
     void ParentResourceWasReset(int id, FudgetStyleResource *resource);
 
+    bool PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result) const;
     bool StringFromVariant(const Variant &var, String &result) const;
     bool DrawableFromVariant(FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
     bool AreaFromVariant(const Variant &var, FudgetDrawArea &result) const;
@@ -669,12 +688,31 @@ private:
         return false;
     }
 
-    FudgetPartPainter* CreatePainterInternal(const String &painter_name) const;
-
+    /// <summary>
+    /// Style that this style directly inherited.
+    /// </summary>
     FudgetStyle *_parent;
-    Array<FudgetStyle*> _derived;
+    /// <summary>
+    /// Styles created for classes inherited from this style. These styles are registered in the main theme database and
+    /// can be retrieved by name from it.
+    /// </summary>
+    Array<FudgetStyle*> _inherited;
+    /// <summary>
+    /// Styles created with names, owned by this style. They don't get registered with the main theme database. These styles
+    /// can be fetched with GetInheritedNamed.
+    /// </summary>
+    Array<FudgetStyle*> _owned;
 
+    /// <summary>
+    /// The name used as the name for this style when the style was created.
+    /// </summary>
     String _name;
+
+    /// <summary>
+    /// True only for styles created by a name instead of by class. Owned styles are owned by the style they inherit, and
+    /// get destroyed when that style is destroyed.
+    /// </summary>
+    bool _owned_style;
 
     // Cached values and overrides. The style only holds resources that were set directly in the style or were
     // once queried with GetResource.

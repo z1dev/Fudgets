@@ -12,7 +12,7 @@
 // FudgetPartPainter
 
 
-FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params), _theme(nullptr), _style(nullptr)
+FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params)
 {
 
 }
@@ -22,18 +22,300 @@ FudgetPartPainter::~FudgetPartPainter()
 
 }
 
-void FudgetPartPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
-{
-    _theme = theme;
-    _style = style;
-}
-
 FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
 {
     FudgetStyle *style = FudgetThemes::GetStyle(GetType().Fullname.ToString());
     if (style == nullptr)
         style = FudgetThemes::CreateStyle(GetType().Fullname.ToString());
     return style;
+}
+
+
+bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetStyle* &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = nullptr;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetStyleResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleStyle(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) AssetReference<TextureBase> &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    TextureBase *tex = nullptr;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && tex == nullptr; ++ix)
+    {
+        if (style_override != nullptr)
+            style_override->GetTextureResource(theme, values[ix], tex);
+        if (tex == nullptr)
+            control->GetStyleTexture(values[ix], tex);
+    }
+    result = tex;
+    return tex != nullptr;
+}
+
+bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) TextureBase* &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = nullptr;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && result == nullptr; ++ix)
+    {
+        if (style_override != nullptr)
+            style_override->GetTextureResource(theme, values[ix], result);
+        if (result == nullptr)
+            control->GetStyleTexture(values[ix], result);
+    }
+
+    return result != nullptr;
+}
+
+bool FudgetPartPainter::GetMappedColor(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Color &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Color::White;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetColorResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleColor(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedString(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) String &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = String();
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetStringResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleString(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedFloat(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) float &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = 0.f;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetFloatResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleFloat(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedFloat2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float2 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Float2::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetFloat2Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleFloat2(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedFloat3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float3 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Float3::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetFloat3Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleFloat3(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedFloat4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float4 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Float4::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetFloat4Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleFloat4(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedInt(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) int &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = 0;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetIntResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleInt(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedInt2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int2 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Int2::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetInt2Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleInt2(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedInt3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int3 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Int3::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetInt3Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleInt3(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedInt4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int4 &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = Int4::Zero;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetInt4Resource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleInt4(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedPadding(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetPadding &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = FudgetPadding(0.f);
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetPaddingResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStylePadding(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedDrawable(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetDrawable* &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = nullptr;
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetDrawableResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleDrawable(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedDrawArea(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetDrawArea &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = FudgetDrawArea();
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetDrawAreaResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleDrawArea(values[ix], result);
+    }
+
+    return success;
+}
+
+bool FudgetPartPainter::GetMappedFont(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetFont &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapped_value, painter_id };
+    result = FudgetFont();
+    bool success = false;
+    for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = style_override->GetFontResource(theme, values[ix], result);
+        if (!success)
+            success = control->GetStyleFont(values[ix], result);
+    }
+
+    return success;
 }
 
 bool FudgetPartPainter::HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const
@@ -108,81 +390,76 @@ FudgetAlignedImagePainter::FudgetAlignedImagePainter(const SpawnParams &params) 
 {
 }
 
-void FudgetAlignedImagePainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+void FudgetAlignedImagePainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
-    Base::Initialize(theme, style);
-    if (style == nullptr)
+    if (control == nullptr)
         return;
 
-    TextureBase *tex;
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::Image, tex))
+    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
+    ResourceMapping res;
+    if (ptrres != nullptr)
+        res = *ptrres;
+    
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::Image, res.Image, _image))
         _image = nullptr;
-    else
-        _image = tex;
 
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::HoveredImage, tex))
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImage, res.HoveredImage, _hovered_image))
         _hovered_image = _image;
-    else
-        _hovered_image = tex;
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::PressedImage, tex))
-        _pressed_image = _image;
-    else
-        _pressed_image = tex;
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::DownImage, tex))
-        _down_image = _pressed_image;
-    else
-        _down_image = tex;
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::FocusedImage, tex))
-        _focused_image = _image;
-    else
-        _focused_image = tex;
-    if (!style->GetTextureResource(theme, (int)FudgetAlignedImagePainterIds::DisabledImage, tex))
-        _disabled_image = _image;
-    else
-        _disabled_image = tex;
 
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::ImageTint, _image_tint))
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImage, res.PressedImage, _pressed_image))
+        _pressed_image = _image;
+
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::DownImage, res.DownImage, _down_image))
+        _down_image = _pressed_image;
+
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImage, res.FocusedImage, _focused_image))
+        _focused_image = _image;
+
+    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImage, res.DisabledImage, _disabled_image))
+        _disabled_image = _image;
+
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::ImageTint, res.ImageTint, _image_tint))
         _image_tint = Color::White;
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::HoveredImageTint, _hovered_image_tint))
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImageTint, res.HoveredImageTint, _hovered_image_tint))
         _hovered_image_tint = _image_tint;
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::PressedImageTint, _pressed_image_tint))
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImageTint, res.PressedImageTint, _pressed_image_tint))
         _pressed_image_tint = _image_tint;
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::DownImageTint, _down_image_tint))
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::DownImageTint, res.DownImageTint, _down_image_tint))
         _down_image_tint = _pressed_image_tint;
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::FocusedImageTint, _focused_image_tint))
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImageTint, res.FocusedImageTint, _focused_image_tint))
         _focused_image_tint = _image_tint;
-    if (!style->GetColorResource(theme, (int)FudgetAlignedImagePainterIds::DisabledImageTint, _disabled_image_tint))
+    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImageTint, res.DisabledImageTint, _disabled_image_tint))
         _disabled_image_tint = _image_tint;
 
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::ImageOffset, _image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::ImageOffset, res.ImageOffset, _image_offset))
         _image_offset = Float2(0.f);
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::HoveredImageOffset, _hovered_image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImageOffset, res.HoveredImageOffset, _hovered_image_offset))
         _hovered_image_offset = _image_offset;
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::PressedImageOffset, _pressed_image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImageOffset, res.PressedImageOffset, _pressed_image_offset))
         _pressed_image_offset = _image_offset;
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::DownImageOffset, _down_image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::DownImageOffset, res.DownImageOffset, _down_image_offset))
         _down_image_offset = _pressed_image_offset;
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::FocusedImageOffset, _focused_image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImageOffset, res.FocusedImageOffset, _focused_image_offset))
         _focused_image_offset = _image_offset;
-    if (!style->GetFloat2Resource(theme, (int)FudgetAlignedImagePainterIds::DisabledImageOffset, _disabled_image_offset))
+    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImageOffset, res.DisabledImageOffset, _disabled_image_offset))
         _disabled_image_offset = _image_offset;
 
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::ImagePadding, _image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::ImagePadding, res.ImagePadding, _image_padding))
         _image_padding = FudgetPadding(0.0f);
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::HoveredImagePadding, _hovered_image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImagePadding, res.HoveredImagePadding, _hovered_image_padding))
         _hovered_image_padding = _image_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::PressedImagePadding, _pressed_image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImagePadding, res.PressedImagePadding, _pressed_image_padding))
         _pressed_image_padding = _image_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::DownImagePadding, _down_image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::DownImagePadding, res.DownImagePadding, _down_image_padding))
         _down_image_padding = _pressed_image_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::FocusedImagePadding, _focused_image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImagePadding, res.FocusedImagePadding, _focused_image_padding))
         _focused_image_padding = _image_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetAlignedImagePainterIds::DisabledImagePadding, _disabled_image_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImagePadding, res.DisabledImagePadding, _disabled_image_padding))
         _disabled_image_padding = _image_padding;
 
-    if (!style->GetEnumResource<FudgetImageHorzAlign>(theme, (int)FudgetAlignedImagePainterIds::HorzAlign, _horz_align))
+    if (!GetMappedEnum<FudgetImageHorzAlign>(control, style_override, (int)FudgetAlignedImagePainterIds::HorzAlign, res.HorzAlign, _horz_align))
         _horz_align = FudgetImageHorzAlign::Stretch;
-    if (!style->GetEnumResource<FudgetImageVertAlign>(theme, (int)FudgetAlignedImagePainterIds::VertAlign, _vert_align))
+    if (!GetMappedEnum<FudgetImageVertAlign>(control, style_override, (int)FudgetAlignedImagePainterIds::VertAlign, res.VertAlign, _vert_align))
         _vert_align = FudgetImageVertAlign::Stretch;
 }
 
@@ -259,70 +536,69 @@ FudgetFramedFieldPainter::FudgetFramedFieldPainter(const SpawnParams &params) : 
 {
 }
 
-void FudgetFramedFieldPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+void FudgetFramedFieldPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
-    Base::Initialize(theme, style);
-    if (style == nullptr)
-        style = GetStyle();
+    if (control == nullptr)
+        return;
 
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::FieldBackground, _field_bg))
-    {
+    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
+    ResourceMapping res;
+    if (ptrres != nullptr)
+        res = *ptrres;
+
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FieldBackground, res.FieldBackground, _field_bg))
         _field_bg = FudgetDrawable::FromColor(Color::White);
-    }
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::HoveredFieldBackground, _hovered_field_bg))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFieldBackground, res.HoveredFieldBackground, _hovered_field_bg))
         _hovered_field_bg = _field_bg;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::PressedFieldBackground, _pressed_field_bg))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFieldBackground, res.PressedFieldBackground, _pressed_field_bg))
         _pressed_field_bg = _field_bg;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::DownFieldBackground, _down_field_bg))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DownFieldBackground, res.DownFieldBackground, _down_field_bg))
         _down_field_bg = _pressed_field_bg;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::FocusedFieldBackground, _focused_field_bg))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFieldBackground, res.FocusedFieldBackground, _focused_field_bg))
         _focused_field_bg = _field_bg;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::DisabledFieldBackground, _disabled_field_bg))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFieldBackground, res.DisabledFieldBackground, _disabled_field_bg))
         _disabled_field_bg = _field_bg;
 
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::FieldPadding, _field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FieldPadding, res.FieldPadding, _field_padding))
         _field_padding = FudgetPadding(0.0f);
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::HoveredFieldPadding, _hovered_field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFieldPadding, res.HoveredFieldPadding, _hovered_field_padding))
         _hovered_field_padding = _field_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::PressedFieldPadding, _pressed_field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFieldPadding, res.PressedFieldPadding, _pressed_field_padding))
         _pressed_field_padding = _field_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::DownFieldPadding, _down_field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DownFieldPadding, res.DownFieldPadding, _down_field_padding))
         _down_field_padding = _pressed_field_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::FocusedFieldPadding, _focused_field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFieldPadding, res.FocusedFieldPadding, _focused_field_padding))
         _focused_field_padding = _field_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::DisabledFieldPadding, _disabled_field_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFieldPadding, res.DisabledFieldPadding, _disabled_field_padding))
         _disabled_field_padding = _field_padding;
 
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::FrameDraw, _frame_area))
-    {
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FrameDraw, res.FrameDraw, _frame_area))
         _frame_area = FudgetDrawable::FromDrawArea(FudgetDrawArea(FudgetPadding::Max(_field_padding, 1.0f), Color::Gray, FudgetFrameType::Inside));
-    }
-
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::HoveredFrameDraw, _hovered_frame_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFrameDraw, res.HoveredFrameDraw, _hovered_frame_area))
         _hovered_frame_area = _frame_area;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::PressedFrameDraw, _pressed_frame_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFrameDraw, res.PressedFrameDraw, _pressed_frame_area))
         _pressed_frame_area = _frame_area;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::DownFrameDraw, _down_frame_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DownFrameDraw, res.DownFrameDraw, _down_frame_area))
         _down_frame_area = _pressed_frame_area;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::FocusedFrameDraw, _focused_frame_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFrameDraw, res.FocusedFrameDraw, _focused_frame_area))
         _focused_frame_area = _frame_area;
-    if (!style->GetDrawableResource(theme, (int)FudgetFramedFieldPainterIds::DisabledFrameDraw, _disabled_frame_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFrameDraw, res.DisabledFrameDraw, _disabled_frame_area))
         _disabled_frame_area = _frame_area;
 
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::FramePadding, _frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FramePadding, res.FramePadding, _frame_padding))
         _frame_padding = FudgetPadding(0.0f);
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::HoveredFramePadding, _hovered_frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFramePadding, res.HoveredFramePadding, _hovered_frame_padding))
         _hovered_frame_padding = _frame_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::PressedFramePadding, _pressed_frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFramePadding, res.PressedFramePadding, _pressed_frame_padding))
         _pressed_frame_padding = _frame_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::DownFramePadding, _down_frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DownFramePadding, res.DownFramePadding, _down_frame_padding))
         _down_frame_padding = _pressed_frame_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::FocusedFramePadding, _focused_frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFramePadding, res.FocusedFramePadding, _focused_frame_padding))
         _focused_frame_padding = _frame_padding;
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::DisabledFramePadding, _disabled_frame_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFramePadding, res.DisabledFramePadding, _disabled_frame_padding))
         _disabled_frame_padding = _frame_padding;
 
-    if (!style->GetPaddingResource(theme, (int)FudgetFramedFieldPainterIds::ContentPadding, _inner_padding))
+    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::ContentPadding, res.ContentPadding, _inner_padding))
         _inner_padding = FudgetPadding(0.0f);
 }
 
@@ -341,7 +617,8 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
         IsHovered(state) ? _hovered_field_padding :
         _field_padding;
 
-    control->DrawDrawable(area, field_padding.Padded(bounds));
+    if (area != nullptr)
+        control->DrawDrawable(area, field_padding.Padded(bounds));
 
     FudgetDrawable *frame = IsDisabled(state) ? _disabled_frame_area :
         IsDown(state) ? _down_frame_area :
@@ -355,7 +632,9 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
         IsFocused(state) ? _focused_frame_padding :
         IsHovered(state) ? _hovered_frame_padding :
         _frame_padding;
-    control->DrawDrawable(frame, frame_padding.Padded(bounds));
+
+    if (frame != nullptr)
+        control->DrawDrawable(frame, frame_padding.Padded(bounds));
 }
 
 
@@ -370,33 +649,35 @@ FudgetSingleLineTextPainter::FudgetSingleLineTextPainter(const SpawnParams &para
 // FudgetLineEditTextPainter
 
 
-void FudgetLineEditTextPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+void FudgetLineEditTextPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
-    Base::Initialize(theme, style);
-    if (style == nullptr)
-        style = GetStyle();
+    if (control == nullptr)
+        return;
 
-    if (!style->GetDrawableResource(theme, (int)FudgetLineEditTextPainterIds::SelectionDraw, _sel_area))
-    {
+    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
+    ResourceMapping res;
+    if (ptrres != nullptr)
+        res = *ptrres;
+
+    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::SelectionDraw, res.SelectionDraw, _sel_area))
         _sel_area = FudgetDrawable::FromColor(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    }
-    if (!style->GetDrawableResource(theme, (int)FudgetLineEditTextPainterIds::FocusedSelectionDraw, _focused_sel_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::FocusedSelectionDraw, res.FocusedSelectionDraw, _focused_sel_area))
         _focused_sel_area = _sel_area;
-    if (!style->GetDrawableResource(theme, (int)FudgetLineEditTextPainterIds::DisabledSelectionDraw, _disabled_sel_area))
+    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledSelectionDraw, res.DisabledSelectionDraw, _disabled_sel_area))
         _disabled_sel_area = _sel_area;
 
-    if (!style->GetColorResource(theme, (int)FudgetLineEditTextPainterIds::TextColor, _text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::TextColor, res.TextColor, _text_color))
         _text_color = Color::Black;
-    if (!style->GetColorResource(theme, (int)FudgetLineEditTextPainterIds::DisabledTextColor, _disabled_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledTextColor, res.DisabledTextColor, _disabled_text_color))
         _disabled_text_color = _text_color;
-    if (!style->GetColorResource(theme, (int)FudgetLineEditTextPainterIds::SelectedTextColor, _selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::SelectedTextColor, res.SelectedTextColor, _selected_text_color))
         _selected_text_color = Color::White;
-    if (!style->GetColorResource(theme, (int)FudgetLineEditTextPainterIds::FocusedSelectedTextColor, _focused_selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::FocusedSelectedTextColor, res.FocusedSelectedTextColor, _focused_selected_text_color))
         _focused_selected_text_color = _selected_text_color;
-    if (!style->GetColorResource(theme, (int)FudgetLineEditTextPainterIds::DisabledSelectedTextColor, _disabled_selected_text_color))
+    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledSelectedTextColor, res.DisabledSelectedTextColor, _disabled_selected_text_color))
         _disabled_selected_text_color = _selected_text_color;
 
-    if (!style->GetFontResource(theme, (int)FudgetLineEditTextPainterIds::Font, _font))
+    if (!GetMappedFont(control, style_override, (int)FudgetLineEditTextPainterIds::Font, res.Font, _font))
     {
         _font.Settings = FudgetFontSettings(-1, 10.f, false, false);
         FontAsset *font_asset = Content::LoadAsyncInternal<FontAsset>(TEXT("Editor/Fonts/Roboto-Regular"));

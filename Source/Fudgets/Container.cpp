@@ -27,11 +27,9 @@ int FudgetContainer::AddChild(FudgetControl *control, int index)
 {
     if (control == nullptr || control->GetParent() == this)
         return -1;
-    if (control->GetParent() != nullptr)
-    {
-        control->GetParent()->RemoveChild(control);
-    }
 
+    if (control->GetParent() != nullptr)
+        control->GetParent()->RemoveChild(control);
 
     if (_changing)
     {
@@ -390,14 +388,15 @@ void FudgetContainer::DoHide()
     Base::DoHide();
 }
 
-void FudgetContainer::ClearStyleCache(bool inherited)
+bool FudgetContainer::ClearStyleCache(bool forced)
 {
-    Base::ClearStyleCache(inherited);
-    if (inherited)
+    if (Base::ClearStyleCache(forced))
     {
         for (FudgetControl *c : _children)
             c->ClearStyleCache(true);
+        return true;
     }
+    return false;
 }
 
 FudgetLayout* FudgetContainer::SetLayout(FudgetLayout *value)
@@ -594,7 +593,8 @@ void FudgetContainer::DoDraw()
 
 void FudgetContainer::DoInitialize()
 {
-    if (_guiRoot == nullptr)
+    //if (_guiRoot == nullptr)
+    if (HasAnyState(FudgetControlState::Initialized))
         return;
 
     Base::DoInitialize();
@@ -608,7 +608,7 @@ void FudgetContainer::DoInitialize()
 
 void FudgetContainer::DoStyleInitialize()
 {
-    if (_guiRoot == nullptr || HasAnyState(FudgetControlState::StyleInitialized) || (_parent != nullptr && !_parent->HasAnyState(FudgetControlState::StyleInitialized)))
+    if (/*_guiRoot == nullptr ||*/ HasAnyState(FudgetControlState::StyleInitialized) || (_parent != nullptr && !_parent->HasAnyState(FudgetControlState::StyleInitialized)))
         return;
     Base::DoStyleInitialize();
 

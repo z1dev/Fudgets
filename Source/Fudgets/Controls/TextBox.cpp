@@ -18,22 +18,44 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_p
 
 void FudgetTextBox::OnInitialize()
 {
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetTextBoxIds::FramePainter);
-    _text_painter = CreateStylePainter<FudgetMultiLineTextPainter, FudgetTextBoxPainter>((int)FudgetTextBoxIds::TextPainter);
+    FudgetFramedFieldPainter::ResourceMapping frame_res;
+    frame_res.FrameDraw = (int)FudgetTextBoxIds::FrameDraw;
+    frame_res.HoveredFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
+    frame_res.PressedFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
+    frame_res.DownFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
+    frame_res.DisabledFrameDraw = (int)FudgetTextBoxIds::DisabledFrameDraw;
+    frame_res.FocusedFrameDraw = (int)FudgetTextBoxIds::FocusedFrameDraw;
+    frame_res.ContentPadding = (int)FudgetTextBoxIds::ContentPadding;
+    _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+
+    FudgetTextBoxPainter::ResourceMapping text_res;
+    text_res.SelectionDraw = (int)FudgetTextBoxIds::TextSelBg;
+    text_res.FocusedSelectionDraw = (int)FudgetTextBoxIds::TextSelBg;
+    text_res.DisabledSelectionDraw = (int)FudgetTextBoxIds::DisabledTextSelBg;
+    text_res.TextColor = (int)FudgetTextBoxIds::TextColor;
+    text_res.DisabledTextColor = (int)FudgetTextBoxIds::DisabledTextColor;
+    text_res.SelectedTextColor = (int)FudgetTextBoxIds::SelectedTextColor;
+    text_res.FocusedSelectedTextColor = (int)FudgetTextBoxIds::SelectedTextColor;
+    text_res.DisabledSelectedTextColor = (int)FudgetTextBoxIds::DisabledSelectedTextColor;
+    text_res.Font = (int)FudgetTextBoxIds::Font;
+
+    _default_text_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetTextBoxPainter>(text_res);
+    
 }
 
 void FudgetTextBox::OnStyleInitialize()
 {
-    FudgetStyle *background_style;
-    if (!GetStyleStyle((int)FudgetTextBoxIds::FrameStyle, background_style))
-        background_style = nullptr;
+    FudgetStyle *frame_style;
+    if (!GetStyleStyle((int)FudgetTextBoxIds::FrameStyle, frame_style))
+        frame_style = nullptr;
+
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetTextBoxIds::FramePainter, frame_style, &_default_frame_painter_mapping);
 
     FudgetStyle *text_style;
     if (!GetStyleStyle((int)FudgetTextBoxIds::TextStyle, text_style))
         text_style = nullptr;
+    _text_painter = CreateStylePainter<FudgetMultiLineTextPainter>(_text_painter, (int)FudgetTextBoxIds::TextPainter, text_style, &_default_text_painter_mapping);
 
-    InitializeStylePainter(_frame_painter, background_style);
-    InitializeStylePainter(_text_painter, text_style);
 
     if (!GetStyleDrawArea((int)FudgetTextBoxIds::CaretDraw, _caret_draw))
         _caret_draw = FudgetDrawArea(Color::Black);

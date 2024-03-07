@@ -2,17 +2,31 @@
 
 #include "../MarginStructs.h"
 
-//#include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Render2D/SpriteAtlas.h"
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Core/Math/Vector4.h"
-//#include "Engine/Core/Memory/Allocation.h"
-//#include "Engine/Core/Types/Variant.h"
 #include "Engine/Render2D/FontAsset.h"
 #include "Engine/Render2D/TextLayoutOptions.h"
+#include "Engine/Core/Types/Variant.h"
 
 struct FudgetDrawArea;
 
+
+API_STRUCT()
+struct FUDGETS_API FudgetPartPainterMapping
+{
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetPartPainterMapping);
+
+	/// <summary>
+	/// Full type name of the painter that can be created for control part drawing.
+	/// </summary>
+	API_FIELD() StringAnsi PainterType;
+
+	/// <summary>
+	/// Must be one of the Fudget***PainterResource structs that correspond to the painter named in PainterType.
+	/// </summary>
+	API_FIELD() Variant ResourceMapping;
+};
 
 /// <summary>
 /// Handle to sprite atlas slot with a single sprite texture.

@@ -12,19 +12,6 @@ class FudgetControl;
 class FudgetDrawable;
 
 
-API_ENUM()
-enum class FudgetPainterIds
-{
-    First = 1000000,
-
-    AlignedImagePainter = First,
-    FramedFieldPainter,
-    LineEditTextPainter,
-    TextBoxPainter,
-    ListBoxItemPainter,
-};
-
-
 /// <summary>
 /// Supported states for framed field drawing
 /// </summary>
@@ -59,6 +46,7 @@ enum class FudgetVisualControlState
 DECLARE_ENUM_OPERATORS(FudgetVisualControlState);
 
 
+
 /// <summary>
 /// Base class for objects that paint the standard controls' parts.
 /// </summary>
@@ -70,28 +58,30 @@ class FUDGETS_API FudgetPartPainter : public ScriptingObject
 public:
     ~FudgetPartPainter();
 
+    template<typename T>
+    static FudgetPartPainterMapping InitializeMapping(const typename T::ResourceMapping &resource_mapping)
+    {
+        FudgetPartPainterMapping value;
+        value.PainterType = T::TypeInitializer.GetType().Fullname;
+        VariantType t;
+        t.Type = VariantType::Structure;
+        t.SetTypeName(T::ResourceMapping::TypeInitializer.GetType().Fullname);
+        value.ResourceMapping = Variant::Structure(std::move(t), resource_mapping);
+        return value;
+    }
+
     /// <summary>
     /// Initializes the painter, caching the resources it will draw with
     /// </summary>
     /// <param name="theme">Theme used for drawing</param>
     /// <param name="style">Style providing the resources for the drawing</param>
-    API_FUNCTION() virtual void Initialize(FudgetTheme *theme, FudgetStyle *style);
+    API_FUNCTION() virtual void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) {}
 
     /// <summary>
     /// Updates the drawing state of the painter. Called by controls in OnUpdate if they registered to get updates
     /// </summary>
     /// <param name="delta_time">Time passed since last update</param>
     API_FUNCTION() virtual void Update(float delta_time) {}
-
-    /// <summary>
-    /// The theme used for drawing 
-    /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetTheme* GetTheme() const { return _theme; }
-
-    /// <summary>
-    /// The style used for drawing. In derived classes requres GetStyle to return a valid style.
-    /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetStyle* GetStyle() const { return _style != nullptr ? _style : GetDefaultStyle(); }
 protected:
     /// <summary>
     /// Tries to find a style that can be used to draw with this painter when a valid style wasn't provided on initialization
@@ -99,17 +89,259 @@ protected:
     /// <returns>A style appropriate for the painter</returns>
     API_PROPERTY() FudgetStyle* GetDefaultStyle() const;
 
-    API_FUNCTION() bool HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const;
+    /// <summary>
+    /// Checks the style, then the control's styles for a texture through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedStyle(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetStyle* &result) const;
 
+    /// <summary>
+    /// Checks the style, then the control's styles for a texture through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    bool GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, AssetReference<TextureBase> &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a texture through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) TextureBase* &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a color through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedColor(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Color &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a string through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedString(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) String &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a float through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedFloat(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) float &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Float2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedFloat2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float2 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Float2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedFloat3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float3 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Float2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedFloat4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Float4 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a int through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedInt(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) int &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Int2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedInt2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int2 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Int2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedInt3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int3 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a Int2 through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedInt4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) Int4 &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a padding through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedPadding(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetPadding &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a drawable resource through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedDrawable(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetDrawable* &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a draw area resource through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedDrawArea(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetDrawArea &result) const;
+
+    /// <summary>
+    /// Checks the style, then the control's styles for a font resource through the mapping of an id to the painter's id. Returns
+    /// whether it was found, and sets the result to the value if it was.
+    /// </summary>
+    /// <param name="control">The control owner of this painter</param>
+    /// <param name="style_override">Style, which is checked first as long as it's not null</param>
+    /// <param name="painter_id">The id for the value from the painter's ids. This is used if the mapped value is 0 or produces no result</param>
+    /// <param name="mapped_value">The id for the value in the mapping</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped style value was successfully stored in result or not</returns>
+    API_FUNCTION() bool GetMappedFont(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) FudgetFont &result) const;
+
+    template<typename E>
+    bool GetMappedEnum(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapped_value, API_PARAM(Out) E &result) const
+    {
+        FudgetTheme *theme = control->GetActiveTheme();
+        int values[2] = { mapped_value, painter_id };
+        result = (E)0;
+        bool success = false;
+        for (int ix = mapped_value == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+        {
+            if (style_override != nullptr)
+                success = style_override->GetEnumResource<E>(theme, values[ix], result);
+            if (!success)
+                success = control->GetStyleEnum<E>(values[ix], result);
+        }
+
+        return success;
+    }
+
+    /// <summary>
+    /// Checks if the passed state flags contain a given state.
+    /// </summary>
+    /// <param name="states">The state flags</param>
+    /// <param name="to_check">The state to check</param>
+    /// <returns>Whether the checked state was found in the flags</returns>
+    API_FUNCTION() bool HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const;
+    /// <summary>
+    /// Checks if the passed state flags match the enabled state.
+    /// </summary>
     API_FUNCTION() bool IsEnabled(FudgetVisualControlState states) const;
+    /// <summary>
+    /// Checks if the passed state flags match the disabled state.
+    /// </summary>
     API_FUNCTION() bool IsDisabled(FudgetVisualControlState states) const;
+    /// <summary>
+    /// Checks if the passed state flags match the hovered state.
+    /// </summary>
     API_FUNCTION() bool IsHovered(FudgetVisualControlState states) const;
+    /// <summary>
+    /// Checks if the passed state flags match the focused state.
+    /// </summary>
     API_FUNCTION() bool IsFocused(FudgetVisualControlState states) const;
+    /// <summary>
+    /// Checks if the passed state flags match the down state.
+    /// </summary>
     API_FUNCTION() bool IsDown(FudgetVisualControlState states) const;
+    /// <summary>
+    /// Checks if the passed state flags match the pressed state.
+    /// </summary>
     API_FUNCTION() bool IsPressed(FudgetVisualControlState states) const;
-private:
-    FudgetTheme *_theme;
-    FudgetStyle *_style;
 };
 
 /// <summary>
@@ -218,6 +450,43 @@ enum class FudgetAlignedImagePainterIds
     VertAlign,
 };
 
+API_STRUCT(Attributes="HideInEditor")
+struct FUDGETS_API FudgetAlignedImagePainterResources
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImagePainterResources);
+
+    API_FIELD() int Image = 0;
+    API_FIELD() int HoveredImage = 0;
+    API_FIELD() int PressedImage = 0;
+    API_FIELD() int DownImage = 0;
+    API_FIELD() int FocusedImage = 0;
+    API_FIELD() int DisabledImage = 0;
+
+    API_FIELD() int ImageTint = 0;
+    API_FIELD() int HoveredImageTint = 0;
+    API_FIELD() int PressedImageTint = 0;
+    API_FIELD() int DownImageTint = 0;
+    API_FIELD() int FocusedImageTint = 0;
+    API_FIELD() int DisabledImageTint = 0;
+
+    API_FIELD() int ImageOffset = 0;
+    API_FIELD() int HoveredImageOffset = 0;
+    API_FIELD() int PressedImageOffset = 0;
+    API_FIELD() int DownImageOffset = 0;
+    API_FIELD() int FocusedImageOffset = 0;
+    API_FIELD() int DisabledImageOffset = 0;
+
+    API_FIELD() int ImagePadding = 0;
+    API_FIELD() int HoveredImagePadding = 0;
+    API_FIELD() int PressedImagePadding = 0;
+    API_FIELD() int DownImagePadding = 0;
+    API_FIELD() int FocusedImagePadding = 0;
+    API_FIELD() int DisabledImagePadding = 0;
+
+    API_FIELD() int HorzAlign = 0;
+    API_FIELD() int VertAlign = 0;
+};
+
 /// <summary>
 /// Painter for controls that have a background and a frame around a field. For text editors
 /// list boxes, drop down menus.
@@ -228,8 +497,10 @@ class FUDGETS_API FudgetAlignedImagePainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetAlignedImagePainter);
 public:
+    using ResourceMapping = FudgetAlignedImagePainterResources;
+
     /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
@@ -301,6 +572,40 @@ enum class FudgetFramedFieldPainterIds
     ContentPadding,
 };
 
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetFramedFieldPainterResources
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldPainterResources);
+
+    API_FIELD() int FieldBackground = 0;
+    API_FIELD() int HoveredFieldBackground = 0;
+    API_FIELD() int PressedFieldBackground = 0;
+    API_FIELD() int DownFieldBackground = 0;
+    API_FIELD() int DisabledFieldBackground = 0;
+    API_FIELD() int FocusedFieldBackground = 0;
+    API_FIELD() int FieldPadding = 0;
+    API_FIELD() int HoveredFieldPadding = 0;
+    API_FIELD() int PressedFieldPadding = 0;
+    API_FIELD() int DownFieldPadding = 0;
+    API_FIELD() int DisabledFieldPadding = 0;
+    API_FIELD() int FocusedFieldPadding = 0;
+
+    API_FIELD() int FrameDraw = 0;
+    API_FIELD() int HoveredFrameDraw = 0;
+    API_FIELD() int PressedFrameDraw = 0;
+    API_FIELD() int DownFrameDraw = 0;
+    API_FIELD() int FocusedFrameDraw = 0;
+    API_FIELD() int DisabledFrameDraw = 0;
+    API_FIELD() int FramePadding = 0;
+    API_FIELD() int HoveredFramePadding = 0;
+    API_FIELD() int PressedFramePadding = 0;
+    API_FIELD() int DownFramePadding = 0;
+    API_FIELD() int FocusedFramePadding = 0;
+    API_FIELD() int DisabledFramePadding = 0;
+
+    API_FIELD() int ContentPadding = 0;
+};
+
 /// <summary>
 /// Painter for controls that have a background and a frame around a field. For text editors
 /// list boxes, drop down menus.
@@ -311,9 +616,10 @@ class FUDGETS_API FudgetFramedFieldPainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
 public:
+    using ResourceMapping = FudgetFramedFieldPainterResources;
 
     /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
@@ -520,6 +826,22 @@ enum class FudgetLineEditTextPainterIds
     Font,
 };
 
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetLineEditTextPainterResources
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLineEditTextPainterResources);
+
+    API_FIELD() int SelectionDraw = 0;
+    API_FIELD() int FocusedSelectionDraw = 0;
+    API_FIELD() int DisabledSelectionDraw = 0;
+    API_FIELD() int TextColor = 0;
+    API_FIELD() int DisabledTextColor = 0;
+    API_FIELD() int SelectedTextColor = 0;
+    API_FIELD() int FocusedSelectedTextColor = 0;
+    API_FIELD() int DisabledSelectedTextColor = 0;
+    API_FIELD() int Font = 0;
+};
+
 /// <summary>
 /// Painter of unformatted text drawn with a single font, that can have spans which should be drawn
 /// as selectable
@@ -530,8 +852,10 @@ class FUDGETS_API FudgetLineEditTextPainter : public FudgetSingleLineTextPainter
     using Base = FudgetSingleLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
 public:
+    using ResourceMapping = FudgetLineEditTextPainterResources;
+
     /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;

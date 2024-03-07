@@ -79,7 +79,36 @@ enum class FudgetListBoxItemPainterIds
 
     TextPainter = First,
     TextStyle,
+
+    SelectionDraw,
+    DisabledSelectionDraw,
+    TextColor,
+    DisabledTextColor,
+    SelectedTextColor,
+    DisabledSelectedTextColor,
+
+    Font,
 };
+
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetListBoxItemPainterResources
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetListBoxItemPainterResources);
+
+    API_FIELD() int TextPainter = 0;
+    API_FIELD() int TextStyle = 0;
+
+    API_FIELD() int SelectionDraw = 0;
+    API_FIELD() int DisabledSelectionDraw = 0;
+    API_FIELD() int TextColor = 0;
+    API_FIELD() int DisabledTextColor = 0;
+    API_FIELD() int SelectedTextColor = 0;
+    API_FIELD() int DisabledSelectedTextColor = 0;
+
+    API_FIELD() int Font = 0;
+};
+
+
 
 API_CLASS()
 class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter
@@ -87,10 +116,12 @@ class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter
     using Base = FudgetListItemPainter;
     DECLARE_SCRIPTING_TYPE(FudgetListBoxItemPainter);
 public:
+    using ResourceMapping = FudgetListBoxItemPainterResources;
+
     ~FudgetListBoxItemPainter();
 
     /// <inheritdoc />
-    void Initialize(FudgetTheme *theme, FudgetStyle *style) override;
+    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
     /// <inheritdoc />
@@ -107,8 +138,27 @@ enum class FudgetListBoxIds
 
     FramePainter = First,
     FrameStyle,
+
+    FrameDraw,
+    DisabledFrameDraw,
+    FocusedFrameDraw,
+
+    ContentPadding,
+
     ItemPainter,
     ItemStyle,
+
+    TextPainter,
+    TextStyle,
+
+    SelectionDraw,
+    DisabledSelectionDraw,
+    TextColor,
+    DisabledTextColor,
+    SelectedTextColor,
+    DisabledSelectedTextColor,
+
+    Font,
 };
 
 /// <summary>
@@ -186,7 +236,9 @@ private:
     FudgetPadding GetInnerPadding() const;
 
     FudgetFramedFieldPainter *_frame_painter;
+    FudgetPartPainterMapping _default_frame_painter_mapping;
     FudgetListItemPainter *_item_painter;
+    FudgetPartPainterMapping _default_item_painter_mapping;
 
     FudgetStringListProvider *_data;
     bool _owned_data;

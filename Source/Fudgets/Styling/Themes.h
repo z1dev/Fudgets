@@ -17,8 +17,8 @@ class FudgetPartPainter;
 
 /// <summary>
 /// Simple struct used as a theme resource that acts like a pointer to a different resource. If a requested resource
-/// in a FudgetStyle or FudgetTheme holds this value, the style or theme will try to get the other resource instead.
-/// If cyclic dependency is detected both should fail.
+/// in a  FudgetTheme holds this value, the theme will try to get the other resource instead. It shouldn't be set
+/// as a value override in a style.
 /// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetResourceId
@@ -190,7 +190,7 @@ public:
     /// </summary>
     /// <param name="class_names">An array of names that are looked up one by one until one matches a style</param>
     /// <returns>The style that matches one of the names or null</returns>
-    API_FUNCTION() static FudgetStyle* FindFirstStyle(const Array<String> &class_names);
+    API_FUNCTION() static FudgetStyle* FindMatchingStyle(const Array<String> &class_names, const String &styling_name);
 
     /// <summary>
     /// Creates a new painter object if the name represents a painter.

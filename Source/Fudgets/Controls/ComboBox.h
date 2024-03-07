@@ -14,11 +14,15 @@ enum class FudgetComboBoxIds
 {
     First = 2000,
 
-    FrameDraw = First,
+    FramePainter = First,
+    FrameStyle,
+
+    FrameDraw,
     FocusedFrameDraw,
     DisabledFrameDraw,
-    FramePainter,
-    FrameStyle,
+
+    ContentPadding,
+
     ButtonImage,
     ButtonHoveredImage,
     ButtonDisabledImage,
@@ -115,6 +119,7 @@ private:
     FudgetProxyLayout *_layout;
 
     FudgetFramedFieldPainter *_frame_painter;
+    FudgetPartPainterMapping default_frame_painter_mapping;
 
     float _button_width;
 

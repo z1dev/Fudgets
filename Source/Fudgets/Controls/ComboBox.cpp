@@ -23,18 +23,26 @@ FudgetComboBox::~FudgetComboBox()
 
 void FudgetComboBox::OnInitialize()
 {
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetComboBoxIds::FramePainter);
+    FudgetFramedFieldPainterResources frame_res;
+    frame_res.FrameDraw = (int)FudgetComboBoxIds::FrameDraw;
+    frame_res.HoveredFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
+    frame_res.PressedFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
+    frame_res.DownFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
+    frame_res.DisabledFrameDraw = (int)FudgetComboBoxIds::DisabledFrameDraw;
+    frame_res.FocusedFrameDraw = (int)FudgetComboBoxIds::FocusedFrameDraw;
+    frame_res.ContentPadding = (int)FudgetComboBoxIds::ContentPadding;
+    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
 
     _editor = CreateChild<FudgetLineEdit>();
     _editor->SetShowBorder(false);
-
-    if (!GetStyleFloat((int)FudgetComboBoxIds::ButtonWidth, _button_width))
-        _button_width = 20.f;
+    _editor->SetStylingName(TEXT("Fudgets_ComboBox"));
 
     _button = CreateChild<FudgetButton>();
     _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
+    _button->SetStylingName(TEXT("Fudgets_ComboBox"));
 
     _list_box = CreateChild<FudgetListBox>();
+    _list_box->SetStylingName(TEXT("Fudgets_ComboBox"));
 
     FudgetGUIRoot *root = GetGUIRoot();
     root->AddChild(_list_box);
@@ -49,24 +57,13 @@ void FudgetComboBox::OnInitialize()
 
 void FudgetComboBox::OnStyleInitialize()
 {
+    if (!GetStyleFloat((int)FudgetComboBoxIds::ButtonWidth, _button_width))
+        _button_width = 20.f;
+
     FudgetStyle *frame_style;
     if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
         frame_style = nullptr;
-    InitializeStylePainter(_frame_painter, frame_style);
-
-    FudgetStyle *editor_style = _editor->GetActiveStyle();
-    if (editor_style != nullptr)
-    {
-        FudgetStyle *editor_style_override = editor_style->CreateInheritedStyle(TypeInitializer.GetType().Fullname.ToString().Append(TEXT(".") + editor_style->GetName()));
-        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretDraw, (int)FudgetComboBoxIds::CaretDraw);
-        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretBlinkTime, (int)FudgetComboBoxIds::CaretBlinkTime);
-        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretWidth, (int)FudgetComboBoxIds::CaretWidth);
-        editor_style_override->SetResourceOverride((int)FudgetLineEditIds::CaretScrollCount, (int)FudgetComboBoxIds::CaretScrollCount);
-
-        _editor->SetStyle(editor_style_override);
-    }
-
-
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetComboBoxIds::FramePainter, frame_style , &default_frame_painter_mapping);
 }
 
 void FudgetComboBox::OnDraw()

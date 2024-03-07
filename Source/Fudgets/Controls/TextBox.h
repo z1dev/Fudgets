@@ -35,8 +35,25 @@ enum class FudgetTextBoxIds
 
     FramePainter = First,
     FrameStyle,
+
+    FrameDraw,
+    DisabledFrameDraw,
+    FocusedFrameDraw,
+
+    ContentPadding,
+
     TextPainter,
     TextStyle,
+
+    TextSelBg,
+    DisabledTextSelBg,
+
+    TextColor,
+    DisabledTextColor,
+    SelectedTextColor,
+    DisabledSelectedTextColor,
+
+    Font,
 
     CaretDraw,
     CaretBlinkTime,
@@ -219,7 +236,11 @@ private:
 
 
     FudgetFramedFieldPainter *_frame_painter;
+    FudgetPartPainterMapping _default_frame_painter_mapping;
+
     FudgetMultiLineTextPainter *_text_painter;
+    FudgetPartPainterMapping _default_text_painter_mapping;
+
     FudgetMultilineTextMeasurements _text_measurements;
 
     // Time passed in seconds since caret blink started. The caret is visible when this value is below

@@ -113,28 +113,38 @@ FudgetListBoxItemPainter::FudgetListBoxItemPainter(const SpawnParams &params) : 
 
 FudgetListBoxItemPainter::~FudgetListBoxItemPainter()
 {
-    if (_text_painter != nullptr)
-        Delete(_text_painter);
 }
 
-void FudgetListBoxItemPainter::Initialize(FudgetTheme *theme, FudgetStyle *style)
+void FudgetListBoxItemPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
-    Base::Initialize(theme, style);
-    if (style == nullptr)
+    if (control == nullptr)
+        return;
+
+    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
+    ResourceMapping res;
+    if (ptrres != nullptr)
+        res = *ptrres;
+
+    FudgetStyle *text_style = nullptr;
+    if (!GetMappedStyle(control, style_override, (int)FudgetListBoxItemPainterIds::TextStyle, res.TextStyle, text_style))
+        text_style = nullptr;
+
+    _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, res.TextPainter, text_style, nullptr, style_override);
+    if (_text_painter == nullptr)
     {
-        style = GetStyle();
-        if (style == nullptr)
-            return;
+        FudgetLineEditTextPainter::ResourceMapping tex_res;
+        tex_res.SelectionDraw = res.SelectionDraw;
+        tex_res.FocusedSelectionDraw = res.SelectionDraw;
+        tex_res.DisabledSelectionDraw = res.DisabledSelectionDraw;
+        tex_res.TextColor = res.TextColor;
+        tex_res.DisabledTextColor = res.DisabledTextColor;
+        tex_res.SelectedTextColor = res.SelectedTextColor;
+        tex_res.FocusedSelectedTextColor = res.SelectedTextColor;
+        tex_res.DisabledSelectedTextColor = res.DisabledSelectedTextColor;
+        tex_res.Font = res.Font;
+        FudgetPartPainterMapping def_text_mapping = FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(tex_res);
+        _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, (int)FudgetListBoxItemPainterIds::TextPainter, text_style, &def_text_mapping, style_override);
     }
-
-    String text_style;
-    if (!style->GetStringResource(theme, (int)FudgetListBoxItemPainterIds::TextStyle, text_style))
-        text_style = String();
-
-    _text_painter = style->CreatePainter<FudgetSingleLineTextPainter>(theme, (int)FudgetListBoxItemPainterIds::TextPainter);
-
-    if (_text_painter != nullptr)
-        _text_painter->Initialize(theme, FudgetThemes::GetStyle(text_style));
 }
 
 void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state)
@@ -187,8 +197,31 @@ FudgetListBox::~FudgetListBox()
 
 void FudgetListBox::OnInitialize()
 {
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>((int)FudgetListBoxIds::FramePainter);
-    _item_painter = CreateStylePainter<FudgetListItemPainter, FudgetListBoxItemPainter>((int)FudgetListBoxIds::ItemPainter);
+    FudgetFramedFieldPainter::ResourceMapping frame_res;
+    frame_res.FrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    frame_res.HoveredFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    frame_res.PressedFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    frame_res.DownFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    frame_res.DisabledFrameDraw = (int)FudgetListBoxIds::DisabledFrameDraw;
+    frame_res.FocusedFrameDraw = (int)FudgetListBoxIds::FocusedFrameDraw;
+    frame_res.ContentPadding = (int)FudgetListBoxIds::ContentPadding;
+    _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+
+    FudgetListBoxItemPainter::ResourceMapping item_res;
+
+    item_res.TextPainter = (int)FudgetListBoxIds::TextPainter;
+    item_res.TextStyle = (int)FudgetListBoxIds::TextStyle;
+
+    item_res.SelectionDraw = (int)FudgetListBoxIds::SelectionDraw;
+    item_res.DisabledSelectionDraw = (int)FudgetListBoxIds::DisabledSelectionDraw;
+    item_res.TextColor = (int)FudgetListBoxIds::TextColor;
+    item_res.DisabledTextColor = (int)FudgetListBoxIds::DisabledTextColor;
+    item_res.SelectedTextColor = (int)FudgetListBoxIds::SelectedTextColor;
+    item_res.DisabledSelectedTextColor = (int)FudgetListBoxIds::DisabledSelectedTextColor;
+
+    item_res.Font = (int)FudgetListBoxIds::Font;
+
+    _default_item_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(item_res);
 }
 
 void FudgetListBox::OnStyleInitialize()
@@ -196,14 +229,12 @@ void FudgetListBox::OnStyleInitialize()
     FudgetStyle *frame_style;
     if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
         frame_style = nullptr;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetListBoxIds::FramePainter, frame_style, &_default_frame_painter_mapping);
 
-    
     FudgetStyle *item_style;
     if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
         item_style = nullptr;
-
-    InitializeStylePainter(_frame_painter, frame_style);
-    InitializeStylePainter(_item_painter, item_style);
+    _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxIds::ItemPainter, item_style, &_default_item_painter_mapping);
 }
 
 void FudgetListBox::OnDraw()
