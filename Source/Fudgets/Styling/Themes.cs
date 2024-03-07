@@ -52,9 +52,11 @@ namespace Fudgets
         /// <returns>The created style or null</returns>
         public static FudgetStyle CreateStyle(string style_name)
         {
-            if (style_name.Length == 0 || GetStyle(style_name) != null)
+            if (style_name.Length == 0)
                 return null;
             FudgetStyle style = Internal_CreateStyle(style_name);
+            if (style == null)
+                return null;
 
 #if FLAX_EDITOR
             if (!RuntimeUse)
@@ -66,15 +68,24 @@ namespace Fudgets
         }
 
         /// <summary>
-        /// Creates a style for a class' full name. The function fails if another style with the same name already exists.
+        /// Returns a style based on a class' full name, creating it if it doesn't exist. The style can be accessed with GetStyle later
+        /// with the same name. Styles with a name matching a control's or painter's full class name will be used for that control or
+        /// painter by default.
         /// </summary>
-        /// <typeparam name="T">Type to create a style for</typeparam>
-        /// <returns>The created style or null</returns>
-        public static FudgetStyle CreateStyle<T>() where T: class
+        /// <typeparam name="T">Name of class to get the style for</typeparam>
+        /// <returns>A style with the same name as the full name of the generic class</returns>
+        public static FudgetStyle CreateOrGetStyle(string style_name)
         {
-            string style_name = typeof(T).FullName;
-            return CreateStyle(style_name);
+            if (style_name.Length == 0)
+                return null;
+
+            FudgetStyle result = CreateStyle(style_name);
+            if (result != null)
+                return result;
+
+            return GetStyle(style_name);
         }
+
 
         /// <summary>
         /// Returns a style based on a class' full name, creating it if it doesn't exist. The style can be accessed with GetStyle later
@@ -83,14 +94,9 @@ namespace Fudgets
         /// </summary>
         /// <typeparam name="T">Name of class to get the style for</typeparam>
         /// <returns>A style with the same name as the full name of the generic class</returns>
-        public static FudgetStyle CreateOrGetStyle<T>() where T: class
+        public static FudgetStyle CreateOrGetStyle<T>() where T : class
         {
-            string style_name = typeof(T).FullName;
-            FudgetStyle result = CreateStyle(style_name);
-            if (result != null)
-                return result;
-
-            return GetStyle(style_name);
+            return CreateOrGetStyle(typeof(T).FullName);
         }
 
         /// <summary>

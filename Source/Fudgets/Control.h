@@ -1619,19 +1619,30 @@ public:
     API_PROPERTY() FudgetTheme* GetActiveTheme();
 
     /// <summary>
-    /// Constructs a painter object based on a type and the style of the control. If the painter's type matches the one found
-    /// in the style, then the original painter is returned.
+    /// Constructs a painter object based on a painter mapping identified by mapping_id and initializes it with the mapping. Mappings contain the name of
+    /// the painter's type to be created and the mapping of painter ids to the ids of a style. That is, when the painter tries to look up a resource by an
+    /// id, another id will be used to get the resource.
+    /// The mapping_id is looked up in the control's styles, unless style_override is not null.
+    /// If mapping_style is provided, it'll be used as the primary style to look up the resources for painting. Otherwise the control's styles are used.
+    /// If default_mapping is not null and no mapping was found by the mapping_id, the default_mapping is used to provide the painter type name and mapping data.
     /// </summary>
-    /// <typeparam name="T">Base type of the painter</typeparam>
-    /// <typeparam name="DEFAULT">Type of the painter if the id does not correspond to a painter's type name in the theme</typeparam>
-    /// <param name="current">The style painter that was created for this painter_id or null</param>
-    /// <param name="painter_id">Id of the painter and resource mapping data in the control's style</param>
-    /// <returns>A part painter for the painter id, the default tyle, or null if the id is not matching a painter or the found painter or the default is not derived from the template argument</returns>
+    /// <typeparam name="T">Base type for the painter. The created painter must be the base type or a type derived from it.</typeparam>
+    /// <param name="current">The painter that was created before, possibly on the same line. It's only needed to make sure it's freed before a
+    /// new painter is created.</param>
+    /// <param name="mapping_id">Id of the painter mapping in the control's style.</param>
+    /// <param name="mapping_style">An optional style to be used to look up the resources in the painter for painting. if null, the control's
+    /// styles are used instead</param>
+    /// <param name="default_mapping">An optional mapping to be used to create and initialize the new painter if nothing was found for mapping_id.</param>
+    /// <param name="style_override">Id of the painter mapping in the control's style.</param>
+    /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
     template<typename T>
     T* CreateStylePainter(T *current, int mapping_id, FudgetStyle *mapping_style = nullptr, FudgetPartPainterMapping *default_mapping = nullptr, FudgetStyle *style_override = nullptr)
     {
         FudgetPartPainterMapping painter_data;
         FudgetPartPainter *painter = nullptr;
+
+        if (current != nullptr)
+            UnregisterStylePainterInternal(current);
 
         bool valid = false;
         if (style_override != nullptr)
@@ -1641,12 +1652,10 @@ public:
 
         if (valid || default_mapping != nullptr)
         {
-            if (valid && (current == nullptr || painter_data.PainterType != current->GetType().Fullname))
+            if (valid)
                 painter = FudgetThemes::CreatePainter(painter_data.PainterType);
-            else if (!valid && (current == nullptr || default_mapping->PainterType != current->GetType().Fullname))
+            else if (!valid)
                 painter = FudgetThemes::CreatePainter(default_mapping->PainterType);
-            else
-                painter = current;
         }
 
         T *result = dynamic_cast<T*>(painter);
@@ -1659,9 +1668,7 @@ public:
         //if (result == nullptr && T::TypeInitializer.IsAssignableFrom((DEFAULT::TypeInitializer)))
         //    result = New<DEFAULT>(SpawnParams(Guid::New(), DEFAULT::TypeInitializer));
 
-        if (current != nullptr && result != current)
-            UnregisterStylePainterInternal(current);
-        if (result != nullptr && result != current)
+        if (result != nullptr)
             RegisterStylePainterInternal(result);
 
         if (result != nullptr)

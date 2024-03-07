@@ -11,7 +11,6 @@
 
 struct FudgetDrawArea;
 
-
 API_STRUCT()
 struct FUDGETS_API FudgetPartPainterMapping
 {
@@ -27,6 +26,7 @@ struct FUDGETS_API FudgetPartPainterMapping
 	/// </summary>
 	API_FIELD() Variant ResourceMapping;
 };
+
 
 /// <summary>
 /// Handle to sprite atlas slot with a single sprite texture.

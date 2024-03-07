@@ -2,8 +2,11 @@
 
 namespace Fudgets;
 
+
+
 public partial struct FudgetSpriteHandle
 {
+
     /// <summary>
     /// Initializes a wrapper from a SpriteHandle to get around a possible engine bug
     /// </summary>
@@ -22,32 +25,6 @@ public partial struct FudgetSpriteHandle
     {
         return new SpriteHandle(Atlas, Index);
     }
-
-    /*
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpriteHandle"/> struct.
-        /// </summary>
-        FudgetSpriteHandle()
-        {
-            Index = -1;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpriteHandle"/> struct.
-        /// </summary>
-        /// <param name="atlas">The sprite atlas.</param>
-        /// <param name="index">The sprite slot index.</param>
-        FudgetSpriteHandle(const SpriteHandle &original)
-            : Atlas(original.Atlas)
-        {
-            Index = original.Index;
-        }
-
-        SpriteHandle ToHandle() const
-        {
-            return SpriteHandle(Atlas, Index);
-        }
-    */
 }
 
 

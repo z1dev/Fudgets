@@ -31,7 +31,6 @@ namespace Fudgets
         /// <returns>Whether the id was associated with a value of the requested type</returns>
         public bool GetEnumResource<T>(FudgetTheme theme, int id, out T result) where T : Enum
         {
-
             if (GetResourceValue(theme, id, true, out var res))
             {
                 if (res.GetType() == typeof(T))

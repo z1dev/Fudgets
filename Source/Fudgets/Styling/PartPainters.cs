@@ -1,58 +1,56 @@
 ﻿using FlaxEngine.Utilities;
+using System;
 
 
-namespace Fudgets
+namespace Fudgets;
+
+
+
+public partial class FudgetPartPainter
 {
-    //public partial struct FudgetPainterStateHelper
-    //{
-    //    /// <summary>
-    //    /// Initializes the helper with no state set
-    //    /// </summary>
-    //    public FudgetPainterStateHelper()
-    //    {
-    //        State = FudgetVisualControlState.Normal;
-    //    }
+    /// <summary>
+    /// Initializes a FudgetPartPainterMapping structure, setting the PainterType value to the full name of the generic type.
+    /// The type has to be a derived class of FudgetPartPainter. The resourceMapping value is stored as the mapping in the
+    /// structure. It must be the exact type required by the specific painter's initialization which is usually called the
+    /// same as the painter and ending with "Resources".
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="resourceMapping"></param>
+    /// <returns></returns>
+    public static FudgetPartPainterMapping InitializeMapping<T>(object resourceMapping) where T : FudgetPartPainter, new()
+    {
+        FudgetPartPainterMapping result;
+        result.PainterType = typeof(T).FullName;
+        result.ResourceMapping = resourceMapping;
+        return result;
+    }
 
-    //    /// <summary>
-    //    /// Adds or removes a state flag
-    //    /// </summary>
-    //    /// <param name="value">Flag to change</param>
-    //    /// <param name="set">Whether to add the flag</param>
-    //    public void SetState(FudgetVisualControlState value, bool set = true)
-    //    {
-    //        if (set)
-    //            this.State |= value;
-    //        else
-    //            this.State &= ~value;
-    //    }
+    /// <summary>
+    /// Checks style_override then the control's styles for an enum resource. First mapping_id is tested and then painter_id.
+    /// Returns whether the result was set to the value.
+    /// </summary>
+    /// <typeparam name="E">The type of the enum, which must match with the resource.</typeparam>
+    /// <param name="control">The control to use for looking up the resource if style_override doesn't have the value.</param>
+    /// <param name="style_override">The style used for looking up the resource first.</param>
+    /// <param name="painter_id">A resource id. Usually this is the id provided for the painter.</param>
+    /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type.</returns>
+    public bool GetMappedEnum<E>(FudgetControl control, FudgetStyle style_override, int painter_id, int mapping_id, out E result) where E: Enum
+    {
+        FudgetTheme theme = control.ActiveTheme;
+        int[] values = [mapping_id, painter_id];
+        result = default;
+        bool success = false;
 
-    //    /// <summary>
-    //    /// Checks if a state flag is set in State
-    //    /// </summary>
-    //    /// <param name="value">The flag to check</param>
-    //    /// <returns>Whether the flag is found in State</returns>
-    //    public readonly bool HasState(FudgetVisualControlState value) { return (State & value) == value; }
+        for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+        {
+            if (style_override != null)
+                success = style_override.GetEnumResource<E>(theme, values[ix], out result);
+            if (!success)
+                success = control.GetStyleEnum<E>(values[ix], out result);
+        }
 
-    //    /// <summary>
-    //    /// State doesn't have the Disabled flag
-    //    /// </summary>
-    //    public readonly bool Enabled { get => !HasState(FudgetVisualControlState.Disabled); }
-    //    /// <summary>
-    //    /// State has the Hovered flag
-    //    /// </summary>
-    //    public readonly bool Hovered { get => HasState(FudgetVisualControlState.Hovered); }
-    //    /// <summary>
-    //    /// State has the Pressed flag
-    //    /// </summary>
-    //    public readonly bool Pressed { get => HasState(FudgetVisualControlState.Pressed); }
-    //    /// <summary>
-    //    /// State has the Down flag
-    //    /// </summary>
-    //    public readonly bool Down { get => HasState(FudgetVisualControlState.Down); }
-    //    /// <summary>
-    //    /// State has the Focused flag
-    //    /// </summary>
-    //    public readonly bool Focused { get => HasState(FudgetVisualControlState.Focused); }
-
-    //}
+        return success;
+    }
 }
