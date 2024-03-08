@@ -362,7 +362,7 @@ bool FudgetControl::GetFocused() const
 
 bool FudgetControl::VirtuallyFocused() const
 {
-    return HasAnyState(FudgetControlState::ShowFocused);
+    return (_visual_state & FudgetVisualControlState::Focused) == FudgetVisualControlState::Focused;
 }
 
 void FudgetControl::SetFocused(bool value)
@@ -386,7 +386,7 @@ bool FudgetControl::GetHovered() const
 
 bool FudgetControl::VirtuallyHovered() const
 {
-    return HasAnyState(FudgetControlState::ShowHovered);
+    return (_visual_state & FudgetVisualControlState::Hovered) == FudgetVisualControlState::Hovered;
 }
 
 bool FudgetControl::GetEnabled() const
@@ -1480,7 +1480,6 @@ void FudgetControl::DoFocusChanging(bool focused, FudgetControl *other)
 
 void FudgetControl::DoFocusChanged(bool focused, FudgetControl *other)
 {
-    SetState(FudgetControlState::ShowFocused, focused);
     SetVisualState(FudgetVisualControlState::Focused, focused);
     OnFocusChanged(focused, other);
 }
@@ -1511,14 +1510,12 @@ void FudgetControl::DoMouseReleased()
 
 void FudgetControl::DoMouseEnter(Float2 pos, Float2 global_pos)
 {
-    SetState(FudgetControlState::ShowHovered, true);
     SetVisualState(FudgetVisualControlState::Hovered, true);
     OnMouseEnter(pos, global_pos);
 }
 
 void FudgetControl::FudgetControl::DoMouseLeave()
 {
-    SetState(FudgetControlState::ShowHovered, false);
     SetVisualState(FudgetVisualControlState::Hovered, false);
     OnMouseLeave();
 }

@@ -631,14 +631,14 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
     FudgetDrawable *area = IsDisabled(state) ? _disabled_field_bg :
         IsDown(state) ? _down_field_bg :
         IsPressed(state) ? _pressed_field_bg :
-        IsFocused(state) ? _focused_field_bg :
         IsHovered(state) ? _hovered_field_bg :
+        IsFocused(state) ? _focused_field_bg :
         _field_bg;
     FudgetPadding field_padding = IsDisabled(state) ? _disabled_field_padding :
         IsDown(state) ? _down_field_padding :
         IsPressed(state) ? _pressed_field_padding :
-        IsFocused(state) ? _focused_field_padding :
         IsHovered(state) ? _hovered_field_padding :
+        IsFocused(state) ? _focused_field_padding :
         _field_padding;
 
     if (area != nullptr)
@@ -647,14 +647,14 @@ void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bou
     FudgetDrawable *frame = IsDisabled(state) ? _disabled_frame_area :
         IsDown(state) ? _down_frame_area :
         IsPressed(state) ? _pressed_frame_area :
-        IsFocused(state) ? _focused_frame_area :
         IsHovered(state) ? _hovered_frame_area :
+        IsFocused(state) ? _focused_frame_area :
         _frame_area;
     FudgetPadding frame_padding = IsDisabled(state) ? _disabled_frame_padding :
         IsDown(state) ? _down_frame_padding :
         IsPressed(state) ? _pressed_frame_padding :
-        IsFocused(state) ? _focused_frame_padding :
         IsHovered(state) ? _hovered_frame_padding :
+        IsFocused(state) ? _focused_frame_padding :
         _frame_padding;
 
     if (frame != nullptr)

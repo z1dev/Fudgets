@@ -135,13 +135,23 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	FudgetTheme *main_theme = New<FudgetTheme>();
 	_data->_theme_map[MainThemeName] = main_theme;
 
+
 	// Basic
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::Background, Color::White);
+	main_theme->SetResource((int)FudgetBasicPainterIds::HoveredBackground, Color::White);
 	main_theme->SetResource((int)FudgetBasicPainterIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
-	main_theme->SetResource((int)FudgetBasicPainterIds::FrameEdge, Color(.5f, .5f, .5f, 1.f));
-	main_theme->SetResource((int)FudgetBasicPainterIds::FocusedFrameEdge, Color(.5f, .5f, .7f, 1.f));
-	main_theme->SetResource((int)FudgetBasicPainterIds::FramePadding, FudgetPadding(3.f));
+
+	FudgetDrawableBuilder::Begin();
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
+	main_theme->SetResource((int)FudgetBasicPainterIds::FrameDraw, FudgetDrawableBuilder::End());
+	FudgetDrawableBuilder::Begin();
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.4f, .5f, .6f, 1.f), FudgetFrameType::Inside));
+	main_theme->SetResource((int)FudgetBasicPainterIds::FocusedFrameDraw, FudgetDrawableBuilder::End());
+	FudgetDrawableBuilder::Begin();
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
+	main_theme->SetResource((int)FudgetBasicPainterIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
+	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(3.f));
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonHoveredSurface, Color(.85f, .85f, .85f, 1.f));
@@ -150,27 +160,26 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonPressedSurface, Color(.65f, .65f, .65f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonContentPressedOffset, Float2(0.f, 1.f));
 
-	// Button
+	// General frame drawing:
 
-	/*
-	FramePainter,
-	FrameStyle,
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::FieldBackground, (int)FudgetBasicPainterIds::Background);
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::HoveredFieldBackground, (int)FudgetBasicPainterIds::HoveredBackground);
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::DisabledFieldBackground, (int)FudgetBasicPainterIds::DisabledBackground);
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::FrameDraw, (int)FudgetBasicPainterIds::FrameDraw);
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::FocusedFrameDraw, (int)FudgetBasicPainterIds::FocusedFrameDraw);
+	//main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::HoveredFrameDraw, (int)FudgetBasicPainterIds::HoveredFrameDraw);
 
-	ContentPainter,
-	ContentStyle,
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::ContentPadding, (int)FudgetBasicPainterIds::ContentPadding);
 
-	ContentImage,
-	ContentHoveredImage,
-	ContentPressedImage,
-	ContentDisabledImage,
-	*/
+	// Button:
+
 	main_theme->SetForwarding((int)FudgetButtonIds::Background, (int)FudgetBasicPainterIds::ButtonSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::HoveredBackground, (int)FudgetBasicPainterIds::ButtonHoveredSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::PressedBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::DownBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::DisabledBackground, (int)FudgetBasicPainterIds::ButtonDisabledSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::Focusedbackground, (int)FudgetBasicPainterIds::ButtonFocusedSurface);
-	main_theme->SetForwarding((int)FudgetButtonIds::ContentPadding, (int)FudgetBasicPainterIds::FramePadding);
+	main_theme->SetForwarding((int)FudgetButtonIds::ContentPadding, (int)FudgetBasicPainterIds::ContentPadding);
 
 	main_theme->SetForwarding((int)FudgetButtonIds::ContentPressedOffset, (int)FudgetBasicPainterIds::ButtonContentPressedOffset);
 

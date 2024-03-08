@@ -163,45 +163,35 @@ enum class FudgetControlState : uint16
     /// </summary>
     ParentDisabled = 1 << 4,
     /// <summary>
-    /// The control has the appearance like it is focused. This can be different from being focused when the control is
-    /// the child of a compound container
-    /// </summary>
-    ShowFocused = 1 << 5,
-    /// <summary>
     /// True when _cached_global_to_local_translation is valid.
     /// </summary>
-    Global2LocalCached = 1 << 6,
+    Global2LocalCached = 1 << 5,
     /// <summary>
     /// Whether the mouse input is currently captured by this control
     /// </summary>
-    MouseIsCaptured = 1 << 7,
-    /// <summary>
-    /// The control has the appearance like the mouse pointer is over it. This can be different from the real state of the
-    /// mouse pointer, when the control is a compound container or the child of a compound container. 
-    /// </summary>
-    ShowHovered = 1 << 8,
+    MouseIsCaptured = 1 << 6,
     /// <summary>
     // Set during layout phase when the control's position was changed by a layout.
     /// </summary>
-    PositionUpdated = 1 << 9,
+    PositionUpdated = 1 << 7,
     /// <summary>
     // Set during layout phase when the control's size was changed by a layout.
     /// </summary>
-    SizeUpdated = 1 << 10,
+    SizeUpdated = 1 << 8,
     /// <summary>
     /// The control is not drawn, can't be focused and won't react to user input. It will receive some events
     /// that are not related to these. If added in a layout, it'll appear as empty space where the control would be.
     /// </summary>
-    Invisible = 1 << 11,
+    Invisible = 1 << 9,
     /// <summary>
     /// The control is not drawn, can't be focused and won't react to user input. It won't receive most events.
     /// It won't appear in layouts and won't take up any space.
     /// </summary>
-    Hidden = 1 << 12,
+    Hidden = 1 << 10,
     /// <summary>
     /// A parent container up the chain is hidden which prevents drawing and user interaction.
     /// </summary>
-    ParentHidden = 1 << 13,
+    ParentHidden = 1 << 11,
 
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);

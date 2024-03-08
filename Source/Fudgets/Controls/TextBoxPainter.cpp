@@ -158,7 +158,8 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             int sel_len = sel_end - sel_pos;
             opt.Bounds = Rectangle(line.Location + bounds.Location + offset + Float2(skip_width, 0.f), line.Size - Float2(skip_width, 0.f));
 
-            float width = _font.Font->MeasureText(StringView(measurements.Text.Get() + sel_pos, sel_len), opt).X;
+            bool full_line = sel_min == line.StartIndex && sel_end == line.EndIndex;
+            float width = full_line ? line.Size.X :_font.Font->MeasureText(StringView(measurements.Text.Get() + sel_pos, sel_len), opt).X;
             opt.Bounds.Size.X = width;
 
             skip_width += width;

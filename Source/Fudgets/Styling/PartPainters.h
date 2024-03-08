@@ -18,21 +18,29 @@ enum class FudgetBasicPainterIds
     /// </summary>
     Background = First,
     /// <summary>
+    /// Hovered background drawable or color, used for the standard framed controls
+    /// </summary>
+    HoveredBackground,
+    /// <summary>
     /// Disabled background drawable or color, used for the standard framed controls
     /// </summary>
     DisabledBackground,
     /// <summary>
     /// Frame edge drawable or color, used for the standard framed controls
     /// </summary>
-    FrameEdge,
+    FrameDraw,
     /// <summary>
     /// Focused frame edge drawable or color, used for the standard framed controls
     /// </summary>
-    FocusedFrameEdge,
+    FocusedFrameDraw,
     /// <summary>
-    /// Padding inside the frame, used for the standard framed controls
+    /// Hovered frame edge drawable or color, used for the standard framed controls
     /// </summary>
-    FramePadding,
+    HoveredFrameDraw,
+    /// <summary>
+    /// Padding inside the frame for the contents, used for the standard framed controls
+    /// </summary>
+    ContentPadding,
 
     /// <summary>
     /// Button surface drawable or color, used for the standard buttons

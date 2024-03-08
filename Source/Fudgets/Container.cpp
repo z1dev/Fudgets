@@ -7,6 +7,8 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Serialization/JsonTools.h"
 
+#include "Styling/PartPainters.h"
+
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
     FillColor(1.0f), DrawFilledBackground(false), _layout(nullptr), _dummy_layout(true), _size_overrides(FudgetSizeOverride::AllUnrestricted), _changing(false)
@@ -355,7 +357,7 @@ void FudgetContainer::DoFocusChanged(bool focused, FudgetControl *other)
             for (int siz = pos->_children.Count(); ix < siz; ++ix)
             {
                 FudgetControl *c = pos->_children[ix];
-                c->SetState(FudgetControlState::ShowFocused, focused);
+                c->SetVisualState(FudgetVisualControlState::Focused, focused);
                 if (c->HasAnyFlag(FudgetControlFlag::ContainerControl))
                 {
                     FudgetContainer *container = dynamic_cast<FudgetContainer*>(c);
