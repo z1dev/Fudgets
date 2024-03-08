@@ -25,40 +25,21 @@ namespace Fudgets
         /// value to it on success.
         /// </summary>
         /// <typeparam name="T">Type of the enum</typeparam>
-        /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
-        /// <param name="id">Id that might be associated with the value in this style.</param>
-        /// <param name="result">Receives the resource's value if it is found.</param>
-        /// <returns>Whether the id was associated with a value of the requested type</returns>
-        public bool GetEnumResource<T>(FudgetTheme theme, int id, out T result) where T : Enum
+        /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
+        /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
+        /// <param name="id">The id to look up for a resource value or resource override</param>
+        /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
+        /// <param name="result">Receives retrieved value associated with the id</param>
+        /// <returns>Whether a resource with the id was found and stored in result</returns>
+        public static bool GetEnumResource<T>(FudgetStyle style, FudgetTheme theme, int id, bool check_theme, out T result) where T : Enum
         {
-            if (GetResourceValue(theme, id, true, out var res))
+            if (FudgetStyle.GetResourceValue(style, theme, id, check_theme, out var res))
             {
                 if (res.GetType() == typeof(T))
                 {
                     result = (T)res;
                     return true;
                 }
-            }
-            result = default;
-            return false;
-        }
-
-        /// <summary>
-        /// Looks up an enum resource associated with an id in this style or a parent style using the theme, and sets the result
-        /// value to it on success.
-        /// This version of the function checks multiple ids until one matches.
-        /// </summary>
-        /// <typeparam name="T">Type of the enum</typeparam>
-        /// <param name="theme">Theme that is checked for the value, unless a direct value override was set.</param>
-        /// <param name="ids">Ids that might be associated with the value in this style.</param>
-        /// <param name="result">Receives the resource's value if it is found.</param>
-        /// <returns>Whether the token was associated with a value of the requested type</returns>
-        public bool GetEnumResource<T>(FudgetTheme theme, int[] ids, out T result) where T : Enum
-        {
-            foreach (var id in ids)
-            {
-                if (GetEnumResource<T>(theme, id, out result))
-                    return true;
             }
             result = default;
             return false;

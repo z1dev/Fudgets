@@ -33,7 +33,7 @@ namespace Fudgets
 
             bool valid = false;
             if (style_override != null)
-                valid = style_override.GetPainterMappingResource(ActiveTheme, mapping_id, out painter_data);
+                valid = FudgetStyle.GetPainterMappingResource(style_override, ActiveTheme, mapping_id, false, out painter_data);
             if (!valid)
                 valid = GetStylePainterMapping(mapping_id, out painter_data);
 
@@ -70,20 +70,20 @@ namespace Fudgets
         /// <returns>Whether a valid value was found for the id</returns>
         public bool GetStyleEnum<T>(int id, out T result) where T: Enum
         {
-            if (TryGetStyleEnumInner<T>(Style, id, out result))
+            if (TryGetStyleEnumInner<T>(Style, id, false, out result))
                 return true;
-            return TryGetStyleEnumInner<T>(ClassStyle, id, out result);
+            return TryGetStyleEnumInner<T>(ClassStyle, id, true, out result);
         }
 
 
-        private bool TryGetStyleEnumInner<T>(FudgetStyle style, int id, out T result) where T : Enum
+        private bool TryGetStyleEnumInner<T>(FudgetStyle style, int id, bool check_theme, out T result) where T : Enum
         {
             if (style == null)
             {
                 result = default;
                 return false;
             }
-            return style.GetEnumResource<T>(ActiveTheme, id, out result);
+            return FudgetStyle.GetEnumResource<T>(style, ActiveTheme, id, check_theme, out result);
         }
 
         /// <summary>

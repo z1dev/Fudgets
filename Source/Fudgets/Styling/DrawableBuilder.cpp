@@ -241,25 +241,25 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
         {
             int id = ((FudgetDrawInstructionResource*)item)->_id;
             float f;
-            if (style != nullptr && style->GetFloatResource(theme, id, f))
+            if (FudgetStyle::GetFloatResource(style, theme, id, true, f))
             {
                 result = new FudgetDrawInstructionFloat(FudgetDrawInstructionType::Blur, f);
                 break;
             }
             Color color;
-            if (style != nullptr && style->GetColorResource(theme, id, color))
+            if (FudgetStyle::GetColorResource(style, theme, id, true, color))
             {
                 result = new FudgetDrawInstructionColor(color);
                 break;
             }
             FudgetPadding padding;
-            if (style != nullptr && style->GetPaddingResource(theme, id, padding))
+            if (FudgetStyle::GetPaddingResource(style, theme, id, true, padding))
             {
                 result = new FudgetDrawInstructionPadding(padding);
                 break;
             }
             FudgetDrawArea area;
-            if (style != nullptr && style->GetDrawAreaResource(theme, id, area))
+            if (FudgetStyle::GetDrawAreaResource(style, theme, id, true, area))
             {
                 result = new FudgetDrawInstructionDrawArea(area);
                 break;

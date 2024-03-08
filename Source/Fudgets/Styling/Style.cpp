@@ -45,14 +45,15 @@ FudgetStyle* FudgetStyle::GetOwnedStyle(const String &name) const
     return nullptr;
 }
 
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result)
+bool FudgetStyle::GetResourceValue(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result)
 {
     if (id < 0)
         return false;
 
-    FudgetStyleResource *res = GetResource(id);
+    FudgetStyleResource *res = style != nullptr ? style->GetResource(id) : nullptr;
     if (res == nullptr)
     {
+        // Falling through to check the theme directly. This is different from getting the resource from the theme below.
         if (check_theme)
             return theme->GetResource(id, result);
         return false;
@@ -65,20 +66,9 @@ bool FudgetStyle::GetResourceValue(FudgetTheme *theme, int id, bool check_theme,
         return true;
     }
 
+    // There was a resource override. Get the value from the theme via the override id.
     if (res->_resource_id >= 0 && theme != nullptr)
         return theme->GetResource(res->_resource_id, result);
-    return false;
-}
-
-bool FudgetStyle::GetResourceValue(FudgetTheme *theme, const Span<int> &ids, bool check_theme, API_PARAM(Out) Variant &result)
-{
-    for (auto id : ids)
-    {
-        if (GetResourceValue(theme, id, check_theme, result))
-            return true;
-    }
-
-    result = Variant();
     return false;
 }
 
@@ -167,10 +157,10 @@ void FudgetStyle::ResetResourceOverride(int id)
         style->ParentResourceWasReset(id, res);
 }
 
-bool FudgetStyle::GetStyleResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetStyle* &result)
+bool FudgetStyle::GetStyleResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetStyle* &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         String style_name;
         if (StringFromVariant(var, style_name))
@@ -183,20 +173,10 @@ bool FudgetStyle::GetStyleResource(FudgetTheme *theme, int id, API_PARAM(Out) Fu
     return false;
 }
 
-bool FudgetStyle::GetStyleResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetStyle* &result)
-{
-    for (auto id : ids)
-    {
-        if (GetStyleResource(theme, id, result))
-            return true;
-    }
-    return false;
-}
-
-bool FudgetStyle::GetPainterMappingResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetPartPainterMapping &result)
+bool FudgetStyle::GetPainterMappingResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetPartPainterMapping &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (PainterMappingFromVariant(var, result))
             return true;
@@ -205,20 +185,10 @@ bool FudgetStyle::GetPainterMappingResource(FudgetTheme *theme, int id, API_PARA
     return false;
 }
 
-bool FudgetStyle::GetPainterMappingResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetPartPainterMapping &result)
-{
-    for (auto id : ids)
-    {
-        if (GetPainterMappingResource(theme, id, result))
-            return true;
-    }
-    return false;
-}
-
-bool FudgetStyle::GetStringResource(FudgetTheme *theme, int id, API_PARAM(Out) String &result)
+bool FudgetStyle::GetStringResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) String &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (StringFromVariant(var, result))
             return true;
@@ -227,20 +197,10 @@ bool FudgetStyle::GetStringResource(FudgetTheme *theme, int id, API_PARAM(Out) S
     return false;
 }
 
-bool FudgetStyle::GetStringResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) String &result)
-{
-    for (auto id : ids)
-    {
-        if (GetStringResource(theme, id, result))
-            return true;
-    }
-    return false;
-}
-
-bool FudgetStyle::GetColorResource(FudgetTheme *theme, int id, API_PARAM(Out) Color &result)
+bool FudgetStyle::GetColorResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Color &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (ColorFromVariant(var, result))
             return true;
@@ -249,21 +209,10 @@ bool FudgetStyle::GetColorResource(FudgetTheme *theme, int id, API_PARAM(Out) Co
     return false;
 }
 
-bool FudgetStyle::GetColorResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Color &result)
-{
-    for (auto id : ids)
-    {
-        if (GetColorResource(theme, id, result))
-            return true;
-    }
-    result = Color();
-    return false;
-}
-
-bool FudgetStyle::GetBoolResource(FudgetTheme *theme, int id, API_PARAM(Out) bool &result)
+bool FudgetStyle::GetBoolResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) bool &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (BoolFromVariant(var, result))
             return true;
@@ -272,21 +221,10 @@ bool FudgetStyle::GetBoolResource(FudgetTheme *theme, int id, API_PARAM(Out) boo
     return false;
 }
 
-bool FudgetStyle::GetBoolResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) bool &result)
-{
-    for (auto id : ids)
-    {
-        if (GetBoolResource(theme, id, result))
-            return true;
-    }
-    result = 0.0f;
-    return false;
-}
-
-bool FudgetStyle::GetFloatResource(FudgetTheme *theme, int id, API_PARAM(Out) float &result)
+bool FudgetStyle::GetFloatResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) float &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (FloatFromVariant(var, result))
             return true;
@@ -295,21 +233,10 @@ bool FudgetStyle::GetFloatResource(FudgetTheme *theme, int id, API_PARAM(Out) fl
     return false;
 }
 
-bool FudgetStyle::GetFloatResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) float &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFloatResource(theme, id, result))
-            return true;
-    }
-    result = 0.0f;
-    return false;
-}
-
-bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float2 &result)
+bool FudgetStyle::GetFloat2Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float2 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Float2FromVariant(var, result))
             return true;
@@ -318,21 +245,10 @@ bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, int id, API_PARAM(Out) F
     return false;
 }
 
-bool FudgetStyle::GetFloat2Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float2 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFloat2Resource(theme, id, result))
-            return true;
-    }
-    result = Float2();
-    return false;
-}
-
-bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float3 &result)
+bool FudgetStyle::GetFloat3Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float3 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Float3FromVariant(var, result))
             return true;
@@ -341,21 +257,10 @@ bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, int id, API_PARAM(Out) F
     return false;
 }
 
-bool FudgetStyle::GetFloat3Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float3 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFloat3Resource(theme, id, result))
-            return true;
-    }
-    result = Float3();
-    return false;
-}
-
-bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, int id, API_PARAM(Out) Float4 &result)
+bool FudgetStyle::GetFloat4Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float4 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Float4FromVariant(var, result))
             return true;
@@ -364,21 +269,10 @@ bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, int id, API_PARAM(Out) F
     return false;
 }
 
-bool FudgetStyle::GetFloat4Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Float4 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFloat4Resource(theme, id, result))
-            return true;
-    }
-    result = Float4();
-    return false;
-}
-
-bool FudgetStyle::GetIntResource(FudgetTheme *theme, int id, API_PARAM(Out) int &result)
+bool FudgetStyle::GetIntResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) int &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (IntFromVariant(var, result))
             return true;
@@ -387,21 +281,10 @@ bool FudgetStyle::GetIntResource(FudgetTheme *theme, int id, API_PARAM(Out) int 
     return false;
 }
 
-bool FudgetStyle::GetIntResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) int &result)
-{
-    for (auto id : ids)
-    {
-        if (GetIntResource(theme, id, result))
-            return true;
-    }
-    result = 0;
-    return false;
-}
-
-bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int2 &result)
+bool FudgetStyle::GetInt2Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int2 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Int2FromVariant(var, result))
             return true;
@@ -410,21 +293,10 @@ bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int
     return false;
 }
 
-bool FudgetStyle::GetInt2Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int2 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetInt2Resource(theme, id, result))
-            return true;
-    }
-    result = Int2();
-    return false;
-}
-
-bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int3 &result)
+bool FudgetStyle::GetInt3Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int3 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Int3FromVariant(var, result))
             return true;
@@ -433,21 +305,10 @@ bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int
     return false;
 }
 
-bool FudgetStyle::GetInt3Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int3 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetInt3Resource(theme, id, result))
-            return true;
-    }
-    result = Int3();
-    return false;
-}
-
-bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int4 &result)
+bool FudgetStyle::GetInt4Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int4 &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (Int4FromVariant(var, result))
             return true;
@@ -456,21 +317,10 @@ bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, int id, API_PARAM(Out) Int
     return false;
 }
 
-bool FudgetStyle::GetInt4Resource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) Int4 &result)
-{
-    for (auto id : ids)
-    {
-        if (GetInt4Resource(theme, id, result))
-            return true;
-    }
-    result = Int4();
-    return false;
-}
-
-bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetPadding &result)
+bool FudgetStyle::GetPaddingResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetPadding &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (PaddingFromVariant(var, result))
             return true;
@@ -479,21 +329,10 @@ bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, int id, API_PARAM(Out) 
     return false;
 }
 
-bool FudgetStyle::GetPaddingResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetPadding &result)
-{
-    for (auto id : ids)
-    {
-        if (GetPaddingResource(theme, id, result))
-            return true;
-    }
-    result = FudgetPadding();
-    return false;
-}
-
-bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetTextDrawResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (TextDrawSettingsFromVariant(var, result))
             return true;
@@ -502,21 +341,10 @@ bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, int id, API_PARAM(Out)
     return false;
 }
 
-bool FudgetStyle::GetTextDrawResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result)
-{
-    for (auto id : ids)
-    {
-        if (GetTextDrawResource(theme, id, result))
-            return true;
-    }
-    result = FudgetTextDrawSettings();
-    return false;
-}
-
-bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetFontSettings &result)
+bool FudgetStyle::GetFontSettingsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetFontSettings &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (FontSettingsFromVariant(var, result))
             return true;
@@ -525,21 +353,10 @@ bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, int id, API_PARAM(
     return false;
 }
 
-bool FudgetStyle::GetFontSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetFontSettings &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFontSettingsResource(theme, id, result))
-            return true;
-    }
-    result = FudgetFontSettings();
-    return false;
-}
-
-bool FudgetStyle::GetFontResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetFont &result)
+bool FudgetStyle::GetFontResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetFont &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (FontFromVariant(var, result))
             return true;
@@ -548,21 +365,10 @@ bool FudgetStyle::GetFontResource(FudgetTheme *theme, int id, API_PARAM(Out) Fud
     return false;
 }
 
-bool FudgetStyle::GetFontResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetFont &result)
-{
-    for (auto id : ids)
-    {
-        if (GetFontResource(theme, id, result))
-            return true;
-    }
-    result = FudgetFont();
-    return false;
-}
-
-bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetDrawArea &result)
+bool FudgetStyle::GetDrawAreaResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawArea &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (AreaFromVariant(var, result))
             return true;
@@ -571,44 +377,22 @@ bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, int id, API_PARAM(Out)
     return false;
 }
 
-bool FudgetStyle::GetDrawAreaResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetDrawArea &result)
-{
-    for (auto id : ids)
-    {
-        if (GetDrawAreaResource(theme, id, result))
-            return true;
-    }
-    result = FudgetDrawArea();
-    return false;
-}
-
-bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
-        if (DrawableFromVariant(this, theme, var, result))
+        if (DrawableFromVariant(style, theme, var, result))
             return true;
     }
     result = nullptr; // FudgetDrawInstructionList();
     return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetDrawable* &result)
-{
-    for (auto id : ids)
-    {
-        if (GetDrawableResource(theme, id, result))
-            return true;
-    }
-    result = nullptr; // FudgetDrawInstructionList();
-    return false;
-}
-
-bool FudgetStyle::GetTextureResource(FudgetTheme *theme, int id, API_PARAM(Out) TextureBase* &result)
+bool FudgetStyle::GetTextureResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) TextureBase* &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (TextureFromVariant(var, result))
             return true;
@@ -617,34 +401,12 @@ bool FudgetStyle::GetTextureResource(FudgetTheme *theme, int id, API_PARAM(Out) 
     return false;
 }
 
-bool FudgetStyle::GetTextureResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) TextureBase* &result)
-{
-    for (auto id : ids)
-    {
-        if (GetTextureResource(theme, id, result))
-            return true;
-    }
-    result = nullptr;
-    return false;
-}
-
-bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, int id, API_PARAM(Out) FudgetTextDrawSettings &result)
+bool FudgetStyle::GetTextDrawSettingsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     Variant var;
-    if (GetResourceValue(theme, id, true, var))
+    if (GetResourceValue(style, theme, id, check_theme, var))
     {
         if (TextDrawSettingsFromVariant(var, result))
-            return true;
-    }
-    result = FudgetTextDrawSettings();
-    return false;
-}
-
-bool FudgetStyle::GetTextDrawSettingsResource(FudgetTheme *theme, const Span<int> &ids, API_PARAM(Out) FudgetTextDrawSettings &result)
-{
-    for (auto id : ids)
-    {
-        if (GetTextDrawSettingsResource(theme, id, result))
             return true;
     }
     result = FudgetTextDrawSettings();

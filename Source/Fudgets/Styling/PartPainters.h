@@ -5,6 +5,7 @@
 
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
+#include "Style.h"
 
 
 API_ENUM()
@@ -357,7 +358,7 @@ protected:
         for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
         {
             if (style_override != nullptr)
-                success = style_override->GetEnumResource<E>(theme, values[ix], result);
+                success = FudgetStyle::GetEnumResource<E>(style_override, theme, values[ix], false, result);
             if (!success)
                 success = control->GetStyleEnum<E>(values[ix], result);
         }

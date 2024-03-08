@@ -46,7 +46,7 @@ public partial class FudgetPartPainter
         for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
         {
             if (style_override != null)
-                success = style_override.GetEnumResource<E>(theme, values[ix], out result);
+                success = FudgetStyle.GetEnumResource<E>(style_override, theme, values[ix], false, out result);
             if (!success)
                 success = control.GetStyleEnum<E>(values[ix], out result);
         }
