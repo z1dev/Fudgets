@@ -343,15 +343,26 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
 
     if (_no_padding_space <= 0)
     {
+        // All the space was used up by padding or the layout has no space to draw anything.
+
         for (int ix = 0; ix < count; ++ix)
             sizes[ix] = 0;
     }
     else if (remaining >= 0)
     {
+        // There is more space than what the contents would normally take up. It needs to be distributed among
+        // the sizes of the expanding slots which can expand.
+
+        // Sum of the weight of all expanding slots.
         int weight_sum = 0;
+        // Number of expanding slots with valid weight.
         int weighted_cnt = 0;
+        // Number of expanding slots, whether valid or invalid. used if no valid weighted slots exist.
         int unweighted_cnt = 0;
 
+        // If some slots have valid weight, stores a multiplier for the available size that they can take up. To avoid
+        // gaps caused by floating point calculations, this is filled from the back. Each element only measuring the
+        // space not used up yet.
         Array<float> weight_ratio(count);
 
         for (int ix = count - 1; ix >= 0; --ix)
@@ -373,18 +384,23 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
             ++unweighted_cnt;
         }
 
+        // Sizes were properly calculated when true. 
         bool sizes_set = false;
+        // Space unused of the remaining space. Each measured slot decreases this value in the loop, so the last slot can
+        // take up all that's left, avoiding floating point rounding issues.
         int unused_space = remaining;
         for (int ix = 0, unweighted_ix = 0; ix < count; ++ix)
         {
             FudgetListLayoutSlot *slot = GetSlot(ix);
             if (slot->Control->IsHiddenInLayout())
                 continue;
+            // Value multiplied by unused_space to get the size of the slot. It's initialized for the case when no proper weight
+            // was calculated or nothing expands.
             float grow_ratio = unweighted_cnt == 0 ? 1.f / float(count - ix) : weight_sum == 0.f ? 1.f / float(unweighted_cnt - unweighted_ix) : 0.f;
             bool is_expanding = IsExpandingRule(slot->_sizing_rule);
             if (is_expanding)
                 ++unweighted_ix;
-            if (unweighted_cnt != 0 && weight_sum > 0.f && is_expanding && sizes[ix] != Relevant(max_sizes[ix]))
+            if (is_expanding && unweighted_cnt != 0 && weight_sum > 0.f && sizes[ix] != Relevant(max_sizes[ix]))
             {
                 grow_ratio = weight_ratio[count - ix - 1]; //Relevant(slot->_weight) / weight_sum;
             }
@@ -413,47 +429,89 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
     }
     else
     {
-        int shrink_sum = 0.f;
-        int late_shrink_sum = 0.f;
-        for (int ix = 0; ix < count; ++ix)
+        // Slots have less space than what their contents need. Their sizes need to be shrinked.
+
+        // First handle normal shrinking slots before late shrinking ones would start changing.
+
+        remaining *= -1;
+
+        int shrink_sum = 0;
+        Array<float> shrink_ratio(count);
+        for (int ix = count - 1; ix >= 0; --ix)
         {
             int size = Relevant(shrink_sizes[ix]);
             if (size <= 0.f)
+            {
+                // Hidden slots have 0 sizes too.
+
+                shrink_ratio.Add(0.f);
                 continue;
+            }
             auto slot = GetSlot(ix);
-            if (slot->Control->IsHiddenInLayout())
-                continue;
+
             if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::CanShrink || slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
+            {
                 shrink_sum += size;
-            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
-                late_shrink_sum += size;
+                shrink_ratio.Add(size / (float)shrink_sum);
+
+            }
+            else
+                shrink_ratio.Add(0.f);
         }
 
-        remaining = Math::Min(-remaining, shrink_sum + late_shrink_sum);
+        int unused_space = Math::Min(remaining, shrink_sum);
+
         for (int ix = 0; ix < count; ++ix)
         {
             int size = Relevant(shrink_sizes[ix]);
-            if (size <= 0.f)
+            if (size <= 0.f || shrink_ratio[count - ix - 1] == 0.f)
                 continue;
-            auto slot = GetSlot(ix);
-            if (slot->Control->IsHiddenInLayout())
-                continue;
-            if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::CanShrink || slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
-                sizes[ix] -= int(Math::Min(remaining, shrink_sum) * (size / (float)shrink_sum));
+
+
+            int shrink = Math::Min(size, int(shrink_ratio[count - ix - 1] * unused_space));
+            unused_space -= shrink;
+            remaining -= shrink;
+            sizes[ix] -= shrink;
         }
-        remaining -= shrink_sum;
-        if (remaining > 0.f && late_shrink_sum > 0.f && !Math::NearEqual(remaining, 0.f))
+
+        if (remaining > 0)
         {
-            for (int ix = 0; ix < count; ++ix)
+            // Handle late shrinking slots.
+
+            shrink_sum = 0;
+            for (int ix = count - 1; ix >= 0; --ix)
             {
                 int size = Relevant(shrink_sizes[ix]);
                 if (size <= 0.f)
+                {
+                    // Hidden slots have 0 sizes too.
+
+                    shrink_ratio[count - ix - 1] = 0.f;
                     continue;
+                }
                 auto slot = GetSlot(ix);
-                if (slot->Control->IsHiddenInLayout())
-                    continue;
+
                 if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
-                    sizes[ix] -= int(Math::Min(remaining, late_shrink_sum) * (size / (float)late_shrink_sum));
+                {
+                    shrink_sum += size;
+                    shrink_ratio[count - ix - 1] = size / (float)shrink_sum;
+
+                }
+                else
+                    shrink_ratio[count - ix - 1] = 0.f;
+            }
+
+            unused_space = Math::Min(remaining, shrink_sum);
+
+            for (int ix = 0; ix < count; ++ix)
+            {
+                int size = Relevant(shrink_sizes[ix]);
+                if (size <= 0.f || shrink_ratio[count - ix - 1] == 0.f)
+                    continue;
+
+                int shrink = Math::Min(size, int(shrink_ratio[count - ix - 1] * unused_space));
+                unused_space -= shrink;
+                sizes[ix] -= shrink;
             }
         }
     }
