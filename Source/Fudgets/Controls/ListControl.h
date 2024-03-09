@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Container.h"
-#include "../Styling/PartPainters.h"
+#include "../Styling/Painters/PartPainters.h"
 
 
 /// <summary>

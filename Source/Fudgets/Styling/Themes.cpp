@@ -1,9 +1,13 @@
 #include "Themes.h"
 #include "../MarginStructs.h"
 #include "StyleStructs.h"
-#include "PartPainters.h"
+#include "Painters/PartPainters.h"
+#include "Painters/FramedFieldPainter.h"
 #include "DrawableBuilder.h"
 #include "../Controls/Button.h"
+
+#include "DrawableBuilder.h"
+#include "StateOrderBuilder.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
@@ -136,6 +140,43 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	_data->_theme_map[MainThemeName] = main_theme;
 
 
+	// DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 0
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed | (uint64)FudgetVisualControlState::Down);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::End();
+	// DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 1
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed | (uint64)FudgetVisualControlState::Down);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::End();
+	// DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 2
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Down);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::End();
+	// DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 3
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Down);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::End();
+	// HOVERED_FOCUSED_STATE_ORDER_INDEX = 4
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::End();
+	// FOCUSED_HOVERED_STATE_ORDER_INDEX = 5
+	FudgetStateOrderBuilder::Begin();
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
+	FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
+	FudgetStateOrderBuilder::End();
+
 	// Basic
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::Background, Color::White);
@@ -143,21 +184,22 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	main_theme->SetResource((int)FudgetBasicPainterIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
 
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::FrameDraw, FudgetDrawableBuilder::End());
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.4f, .5f, .6f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.4f, .5f, .8f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::FocusedFrameDraw, FudgetDrawableBuilder::End());
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(1.f), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
-	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(3.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(4.f));
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonHoveredSurface, Color(.85f, .85f, .85f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonDisabledSurface, Color(.6f, .6f, .6f, 1.f));
-	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonFocusedSurface, Color(.75f, .75f, .85f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonFocusedSurface, Color(.70f, .75f, .80f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonPressedSurface, Color(.65f, .65f, .65f, 1.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonDownSurface, Color(.6f, .6f, .6f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonContentPressedOffset, Float2(0.f, 1.f));
 
 	// General frame drawing:
@@ -176,7 +218,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	main_theme->SetForwarding((int)FudgetButtonIds::Background, (int)FudgetBasicPainterIds::ButtonSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::HoveredBackground, (int)FudgetBasicPainterIds::ButtonHoveredSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::PressedBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
-	main_theme->SetForwarding((int)FudgetButtonIds::DownBackground, (int)FudgetBasicPainterIds::ButtonPressedSurface);
+	main_theme->SetForwarding((int)FudgetButtonIds::DownBackground, (int)FudgetBasicPainterIds::ButtonDownSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::DisabledBackground, (int)FudgetBasicPainterIds::ButtonDisabledSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::Focusedbackground, (int)FudgetBasicPainterIds::ButtonFocusedSurface);
 	main_theme->SetForwarding((int)FudgetButtonIds::ContentPadding, (int)FudgetBasicPainterIds::ContentPadding);
@@ -233,6 +275,11 @@ void FudgetThemes::Uninitialize(bool in_game)
 	for (auto p : _data->_style_area_list)
 		delete p;
 	_data->_style_area_list.clear();
+
+
+	for (auto p : _data->_state_order_list)
+		delete p;
+	_data->_state_order_list.clear();
 
 #if USE_EDITOR
 	if (!in_game)
@@ -388,25 +435,46 @@ FudgetPartPainter* FudgetThemes::CreatePainter(const StringAnsi &painter_name)
 	return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
 }
 
-int FudgetThemes::RegisterDrawInstructionList(FudgetDrawInstructionList *style_area)
+int FudgetThemes::RegisterDrawInstructionList(FudgetDrawInstructionList *drawlist)
 {
-	if (style_area == nullptr || IsDrawInstructionListRegistered(style_area))
+	if (drawlist == nullptr || IsDrawInstructionListRegistered(drawlist))
 		return -1;
 
-	_data->_style_area_list.push_back(style_area);
+	_data->_style_area_list.push_back(drawlist);
 	return (int)_data->_style_area_list.size() - 1;
 }
 
-bool FudgetThemes::IsDrawInstructionListRegistered(FudgetDrawInstructionList *arealist)
+bool FudgetThemes::IsDrawInstructionListRegistered(FudgetDrawInstructionList *drawlist)
 {
-	return std::find(_data->_style_area_list.begin(), _data->_style_area_list.end(), arealist) != _data->_style_area_list.end();
+	return std::find(_data->_style_area_list.begin(), _data->_style_area_list.end(), drawlist) != _data->_style_area_list.end();
 }
 
-FudgetDrawInstructionList* FudgetThemes::GetDrawInstructionList(int arealist_index)
+FudgetDrawInstructionList* FudgetThemes::GetDrawInstructionList(int drawlist_index)
 {
-	if (arealist_index < 0 || arealist_index >= _data->_style_area_list.size())
+	if (drawlist_index < 0 || drawlist_index >= _data->_style_area_list.size())
 		return nullptr;
-	return _data->_style_area_list[arealist_index];
+	return _data->_style_area_list[drawlist_index];
+}
+
+int FudgetThemes::RegisterStateOrder(FudgetStateOrder *orderlist)
+{
+	if (orderlist == nullptr || IsStateOrderRegistered(orderlist))
+		return -1;
+
+	_data->_state_order_list.push_back(orderlist);
+	return (int)_data->_state_order_list.size() - 1;
+}
+
+bool FudgetThemes::IsStateOrderRegistered(FudgetStateOrder *orderlist)
+{
+	return std::find(_data->_state_order_list.begin(), _data->_state_order_list.end(), orderlist) != _data->_state_order_list.end();
+}
+
+FudgetStateOrder* FudgetThemes::GetStateOrder(int orderlist_index)
+{
+	if (orderlist_index < 0 || orderlist_index >= _data->_state_order_list.size())
+		return nullptr;
+	return _data->_state_order_list[orderlist_index];
 }
 
 #if USE_EDITOR

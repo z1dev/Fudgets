@@ -15,12 +15,14 @@ FudgetDrawInstructionList::~FudgetDrawInstructionList()
     _list.clear();
 }
 
+
+// FudgetDrawableBuilder
+
+
 bool FudgetDrawableBuilder::_building = false;
 FudgetDrawInstructionList *FudgetDrawableBuilder::_data = nullptr;
 std::vector<FudgetDrawInstructionList*> FudgetDrawableBuilder::_sub_data;
 
-
-// FudgetDrawableBuilder
 
 bool FudgetDrawableBuilder::Begin()
 {

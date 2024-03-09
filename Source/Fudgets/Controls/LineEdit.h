@@ -1,8 +1,10 @@
 #pragma once
 
 #include "TextBoxBase.h"
-#include "../Styling/PartPainters.h"
+//#include "../Styling/Painters/PartPainters.h"
 
+class FudgetFramedFieldPainter;
+class FudgetSingleLineTextPainter;
 
 
 API_ENUM()

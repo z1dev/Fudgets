@@ -1,13 +1,15 @@
 #pragma once
 
 #include "../GUIRoot.h"
-#include "../Styling/PartPainters.h"
+//#include "../Styling/Painters/PartPainters.h"
 #include "../Layouts/ProxyLayout.h"
 
 class FudgetLineEdit;
 class FudgetButton;
 class FudgetListBox;
 class FudgetStringListProvider;
+class FudgetFramedFieldPainter;
+
 
 API_ENUM()
 enum class FudgetComboBoxIds

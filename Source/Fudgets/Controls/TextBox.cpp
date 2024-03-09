@@ -3,7 +3,7 @@
 #include "../Styling/Themes.h"
 #include "Engine/Core/Types/StringBuilder.h"
 #include "../Layouts/Layout.h"
-
+#include "../Styling/Painters/FramedFieldPainter.h"
 
 
 
@@ -19,6 +19,7 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_p
 void FudgetTextBox::OnInitialize()
 {
     FudgetFramedFieldPainter::ResourceMapping frame_res;
+    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     frame_res.FrameDraw = (int)FudgetTextBoxIds::FrameDraw;
     frame_res.HoveredFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
     frame_res.PressedFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
@@ -29,6 +30,7 @@ void FudgetTextBox::OnInitialize()
     _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
 
     FudgetTextBoxPainter::ResourceMapping text_res;
+    text_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     text_res.SelectionDraw = (int)FudgetTextBoxIds::TextSelBg;
     text_res.FocusedSelectionDraw = (int)FudgetTextBoxIds::TextSelBg;
     text_res.DisabledSelectionDraw = (int)FudgetTextBoxIds::DisabledTextSelBg;

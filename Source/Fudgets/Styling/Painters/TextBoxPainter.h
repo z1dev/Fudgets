@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../Styling/PartPainters.h"
+#include "Engine/Scripting/ScriptingObject.h"
+
+#include "PartPainters.h"
 
 
 /// <summary>
@@ -156,7 +158,8 @@ public:
     /// <param name="state">State of the control</param>
     /// <param name="options">Options for text, like scale or wrapping mode</param>
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState states,
+        const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
 
     /// <summary>
     /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
@@ -223,7 +226,8 @@ public:
     /// <param name="scale">Scale to use for measurements</param>
     /// <param name="options">Options for text, like the offset, selection spans etc.</param>
     /// <param name="result">The measured lines</param>
-    API_FUNCTION() virtual void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) {}
+    API_FUNCTION() virtual void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale,
+        const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) {}
 
     /// <summary>
     /// Finds the line that holds the character at an index. If the character is omitted due to word wrapping, the next line's
@@ -283,6 +287,8 @@ struct FUDGETS_API FudgetTextBoxPainterResources
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextBoxPainterResources);
 
+    API_FIELD() int StateOrderIndex = -1;
+
     API_FIELD() int SelectionDraw = 0;
     API_FIELD() int FocusedSelectionDraw = 0;
     API_FIELD() int DisabledSelectionDraw = 0;
@@ -309,7 +315,8 @@ public:
     void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState states,
+        const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
 
     /// <inheritdoc />
     float GetKerning(Char a, Char b, float scale) const override;
@@ -330,7 +337,8 @@ public:
     Float2 Measure(FudgetControl *control, const StringView &text, float scale) override;
 
     /// <inheritdoc />
-    void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale, const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
+    void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale,
+        const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
 
     /// <inheritdoc />
     int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const override;
@@ -353,4 +361,6 @@ private:
     Color _disabled_selected_text_color;
 
     FudgetFont _font;
+
+    FudgetStateOrder *_state_order;
 };

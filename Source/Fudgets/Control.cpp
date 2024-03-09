@@ -5,8 +5,10 @@
 #include "MarginStructs.h"
 #include "Styling/Themes.h"
 #include "Styling/StyleStructs.h"
-#include "Styling/PartPainters.h"
+#include "Styling/DrawableBuilder.h"
+#include "Styling/Painters/PartPainters.h"
 #include "Layouts/Layout.h"
+
 
 #include "Engine/Render2D/Render2D.h"
 #include "Engine/Render2D/TextLayoutOptions.h"

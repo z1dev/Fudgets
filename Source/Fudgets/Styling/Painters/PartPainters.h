@@ -3,9 +3,12 @@
 #include "Engine/Scripting/ScriptingObject.h"
 #include "Engine/Render2D/Font.h"
 
-#include "../MarginStructs.h"
-#include "StyleStructs.h"
-#include "Style.h"
+#include "../../MarginStructs.h"
+#include "../StyleStructs.h"
+#include "../Style.h"
+
+
+class FudgetStateOrder;
 
 
 API_ENUM()
@@ -59,9 +62,13 @@ enum class FudgetBasicPainterIds
     /// </summary>
     ButtonFocusedSurface,
     /// <summary>
-    /// Button pressed or down surface drawable or color, used for the standard buttons
+    /// Button pressed surface drawable or color, used for the standard buttons
     /// </summary>
     ButtonPressedSurface,
+    /// <summary>
+    /// Button down surface drawable or color, used for the standard buttons
+    /// </summary>
+    ButtonDownSurface,
     /// <summary>
     /// Button offset to move contents visually when the button is pressed.
     /// </summary>
@@ -86,25 +93,38 @@ enum class FudgetVisualControlState
     /// </summary>
     Normal = 0,
     /// <summary>
-    /// Pressed appearance of a control, usually for buttons
+    /// Pressed appearance of a part, usually for buttons
     /// </summary>
     Pressed = 1 << 0,
     /// <summary>
-    /// Down appearance of a control, usually for buttons
+    /// Down appearance of a part, usually for buttons
     /// </summary>
     Down = 1 << 1,
     /// <summary>
-    /// Focused appearance of a control that can have the keyboard focus
+    /// Focused appearance of a part that can have the keyboard focus
     /// </summary>
     Focused = 1 << 2,
     /// <summary>
-    /// Disabled appearance of a control that means the users can't interact with it
+    /// Disabled appearance of a part that means the users can't interact with it
     /// </summary>
     Disabled = 1 << 3,
     /// <summary>
-    /// Hovered appearance of a control, usually when the mouse pointer is over it
+    /// Hovered appearance of a part, usually when the mouse pointer is over it
     /// </summary>
     Hovered = 1 << 4,
+    /// <summary>
+    /// Selected appearance of a part, usually for items in lists.
+    /// </summary>
+    Selected = 1 << 5,
+    /// <summary>
+    /// Expanded appearance of a part, usually for items in lists.
+    /// </summary>
+    Expanded = 1 << 6,
+    /// <summary>
+    /// Opened appearance of a part, usually for items in lists.
+    /// </summary>
+    Opened = 1 << 7,
+
 };
 DECLARE_ENUM_OPERATORS(FudgetVisualControlState);
 
@@ -151,6 +171,19 @@ protected:
     /// </summary>
     /// <returns>A style appropriate for the painter</returns>
     API_PROPERTY() FudgetStyle* GetDefaultStyle() const;
+
+    /// <summary>
+    /// Checks the themes database for a draw order list object at the given index. If the index is not found, the default draw order
+    /// is added which does not correspond to any state.
+    /// The draw order list can tell a part painter which resources to use to draw the part in. For example if a control's state
+    /// state is both focused and selected, the painter looks for either of them in the list. Whether focused or selected is coming
+    /// first, its item is further checked if there is a focused or selected item inside it. When the last such item is found,
+    /// the value in it can be used to pick the appropriate resources for drawing.
+    /// </summary>
+    /// <param name="theme_order_index">Index of the draw order list in FudgetThemes</param>
+    /// <param name="order">The variable that receives the list. It's set to null if the index was not found.</param>
+    void GetMappedStateOrder(int theme_order_index, FudgetStateOrder* &order) const;
+
 
     /// <summary>
     /// Checks style_override then the control's styles for a texture. First mapping_id is tested and then painter_id.
@@ -380,31 +413,65 @@ protected:
     /// <param name="states">The state flags</param>
     /// <param name="to_check">The state to check</param>
     /// <returns>Whether the checked state was found in the flags</returns>
-    API_FUNCTION() bool HasState(FudgetVisualControlState states, FudgetVisualControlState to_check) const;
+    template<typename T>
+    bool HasState(T states, T to_check) const
+    {
+        return ((uint64)states & (uint64)to_check) == (uint64)to_check;
+    }
+
     /// <summary>
-    /// Checks if the passed state flags match the enabled state.
+    /// Checks if the passed state flag matches the pressed state.
     /// </summary>
-    API_FUNCTION() bool IsEnabled(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawPressed(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Pressed) == (uint64)FudgetVisualControlState::Pressed;
+    }
     /// <summary>
-    /// Checks if the passed state flags match the disabled state.
+    /// Checks if the passed state flag matches the down state.
     /// </summary>
-    API_FUNCTION() bool IsDisabled(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawDown(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Down) == (uint64)FudgetVisualControlState::Down;
+    }
     /// <summary>
-    /// Checks if the passed state flags match the hovered state.
+    /// Checks if the passed state flag matches the focused state.
     /// </summary>
-    API_FUNCTION() bool IsHovered(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawFocused(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Focused) == (uint64)FudgetVisualControlState::Focused;
+    }
     /// <summary>
-    /// Checks if the passed state flags match the focused state.
+    /// Checks if the passed state flag matches the disabled state.
     /// </summary>
-    API_FUNCTION() bool IsFocused(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawDisabled(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Disabled) == (uint64)FudgetVisualControlState::Disabled;
+    }
     /// <summary>
-    /// Checks if the passed state flags match the down state.
+    /// Checks if the passed state flag matches the hovered state.
     /// </summary>
-    API_FUNCTION() bool IsDown(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawHovered(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Hovered) == (uint64)FudgetVisualControlState::Hovered;
+    }
+
+    API_FUNCTION() FORCE_INLINE bool DrawSelected(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Selected) == (uint64)FudgetVisualControlState::Selected;
+    }
+
+    API_FUNCTION() FORCE_INLINE bool DrawExpanded(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Expanded) == (uint64)FudgetVisualControlState::Expanded;
+    }
     /// <summary>
-    /// Checks if the passed state flags match the pressed state.
+    /// Checks if the passed state flag matches the opened state.
     /// </summary>
-    API_FUNCTION() bool IsPressed(FudgetVisualControlState states) const;
+    API_FUNCTION() FORCE_INLINE bool DrawOpened(uint64 state) const
+    {
+        return (state & (uint64)FudgetVisualControlState::Opened) == (uint64)FudgetVisualControlState::Opened;
+    }
+
 };
 
 /// <summary>
@@ -421,306 +488,10 @@ public:
     /// </summary>
     /// <param name="control">Control to draw</param>
     /// <param name="bounds">Bounds to draw inside. This is usually the result of padding on the control's bounds.</param>
-    /// <param name="state">State to paint</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) {}
+    /// <param name="states">State flags of the part to paint</param>
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) {}
 };
 
-// TODO: these alignments might be unified somewhere if there are multiple
-
-/// <summary>
-/// Horizontal image alignment for FudgetAlignedImagePainter
-/// </summary>
-API_ENUM()
-enum class FudgetImageHorzAlign
-{
-    /// <summary>
-    /// Image is aligned to the left
-    /// </summary>
-    Left,
-    /// <summary>
-    /// Image is aligned to the right
-    /// </summary>
-    Right,
-    /// <summary>
-    /// Image is aligned to be at the center horizontally
-    /// </summary>
-    Center,
-    /// <summary>
-    /// Stretch image to fill the horizontal space
-    /// </summary>
-    Stretch
-};
-
-/// <summary>
-/// Vertical image alignment for FudgetAlignedImagePainter
-/// </summary>
-API_ENUM()
-enum class FudgetImageVertAlign
-{
-    /// <summary>
-    /// Image is aligned to the top
-    /// </summary>
-    Top,
-    /// <summary>
-    /// Image is aligned to the bottom
-    /// </summary>
-    Bottom,
-    /// <summary>
-    /// Image is aligned to be at the center vertically
-    /// </summary>
-    Center,
-    /// <summary>
-    /// Stretch image to fill the vertical space
-    /// </summary>
-    Stretch
-};
-
-
-API_ENUM()
-enum class FudgetAlignedImagePainterIds
-{
-    First = 8000,
-
-    Image = First,
-    HoveredImage,
-    PressedImage,
-    DownImage,
-    FocusedImage,
-    DisabledImage,
-
-    ImageTint,
-    HoveredImageTint,
-    PressedImageTint,
-    DownImageTint,
-    FocusedImageTint,
-    DisabledImageTint,
-
-    ImageOffset,
-    HoveredImageOffset,
-    PressedImageOffset,
-    DownImageOffset,
-    FocusedImageOffset,
-    DisabledImageOffset,
-
-    ImagePadding,
-    HoveredImagePadding,
-    PressedImagePadding,
-    DownImagePadding,
-    FocusedImagePadding,
-    DisabledImagePadding,
-
-    HorzAlign,
-    VertAlign,
-};
-
-API_STRUCT(Attributes="HideInEditor")
-struct FUDGETS_API FudgetAlignedImagePainterResources
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImagePainterResources);
-
-    API_FIELD() int Image = 0;
-    API_FIELD() int HoveredImage = 0;
-    API_FIELD() int PressedImage = 0;
-    API_FIELD() int DownImage = 0;
-    API_FIELD() int FocusedImage = 0;
-    API_FIELD() int DisabledImage = 0;
-
-    API_FIELD() int ImageTint = 0;
-    API_FIELD() int HoveredImageTint = 0;
-    API_FIELD() int PressedImageTint = 0;
-    API_FIELD() int DownImageTint = 0;
-    API_FIELD() int FocusedImageTint = 0;
-    API_FIELD() int DisabledImageTint = 0;
-
-    API_FIELD() int ImageOffset = 0;
-    API_FIELD() int HoveredImageOffset = 0;
-    API_FIELD() int PressedImageOffset = 0;
-    API_FIELD() int DownImageOffset = 0;
-    API_FIELD() int FocusedImageOffset = 0;
-    API_FIELD() int DisabledImageOffset = 0;
-
-    API_FIELD() int ImagePadding = 0;
-    API_FIELD() int HoveredImagePadding = 0;
-    API_FIELD() int PressedImagePadding = 0;
-    API_FIELD() int DownImagePadding = 0;
-    API_FIELD() int FocusedImagePadding = 0;
-    API_FIELD() int DisabledImagePadding = 0;
-
-    API_FIELD() int HorzAlign = 0;
-    API_FIELD() int VertAlign = 0;
-};
-
-/// <summary>
-/// Painter for controls that have a background and a frame around a field. For text editors
-/// list boxes, drop down menus.
-/// </summary>
-API_CLASS()
-class FUDGETS_API FudgetAlignedImagePainter : public FudgetStatePainter
-{
-    using Base = FudgetStatePainter;
-    DECLARE_SCRIPTING_TYPE(FudgetAlignedImagePainter);
-public:
-    using ResourceMapping = FudgetAlignedImagePainterResources;
-
-    /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
-
-    /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
-private:
-    AssetReference<TextureBase> _image;
-    AssetReference<TextureBase> _hovered_image;
-    AssetReference<TextureBase> _pressed_image;
-    AssetReference<TextureBase> _down_image;
-    AssetReference<TextureBase> _focused_image;
-    AssetReference<TextureBase> _disabled_image;
-
-    Color _image_tint;
-    Color _hovered_image_tint;
-    Color _pressed_image_tint;
-    Color _down_image_tint;
-    Color _focused_image_tint;
-    Color _disabled_image_tint;
-
-    Float2 _image_offset;
-    Float2 _hovered_image_offset;
-    Float2 _pressed_image_offset;
-    Float2 _down_image_offset;
-    Float2 _focused_image_offset;
-    Float2 _disabled_image_offset;
-
-    FudgetPadding _image_padding;
-    FudgetPadding _hovered_image_padding;
-    FudgetPadding _pressed_image_padding;
-    FudgetPadding _down_image_padding;
-    FudgetPadding _focused_image_padding;
-    FudgetPadding _disabled_image_padding;
-
-    FudgetImageHorzAlign _horz_align;
-    FudgetImageVertAlign _vert_align;
-};
-
-
-API_ENUM()
-enum class FudgetFramedFieldPainterIds
-{
-    First = 9000,
-
-    FieldBackground = First,
-    HoveredFieldBackground,
-    PressedFieldBackground,
-    DownFieldBackground,
-    DisabledFieldBackground,
-    FocusedFieldBackground,
-    FieldPadding,
-    HoveredFieldPadding,
-    PressedFieldPadding,
-    DownFieldPadding,
-    DisabledFieldPadding,
-    FocusedFieldPadding,
-
-    FrameDraw,
-    HoveredFrameDraw,
-    PressedFrameDraw,
-    DownFrameDraw,
-    FocusedFrameDraw,
-    DisabledFrameDraw,
-    FramePadding,
-    HoveredFramePadding,
-    PressedFramePadding,
-    DownFramePadding,
-    FocusedFramePadding,
-    DisabledFramePadding,
-
-    ContentPadding,
-};
-
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetFramedFieldPainterResources
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldPainterResources);
-
-    API_FIELD() int FieldBackground = 0;
-    API_FIELD() int HoveredFieldBackground = 0;
-    API_FIELD() int PressedFieldBackground = 0;
-    API_FIELD() int DownFieldBackground = 0;
-    API_FIELD() int DisabledFieldBackground = 0;
-    API_FIELD() int FocusedFieldBackground = 0;
-    API_FIELD() int FieldPadding = 0;
-    API_FIELD() int HoveredFieldPadding = 0;
-    API_FIELD() int PressedFieldPadding = 0;
-    API_FIELD() int DownFieldPadding = 0;
-    API_FIELD() int DisabledFieldPadding = 0;
-    API_FIELD() int FocusedFieldPadding = 0;
-
-    API_FIELD() int FrameDraw = 0;
-    API_FIELD() int HoveredFrameDraw = 0;
-    API_FIELD() int PressedFrameDraw = 0;
-    API_FIELD() int DownFrameDraw = 0;
-    API_FIELD() int FocusedFrameDraw = 0;
-    API_FIELD() int DisabledFrameDraw = 0;
-    API_FIELD() int FramePadding = 0;
-    API_FIELD() int HoveredFramePadding = 0;
-    API_FIELD() int PressedFramePadding = 0;
-    API_FIELD() int DownFramePadding = 0;
-    API_FIELD() int FocusedFramePadding = 0;
-    API_FIELD() int DisabledFramePadding = 0;
-
-    API_FIELD() int ContentPadding = 0;
-};
-
-/// <summary>
-/// Painter for controls that have a background and a frame around a field. For text editors
-/// list boxes, drop down menus.
-/// </summary>
-API_CLASS()
-class FUDGETS_API FudgetFramedFieldPainter : public FudgetStatePainter
-{
-    using Base = FudgetStatePainter;
-    DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
-public:
-    using ResourceMapping = FudgetFramedFieldPainterResources;
-
-    /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
-
-    /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState state) override;
-
-
-    /// <summary>
-    /// Padding inside the rectangle of the painted frame that restricts the size of the contents inside the frame
-    /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _inner_padding; }
-private:
-    FudgetDrawable *_field_bg;
-    FudgetDrawable *_hovered_field_bg;
-    FudgetDrawable *_pressed_field_bg;
-    FudgetDrawable *_down_field_bg;
-    FudgetDrawable *_focused_field_bg;
-    FudgetDrawable *_disabled_field_bg;
-    FudgetPadding _field_padding;
-    FudgetPadding _hovered_field_padding;
-    FudgetPadding _pressed_field_padding;
-    FudgetPadding _down_field_padding;
-    FudgetPadding _focused_field_padding;
-    FudgetPadding _disabled_field_padding;
-
-    FudgetDrawable *_frame_area;
-    FudgetDrawable *_hovered_frame_area;
-    FudgetDrawable *_pressed_frame_area;
-    FudgetDrawable *_down_frame_area;
-    FudgetDrawable *_focused_frame_area;
-    FudgetDrawable *_disabled_frame_area;
-    FudgetPadding _frame_padding;
-    FudgetPadding _hovered_frame_padding;
-    FudgetPadding _pressed_frame_padding;
-    FudgetPadding _down_frame_padding;
-    FudgetPadding _focused_frame_padding;
-    FudgetPadding _disabled_frame_padding;
-
-    FudgetPadding _inner_padding;
-};
 
 /// <summary>
 /// Workaround for TextRange not having FLAXENGINE_API in their declaration
@@ -870,83 +641,6 @@ public:
     /// Returns the height of the font used by the painter.
     /// </summary>
     API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
-};
-
-
-API_ENUM()
-enum class FudgetLineEditTextPainterIds
-{
-    First = 10000,
-
-    SelectionDraw = First,
-    FocusedSelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    FocusedSelectedTextColor,
-    DisabledSelectedTextColor,
-    Font,
-};
-
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetLineEditTextPainterResources
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLineEditTextPainterResources);
-
-    API_FIELD() int SelectionDraw = 0;
-    API_FIELD() int FocusedSelectionDraw = 0;
-    API_FIELD() int DisabledSelectionDraw = 0;
-    API_FIELD() int TextColor = 0;
-    API_FIELD() int DisabledTextColor = 0;
-    API_FIELD() int SelectedTextColor = 0;
-    API_FIELD() int FocusedSelectedTextColor = 0;
-    API_FIELD() int DisabledSelectedTextColor = 0;
-    API_FIELD() int Font = 0;
-};
-
-/// <summary>
-/// Painter of unformatted text drawn with a single font, that can have spans which should be drawn
-/// as selectable
-/// </summary>
-API_CLASS()
-class FUDGETS_API FudgetLineEditTextPainter : public FudgetSingleLineTextPainter
-{
-    using Base = FudgetSingleLineTextPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
-public:
-    using ResourceMapping = FudgetLineEditTextPainterResources;
-
-    /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
-
-    /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;
-
-    /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;
-
-    /// <inheritdoc />
-    float GetKerning(Char a, Char b, float scale) const override;
-
-    /// <inheritdoc />
-    int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
-
-    /// <inheritdoc />
-    float GetFontHeight() const override;
-
-private:
-    FudgetDrawable *_sel_area;
-    FudgetDrawable *_focused_sel_area;
-    FudgetDrawable *_disabled_sel_area;
-
-    Color _text_color;
-    Color _disabled_text_color;
-    Color _selected_text_color;
-    Color _focused_selected_text_color;
-    Color _disabled_selected_text_color;
-
-    FudgetFont _font;
 };
 
 

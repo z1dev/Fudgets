@@ -7,12 +7,13 @@
 
 #include "Style.h"
 #include "StyleStructs.h"
-#include "DrawableBuilder.h"
 
 #include <map>
 #include <vector>
 
 class FudgetPartPainter;
+struct FudgetDrawInstructionList;
+class FudgetStateOrder;
 
 
 /// <summary>
@@ -146,6 +147,32 @@ class FUDGETS_API FudgetThemes
 {
     DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetThemes);
 public:
+
+    /// <summary>
+    /// Index to get the state ordering of down OR pressed, hovered, focused, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 0;
+    /// <summary>
+    /// Index to get the state ordering of down OR pressed, focused, hovered, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 1;
+    /// <summary>
+    /// Index to get the state ordering of down, pressed, hovered, focused, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 2;
+    /// <summary>
+    /// Index to get the state ordering of down, pressed, focused, hovered, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 3;
+    /// <summary>
+    /// Index to get the state ordering of hovered, focused, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int HOVERED_FOCUSED_STATE_ORDER_INDEX = 4;
+    /// <summary>
+    /// Index to get the state ordering of focused, hovered, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int FOCUSED_HOVERED_STATE_ORDER_INDEX = 5;
+
     /// <summary>
     /// Initializes the themes by allocating the main data structures. Call Uninitialize to free them. There are
     /// two sets of data when run in the editor, to make sure the running game is not corrupted when editing.
@@ -281,7 +308,23 @@ public:
     /// <summary>
     /// Returns the draw instruction list registered with RegisterDrawInstructionList by its index
     /// </summary>
-    static FudgetDrawInstructionList* GetDrawInstructionList(int drawlist_index);
+    API_FUNCTION() static FudgetDrawInstructionList* GetDrawInstructionList(int drawlist_index);
+
+
+    /// <summary>
+    /// Used by FudgetStateOrderBuilder to store the state order created so it can be freed later
+    /// </summary>
+    /// <param name="order">State order to register.</param>
+    /// <returns>Index of the registered state order, or -1 on error.</returns>
+    static int RegisterStateOrder(FudgetStateOrder *order);
+    /// <summary>
+    /// Used by FudgetStateOrderBuilder to check if a state order has been already created with the given name.
+    /// </summary>
+    static bool IsStateOrderRegistered(FudgetStateOrder *order);
+    /// <summary>
+    /// Returns the state order registered with RegisterStateOrder by its index
+    /// </summary>
+    API_FUNCTION() static FudgetStateOrder* GetStateOrder(int order_index);
 
 #ifdef USE_EDITOR
     /// <summary>
@@ -309,6 +352,8 @@ private:
         Dictionary<int, FontAsset*> _font_asset_map;
 
         std::vector<FudgetDrawInstructionList*> _style_area_list;
+
+        std::vector<FudgetStateOrder*> _state_order_list;
     };
 
 #if USE_EDITOR

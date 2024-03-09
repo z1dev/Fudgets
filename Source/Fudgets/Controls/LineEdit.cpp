@@ -1,5 +1,7 @@
 #include "LineEdit.h"
 #include "../Styling/Themes.h"
+#include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/Painters/LineEditTextPainter.h"
 #include "Engine/Core/Types/StringBuilder.h"
 
 
@@ -13,6 +15,7 @@ FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _frame
 void FudgetLineEdit::OnInitialize()
 {
     FudgetFramedFieldPainterResources frame_res;
+    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     frame_res.FrameDraw = (int)FudgetLineEditIds::FrameDraw;
     frame_res.HoveredFrameDraw = (int)FudgetLineEditIds::FrameDraw;
     frame_res.PressedFrameDraw = (int)FudgetLineEditIds::FrameDraw;
@@ -23,6 +26,7 @@ void FudgetLineEdit::OnInitialize()
     _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
 
     FudgetLineEditTextPainterResources text_res;
+    text_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     text_res.SelectionDraw = (int)FudgetLineEditIds::SelectionDraw;
     text_res.FocusedSelectionDraw = (int)FudgetLineEditIds::SelectionDraw;
     text_res.DisabledSelectionDraw = (int)FudgetLineEditIds::DisabledSelectionDraw;

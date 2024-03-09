@@ -7,7 +7,7 @@
 #include "Engine/Core/Log.h"
 #include "Engine/Serialization/JsonTools.h"
 
-#include "Styling/PartPainters.h"
+#include "Styling/Painters/PartPainters.h"
 
 
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),

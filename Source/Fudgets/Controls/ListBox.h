@@ -2,6 +2,9 @@
 
 #include "ListControl.h"
 
+class FudgetFramedFieldPainter;
+class FudgetListItemPainter;
+
 
 API_CLASS ()
 class FUDGETS_API FudgetStringListProvider : public ScriptingObject, public IListDataProvider
@@ -69,65 +72,6 @@ protected:
 private:
     Array<String> _items;
     bool _allow_duplicates;
-};
-
-
-API_ENUM()
-enum class FudgetListBoxItemPainterIds
-{
-    First = 4000,
-
-    TextPainter = First,
-    TextStyle,
-
-    SelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    DisabledSelectedTextColor,
-
-    Font,
-};
-
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetListBoxItemPainterResources
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetListBoxItemPainterResources);
-
-    API_FIELD() int TextPainter = 0;
-    API_FIELD() int TextStyle = 0;
-
-    API_FIELD() int SelectionDraw = 0;
-    API_FIELD() int DisabledSelectionDraw = 0;
-    API_FIELD() int TextColor = 0;
-    API_FIELD() int DisabledTextColor = 0;
-    API_FIELD() int SelectedTextColor = 0;
-    API_FIELD() int DisabledSelectedTextColor = 0;
-
-    API_FIELD() int Font = 0;
-};
-
-
-
-API_CLASS()
-class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter
-{
-    using Base = FudgetListItemPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetListBoxItemPainter);
-public:
-    using ResourceMapping = FudgetListBoxItemPainterResources;
-
-    ~FudgetListBoxItemPainter();
-
-    /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
-    /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
-    /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
-private:
-    FudgetSingleLineTextPainter *_text_painter;
 };
 
 

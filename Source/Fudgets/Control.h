@@ -44,6 +44,7 @@
 
 #include "Styling/StyleStructs.h"
 #include "Styling/Style.h"
+#include "Styling/Themes.h"
 
 
 class FudgetContainer;

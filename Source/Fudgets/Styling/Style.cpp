@@ -1,7 +1,8 @@
 #include "Style.h"
 #include "Themes.h"
-#include "PartPainters.h"
+#include "Painters/PartPainters.h"
 #include "StyleStructs.h"
+#include "DrawableBuilder.h"
 
 #include "Engine/Core/Types/BaseTypes.h"
 #include "Engine/Core/Log.h"

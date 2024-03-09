@@ -1,9 +1,10 @@
 #include "TextBoxPainter.h"
-#include "../MarginStructs.h"
-#include "../Styling/Style.h"
-#include "../Styling/Themes.h"
-#include "../Styling/StyleStructs.h"
-#include "../Control.h"
+#include "../../MarginStructs.h"
+#include "../Style.h"
+#include "../Themes.h"
+#include "../StyleStructs.h"
+#include "../../Control.h"
+#include "../StateOrderBuilder.h"
 
 #include "Engine/Render2D/FontManager.h"
 #include "Engine/Core/Log.h"
@@ -38,6 +39,12 @@ void FudgetMultiLineTextPainter::AddLine(API_PARAM(Ref) Float2 &pos, int start_i
 
 
 
+FudgetTextBoxPainter::FudgetTextBoxPainter(const SpawnParams &params) : Base(params),
+    _text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
+    _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White), _state_order(nullptr)
+{
+}
+
 void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
 {
     if (control == nullptr)
@@ -47,6 +54,8 @@ void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style
     ResourceMapping res;
     if (ptrres != nullptr)
         res = *ptrres;
+
+    GetMappedStateOrder(res.StateOrderIndex, _state_order);
 
     if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::SelectionDraw, res.SelectionDraw, _sel_area))
         _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
@@ -75,21 +84,16 @@ void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style
     }
 }
 
-
-FudgetTextBoxPainter::FudgetTextBoxPainter(const SpawnParams &params) : Base(params),
-_text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
-_focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White)
-{
-}
-
-void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState state, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
+void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState states, const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements)
 {
     if (_font.Font == nullptr)
         return;
 
-    Color selTextColor = IsDisabled(state) ? _disabled_selected_text_color : IsFocused(state) ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = IsDisabled(state) ? _disabled_text_color : _text_color;
-    FudgetDrawArea sel_bg = IsDisabled(state) ? _disabled_sel_area : IsFocused(state) ? _focused_sel_area : _sel_area;
+    uint64 matched_state = _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
+
+    Color selTextColor = DrawDisabled(matched_state) ? _disabled_selected_text_color : DrawFocused(matched_state) ? _focused_selected_text_color : _selected_text_color;
+    Color textColor = DrawDisabled(matched_state) ? _disabled_text_color : _text_color;
+    FudgetDrawArea sel_bg = DrawDisabled(matched_state) ? _disabled_sel_area : DrawFocused(matched_state) ? _focused_sel_area : _sel_area;
 
     int sel_min = -1; 
     int sel_max = -1; 

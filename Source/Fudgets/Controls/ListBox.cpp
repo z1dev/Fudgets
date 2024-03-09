@@ -1,5 +1,6 @@
 #include "ListBox.h"
-#include "../Styling/Themes.h"
+#include "../Styling/Painters/ListBoxPainter.h"
+#include "../Styling/Painters/FramedFieldPainter.h"
 
 
 FudgetStringListProvider::FudgetStringListProvider(const SpawnParams &params) : Base(params), _allow_duplicates(false)
@@ -104,82 +105,6 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 }
 
 
-// FudgetListBoxItemPainter
-
-
-FudgetListBoxItemPainter::FudgetListBoxItemPainter(const SpawnParams &params) : Base(params), _text_painter(nullptr)
-{
-}
-
-FudgetListBoxItemPainter::~FudgetListBoxItemPainter()
-{
-}
-
-void FudgetListBoxItemPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
-{
-    if (control == nullptr)
-        return;
-
-    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
-    ResourceMapping res;
-    if (ptrres != nullptr)
-        res = *ptrres;
-
-    FudgetStyle *text_style = nullptr;
-    if (!GetMappedStyle(control, style_override, (int)FudgetListBoxItemPainterIds::TextStyle, res.TextStyle, text_style))
-        text_style = nullptr;
-
-    _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, res.TextPainter, text_style, nullptr, style_override);
-    if (_text_painter == nullptr)
-    {
-        FudgetLineEditTextPainter::ResourceMapping tex_res;
-        tex_res.SelectionDraw = res.SelectionDraw;
-        tex_res.FocusedSelectionDraw = res.SelectionDraw;
-        tex_res.DisabledSelectionDraw = res.DisabledSelectionDraw;
-        tex_res.TextColor = res.TextColor;
-        tex_res.DisabledTextColor = res.DisabledTextColor;
-        tex_res.SelectedTextColor = res.SelectedTextColor;
-        tex_res.FocusedSelectedTextColor = res.SelectedTextColor;
-        tex_res.DisabledSelectedTextColor = res.DisabledSelectedTextColor;
-        tex_res.Font = res.Font;
-        FudgetPartPainterMapping def_text_mapping = FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(tex_res);
-        _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, (int)FudgetListBoxItemPainterIds::TextPainter, text_style, &def_text_mapping, style_override);
-    }
-}
-
-void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state)
-{
-    if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
-        return;
-
-    String text = data->GetText(item_index);
-
-    // TODO: make the range argument a pointer so it doesn't have to be passed for every painter function.
-
-    FudgetTextRange full_range;
-    full_range.StartIndex = 0;
-    full_range.EndIndex = text.Length();
-
-    FudgetSingleLineTextOptions opt;
-    _text_painter->Draw(control, bounds, text, full_range, state, opt);
-}
-
-Float2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state)
-{
-    if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
-        return Float2::Zero;
-
-    String text = data->GetText(item_index);
-
-    FudgetTextRange full_range;
-    full_range.StartIndex = 0;
-    full_range.EndIndex = text.Length();
-
-    FudgetSingleLineTextOptions opt;
-    return _text_painter->Measure(control, data->GetText(item_index), full_range, state, opt);
-}
-
-
 // FudgetListBox
 
 
@@ -198,6 +123,7 @@ FudgetListBox::~FudgetListBox()
 void FudgetListBox::OnInitialize()
 {
     FudgetFramedFieldPainter::ResourceMapping frame_res;
+    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     frame_res.FrameDraw = (int)FudgetListBoxIds::FrameDraw;
     frame_res.HoveredFrameDraw = (int)FudgetListBoxIds::FrameDraw;
     frame_res.PressedFrameDraw = (int)FudgetListBoxIds::FrameDraw;
@@ -208,7 +134,7 @@ void FudgetListBox::OnInitialize()
     _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
 
     FudgetListBoxItemPainter::ResourceMapping item_res;
-
+    frame_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER_INDEX;
     item_res.TextPainter = (int)FudgetListBoxIds::TextPainter;
     item_res.TextStyle = (int)FudgetListBoxIds::TextStyle;
 

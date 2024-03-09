@@ -1,7 +1,10 @@
 #pragma once
 
 #include "TextBoxBase.h"
-#include "TextBoxPainter.h"
+#include "../Styling/Painters/TextBoxPainter.h"
+
+class FudgetFramedFieldPainter;
+
 
 /// <summary>
 /// Text box sizing and auto sizing options determine if the text box size is automatically adjusted to fit its

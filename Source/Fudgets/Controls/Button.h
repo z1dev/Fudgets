@@ -1,7 +1,11 @@
 #pragma once
 
 #include "../Control.h"
-#include "../Styling/PartPainters.h"
+//#include "../Styling/Painters/PartPainters.h"
+
+class FudgetFramedFieldPainter;
+class FudgetStatePainter;
+
 
 /// <summary>
 /// Base class of buttons which handles user input. Derived classes should draw the button and the contents.
@@ -98,6 +102,7 @@ enum class FudgetButtonIds
     ContentImage,
     ContentHoveredImage,
     ContentPressedImage,
+    ContentDownImage,
     ContentDisabledImage,
 
     ContentPressedOffset,

@@ -6,7 +6,7 @@
 #include "../Utils/Utils.h"
 
 #include "../Styling/Themes.h"
-
+#include "../Styling/Painters/FramedFieldPainter.h"
 
 
 
@@ -24,6 +24,7 @@ FudgetComboBox::~FudgetComboBox()
 void FudgetComboBox::OnInitialize()
 {
     FudgetFramedFieldPainterResources frame_res;
+    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
     frame_res.FrameDraw = (int)FudgetComboBoxIds::FrameDraw;
     frame_res.HoveredFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
     frame_res.PressedFrameDraw = (int)FudgetComboBoxIds::FrameDraw;

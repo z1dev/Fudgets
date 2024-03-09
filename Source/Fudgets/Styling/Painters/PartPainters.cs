@@ -1,5 +1,6 @@
 ﻿using FlaxEngine.Utilities;
 using System;
+using System.Numerics;
 
 
 namespace Fudgets;
@@ -52,5 +53,17 @@ public partial class FudgetPartPainter
         }
 
         return success;
+    }
+
+    /// <summary>
+    /// Shortcut to check if the flags in states contains the flags from to_check.
+    /// </summary>
+    /// <typeparam name="T">A type that supports binary operators like &amp;</typeparam>
+    /// <param name="states">Value to check for flags</param>
+    /// <param name="to_check">Flags to look for in the value</param>
+    /// <returns>Whether the states flags contain the to_check flag(s) or not</returns>
+    public bool HasState<T>(T states, T to_check) where T : IBinaryNumber<T>
+    {
+        return (states & to_check) == to_check;
     }
 }
