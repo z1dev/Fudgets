@@ -330,6 +330,18 @@ bool FudgetStyle::GetPaddingResource(FudgetStyle *style, FudgetTheme *theme, int
     return false;
 }
 
+bool FudgetStyle::GetBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetBorder &result)
+{
+    Variant var;
+    if (GetResourceValue(style, theme, id, check_theme, var))
+    {
+        if (BorderFromVariant(var, result))
+            return true;
+    }
+    result = FudgetBorder();
+    return false;
+}
+
 bool FudgetStyle::GetTextDrawResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetTextDrawSettings &result)
 {
     Variant var;
@@ -722,6 +734,23 @@ bool FudgetStyle::PaddingFromVariant(const Variant &var, FudgetPadding &result)
             return false;
         }
         result = *padding;
+        return true;
+    }
+    return false;
+}
+
+
+bool FudgetStyle::BorderFromVariant(const Variant &var, FudgetBorder &result)
+{
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetBorder *border = var.AsStructure<FudgetBorder>();
+        if (border == nullptr)
+        {
+            result = FudgetBorder();
+            return false;
+        }
+        result = *border;
         return true;
     }
     return false;

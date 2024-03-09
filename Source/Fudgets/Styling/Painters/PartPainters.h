@@ -354,6 +354,18 @@ protected:
     API_FUNCTION() bool GetMappedPadding(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetPadding &result) const;
 
     /// <summary>
+    /// Checks style_override then the control's styles for a border. First mapping_id is tested and then painter_id.
+    /// Returns whether the result was set to the value.
+    /// </summary>
+    /// <param name="control">The control to use for looking up the resource if style_override doesn't have the value.</param>
+    /// <param name="style_override">The style used for looking up the resource first.</param>
+    /// <param name="painter_id">A resource id. Usually this is the id provided for the painter.</param>
+    /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
+    API_FUNCTION() bool GetMappedBorder(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetBorder &result) const;
+
+    /// <summary>
     /// Checks style_override then the control's styles for a drawable resource. First mapping_id is tested and then painter_id.
     /// Returns whether the result was set to the value.
     /// </summary>

@@ -298,6 +298,23 @@ bool FudgetPartPainter::GetMappedPadding(FudgetControl *control, FudgetStyle *st
     return success;
 }
 
+bool FudgetPartPainter::GetMappedBorder(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetBorder &result) const
+{
+    FudgetTheme *theme = control->GetActiveTheme();
+    int values[2] = { mapping_id, painter_id };
+    result = FudgetBorder(0.f);
+    bool success = false;
+    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
+    {
+        if (style_override != nullptr)
+            success = FudgetStyle::GetBorderResource(style_override, theme, values[ix], false, result);
+        if (!success)
+            success = control->GetStyleBorder(values[ix], result);
+    }
+
+    return success;
+}
+
 bool FudgetPartPainter::GetMappedDrawable(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetDrawable* &result) const
 {
     FudgetTheme *theme = control->GetActiveTheme();

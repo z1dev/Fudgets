@@ -60,6 +60,7 @@ class GPUTextureView;
 class Font;
 struct FudgetDrawArea;
 struct FudgetPadding;
+struct FudgetBorder;
 struct FudgetFontSettings;
 struct FudgetFont;
 class FudgetPartPainter;
@@ -1812,7 +1813,7 @@ public:
         return TryGetStyleEnumInner<T>(GetClassStyle(), id, true, result);
     }
 
-        /// <summary>
+    /// <summary>
     /// Returns a padding value for the control based on an id.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
@@ -1820,6 +1821,15 @@ public:
     /// <param name="result">Variable that receives the result</param>
     /// <returns>Whether a valid value was found for the id</returns>
     API_FUNCTION() bool GetStylePadding(int id, API_PARAM(Out) FudgetPadding &result);
+
+    /// <summary>
+    /// Returns a border value for the control based on an id.
+    /// The resulting value depends on both the style and the theme currently active for this control.
+    /// </summary>
+    /// <param name="id">Id associated with the border value in the active styles</param>
+    /// <param name="result">Variable that receives the result</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleBorder(int id, API_PARAM(Out) FudgetBorder &result);
 
     /// <summary>
     /// Use this function to check settings for a font in the style, when font creation is not necessary.

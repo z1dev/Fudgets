@@ -1248,6 +1248,20 @@ bool FudgetControl::GetStylePadding(int id, API_PARAM(Out) FudgetPadding &result
     return false;
 }
 
+bool FudgetControl::GetStyleBorder(int id, API_PARAM(Out) FudgetBorder &result)
+{
+    FudgetStyle *style = GetStyle();
+    if (style != nullptr && FudgetStyle::GetBorderResource(style, GetActiveTheme(), id, false, result))
+        return true;
+
+    FudgetStyle *class_style = GetClassStyle();
+    if (class_style == nullptr || class_style != style)
+        return FudgetStyle::GetBorderResource(class_style, GetActiveTheme(), id, true, result);
+
+    result = FudgetBorder();
+    return false;
+}
+
 bool FudgetControl::GetStyleFontSettings(int id, API_PARAM(Out) FudgetFontSettings &result)
 {
     FudgetStyle *style = GetStyle();

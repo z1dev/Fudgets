@@ -14,6 +14,7 @@ class FudgetPartPainter;
 struct FudgetDrawArea;
 struct FudgetTextDrawSettings;
 struct FudgetPadding;
+struct FudgetBorder;
 struct Color;
 struct FudgetFontSettings;
 struct FudgetFont;
@@ -344,6 +345,19 @@ public:
     API_FUNCTION() static bool GetPaddingResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetPadding &result);
 
     /// <summary>
+    /// Retrieves the FudgetBorder resource by an id either from the style, one of its parent styles or the theme, checked in this order.
+    /// The id might refer to a resource override, in which case the style attempts to retreive the value from the theme.
+    /// The value is stored in result, unless the id wasn't found.
+    /// </summary>
+    /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
+    /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
+    /// <param name="id">The id to look up for a resource value or resource override</param>
+    /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
+    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <returns>Whether a resource with the id was found and stored in result</returns>
+    API_FUNCTION() static bool GetBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetBorder &result);
+
+    /// <summary>
     /// Retrieves the FudgetTextDrawSettings resource by an id either from the style, one of its parent styles or the theme, checked in this order.
     /// The id might refer to a resource override, in which case the style attempts to retreive the value from the theme.
     /// The value is stored in result, unless the id wasn't found.
@@ -443,6 +457,7 @@ public:
     static bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result);
     static bool FontFromVariant(const Variant &var, FudgetFont &result);
     static bool PaddingFromVariant(const Variant &var, FudgetPadding &result);
+    static bool BorderFromVariant(const Variant &var, FudgetBorder &result);
     static bool BoolFromVariant(const Variant &var, bool &result);
     static bool FloatFromVariant(const Variant &var, float &result);
     static bool Float2FromVariant(const Variant &var, Float2 &result);
