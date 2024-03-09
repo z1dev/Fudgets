@@ -56,31 +56,31 @@ void FudgetLineEdit::OnStyleInitialize()
         _caret_draw = FudgetDrawArea(Color::Black);
     if (!GetStyleFloat((int)FudgetLineEditIds::CaretBlinkTime, _caret_blink_time))
         _caret_blink_time = 1.0f;
-    if (!GetStyleFloat((int)FudgetLineEditIds::CaretWidth, _caret_width))
-        _caret_width = 2.0f;
+    if (!GetStyleInt((int)FudgetLineEditIds::CaretWidth, _caret_width))
+        _caret_width = 2;
     if (!GetStyleInt((int)FudgetLineEditIds::CaretScrollCount, _character_scroll_count))
         _character_scroll_count = 4;
 }
 
-Float2 FudgetLineEdit::GetLayoutHintSize() const
+Int2 FudgetLineEdit::GetLayoutHintSize() const
 {
-    Float2 size = Base::GetLayoutHintSize();
+    Int2 size = Base::GetLayoutHintSize();
     if (_text_painter == nullptr)
         return size;
 
     FudgetPadding inner = GetInnerPadding();
-    float h = _text_painter->GetFontHeight();
-    return Float2(size.X, h + inner.Height());
+    int h = _text_painter->GetFontHeight();
+    return Int2(size.X, h + inner.Height());
 }
 
-Float2 FudgetLineEdit::GetLayoutMinSize() const
+Int2 FudgetLineEdit::GetLayoutMinSize() const
 {
     if (_text_painter == nullptr)
         return Base::GetLayoutMinSize();
 
     FudgetPadding inner = GetInnerPadding();
-    float h = _text_painter->GetFontHeight();
-    return Float2(inner.Width(), h + inner.Height());
+    int h = _text_painter->GetFontHeight();
+    return Int2(inner.Width(), h + inner.Height());
 }
 
 void FudgetLineEdit::OnDraw()
@@ -98,7 +98,7 @@ void FudgetLineEdit::OnDraw()
 
     FudgetSingleLineTextOptions options;
     //options.Text = _text;
-    //options.Offset = Float2(-_scroll_pos, 0.0f);
+    //options.Offset = Int2(-_scroll_pos, 0.0f);
     //options.Range.StartIndex = 0;
     //options.Range.EndIndex = _text.Length();
 
@@ -136,7 +136,7 @@ void FudgetLineEdit::OnDraw()
     if (_blink_passed < _caret_blink_time)
     {
         range.EndIndex = GetCaretPos();
-        float caret_left = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
+        int caret_left = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
 
         DrawArea(_caret_draw, Rectangle(Float2(caret_left - 1.0f + bounds.GetLeft(), bounds.Location.Y), Float2(_caret_width, bounds.GetHeight())));
     }
@@ -151,10 +151,10 @@ void FudgetLineEdit::OnSizeChanged()
 
 FudgetPadding FudgetLineEdit::GetInnerPadding() const
 {
-    return _show_border && _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
+    return _show_border && _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
 }
 
-int FudgetLineEdit::CharIndexAt(Float2 pos)
+int FudgetLineEdit::CharIndexAt(Int2 pos)
 {
     if (_text_painter == nullptr)
         return 0;
@@ -168,12 +168,12 @@ int FudgetLineEdit::CharIndexAt(Float2 pos)
 
     FudgetSingleLineTextOptions options;
     //options.Text = _text;
-    //options.Offset = Float2(-_scroll_pos, 0.0f);
+    //options.Offset = Int2(-_scroll_pos, 0.0f);
     FudgetTextRange range;
     range.StartIndex = 0;
     range.EndIndex = _text.Length();
 
-    return _text_painter->HitTest(this, bounds, _text, range, GetVisualState(), options, Float2(pos.X, bounds.GetTop()));
+    return _text_painter->HitTest(this, bounds, _text, range, GetVisualState(), options, Int2(pos.X, bounds.GetTop()));
 }
 
 void FudgetLineEdit::DoPositionChanged(int old_caret_pos, int old_sel_pos)
@@ -246,7 +246,7 @@ void FudgetLineEdit::ScrollToPos()
     range.StartIndex = 0;
     range.EndIndex = caret_pos;
 
-    float text_width = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
+    int text_width = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
 
     if (_scroll_pos > 0.f && text_width - _scroll_pos < 0.f)
     {
@@ -262,10 +262,10 @@ void FudgetLineEdit::ScrollToPos()
 
         range.StartIndex = caret_pos;
         range.EndIndex = Math::Min(caret_pos + _character_scroll_count, GetTextLength());
-        float kerning = 0.f;
+        int kerning = 0.f;
         if (caret_pos > 0 && range.EndIndex > caret_pos)
-            kerning = (float)_text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
-        _scroll_pos = _text_painter->Measure(this, _text, range, GetVisualState(), options).X + text_width + kerning - bounds.GetWidth() + _caret_width * 2.0f;
+            kerning = _text_painter->GetKerning(caret_pos - 1, caret_pos, 1.1);
+        _scroll_pos = _text_painter->Measure(this, _text, range, GetVisualState(), options).X + text_width + kerning - bounds.GetWidth() + _caret_width * 2;
     }
     else if (_scroll_pos > 0.f && text_width - _scroll_pos < bounds.GetWidth())
     {
@@ -273,10 +273,10 @@ void FudgetLineEdit::ScrollToPos()
 
         range.StartIndex = caret_pos;
         range.EndIndex = GetTextLength();
-        float afterSize = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
-        float kerning = 0.f;
+        int afterSize = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
+        int kerning = 0.f;
         if (caret_pos > 0 && range.EndIndex > caret_pos)
-            kerning = (float)_text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
+            kerning = _text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
         if (text_width + afterSize + kerning - _scroll_pos + _caret_width * 2.0f < bounds.GetWidth())
             _scroll_pos = Math::Max(0.0f, text_width + afterSize + kerning - bounds.GetWidth() + _caret_width * 2.0f);
     }
@@ -294,11 +294,11 @@ void FudgetLineEdit::FixScrollPos()
     range.StartIndex = 0;
     range.EndIndex = GetTextLength();
 
-    Float2 textSize = _text_painter->Measure(this, _text, range, GetVisualState(), options);
+    Int2 textSize = _text_painter->Measure(this, _text, range, GetVisualState(), options);
 
-    float w = GetInnerPadding().Padded(GetBounds()).GetWidth() + _scroll_pos;
+    int w = GetInnerPadding().Padded(GetBounds()).GetWidth() + _scroll_pos;
     if (w > textSize.X)
-        _scroll_pos = Math::Max(0.0f, textSize.X - w + _scroll_pos);
+        _scroll_pos = Math::Max(0, textSize.X - w + _scroll_pos);
 }
 
 void FudgetLineEdit::Process(const StringView &value)

@@ -147,7 +147,8 @@ public partial class FudgetsEditorWindow
             foreach (FudgetControl control in controls)
             {
                 Float2 localLocation = control.GlobalToLocal(location);
-                localLocation += control.Position;
+                //localLocation += control.Position;
+                localLocation = new Float2(localLocation.X + control.Position.X, localLocation.Y + control.Position.Y);
                 if (control.BoundsInParent.Contains(localLocation))
                 {
                     intersectingControls.Add(control);

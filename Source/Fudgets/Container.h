@@ -239,21 +239,21 @@ public:
     /// doesn't have a preferred size, this is the preferred size of the container itself.
     /// </summary>
     /// <returns>The container's preferred size with the current layout</returns>
-    Float2 GetLayoutHintSize() const override;
+    Int2 GetLayoutHintSize() const override;
 
     /// <summary>
     /// Gets the minimum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred minimum size, this is the minimum size set to the container itself.
     /// </summary>
     /// <returns>The container's minimum size with the current layout</returns>
-    Float2 GetLayoutMinSize() const override;
+    Int2 GetLayoutMinSize() const override;
 
     /// <summary>
     /// Gets the maximum size of this container with its contents depending on the layout. If the layout
     /// doesn't have a preferred maximum size, this is the maximum size set to the container itself.
     /// </summary>
     /// <returns>The container's maximum size with the current layout</returns>
-    Float2 GetLayoutMaxSize() const override;
+    Int2 GetLayoutMaxSize() const override;
 
     /// <summary>
     /// The available space in the container for child controls, which excludes internal padding. Only valid if
@@ -261,7 +261,7 @@ public:
     /// TODO: implement internal padding
     /// </summary>
     /// <returns></returns>
-    API_PROPERTY() Float2 LayoutSpace() const;
+    API_PROPERTY() Int2 LayoutSpace() const;
 
     /// <summary>
     /// Notifies this container about a change that might require layout calculations. If a control initiated the
@@ -282,7 +282,7 @@ public:
     void OnDraw() override;
 
     /// <inheritdoc />
-    bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    bool OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size) override;
 
     /// <inheritdoc />
     void DoFocusChanged(bool focused, FudgetControl *other) override;
@@ -365,7 +365,7 @@ public:
     /// <param name="block_state">Stops checking child controls in the container which has one of these states.</param>
     /// <param name="result">Receives the controls that match the flags</param>
     /// <returns>List of controls matching at least one request flag and none of the reject flags</returns>
-    API_FUNCTION() virtual void ControlsAtPosition(Float2 pos, FudgetControlFlag request_flags, FudgetControlFlag reject_flags, FudgetControlFlag block_flags,
+    API_FUNCTION() virtual void ControlsAtPosition(Int2 pos, FudgetControlFlag request_flags, FudgetControlFlag reject_flags, FudgetControlFlag block_flags,
         FudgetControlState request_state, FudgetControlState reject_state, FudgetControlState block_state, API_PARAM(Ref) Array<FudgetControl*> &result);
 
     /// <summary>
@@ -459,7 +459,7 @@ private:
     /// </summary>
     /// <param name="pos">The new position</param>
     /// <param name="size">The new size</param>
-    void LayoutUpdate(Float2 pos, Float2 size) override;
+    void LayoutUpdate(Int2 pos, Int2 size) override;
 
     /// <summary>
     /// Creates the FudgetContainerLayout as the default layout in the container, when no other layout is set.

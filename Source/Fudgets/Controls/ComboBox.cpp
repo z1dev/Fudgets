@@ -11,7 +11,7 @@
 
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
-    _button_width(0.f), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
+    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
 {
 
 }
@@ -58,8 +58,8 @@ void FudgetComboBox::OnInitialize()
 
 void FudgetComboBox::OnStyleInitialize()
 {
-    if (!GetStyleFloat((int)FudgetComboBoxIds::ButtonWidth, _button_width))
-        _button_width = 20.f;
+    if (!GetStyleInt((int)FudgetComboBoxIds::ButtonWidth, _button_width))
+        _button_width = 20;
 
     FudgetStyle *frame_style;
     if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
@@ -173,7 +173,7 @@ void FudgetComboBox::OnMouseReleased()
 
 void FudgetComboBox::OnSizeChanged()
 {
-    Float2 siz = _list_box->GetHintSize();
+    Int2 siz = _list_box->GetHintSize();
     siz.X = GetSize().X;
     _list_box->SetHintSize(siz);
 
@@ -191,35 +191,35 @@ FudgetLayoutFlag FudgetComboBox::ProxyInterfaceGetInitFlags() const
         FudgetLayoutFlag::ResizeOnContainerResize | FudgetLayoutFlag::ResizeOnContentResize | FudgetLayoutFlag::CanProvideSizeHeight;
 }
 
-void FudgetComboBox::ProxyInterfacePreLayoutChildren(Float2 space)
+void FudgetComboBox::ProxyInterfacePreLayoutChildren(Int2 space)
 {
 }
 
-void FudgetComboBox::ProxyInterfaceLayoutChildren(Float2 space)
+void FudgetComboBox::ProxyInterfaceLayoutChildren(Int2 space)
 {
     if (_editor == nullptr || _button == nullptr)
         return;
 
-    Float2 txt_wanted = Float2::Zero;
-    Float2 txt_min = Float2::Zero;
-    Float2 txt_max = Float2::Zero;
-    _layout->GetSlotMeasures(0, Float2(-1.f), txt_wanted, txt_min, txt_max);
+    Int2 txt_wanted = Int2::Zero;
+    Int2 txt_min = Int2::Zero;
+    Int2 txt_max = Int2::Zero;
+    _layout->GetSlotMeasures(0, Int2(-1), txt_wanted, txt_min, txt_max);
 
     FudgetPadding inner = GetInnerPadding();
-    Float2 min = txt_min + inner.Size() + Float2(_button_width, 0.f);
+    Int2 min = txt_min + inner.Size() + Int2(_button_width, 0);
     min.X = Math::Max(min.X, Base::GetMinSize().X);
-    Float2 normal = txt_wanted + inner.Size() + Float2(_button_width, 0.f);
+    Int2 normal = txt_wanted + inner.Size() + Int2(_button_width, 0);
 
     if (!_layout->IsUnrestrictedSpace(space))
     {
         normal.X = Math::Min(space.X, Base::GetMaxSize().X);
 
-        _layout->SetComputedBounds(0, inner.UpperLeft(), Float2::Max(Float2::Min(space, normal), min) - Float2(inner.Width() + _button_width, inner.Height()));
-        _layout->SetComputedBounds(1, Float2(Math::Max(Math::Min(space.X, normal.X), min.X) - _button_width - inner.Right, 0.0f), Float2(_button_width, Math::Max(Math::Min(space.Y, normal.Y), min.Y)  ));
+        _layout->SetComputedBounds(0, inner.UpperLeft(), Int2::Max(Int2::Min(space, normal), min) - Int2(inner.Width() + _button_width, inner.Height()));
+        _layout->SetComputedBounds(1, Int2(Math::Max(Math::Min(space.X, normal.X), min.X) - _button_width - inner.Right, 0), Int2(_button_width, Math::Max(Math::Min(space.Y, normal.Y), min.Y)  ));
     }
     txt_max.Y = normal.Y;
 
-    _layout->SetControlSizes(FudgetLayoutSizeCache(space, normal, min, AddBigFloats(txt_max, Float2(_button_width, 0.f), inner.Size()), false));
+    _layout->SetControlSizes(FudgetLayoutSizeCache(space, normal, min, AddBigValues(txt_max, Int2(_button_width, 0), inner.Size()), false));
 }
 
 bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
@@ -241,7 +241,7 @@ FudgetControlFlag FudgetComboBox::GetInitFlags() const
 
 FudgetPadding FudgetComboBox::GetInnerPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
+    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
 }
 
 void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter)

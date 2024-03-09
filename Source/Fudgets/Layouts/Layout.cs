@@ -9,13 +9,13 @@ namespace Fudgets
         /// Initializes the structure to be valid with only the measured space set. Every other value at zero.
         /// </summary>
         /// <param name="space">Space used for measurement</param>
-        public FudgetLayoutSizeCache(Float2 space)
+        public FudgetLayoutSizeCache(Int2 space)
         {
             IsValid = true;
             Space = space;
-            Size = Float2.Zero;
-            Min = Float2.Zero;
-            Max = Float2.Zero;
+            Size = Int2.Zero;
+            Min = Int2.Zero;
+            Max = Int2.Zero;
             SizeFromSpace = false;
         }
 
@@ -27,7 +27,7 @@ namespace Fudgets
         /// <param name="min">Requested minimum size</param>
         /// <param name="max">Requested maximum size</param>
         /// <param name="sizeFromSpace">Control calculates its size based on the space it gets</param>
-        public FudgetLayoutSizeCache(Float2 space, Float2 size, Float2 min, Float2 max, bool sizeFromSpace)
+        public FudgetLayoutSizeCache(Int2 space, Int2 size, Int2 min, Int2 max, bool sizeFromSpace)
         {
             IsValid = true;
             Space = space;

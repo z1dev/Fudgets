@@ -436,9 +436,9 @@ struct FUDGETS_API FudgetLayoutSizeCache
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLayoutSizeCache);
 
-    FudgetLayoutSizeCache() : IsValid(false), Space(MAX_float - 1.0f), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
-    FudgetLayoutSizeCache(Float2 space) : IsValid(true), Space(space), Size(Float2::Zero), Min(Float2::Zero), Max(Float2::Zero), SizeFromSpace(false) {}
-    FudgetLayoutSizeCache(Float2 space, Float2 size, Float2 min, Float2 max, bool size_from_space = false) : IsValid(true), Space(space), Size(size), Min(min), Max(max), SizeFromSpace(size_from_space) {}
+    FudgetLayoutSizeCache() : IsValid(false), Space(MAX_int32 - 1), Size(Int2::Zero), Min(Int2::Zero), Max(Int2::Zero), SizeFromSpace(false) {}
+    FudgetLayoutSizeCache(Int2 space) : IsValid(true), Space(space), Size(Int2::Zero), Min(Int2::Zero), Max(Int2::Zero), SizeFromSpace(false) {}
+    FudgetLayoutSizeCache(Int2 space, Int2 size, Int2 min, Int2 max, bool size_from_space = false) : IsValid(true), Space(space), Size(size), Min(min), Max(max), SizeFromSpace(size_from_space) {}
 
     /// <summary>
     /// Whether the data in this cache is valid and hasn't been invalidated.
@@ -447,19 +447,19 @@ struct FUDGETS_API FudgetLayoutSizeCache
     /// <summary>
     /// Space provided in measure used to calculate the wanted sizes
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Space;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Int2 Space;
     /// <summary>
     /// The optimal size for a control.
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Size;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Int2 Size;
     /// <summary>
     /// The minimum size requested by a control.
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Min;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Int2 Min;
     /// <summary>
     /// The maximum size requested by a control.
     /// </summary>
-    API_FIELD(Attributes = "HideInEditor, NoSerialize") Float2 Max;
+    API_FIELD(Attributes = "HideInEditor, NoSerialize") Int2 Max;
 
     /// <summary>
     /// Same as the control flag. If the available space changes, the control's sizes might change as well. Can be
@@ -577,21 +577,21 @@ public:
     /// This might require recalculation if the preferred size of any control changed or a new control was added.
     /// </summary>
     /// <returns>The layout's preferred size</returns>
-    API_PROPERTY(Attributes="HideInEditor") Float2 GetHintSize();
+    API_PROPERTY(Attributes="HideInEditor") Int2 GetHintSize();
 
     /// <summary>
     /// Returns the calculated minimum size of the layout with all the managed controls laid out with their smallest size.
     /// This might require recalculation if the minimum size of any control changed or a new control was added.
     /// </summary>
     /// <returns>The layout's minimum size</returns>
-    API_PROPERTY(Attributes="HideInEditor") Float2 GetMinSize();
+    API_PROPERTY(Attributes="HideInEditor") Int2 GetMinSize();
 
     /// <summary>
     /// Returns the calculated maximum size of the layout with all the managed controls laid out with their largest size.
     /// This might require recalculation if the maximum size of any control changed or a new control was added.
     /// </summary>
     /// <returns>The layout's maximum size</returns>
-    API_PROPERTY(Attributes="HideInEditor") Float2 GetMaxSize();
+    API_PROPERTY(Attributes="HideInEditor") Int2 GetMaxSize();
 
     /// <summary>
     /// Whether the layout or any of its child controls can change their requested sizes depending on the available space.
@@ -609,7 +609,7 @@ public:
     /// </summary>
     /// <param name="space">The size of the available space to check</param>
     /// <returns>Whether the layout can size and place its children without being limited in space</returns>
-    API_FUNCTION() FORCE_INLINE static bool IsUnrestrictedSpace(Float2 space) { return space.X < 0.f || space.Y < 0.f; }
+    API_FUNCTION() FORCE_INLINE static bool IsUnrestrictedSpace(Int2 space) { return space.X < 0 || space.Y < 0; }
 
     void Serialize(SerializeStream& stream, const void* otherObj) override;
     void Deserialize(DeserializeStream& stream, ISerializeModifier* modifier) override;
@@ -627,7 +627,7 @@ protected:
     /// <param name="index">The index of the control</param>
     /// <param name="pos">The calculated position of the control</param>
     /// <param name="size">The calculated size of the control</param>
-    API_FUNCTION() virtual void SetControlDimensions(int index, Float2 pos, Float2 size);
+    API_FUNCTION() virtual void SetControlDimensions(int index, Int2 pos, Int2 size);
 
     /// <summary>
     /// Returns the slot, which represents the attributes of a control depending on what values a layout needs.
@@ -659,7 +659,7 @@ protected:
     /// value is valid</param>
     /// <param name="owner">The owner container of this layout</param>
     /// <param name="count">Number of slots in the layout</param>
-    API_FUNCTION() virtual void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count);
+    API_FUNCTION() virtual void PreLayoutChildren(Int2 space, FudgetContainer *owner, int count);
 
     /// <summary>
     /// Calculates the bounds of the child controls in the owner container, using the available space and slot size
@@ -670,7 +670,7 @@ protected:
     /// value is valid</param>
     /// <param name="owner">The owner container of this layout</param>
     /// <param name="count">Number of slots in the layout</param>
-    API_FUNCTION() virtual void LayoutChildren(Float2 space, FudgetContainer *owner, int count);
+    API_FUNCTION() virtual void LayoutChildren(Int2 space, FudgetContainer *owner, int count);
 
     /// <summary>
     /// Calculates and sets the child controls' position and size on the owner container, using the available space, and
@@ -679,7 +679,7 @@ protected:
     /// </summary>
     /// <param name="space">The available space for the layout contents. Check with IsUnrestrictedSpace to see if this
     /// value is valid</param>
-    API_FUNCTION() virtual void DoLayoutChildren(Float2 space);
+    API_FUNCTION() virtual void DoLayoutChildren(Int2 space);
 
     /// <summary>
     /// Measures the control in the slot if it doesn't have valid measurements for the passed available space. Otherwise returns
@@ -691,7 +691,7 @@ protected:
     /// <param name="wanted_min">Receives the slot's content's requested minimal size</param>
     /// <param name="wanted_max">Receives the slot's content's requested maximum size</param>
     /// <param name="result">Receives the sizes requested by the control in the slot.</param>
-    API_FUNCTION() virtual bool MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
+    API_FUNCTION() virtual bool MeasureSlot(int index, Int2 available, API_PARAM(Out) Int2 &wanted_size, API_PARAM(Out) Int2 &wanted_min, API_PARAM(Out) Int2 &wanted_max);
 
     /// <summary>
     /// Checks if the control in the slot might change its size depending on the available space, or it always returns the
@@ -705,7 +705,7 @@ protected:
     /// <summary>
     /// Call inside LayoutChildren when the layout calculated its size requirements. If the available space is unrestricted
     /// (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and updating any slot layout data
-    /// should be avoided. Care must be taken not to cause float overflow when calculating any of the sizes.
+    /// should be avoided. Care must be taken not to cause overflow when calculating any of the sizes.
     /// </summary>
     /// <param name="sizes">The available space and sizes for child controls. Every member needs to be filled</param>
     API_FUNCTION() void SetMeasuredSizes(const FudgetLayoutSizeCache &sizes);

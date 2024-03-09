@@ -126,7 +126,7 @@ void FudgetButton::OnStyleInitialize()
 
 FudgetPadding FudgetButton::GetInnerPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
+    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
 } 
 
 void FudgetButton::OnDraw()

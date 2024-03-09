@@ -613,7 +613,7 @@ public:
     /// <param name="state">State of control</param>
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <returns>Size of the measured text</returns>
-    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) { return Float2::Zero;  }
+    API_FUNCTION() virtual Int2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) { return Float2::Zero;  }
 
     /// <summary>
     /// Returns the kerning distance between two characters using the font of the painter. If no font is set, the result is 0
@@ -622,7 +622,7 @@ public:
     /// <param name="b">Other character</param>
     /// <param name="scale">Scale of the control used for measurements and drawing</param>
     /// <returns>Kerning distance between characters</returns>
-    API_FUNCTION() virtual float GetKerning(Char a, Char b, float scale) const { return 0.f; }
+    API_FUNCTION() virtual int GetKerning(Char a, Char b, float scale) const { return 0; }
 
     /// <summary>
     /// Finds the index of character in the text at a position.
@@ -635,12 +635,12 @@ public:
     /// <param name="text_options">Options for text, like the range or selection spans.</param>
     /// <param name="point">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
-    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) { return 0; }
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Int2 &point) { return 0; }
 
     /// <summary>
     /// Returns the height of the font used by the painter.
     /// </summary>
-    API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
+    API_FUNCTION() virtual int GetFontHeight() const { return 0; }
 };
 
 
@@ -665,7 +665,7 @@ public:
     /// <param name="item_index">Index of item in data</param>
     /// <param name="data">Source of item data</param>
     /// <param name="state">State of control</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState state) {}
 
     /// <summary>
     /// Measures the list item at index.
@@ -675,6 +675,6 @@ public:
     /// <param name="data">Source of item data</param>
     /// <param name="state">State of control</param>
     /// <returns>Dimensions of the requested item</returns>
-    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) { return Float2::Zero; }
+    API_FUNCTION() virtual Int2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) { return Int2::Zero; }
 };
 

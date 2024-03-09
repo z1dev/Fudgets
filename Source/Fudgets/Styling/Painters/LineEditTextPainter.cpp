@@ -70,7 +70,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.TextWrapping = TextWrapping::NoWrap;
 
-    float caret_left = 0;
+    int caret_left = 0;
     float scale = options.Scale / FontManager::FontScale;
     if (options.Spans.IsInvalid() || options.Spans.Length() == 0 || (options.Spans.Length() > 0 && (options.Spans[0].RangeSpan.IsInvalid() || options.Spans[0].RangeSpan.Length() == 0)))
     {
@@ -95,12 +95,12 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         {
             control->DrawText(_font.Font, text, range2, textColor, opt);
 
-            r.Location = Float2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
+            r.Location = Int2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
             if (range2.EndIndex < range.EndIndex)
             {
                 Char prev_char = text[range2.EndIndex - 1];
                 Char next_char = text[range2.EndIndex];
-                r.Location.X += (float)_font.Font->GetKerning(prev_char, next_char) * scale;
+                r.Location.X += _font.Font->GetKerning(prev_char, next_char) * scale;
             }
             opt.Bounds = r;
         }
@@ -119,7 +119,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
             {
                 Char prev_char = text[range2.EndIndex - 1];
                 Char next_char = text[range2.EndIndex];
-                r.Location.X += (float)_font.Font->GetKerning(prev_char, next_char) * scale;
+                r.Location.X += _font.Font->GetKerning(prev_char, next_char) * scale;
 
                 r.Location = Float2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
                 opt.Bounds = r;
@@ -135,10 +135,10 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     }
 }
 
-Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options)
+Int2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options)
 {
     if (_font.Font == nullptr)
-        return Float2::Zero;
+        return Int2::Zero;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
@@ -151,7 +151,7 @@ Float2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringVi
     return _font.Font->MeasureText(text, range, opt);
 }
 
-float FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
+int FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
 {
     if (_font.Font == nullptr)
         return 0.f;
@@ -160,7 +160,7 @@ float FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
     return _font.Font->GetKerning(a, b) * scale;
 }
 
-int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options, const Float2 &point)
+int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options, const Int2 &point)
 {
     if (_font.Font == nullptr)
         return 0;
@@ -176,10 +176,10 @@ int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &
     return _font.Font->HitTestText(text, range, point, opt);
 }
 
-float FudgetLineEditTextPainter::GetFontHeight() const
+int FudgetLineEditTextPainter::GetFontHeight() const
 {
     if (_font.Font == nullptr)
         return 0.f;
 
-    return (float)_font.Font->GetHeight();
+    return _font.Font->GetHeight();
 }

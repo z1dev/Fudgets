@@ -60,7 +60,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     private FudgetTree _tree;
 
     // TODO: Figure out how to properly resize the GPU Texture and whatnot during render time
-    private Vector2 _resolution = new Vector2(1920, 1080);
+    private Int2 _resolution = new Int2(1920, 1080);
     private CustomEditorPresenter _fudgetControlsEditor;
 
     private List<FudgetControl> _selectedControls = null;
@@ -271,7 +271,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
         if (_imagePanel.Size.X < 1 || _imagePanel.Size.Y < 1)
             return;
 
-        _resolution = _imagePanel.Size;
+        _resolution = new Int2((int)_imagePanel.Size.X, (int)_imagePanel.Size.Y);
         _texture.Resize((int)_resolution.X, (int)_resolution.Y);
 
         RootObject.HintSize = _resolution;
@@ -282,7 +282,7 @@ public partial class FudgetsEditorWindow : AssetEditorWindowBase<FudgetJsonAsset
     private void RenderWindow(RenderTask task, GPUContext context)
     {
         Render2D.Begin(context, _texture);
-        Render2D.FillRectangle(new Rectangle(0, 0, _resolution), new Color(0, 0, 0, 255));
+        Render2D.FillRectangle(new Rectangle(0, 0, new Float2(_resolution.X, _resolution.Y)), new Color(0, 0, 0, 255));
         RenderRoot.DoLayout();
         RenderRoot.DoDraw();
         Render2D.End();

@@ -18,12 +18,12 @@ public:
     /// <summary>
     /// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
     /// </summary>
-    API_FUNCTION() virtual void ProxyInterfacePreLayoutChildren(Float2 space) = 0;
+    API_FUNCTION() virtual void ProxyInterfacePreLayoutChildren(Int2 space) = 0;
 
     /// <summary>
     /// Acts in place of a FudgetProxyLayout to provide the LayoutChildren method.
     /// </summary>
-    API_FUNCTION() virtual void ProxyInterfaceLayoutChildren(Float2 space) = 0;
+    API_FUNCTION() virtual void ProxyInterfaceLayoutChildren(Int2 space) = 0;
 
 
     /// <summary>
@@ -40,7 +40,7 @@ public:
     ///// <param name="wanted_size">The size requested by the layout contents. This might be larger than the available space.</param>
     ///// <param name="min_size">The minimum size requied by the layout. Should be the same value unless the contents change</param>
     ///// <returns>Whether the layout's size depends on available space, or manages a control that influences this behavior</returns>
-    //API_FUNCTION() virtual bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) = 0;
+    //API_FUNCTION() virtual bool ProxyInterfaceMeasure(Int2 available, API_PARAM(Out) Int2 &wanted_size, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size) = 0;
 
     /// <summary>
     /// Acts in place of a FudgetProxyLayout to provide the GetInitFlags method.
@@ -77,12 +77,12 @@ public:
     /// <param name="index">Index of the control</param>
     /// <param name="pos">Calculated position of control relative to the IProxyLayoutContainer</param>
     /// <param name="size">Calculated size of the control</param>
-    API_FUNCTION() void SetComputedBounds(int index, Float2 pos, Float2 size);
+    API_FUNCTION() void SetComputedBounds(int index, Int2 pos, Int2 size);
 
     /// <summary>
     /// Call from an IProxyLayoutContainer's ProxyInterfaceLayoutChildren when the proxy layout calculated its size requirements.
     /// If the available space is unrestricted (checked by IsUnrestrictedSpace), only the layout sizes should be calculated and
-    /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause float overflow
+    /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause overflow
     /// when calculating any of the sizes.
     /// </summary>
     /// <param name="size">The space used for measurement and the measured sizes of the layout. Every field should be set in the struct.</param>
@@ -97,13 +97,13 @@ public:
     /// <param name="wanted_min">Receives the slot's content's requested minimal size</param>
     /// <param name="wanted_max">Receives the slot's content's requested maximum size</param>
     /// <param name="result">Receives the sizes requested by the control in the slot.</param>
-    API_FUNCTION() bool GetSlotMeasures(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max);
+    API_FUNCTION() bool GetSlotMeasures(int index, Int2 available, API_PARAM(Out) Int2 &wanted_size, API_PARAM(Out) Int2 &wanted_min, API_PARAM(Out) Int2 &wanted_max);
 protected:
     /// <inheritdoc />
-    void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+    void PreLayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
 
     /// <inheritdoc />
-    void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+    void LayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
 
     ///// <inheritdoc />
     //bool Measure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
@@ -115,7 +115,7 @@ protected:
     FudgetLayoutFlag GetInitFlags() const override;
 
     /// <inheritdoc />
-    void SetControlDimensions(int index, Float2 pos, Float2 size) override;
+    void SetControlDimensions(int index, Int2 pos, Int2 size) override;
 
     /// <inheritdoc />
     void PlaceControlInSlotRectangle(int index) override;

@@ -48,7 +48,7 @@ void FudgetListBoxItemPainter::Initialize(FudgetControl *control, FudgetStyle *s
     }
 }
 
-void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states)
+void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states)
 {
     if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
         return;
@@ -65,10 +65,10 @@ void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bou
     _text_painter->Draw(control, bounds, text, full_range, states, opt);
 }
 
-Float2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state)
+Int2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state)
 {
     if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
-        return Float2::Zero;
+        return Int2::Zero;
 
     String text = data->GetText(item_index);
 

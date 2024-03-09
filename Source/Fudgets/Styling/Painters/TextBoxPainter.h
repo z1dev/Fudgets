@@ -38,7 +38,7 @@ struct FUDGETS_API FudgetLineMeasurements
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLineMeasurements);
 
-    FudgetLineMeasurements() : StartIndex(0), EndIndex(0), Size(0.f), Location(0.f) {}
+    FudgetLineMeasurements() : StartIndex(0), EndIndex(0), Size(0), Location(0) {}
 
     /// <summary>
     /// Index of first character to display in the line
@@ -53,12 +53,12 @@ struct FUDGETS_API FudgetLineMeasurements
     /// <summary>
     /// Line dimensions
     /// </summary>
-    API_FIELD() Float2 Size;
+    API_FIELD() Int2 Size;
 
     /// <summary>
     /// Top left corner of the line
     /// </summary>
-    API_FIELD() Float2 Location;
+    API_FIELD() Int2 Location;
 };
 
 template<>
@@ -75,7 +75,7 @@ struct FUDGETS_API FudgetMultilineTextMeasurements
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetMultilineTextMeasurements);
 
-    FudgetMultilineTextMeasurements() : Scale(1.f), Lines(), Size(0.f) {}
+    FudgetMultilineTextMeasurements() : Scale(1.f), Lines(), Size(0) {}
 
     /// <summary>
     /// The text that was measured. The original text buffer or string must persist while this measurement is used.
@@ -95,7 +95,7 @@ struct FUDGETS_API FudgetMultilineTextMeasurements
     /// <summary>
     /// Size of all the measured lines
     /// </summary>
-    API_FIELD() Float2 Size;
+    API_FIELD() Int2 Size;
 };
 
 template<>
@@ -158,7 +158,7 @@ public:
     /// <param name="state">State of the control</param>
     /// <param name="options">Options for text, like scale or wrapping mode</param>
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState states,
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, FudgetVisualControlState states,
         const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
 
     /// <summary>
@@ -168,7 +168,7 @@ public:
     /// <param name="b">Other character</param>
     /// <param name="scale">Scale used for measurement</param>
     /// <returns>Kerning distance between characters</returns>
-    API_FUNCTION() virtual float GetKerning(Char a, Char b, float scale) const { return 0.f; }
+    API_FUNCTION() virtual int GetKerning(Char a, Char b, float scale) const { return 0; }
 
     /// <summary>
     /// Finds the index of character in the text at a position. If the position is outside a line, the closest character index is returned.
@@ -177,7 +177,7 @@ public:
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
     /// <param name="point">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
-    API_FUNCTION() virtual int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) { return 0; }
+    API_FUNCTION() virtual int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Int2 &point) { return 0; }
 
     /// <summary>
     /// Finds the index of the line closest to the y position
@@ -186,7 +186,7 @@ public:
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
     /// <param name="y_position">Y position of line to look for</param>
     /// <returns>Index of line at the given position</returns>
-    API_FUNCTION() virtual int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, float y_position) { return 0; }
+    API_FUNCTION() virtual int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int y_position) { return 0; }
 
     /// <summary>
     /// Finds the index of character in one line of the text at a position. If the position is outside a line, the closest character index is returned.
@@ -196,7 +196,7 @@ public:
     /// <param name="line_index">Index of line to measure in. </param>
     /// <param name="x_position">The position of the character to look for</param>
     /// <returns>Index of the character at the given position</returns>
-    API_FUNCTION() virtual int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, float x_position) { return 0; }
+    API_FUNCTION() virtual int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, int x_position) { return 0; }
 
     /// <summary>
     /// Finds the upper left corner of the character at an index
@@ -205,7 +205,7 @@ public:
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
     /// <param name="char_index">Index of character to look for</param>
     /// <returns>Position of the upper left corner of the character</returns>
-    API_FUNCTION() virtual Float2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const { return Float2::Zero; }
+    API_FUNCTION() virtual Int2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const { return Int2::Zero; }
 
     /// <summary>
     /// Measures text using the current font.
@@ -214,7 +214,7 @@ public:
     /// <param name="text">Text to measure</param>
     /// <param name="scale">Text scale</param>
     /// <returns>Dimensions of the measured text</returns>
-    API_FUNCTION() virtual Float2 Measure(FudgetControl *control, const StringView &text, float scale) { return Float2::Zero; }
+    API_FUNCTION() virtual Int2 Measure(FudgetControl *control, const StringView &text, float scale) { return Int2::Zero; }
 
     /// <summary>
     /// Measures the text and separates it to lines. The lines are checked for word wrapping based on the passed options
@@ -226,7 +226,7 @@ public:
     /// <param name="scale">Scale to use for measurements</param>
     /// <param name="options">Options for text, like the offset, selection spans etc.</param>
     /// <param name="result">The measured lines</param>
-    API_FUNCTION() virtual void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale,
+    API_FUNCTION() virtual void MeasureLines(FudgetControl *control, int bounds_width, const StringView &text, float scale,
         const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) {}
 
     /// <summary>
@@ -244,12 +244,12 @@ public:
     /// <param name="measurements">Line measurements calculated previously with Measure on the text</param>
     /// <param name="char_index">Index of character to look for</param>
     /// <returns>Height of the line at the character's position</returns>
-    API_FUNCTION() virtual float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
+    API_FUNCTION() virtual int GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const { return 0; }
 
     /// <summary>
     /// Returns the height of the font used by the painter.
     /// </summary>
-    API_FUNCTION() virtual float GetFontHeight() const { return 0.f; }
+    API_FUNCTION() virtual int GetFontHeight() const { return 0; }
 
 protected:
     /// <summary>
@@ -261,7 +261,7 @@ protected:
     /// <param name="line_width">Width of the line in screen units</param>
     /// <param name="line_height">Height of the line in screen units</param>
     /// <param name="result">Measurements to expand</param>
-    API_FUNCTION() virtual void AddLine(API_PARAM(Ref) Float2 &pos, int start_index, int end_index, float line_width, float line_height, API_PARAM(Ref) FudgetMultilineTextMeasurements &result);
+    API_FUNCTION() virtual void AddLine(API_PARAM(Ref) Int2 &pos, int start_index, int end_index, int line_width, int line_height, API_PARAM(Ref) FudgetMultilineTextMeasurements &result);
 };
 
 
@@ -315,39 +315,39 @@ public:
     void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const Float2 &offset, FudgetVisualControlState states,
+    void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, FudgetVisualControlState states,
         const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
 
     /// <inheritdoc />
-    float GetKerning(Char a, Char b, float scale) const override;
+    int GetKerning(Char a, Char b, float scale) const override;
 
     /// <inheritdoc />
-    int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Float2 &point) override;
+    int HitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, const Int2 &point) override;
 
     /// <inheritdoc />
-    int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, float y_position) override;
+    int LineAtPos(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int y_position) override;
 
     /// <inheritdoc />
-    int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, float x_position) override;
+    int LineHitTest(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int line_index, int x_position) override;
 
     /// <inheritdoc />
-    Float2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+    Int2 GetCharacterPosition(FudgetControl *control, const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
 
     /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const StringView &text, float scale) override;
+    Int2 Measure(FudgetControl *control, const StringView &text, float scale) override;
 
     /// <inheritdoc />
-    void MeasureLines(FudgetControl *control, float bounds_width, const StringView &text, float scale,
+    void MeasureLines(FudgetControl *control, int bounds_width, const StringView &text, float scale,
         const FudgetMultiLineTextOptions &options, API_PARAM(Ref) FudgetMultilineTextMeasurements &result) override;
 
     /// <inheritdoc />
     int GetCharacterLine(FudgetMultilineTextMeasurements &measurements, int char_index) const override;
 
     /// <inheritdoc />
-    float GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
+    int GetCharacterLineHeight(const FudgetMultilineTextMeasurements &measurements, int char_index) const override;
 
     /// <inheritdoc />
-    float GetFontHeight() const override;
+    int GetFontHeight() const override;
 
 private:
     FudgetDrawArea _sel_area;

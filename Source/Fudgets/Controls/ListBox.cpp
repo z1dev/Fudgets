@@ -109,7 +109,7 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 
 
 FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _item_painter(nullptr),
-    _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0.f), _fixed_item_size(true), _default_size(Float2(-1.f)), _size_processed(0)
+    _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0.f), _fixed_item_size(true), _default_size(Int2(-1)), _size_processed(0)
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
 }
@@ -178,12 +178,12 @@ void FudgetListBox::OnDraw()
 
     bounds = GetInnerPadding().Padded(bounds);
 
-    float pos = 0.f;
+    int pos = 0;
     Rectangle r = Rectangle(Float2::Zero, Float2(bounds.GetWidth(), 0.f));
     for (int ix = 0; ix < count; ++ix)
     {
         r.Size.Y = GetItemSize(ix).Y;
-        _item_painter->Draw(this, r, Float2(0.f, pos), ix, _data, GetVisualState());
+        _item_painter->Draw(this, r, Int2(0, pos), ix, _data, GetVisualState());
         r.Location.Y += r.Size.Y;
     }
 }
@@ -199,17 +199,17 @@ void FudgetListBox::SetDataProvider(FudgetStringListProvider *data)
     _owned_data = false;
     _data = data;
     _current = -1;
-    _scroll_pos = Float2::Zero;
+    _scroll_pos = Int2::Zero;
 }
 
-void FudgetListBox::SetDefaultItemSize(Float2 value)
+void FudgetListBox::SetDefaultItemSize(Int2 value)
 {
     if (_default_size == value)
         return;
     _default_size = value;
 }
 
-Float2 FudgetListBox::GetItemSize(int index)
+Int2 FudgetListBox::GetItemSize(int index)
 {
     if (_data == nullptr || _size_processed <= index)
         return _default_size;
@@ -217,7 +217,7 @@ Float2 FudgetListBox::GetItemSize(int index)
     if (_item_heights.IsEmpty())
         return _default_size;
 
-    return Float2(_default_size.X, _item_heights[index]);
+    return Int2(_default_size.X, _item_heights[index]);
 }
 
 void FudgetListBox::SetItemsHaveFixedSize(bool value)
@@ -229,6 +229,6 @@ void FudgetListBox::SetItemsHaveFixedSize(bool value)
 
 FudgetPadding FudgetListBox::GetInnerPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0.0f);
+    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
 }
 

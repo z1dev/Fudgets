@@ -54,9 +54,9 @@ public:
     /// <inheritdoc />
     void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, Float2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states) override;
     /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
+    Int2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, FudgetVisualControlState state) override;
 private:
     FudgetSingleLineTextPainter *_text_painter;
 };

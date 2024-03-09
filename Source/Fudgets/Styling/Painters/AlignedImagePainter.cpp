@@ -69,7 +69,7 @@ void FudgetAlignedImagePainter::Initialize(FudgetControl *control, FudgetStyle *
         _disabled_image_offset = _image_offset;
 
     if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::ImagePadding, res.ImagePadding, _image_padding))
-        _image_padding = FudgetPadding(0.0f);
+        _image_padding = FudgetPadding(0);
     if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImagePadding, res.HoveredImagePadding, _hovered_image_padding))
         _hovered_image_padding = _image_padding;
     if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImagePadding, res.PressedImagePadding, _pressed_image_padding))

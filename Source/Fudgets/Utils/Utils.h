@@ -27,12 +27,19 @@ void MoveInArray(Array<T> &arr, int from, int to)
 
 //extern const float MaximumFloatLimit;
 
-float AddBigFloats(float a, float b);
-float AddBigFloats(float a, float b, float c);
-float AddBigFloats(float a, float b, float c, float d);
-Float2 AddBigFloats(Float2 a, Float2 b);
-Float2 AddBigFloats(Float2 a, Float2 b, Float2 c);
-Float2 AddBigFloats(Float2 a, Float2 b, Float2 c, Float2 d);
+float AddBigValues(float a, float b);
+float AddBigValues(float a, float b, float c);
+float AddBigValues(float a, float b, float c, float d);
+Float2 AddBigValues(Float2 a, Float2 b);
+Float2 AddBigValues(Float2 a, Float2 b, Float2 c);
+Float2 AddBigValues(Float2 a, Float2 b, Float2 c, Float2 d);
+
+int AddBigValues(int a, int b);
+int AddBigValues(int a, int b, int c);
+int AddBigValues(int a, int b, int c, int d);
+Int2 AddBigValues(Int2 a, Int2 b);
+Int2 AddBigValues(Int2 a, Int2 b, Int2 c);
+Int2 AddBigValues(Int2 a, Int2 b, Int2 c, Int2 d);
 
 #define STRING_SUBSTEP(A) #A
 #define STRING(A) STRING_SUBSTEP(A)

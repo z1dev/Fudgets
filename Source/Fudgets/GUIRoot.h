@@ -65,13 +65,13 @@ public:
     API_FUNCTION() int ChangeControlAlwaysOnTop(FudgetControl *control, bool set_always_on_top, int index = -1);
 
     /// <inheritdoc />
-    Float2 GetSize() const override;
+    Int2 GetSize() const override;
     /// <inheritdoc />
-    Float2 GetHintSize() const override;
+    Int2 GetHintSize() const override;
     /// <inheritdoc />
-    Float2 GetMinSize() const override;
+    Int2 GetMinSize() const override;
     /// <inheritdoc />
-    Float2 GetMaxSize() const override;
+    Int2 GetMaxSize() const override;
 
     /// <summary>
     /// Returns the Fudget actor that uses this container for its root.
@@ -173,7 +173,7 @@ public:
     /// </summary>
     /// <param name="new_size"></param>
     /// <returns></returns>
-    API_FUNCTION() void OnResized(Float2 new_size);
+    API_FUNCTION() void OnResized(Int2 new_size);
 
     /// <summary>
     /// Starts the layout of the whole control tree. Only controls with a dirty layout are affected.
@@ -183,7 +183,7 @@ public:
     /// <summary>
     /// Callback event when the size of the GUI area changes
     /// </summary>
-    API_EVENT() Delegate<Float2> Resized;
+    API_EVENT() Delegate<Int2> Resized;
 private:
     //// Called once from the Fudget to initialize during gameplay
     //void Initialize() override;

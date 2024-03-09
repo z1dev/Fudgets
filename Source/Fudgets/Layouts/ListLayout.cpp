@@ -183,7 +183,7 @@ void FudgetListLayout::SetSlotWeight(int index, Float2 value)
     MarkOwnerDirty();
 }
 
-void FudgetListLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
+void FudgetListLayout::PreLayoutChildren(Int2 space, FudgetContainer *owner, int count)
 {
     if (IsUnrestrictedSpace(space))
         return;
@@ -240,10 +240,10 @@ bool FudgetListLayout::IsExpandingRule(FudgetDistributedSizingRule rule) const
         (!_has_expanding && !_has_grow_expanding && !_has_grow_exact && !_has_exact && !_has_shrink);
 }
 
-void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
+void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int count)
 {
     // Will hold the calculated size of each slot based on the ratio, without the leftover space.
-    Array<float> sizes(count);
+    Array<int> sizes(count);
 
     // Will hold the ratio of each control relative to each other.
     Array<float> ratios(count);
@@ -251,23 +251,23 @@ void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int 
     float ratio_sum = 0.f;
     // Calculating the ratios and the ratio sum
 
-    Array<Float2> wanted_sizes(count);
-    Array<Float2> min_sizes(count);
-    Array<Float2> max_sizes(count);
-    Array<Float2> shrink_sizes(count);
+    Array<Int2> wanted_sizes(count);
+    Array<Int2> min_sizes(count);
+    Array<Int2> max_sizes(count);
+    Array<Int2> shrink_sizes(count);
 
-    Float2 layout_wanted = Float2::Zero;
-    Float2 layout_min = Float2::Zero;
-    Float2 layout_max = Float2::Zero;
+    Int2 layout_wanted = Int2::Zero;
+    Int2 layout_min = Int2::Zero;
+    Int2 layout_max = Int2::Zero;
 
     bool unrestricted = IsUnrestrictedSpace(space);
     for (int ix = 0; ix < count; ++ix)
     {
         FudgetListLayoutSlot *slot = GetSlot(ix);
 
-        Float2 wanted = Float2::Zero;
-        Float2 min = Float2::Zero;
-        Float2 max = Float2::Zero;
+        Int2 wanted = Int2::Zero;
+        Int2 min = Int2::Zero;
+        Int2 max = Int2::Zero;
 
         if (!slot->Control->IsHiddenInLayout())
             MeasureSlot(ix, slot->ComputedBounds.Size, wanted, min, max);
@@ -277,17 +277,17 @@ void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int 
             wanted_sizes.Add(wanted);
             min_sizes.Add(min);
             max_sizes.Add(max);
-            shrink_sizes.Add(Float2(Math::Max(wanted.X - min.X, 0.f), Math::Max(wanted.Y - min.Y, 0.f)));
+            shrink_sizes.Add(Int2(Math::Max(wanted.X - min.X, 0), Math::Max(wanted.Y - min.Y, 0)));
         }
 
         if (slot->Control->IsHiddenInLayout())
             continue;
 
-        RelevantRef(layout_wanted) = AddBigFloats(Relevant(layout_wanted), Relevant(wanted) + RelevantPad(slot->_padding));
+        RelevantRef(layout_wanted) = AddBigValues(Relevant(layout_wanted), Relevant(wanted) + RelevantPad(slot->_padding));
         OppositeRef(layout_wanted) = Math::Max(Opposite(layout_wanted), Opposite(wanted) + OppositePad(slot->_padding));
-        RelevantRef(layout_min) = AddBigFloats(Relevant(layout_min), Relevant(min) + RelevantPad(slot->_padding));
+        RelevantRef(layout_min) = AddBigValues(Relevant(layout_min), Relevant(min) + RelevantPad(slot->_padding));
         OppositeRef(layout_min) = Math::Max(Opposite(layout_min), Opposite(min) + OppositePad(slot->_padding));
-        RelevantRef(layout_max) = AddBigFloats(Relevant(layout_max), Relevant(max) + RelevantPad(slot->_padding));
+        RelevantRef(layout_max) = AddBigValues(Relevant(layout_max), Relevant(max) + RelevantPad(slot->_padding));
         OppositeRef(layout_max) = Math::Max(Opposite(layout_max), Opposite(max) + OppositePad(slot->_padding));
     }
 
@@ -312,7 +312,7 @@ void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int 
             if (slot->_sizing_rule == FudgetDistributedSizingRule::Shrink)
             {
                 RelevantRef(wanted_sizes[ix]) -= Relevant(shrink_sizes[ix]);
-                RelevantRef(shrink_sizes[ix]) = 0.f;
+                RelevantRef(shrink_sizes[ix]) = 0;
             }
         }
         else if (_has_expanding || _has_grow_exact || _has_grow_expanding || _has_shrink)
@@ -320,89 +320,104 @@ void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int 
             if (slot->_sizing_rule == FudgetDistributedSizingRule::Minimal)
             {
                 RelevantRef(wanted_sizes[ix]) -= Relevant(shrink_sizes[ix]);
-                RelevantRef(shrink_sizes[ix]) = 0.f;
+                RelevantRef(shrink_sizes[ix]) = 0;
             }
         }
 
         if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::KeepSize)
-            RelevantRef(shrink_sizes[ix]) = 0.f;
+            RelevantRef(shrink_sizes[ix]) = 0;
     }
 
     //// The size remaining after all the wanted sizes are subtracted from the available space. This
     //// might be a negative value if the slots need more space.
-    float remaining = _no_padding_space;
+    int remaining = _no_padding_space;
 
     for (int ix = 0; ix < count; ++ix)
     {
-        float size = Relevant(wanted_sizes[ix]);
+        int size = Relevant(wanted_sizes[ix]);
         sizes.Add(size);
 
         if (!GetSlot(ix)->Control->IsHiddenInLayout())
             remaining -= size;
     }
 
-
-
-    if (_no_padding_space <= 0.f)
+    if (_no_padding_space <= 0)
     {
         for (int ix = 0; ix < count; ++ix)
-            sizes[ix] = 0.f;
+            sizes[ix] = 0;
     }
-    else if (remaining >= 0.f)
+    else if (remaining >= 0)
     {
-        float weight_sum = 0.f;
+        int weight_sum = 0;
         int weighted_cnt = 0;
         int unweighted_cnt = 0;
 
-        for (int ix = 0; ix < count; ++ix)
+        Array<float> weight_ratio(count);
+
+        for (int ix = count - 1; ix >= 0; --ix)
         {
             FudgetListLayoutSlot *slot = GetSlot(ix);
-            if (slot->Control->IsHiddenInLayout())
-                continue;
-
-            if (IsExpandingRule(slot->_sizing_rule))
+            if (slot->Control->IsHiddenInLayout() || !IsExpandingRule(slot->_sizing_rule))
             {
-                if (!Math::NearEqual(sizes[ix], Relevant(max_sizes[ix])))
-                {
-                    weight_sum += Math::Max(0.f, Relevant(slot->_weight));
-                    ++weighted_cnt;
-                }
-                ++unweighted_cnt;
+                weight_ratio.Add(0.f);
+                continue;
             }
+
+            if (sizes[ix] != Relevant(max_sizes[ix]))
+            {
+                float weight = Math::Max(0, Relevant(slot->_weight));
+                weight_sum += weight;
+                ++weighted_cnt;
+                weight_ratio.Add(weight / weight_sum);
+            }
+            ++unweighted_cnt;
         }
 
         bool sizes_set = false;
-        for (int ix = 0; ix < count; ++ix)
+        int unused_space = remaining;
+        for (int ix = 0, unweighted_ix = 0; ix < count; ++ix)
         {
             FudgetListLayoutSlot *slot = GetSlot(ix);
             if (slot->Control->IsHiddenInLayout())
                 continue;
-            float grow_ratio = unweighted_cnt == 0.f ? 1.f / count : weight_sum == 0.f ? 1.f / unweighted_cnt : 0.f;
-            if (unweighted_cnt != 0 && weight_sum > 0.f && IsExpandingRule(slot->_sizing_rule) && !Math::NearEqual(sizes[ix], Relevant(max_sizes[ix])))
+            float grow_ratio = unweighted_cnt == 0 ? 1.f / float(count - ix) : weight_sum == 0.f ? 1.f / float(unweighted_cnt - unweighted_ix) : 0.f;
+            bool is_expanding = IsExpandingRule(slot->_sizing_rule);
+            if (is_expanding)
+                ++unweighted_ix;
+            if (unweighted_cnt != 0 && weight_sum > 0.f && is_expanding && sizes[ix] != Relevant(max_sizes[ix]))
             {
-                grow_ratio = Relevant(slot->_weight) / weight_sum;
+                grow_ratio = weight_ratio[count - ix - 1]; //Relevant(slot->_weight) / weight_sum;
             }
 
-            sizes[ix] += grow_ratio * remaining;
+            int grow_by = grow_ratio * unused_space;
+            sizes[ix] += grow_by;
+            unused_space = Math::Max(0, unused_space - grow_by);
             if (grow_ratio != 0.f)
                 sizes_set = true;
         }
         if (!sizes_set)
         {
             // No grow ratio set for anything.
-            for (int ix = 0; ix < count; ++ix)
+            for (int ix = 0, visible_ix = 0; ix < count; ++ix)
             {
-                sizes[ix] += remaining / visible_count;
+                FudgetListLayoutSlot *slot = GetSlot(ix);
+                if (slot->Control->IsHiddenInLayout())
+                    continue;
+
+                int grow_by = unused_space / visible_count;
+                sizes[ix] += unused_space / Math::Max(0, visible_count - visible_ix);
+                unused_space = Math::Max(0, unused_space - grow_by);
+                ++visible_ix;
             }
         }
     }
     else
     {
-        float shrink_sum = 0.f;
-        float late_shrink_sum = 0.f;
+        int shrink_sum = 0.f;
+        int late_shrink_sum = 0.f;
         for (int ix = 0; ix < count; ++ix)
         {
-            float size = Relevant(shrink_sizes[ix]);
+            int size = Relevant(shrink_sizes[ix]);
             if (size <= 0.f)
                 continue;
             auto slot = GetSlot(ix);
@@ -417,42 +432,42 @@ void FudgetListLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int 
         remaining = Math::Min(-remaining, shrink_sum + late_shrink_sum);
         for (int ix = 0; ix < count; ++ix)
         {
-            float size = Relevant(shrink_sizes[ix]);
+            int size = Relevant(shrink_sizes[ix]);
             if (size <= 0.f)
                 continue;
             auto slot = GetSlot(ix);
             if (slot->Control->IsHiddenInLayout())
                 continue;
             if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::CanShrink || slot->_shrinking_rule == FudgetDistributedShrinkingRule::IgnoreMinimum)
-                sizes[ix] -= Math::Min(remaining, shrink_sum) * (size / shrink_sum);
+                sizes[ix] -= int(Math::Min(remaining, shrink_sum) * (size / (float)shrink_sum));
         }
         remaining -= shrink_sum;
         if (remaining > 0.f && late_shrink_sum > 0.f && !Math::NearEqual(remaining, 0.f))
         {
             for (int ix = 0; ix < count; ++ix)
             {
-                float size = Relevant(shrink_sizes[ix]);
+                int size = Relevant(shrink_sizes[ix]);
                 if (size <= 0.f)
                     continue;
                 auto slot = GetSlot(ix);
                 if (slot->Control->IsHiddenInLayout())
                     continue;
                 if (slot->_shrinking_rule == FudgetDistributedShrinkingRule::LateShrink)
-                    sizes[ix] -= Math::Min(remaining, late_shrink_sum) * (size / late_shrink_sum);
+                    sizes[ix] -= int(Math::Min(remaining, late_shrink_sum) * (size / (float)late_shrink_sum));
             }
         }
     }
 
-    Float2 pos = Float2::Zero;
+    Int2 pos = Int2::Zero;
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
         if (slot->Control->IsHiddenInLayout())
             continue;
 
-        float size = Math::Max(0.f, sizes[ix]);
-        float size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0.0f);
-        float size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0.0f);
+        int size = Math::Max(0, sizes[ix]);
+        int size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0);
+        int size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0);
 
         slot->ComputedBounds = Rectangle(Float2(pos.X + slot->_padding.Left, pos.Y + slot->_padding.Top), Float2(size_x, size_y));
 
@@ -493,13 +508,13 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
 {
     auto slot = GetSlot(index);
 
-    Float2 computed_pos = slot->ComputedBounds.Location;
-    Float2 computed_size = slot->ComputedBounds.Size;
+    Int2 computed_pos = slot->ComputedBounds.Location;
+    Int2 computed_size = slot->ComputedBounds.Size;
 
     // Making sure it's calculated.
     GetHintSize();
 
-    if (!Math::NearEqual(computed_size.X, slot->Sizes.Size.X))
+    if (computed_size.X != slot->Sizes.Size.X)
     {
         float size_X = slot->Sizes.Size.X;
         if (computed_size.X > size_X &&
@@ -514,7 +529,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         {
             if (slot->_horz_align != FudgetLayoutHorzAlign::Fill)
             {
-                float dif = computed_size.X - size_X;
+                int dif = computed_size.X - size_X;
                 if (slot->_horz_align == FudgetLayoutHorzAlign::Right || slot->_horz_align == FudgetLayoutHorzAlign::ClipRight || slot->_horz_align == FudgetLayoutHorzAlign::RightGrow)
                     computed_pos.X += dif;
                 else if (slot->_horz_align == FudgetLayoutHorzAlign::Center || slot->_horz_align == FudgetLayoutHorzAlign::ClipCenter || slot->_horz_align == FudgetLayoutHorzAlign::CenterGrow)
@@ -528,21 +543,21 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         }
         else if (slot->_horz_align == FudgetLayoutHorzAlign::ClipRight)
         {
-            float dif = Math::Max(slot->Sizes.Min.X, computed_size.X) - computed_size.X;
+            int dif = Math::Max(slot->Sizes.Min.X, computed_size.X) - computed_size.X;
             computed_pos.X -= dif;
             computed_size.X += dif;
         }
         else if (slot->_horz_align == FudgetLayoutHorzAlign::ClipCenter)
         {
-            float dif = Math::Max(slot->Sizes.Min.X, computed_size.X) - computed_size.X;
+            int dif = Math::Max(slot->Sizes.Min.X, computed_size.X) - computed_size.X;
             computed_pos.X -= dif * 0.5f;
             computed_size.X += dif;
         }
     }
 
-    if (!Math::NearEqual(computed_size.Y, slot->Sizes.Size.Y))
+    if (computed_size.Y != slot->Sizes.Size.Y)
     {
-        float size_Y = slot->Sizes.Size.Y;
+        int size_Y = slot->Sizes.Size.Y;
         if (computed_size.Y > size_Y &&
             (slot->_vert_align == FudgetLayoutVertAlign::TopGrow ||
             slot->_vert_align == FudgetLayoutVertAlign::BottomGrow ||
@@ -555,7 +570,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         {
             if (slot->_vert_align != FudgetLayoutVertAlign::Fill)
             {
-                float dif = computed_size.Y - size_Y;
+                int dif = computed_size.Y - size_Y;
                 if (slot->_vert_align == FudgetLayoutVertAlign::Bottom || slot->_vert_align == FudgetLayoutVertAlign::ClipBottom || slot->_vert_align == FudgetLayoutVertAlign::BottomGrow)
                     computed_pos.Y += dif;
                 else if (slot->_vert_align == FudgetLayoutVertAlign::Center || slot->_vert_align == FudgetLayoutVertAlign::ClipCenter || slot->_vert_align == FudgetLayoutVertAlign::CenterGrow)
@@ -569,13 +584,13 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         }
         else if (slot->_vert_align == FudgetLayoutVertAlign::ClipBottom)
         {
-            float dif = Math::Max(slot->Sizes.Min.Y, computed_size.Y) - computed_size.Y;
+            int dif = Math::Max(slot->Sizes.Min.Y, computed_size.Y) - computed_size.Y;
             computed_pos.Y -= dif;
             computed_size.Y += dif;
         }
         else if (slot->_vert_align == FudgetLayoutVertAlign::ClipCenter)
         {
-            float dif = Math::Max(slot->Sizes.Min.Y, computed_size.Y) - computed_size.Y;
+            int dif = Math::Max(slot->Sizes.Min.Y, computed_size.Y) - computed_size.Y;
             computed_pos.Y -= dif * 0.5f;
             computed_size.Y += dif;
         }

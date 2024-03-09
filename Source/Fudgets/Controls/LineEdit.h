@@ -55,10 +55,10 @@ public:
     void OnStyleInitialize() override;
 
     /// <inheritdoc />
-    Float2 GetLayoutHintSize() const override;
+    Int2 GetLayoutHintSize() const override;
 
     /// <inheritdoc />
-    Float2 GetLayoutMinSize() const override;
+    Int2 GetLayoutMinSize() const override;
 
     /// <inheritdoc />
     StringView GetText() const override { return _text; }
@@ -73,7 +73,7 @@ public:
     void OnSizeChanged() override;
 
     /// <inheritdoc />
-    int CharIndexAt(Float2 pos) override;
+    int CharIndexAt(Int2 pos) override;
 
     /// <inheritdoc />
     void DoPositionChanged(int old_caret_pos, int old_sel_pos) override;
@@ -143,9 +143,9 @@ private:
 
     FudgetDrawArea _caret_draw;
     float _caret_blink_time;
-    float _caret_width;
+    int _caret_width;
 
-    float _scroll_pos;
+    int _scroll_pos;
     String _text;
 
     bool _show_border;

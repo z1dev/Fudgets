@@ -5,13 +5,13 @@
 //// These could be in any cpp file but it's most likely to be used in layouts so whatever. Declared as extern in Utils.h
 //const float MaximumFloatLimit = (std::numeric_limits<float>::max() - 1.0f);
 
-float AddBigFloats(float a, float b)
+float AddBigValues(float a, float b)
 {
     // Should be safe:
     if ((a > 0) != (b > 0))
         return a + b;
     if (a < 0 && b < 0)
-        return -AddBigFloats(-a, -b);
+        return -AddBigValues(-a, -b);
 
     if (MAX_float -a < b)
         return MAX_float;
@@ -19,33 +19,77 @@ float AddBigFloats(float a, float b)
     return a + b;
 }
 
-float AddBigFloats(float a, float b, float c)
+float AddBigValues(float a, float b, float c)
 {
-    return AddBigFloats(AddBigFloats(a, b), c);
+    return AddBigValues(AddBigValues(a, b), c);
 }
 
-float AddBigFloats(float a, float b, float c, float d)
+float AddBigValues(float a, float b, float c, float d)
 {
-    return AddBigFloats(AddBigFloats(AddBigFloats(a, b), c), d);
+    return AddBigValues(AddBigValues(AddBigValues(a, b), c), d);
 }
 
-Float2 AddBigFloats(Float2 a, Float2 b)
+Float2 AddBigValues(Float2 a, Float2 b)
 {
     // Should be safe:
-    return Float2(AddBigFloats(a.X, b.X), AddBigFloats(a.Y, b.Y));
+    return Float2(AddBigValues(a.X, b.X), AddBigValues(a.Y, b.Y));
 }
 
-Float2 AddBigFloats(Float2 a, Float2 b, Float2 c)
+Float2 AddBigValues(Float2 a, Float2 b, Float2 c)
 {
     // Should be safe:
-    return AddBigFloats(AddBigFloats(a, b), c);
+    return AddBigValues(AddBigValues(a, b), c);
 }
 
-Float2 AddBigFloats(Float2 a, Float2 b, Float2 c, Float2 d)
+Float2 AddBigValues(Float2 a, Float2 b, Float2 c, Float2 d)
 {
     // Should be safe:
-    return AddBigFloats(AddBigFloats(AddBigFloats(a, b), c), d);
+    return AddBigValues(AddBigValues(AddBigValues(a, b), c), d);
 }
+
+
+int AddBigValues(int a, int b)
+{
+    // Should be safe:
+    if ((a > 0) != (b > 0))
+        return a + b;
+    if (a < 0 && b < 0)
+        return -AddBigValues(-a, -b);
+
+    if (MAX_int32 - a < b)
+        return MAX_int32;
+
+    return a + b;
+}
+
+int AddBigValues(int a, int b, int c)
+{
+    return AddBigValues(AddBigValues(a, b), c);
+}
+
+int AddBigValues(int a, int b, int c, int d)
+{
+    return AddBigValues(AddBigValues(AddBigValues(a, b), c), d);
+}
+
+Int2 AddBigValues(Int2 a, Int2 b)
+{
+    // Should be safe:
+    return Int2(AddBigValues(a.X, b.X), AddBigValues(a.Y, b.Y));
+}
+
+Int2 AddBigValues(Int2 a, Int2 b, Int2 c)
+{
+    // Should be safe:
+    return AddBigValues(AddBigValues(a, b), c);
+}
+
+Int2 AddBigValues(Int2 a, Int2 b, Int2 c, Int2 d)
+{
+    // Should be safe:
+    return AddBigValues(AddBigValues(AddBigValues(a, b), c), d);
+}
+
 
 FudgetLayoutSlot::FudgetLayoutSlot(const SpawnParams &params) : Base(params), Control(nullptr), OldSizes(), UnrestrictedSizes(), Sizes(), ComputedBounds(0.f, 0.f)
 {
@@ -139,19 +183,19 @@ void FudgetLayout::MarkDirtyOnLayoutUpdate(FudgetLayoutDirtyReason dirt_reason)
     }
 }
 
-Float2 FudgetLayout::GetHintSize()
+Int2 FudgetLayout::GetHintSize()
 {
-    return _sizes.IsValid ? _sizes.Size : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Size : Float2::Zero;
+    return _sizes.IsValid ? _sizes.Size : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Size : Int2::Zero;
 }
 
-Float2 FudgetLayout::GetMinSize()
+Int2 FudgetLayout::GetMinSize()
 {
-    return _sizes.IsValid ? _sizes.Min : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Min : Float2::Zero;
+    return _sizes.IsValid ? _sizes.Min : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Min : Int2::Zero;
 }
 
-Float2 FudgetLayout::GetMaxSize()
+Int2 FudgetLayout::GetMaxSize()
 {
-    return _sizes.IsValid ? _sizes.Max : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Max : Float2::Zero;
+    return _sizes.IsValid ? _sizes.Max : _unrestricted_sizes.IsValid ? _unrestricted_sizes.Max : Int2::Zero;
 }
 
 bool FudgetLayout::SizeDependsOnSpace() const
@@ -168,7 +212,7 @@ void FudgetLayout::RequestLayoutChildren(bool forced)
     if (owner == nullptr)
         return;
 
-    Float2 space = owner->LayoutSpace();
+    Int2 space = owner->LayoutSpace();
     DoLayoutChildren(space);
 }
 
@@ -195,7 +239,7 @@ bool FudgetLayout::GoodSlotIndex(int index) const
     return index >= 0 && index < _slots.Count();
 }
 
-void FudgetLayout::SetControlDimensions(int index, Float2 pos, Float2 size)
+void FudgetLayout::SetControlDimensions(int index, Int2 pos, Int2 size)
 {
     if (_owner == nullptr)
         return;
@@ -228,18 +272,18 @@ void FudgetLayout::FillSlots()
     }
 }
 
-void FudgetLayout::PreLayoutChildren(Float2 space, FudgetContainer *owner, int count)
+void FudgetLayout::PreLayoutChildren(Int2 space, FudgetContainer *owner, int count)
 {
     for (int ix = 0; ix < count; ++ix)
     {
         auto slot = GetSlot(ix);
         if (slot->Control->IsHiddenInLayout())
             continue;
-        slot->ComputedBounds.Size = Float2(-1.f);
+        slot->ComputedBounds.Size = Int2(-1);
     }
 }
 
-void FudgetLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
+void FudgetLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int count)
 {
     SetMeasuredSizes(FudgetLayoutSizeCache(space));
     if (IsUnrestrictedSpace(space))
@@ -252,11 +296,11 @@ void FudgetLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int coun
             continue;
         slot->Sizes = slot->UnrestrictedSizes;
         slot->Sizes.Space = slot->UnrestrictedSizes.Size;
-        slot->ComputedBounds = Rectangle(slot->Control->GetHintPosition(), slot->UnrestrictedSizes.Size);
+        slot->ComputedBounds = Rectangle(Float2(slot->Control->GetHintPosition()), Float2(slot->UnrestrictedSizes.Size));
     }
 }
 
-void FudgetLayout::DoLayoutChildren(Float2 available)
+void FudgetLayout::DoLayoutChildren(Int2 available)
 {
     auto owner = GetOwner();
     if (owner == nullptr)
@@ -278,7 +322,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
         // Nothing to do.
 
         bool from_space = owner->SizeDependsOnSpace();
-        SetMeasuredSizes(FudgetLayoutSizeCache(available, 0.f, 0.f, 0.f, from_space));
+        SetMeasuredSizes(FudgetLayoutSizeCache(available, 0, 0, 0, from_space));
         _layout_dirty = false;
         return;
     }
@@ -299,7 +343,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
         if (!slot->UnrestrictedSizes.IsValid)
         {
             slot->UnrestrictedSizes.IsValid = true;
-            slot->UnrestrictedSizes.SizeFromSpace = slot->Control->OnMeasure(Float2(-1.f), slot->UnrestrictedSizes.Size, slot->UnrestrictedSizes.Min, slot->UnrestrictedSizes.Max);
+            slot->UnrestrictedSizes.SizeFromSpace = slot->Control->OnMeasure(Int2(-1), slot->UnrestrictedSizes.Size, slot->UnrestrictedSizes.Min, slot->UnrestrictedSizes.Max);
             slot->Sizes = slot->UnrestrictedSizes;
         }
         if (slot->UnrestrictedSizes.SizeFromSpace)
@@ -313,7 +357,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
         // given unlimited space, or no control's measurement depends on the available space.
         return;
     }
-    if (!_layout_dirty && _sizes.IsValid && Float2::NearEqual(available, _sizes.Space))
+    if (!_layout_dirty && _sizes.IsValid && available == _sizes.Space)
     {
         // The layout doesn't require calculations if it already has valid measurements. In this case it was previously
         // laid out in the same available space.
@@ -357,7 +401,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
                 if (!slot->UnrestrictedSizes.SizeFromSpace || slot->Control->IsHiddenInLayout())
                     continue;
                 FudgetLayoutSizeCache cached = compare_cache[pos++];
-                need_remeasure = !slot->Sizes.IsValid || !Float2::NearEqual(cached.Size, slot->Sizes.Size) || !Float2::NearEqual(cached.Min, slot->Sizes.Min) || !Float2::NearEqual(cached.Max, slot->Sizes.Max);
+                need_remeasure = !slot->Sizes.IsValid || cached.Size != slot->Sizes.Size || cached.Min != slot->Sizes.Min || cached.Max != slot->Sizes.Max;
             }
         }
     } while (need_remeasure && (++iteration < max_iterations));
@@ -374,7 +418,7 @@ void FudgetLayout::DoLayoutChildren(Float2 available)
     }
 }
 
-bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &wanted_min, API_PARAM(Out) Float2 &wanted_max)
+bool FudgetLayout::MeasureSlot(int index, Int2 available, API_PARAM(Out) Int2 &wanted_size, API_PARAM(Out) Int2 &wanted_min, API_PARAM(Out) Int2 &wanted_max)
 {
     auto slot = GetSlot(index);
     if (slot == nullptr)
@@ -387,7 +431,7 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
         wanted_max = slot->UnrestrictedSizes.Max;
         return slot->UnrestrictedSizes.SizeFromSpace;
     }
-    else if (slot->Sizes.IsValid && Math::NearEqual(available, slot->Sizes.Space))
+    else if (slot->Sizes.IsValid && available == slot->Sizes.Space)
     {
         wanted_size = slot->Sizes.Size;
         wanted_min = slot->Sizes.Min;
@@ -395,9 +439,9 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
         return slot->Sizes.SizeFromSpace;
     }
 
-    Float2 size;
-    Float2 min;
-    Float2 max;
+    Int2 size;
+    Int2 min;
+    Int2 max;
     bool from_space = slot->Control->OnMeasure(available, size, min, max);
 
     if (IsUnrestrictedSpace(available))
@@ -405,8 +449,8 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
         slot->UnrestrictedSizes.IsValid = true;
         slot->UnrestrictedSizes.Space = available;
         wanted_min = slot->UnrestrictedSizes.Min = min;
-        wanted_max = slot->UnrestrictedSizes.Max = Float2::Max(min, max);
-        wanted_size = slot->UnrestrictedSizes.Size = Float2::Clamp(size, wanted_min, wanted_max);
+        wanted_max = slot->UnrestrictedSizes.Max = Int2::Max(min, max);
+        wanted_size = slot->UnrestrictedSizes.Size = Int2::Clamp(size, wanted_min, wanted_max);
         slot->UnrestrictedSizes.SizeFromSpace = from_space;
 
         if (!from_space)
@@ -417,8 +461,8 @@ bool FudgetLayout::MeasureSlot(int index, Float2 available, API_PARAM(Out) Float
         slot->Sizes.IsValid = true;
         slot->Sizes.Space = available;
         wanted_min = slot->Sizes.Min = min;
-        wanted_max = slot->Sizes.Max = Float2::Max(min, max);
-        wanted_size = slot->Sizes.Size = Float2::Clamp(size, wanted_min, wanted_max);
+        wanted_max = slot->Sizes.Max = Int2::Max(min, max);
+        wanted_size = slot->Sizes.Size = Int2::Clamp(size, wanted_min, wanted_max);
         slot->Sizes.SizeFromSpace = from_space;
     }
 
@@ -439,7 +483,7 @@ void FudgetLayout::SetMeasuredSizes(const FudgetLayoutSizeCache &sizes)
     if (IsUnrestrictedSpace(sizes.Space) || !sizes.SizeFromSpace)
     {
         _unrestricted_sizes.IsValid = true;
-        _unrestricted_sizes.Space = -1.f;
+        _unrestricted_sizes.Space = -1;
         _unrestricted_sizes.Size = sizes.Size;
         _unrestricted_sizes.Min = sizes.Min;
         _unrestricted_sizes.Max = sizes.Max;
@@ -462,7 +506,7 @@ void FudgetLayout::SetMeasuredSizes(const FudgetLayoutSizeCache &sizes)
 void FudgetLayout::PlaceControlInSlotRectangle(int index)
 {
     auto slot = GetSlot(index);
-    SetControlDimensions(index, slot->ComputedBounds.Location, Float2::Clamp(slot->ComputedBounds.Size, slot->Sizes.Min, slot->Sizes.Max));
+    SetControlDimensions(index, slot->ComputedBounds.Location, Int2::Clamp(slot->ComputedBounds.Size, slot->Sizes.Min, slot->Sizes.Max));
 }
 
 FudgetLayoutSlot* FudgetLayout::CreateSlot(FudgetControl *control)

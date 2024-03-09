@@ -221,7 +221,7 @@ public:
 
 protected:
     /// <inheritdoc />
-    void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+    void LayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
 
     /// <summary>
     /// The slot of a child control at an index in its container

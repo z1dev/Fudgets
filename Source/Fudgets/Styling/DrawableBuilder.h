@@ -57,6 +57,14 @@ struct FudgetDrawInstructionFloat : public FudgetDrawInstruction
     float _value;
 };
 
+struct FudgetDrawInstructionInt : public FudgetDrawInstruction
+{
+    using Base = FudgetDrawInstruction;
+    FudgetDrawInstructionInt(FudgetDrawInstructionType type) : Base(type), _value(0) {}
+    FudgetDrawInstructionInt(FudgetDrawInstructionType type, int value) : Base(type), _value(value) {}
+    int _value;
+};
+
 struct FudgetDrawInstructionPadding : public FudgetDrawInstruction
 {
     using Base = FudgetDrawInstruction;

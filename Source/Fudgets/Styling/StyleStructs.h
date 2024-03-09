@@ -161,7 +161,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <summary>
 	/// Necessary empty constructor. For filling area with white color
 	/// </summary>
-	FudgetDrawArea() : AreaType(FudgetFillType::None), Tint(Color::White), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.0f)
+	FudgetDrawArea() : AreaType(FudgetFillType::None), Tint(Color::White), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.f)
 	{
 	}
 
@@ -169,7 +169,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// Initializes draw area to fill a rectangle with the specified color
 	/// </summary>
 	/// <param name="color">Color used for filling the rectangle</param>
-	FudgetDrawArea(Color color) : AreaType(FudgetFillType::Color), Tint(color), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.0f)
+	FudgetDrawArea(Color color) : AreaType(FudgetFillType::Color), Tint(color), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.f)
 	{
 	}
 
@@ -179,7 +179,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="borders">The width of borders on each side</param>
 	/// <param name="color">Color of the border</param>
 	/// <param name="border_type">Where to draw the border</param>
-	FudgetDrawArea(FudgetPadding borders, Color color, FudgetFrameType border_type) : AreaType(FudgetFillType::Color |
+	FudgetDrawArea(FudgetBorder borders, Color color, FudgetFrameType border_type) : AreaType(FudgetFillType::Color |
 		(border_type == FudgetFrameType::Inside ? FudgetFillType::BorderInside : border_type == FudgetFrameType::Outside ? FudgetFillType::BorderOutside :
 		FudgetFillType::BorderCentered)), Tint(color), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(borders)
 	{
@@ -193,9 +193,9 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="point_tex">Draw texture with point rendering</param>
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
-	FudgetDrawArea(TextureBase *texture, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(TextureBase *texture, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
-		Tint(tint), Texture(texture), TextureOffset(tex_offset), TextureScale(tex_scale), SpriteHandle(), Borders(-1.0f)
+		Tint(tint), Texture(texture), TextureOffset(tex_offset), TextureScale(tex_scale), SpriteHandle(), Borders(-1.f)
 	{
 	}
 
@@ -209,7 +209,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="point_tex">Draw texture with point rendering</param>
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
-	FudgetDrawArea(TextureBase *texture, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(TextureBase *texture, FudgetBorder border_widths, FudgetFrameType border_type, bool stretch = false, bool point_tex = false, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_tex ? FudgetFillType::Point : FudgetFillType::None) |
 		(border_type == FudgetFrameType::Inside ? FudgetFillType::BorderInside : border_type == FudgetFrameType::Outside ? FudgetFillType::BorderOutside :
 		FudgetFillType::BorderCentered)), Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(texture), SpriteHandle(), Borders(border_widths)
@@ -220,11 +220,11 @@ struct FUDGETS_API FudgetDrawArea
 	/// Initializes draw area to fill a rectangle with a texture using 9-slicing.
 	/// </summary>
 	/// <param name="texture">Texture to draw inside the border</param>
-	/// <param name="borders_9p">Fixed sized not stretched borders around the texture</param>
+	/// <param name="borders_9p">Fixed sized not stretched borders of the texture</param>
 	/// <param name="point_tex">Draw texture with point rendering</param>
 	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the texture with</param>
-	FudgetDrawArea(TextureBase *texture, FudgetPadding borders_9p, bool point_tex = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(TextureBase *texture, FudgetPadding borders_9p, bool point_tex = false, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType(FudgetFillType::Sliced | (point_tex ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(texture), SpriteHandle(), Borders(borders_9p)
 	{
@@ -238,9 +238,9 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="point_sprite">Draw sprite with point rendering</param>
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
-	FudgetDrawArea(const SpriteHandle &sprite_handle, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(const SpriteHandle &sprite_handle, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
-		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(-1.0f)
+		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(-1.f)
 	{
 	}
 
@@ -254,7 +254,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="point_sprite">Draw sprite with point rendering</param>
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
-	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch = false, bool point_sprite = false, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType((stretch ? FudgetFillType::Stretch : FudgetFillType::None) | (point_sprite ? FudgetFillType::Point : FudgetFillType::None) |
 		(border_type == FudgetFrameType::Inside ? FudgetFillType::BorderInside : border_type == FudgetFrameType::Outside ? FudgetFillType::BorderOutside :
 		FudgetFillType::BorderCentered)), Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(border_widths)
@@ -269,7 +269,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <param name="point_sprite">Draw sprite with point rendering</param>
 	/// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
 	/// <param name="tint">Color to multiply the sprite with</param>
-	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding borders_9p, bool point_sprite, Float2 tex_offset = Float2(0.0f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
+	FudgetDrawArea(const SpriteHandle &sprite_handle, FudgetPadding borders_9p, bool point_sprite, Float2 tex_offset = Float2(0.f), Float2 tex_scale = Float2(-1.0f), const Color &tint = Color::White) :
 		AreaType(FudgetFillType::Sliced | (point_sprite ? FudgetFillType::Point : FudgetFillType::None)),
 		Tint(tint), TextureOffset(tex_offset), TextureScale(tex_scale), Texture(nullptr), SpriteHandle(sprite_handle), Borders(borders_9p)
 	{
@@ -358,7 +358,7 @@ struct FUDGETS_API FudgetDrawArea
 	/// <summary>
 	/// Set when the area is for a 9-slicing image or it is for drawing a border.
 	/// </summary>
-	API_FIELD() FudgetPadding Borders;
+	API_FIELD() FudgetBorder Borders;
 };
 
 
@@ -442,23 +442,23 @@ struct FUDGETS_API FudgetTextDrawSettings
 {
 	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextDrawSettings)
 
-	FudgetTextDrawSettings() : FudgetTextDrawSettings(0.f, Color::White, TextAlignment::Near, TextAlignment::Center, 0.0f, -1)
+	FudgetTextDrawSettings() : FudgetTextDrawSettings(0, Color::White, TextAlignment::Near, TextAlignment::Center, 0, -1)
 	{
 	}
 
-	FudgetTextDrawSettings(Color color, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), int material_id = -1) :
-		FudgetTextDrawSettings(0.f, color, horz_align, vert_align, padding, material_id)
+	FudgetTextDrawSettings(Color color, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0), int material_id = -1) :
+		FudgetTextDrawSettings(0, color, horz_align, vert_align, padding, material_id)
 	{
 
 	}
 
 	FudgetTextDrawSettings(FudgetPadding padding, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, int material_id = -1) :
-		FudgetTextDrawSettings(0.f, Color::White, horz_align, vert_align, padding, material_id)
+		FudgetTextDrawSettings(0, Color::White, horz_align, vert_align, padding, material_id)
 	{
 
 	}
 
-	FudgetTextDrawSettings(Float2 offset, Color color = Color::White, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0.0f), int material_id = -1) :
+	FudgetTextDrawSettings(Int2 offset, Color color = Color::White, TextAlignment horz_align = TextAlignment::Near, TextAlignment vert_align = TextAlignment::Center, FudgetPadding padding = FudgetPadding(0), int material_id = -1) :
 		Offset(offset), Color(color), HorizontalAlignment(horz_align), VerticalAlignment(vert_align), Padding(padding), MaterialId(material_id)
 	{
 
@@ -508,7 +508,7 @@ struct FUDGETS_API FudgetTextDrawSettings
 	/// <summary>
 	/// Offset of the text bounds when drawing.
 	/// </summary>
-	API_FIELD() Float2 Offset;
+	API_FIELD() Int2 Offset;
 	/// <summary>
 	/// Color of the text to draw
 	/// </summary>

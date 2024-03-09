@@ -14,13 +14,13 @@ FudgetAnchorLayout::FudgetAnchorLayout(const SpawnParams &params) : Base(params)
 
 }
 
-void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, int count)
+void FudgetAnchorLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int count)
 {
     // All controls sizes will be their hint size if the anchors don't change the control's size. For anchors that affect
     // the size too, the control's requested sizes are ignored. If the resulting size would be negative, the control will
     // have 0 size.
 
-    SetMeasuredSizes(FudgetLayoutSizeCache(space, Float2::Zero, Float2::Zero, Float2::Zero, false));
+    SetMeasuredSizes(FudgetLayoutSizeCache(space, Int2::Zero, Int2::Zero, Int2::Zero, false));
 
     if (IsUnrestrictedSpace(space))
         return;
@@ -31,36 +31,36 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, in
         if (slot->Control->IsHiddenInLayout())
             continue;
 
-        Float2 wanted = Float2::Zero;
-        Float2 min = Float2::Zero;
-        Float2 max = Float2::Zero;
+        Int2 wanted = Int2::Zero;
+        Int2 min = Int2::Zero;
+        Int2 max = Int2::Zero;
         MeasureSlot(ix, slot->ComputedBounds.Size, wanted, min, max);
 
-        Float2 control_size = Float2::Zero;
-        Float2 control_pos = Float2::Zero;
+        Int2 control_size = Int2::Zero;
+        Int2 control_pos = Int2::Zero;
 
         // Horizontal first:
         if (slot->leftAnchor == FudgetHorizontalAnchor::None && slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
             float center = (slot->leftPercent + slot->rightPercent) * 0.5f;
             control_size.X = wanted.X;
-            control_pos.X = (space.X * center) - control_size.X * 0.5f;
+            control_pos.X = int((space.X * center) - control_size.X * 0.5f);
         }
         else if (slot->rightAnchor == FudgetHorizontalAnchor::None)
         {
             control_size.X = wanted.X;
             if (slot->leftAnchor == FudgetHorizontalAnchor::Left)
-                control_pos.X = space.X * slot->leftPercent;
+                control_pos.X = int(space.X * slot->leftPercent);
             else
-                control_pos.X = space.X * (1.0f - slot->leftPercent);
+                control_pos.X = int(space.X * (1.0f - slot->leftPercent));
         }
         else if (slot->leftAnchor == FudgetHorizontalAnchor::None)
         {
             control_size.X = wanted.X;
             if (slot->rightAnchor == FudgetHorizontalAnchor::Right)
-                control_pos.X = space.X * (1 - slot->rightPercent) - control_size.X;
+                control_pos.X = int(space.X * (1 - slot->rightPercent) - control_size.X);
             else
-                control_pos.X = space.X * slot->rightPercent;
+                control_pos.X = int(space.X * slot->rightPercent);
         }
         else
         {
@@ -77,13 +77,13 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, in
 
             if (left >= right)
             {
-                control_size.X = 0.0f;
+                control_size.X = 0;
                 control_pos.X = (slot->leftPercent + slot->rightPercent) * 0.5f * space.X;
             }
             else
             {
-                control_size.X = right - left;
-                control_pos.X = left;
+                control_size.X = int(right - left);
+                control_pos.X = int(left);
             }
         }
 
@@ -92,23 +92,23 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, in
         {
             float center = (slot->topPercent + slot->bottomPercent) * 0.5f;
             control_size.Y = wanted.Y;
-            control_pos.Y = (space.Y * center) - control_size.Y * 0.5f;
+            control_pos.Y = int((space.Y * center) - control_size.Y * 0.5f);
         }
         else if (slot->bottomAnchor == FudgetVerticalAnchor::None)
         {
             control_size.Y = wanted.Y;
             if (slot->topAnchor == FudgetVerticalAnchor::Top)
-                control_pos.Y = space.Y * slot->topPercent;
+                control_pos.Y = int(space.Y * slot->topPercent);
             else
-                control_pos.Y = space.Y * (1.0f - slot->topPercent);
+                control_pos.Y = int(space.Y * (1.0f - slot->topPercent));
         }
         else if (slot->topAnchor == FudgetVerticalAnchor::None)
         {
             control_size.Y = wanted.Y;
             if (slot->bottomAnchor == FudgetVerticalAnchor::Bottom)
-                control_pos.Y = space.Y * (1 - slot->bottomPercent) - control_size.Y;
+                control_pos.Y = int(space.Y * (1 - slot->bottomPercent) - control_size.Y);
             else
-                control_pos.Y = space.Y * slot->bottomPercent;
+                control_pos.Y = int(space.Y * slot->bottomPercent);
         }
         else
         {
@@ -125,17 +125,17 @@ void FudgetAnchorLayout::LayoutChildren(Float2 space, FudgetContainer *owner, in
 
             if (top >= bottom)
             {
-                control_size.Y = 0.0f;
-                control_pos.Y = (slot->topPercent + slot->bottomPercent) * 0.5f * space.Y;
+                control_size.Y = 0;
+                control_pos.Y = int((slot->topPercent + slot->bottomPercent) * 0.5f * space.Y);
             }
             else
             {
-                control_size.Y = bottom - top;
-                control_pos.Y = top;
+                control_size.Y = int(bottom - top);
+                control_pos.Y = int(top);
             }
         }
 
-        slot->ComputedBounds = Rectangle(control_pos, control_size);
+        slot->ComputedBounds = Rectangle(Float2(control_pos), Float2(control_size));
     }
 }
 

@@ -238,9 +238,9 @@ public:
 
 protected:
     /// <inheritdoc />
-    void PreLayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+    void PreLayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
     /// <inheritdoc />
-    void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+    void LayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
 
     /// <inheritdoc />
     FudgetLayoutSlot* CreateSlot(FudgetControl *control) override;
@@ -262,37 +262,37 @@ private:
     // Used during layouting to check if the sizing rule allows its slot to expand. It uses data provided from PreLayoutChildren
     bool IsExpandingRule(FudgetDistributedSizingRule rule) const;
 
-    FORCE_INLINE float Relevant(Float2 value) const
+    FORCE_INLINE int Relevant(Int2 value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.X;
         return value.Y;
     }
-    FORCE_INLINE float& RelevantRef(Float2 &value) const
+    FORCE_INLINE int& RelevantRef(Int2 &value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.X;
         return value.Y;
     }
-    FORCE_INLINE float Opposite(Float2 value) const
+    FORCE_INLINE int Opposite(Int2 value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.Y;
         return value.X;
     }
-    FORCE_INLINE float& OppositeRef(Float2 &value) const
+    FORCE_INLINE int& OppositeRef(Int2 &value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.Y;
         return value.X;
     }
-    FORCE_INLINE float RelevantPad(const FudgetPadding &padding) const
+    FORCE_INLINE int RelevantPad(const FudgetPadding &padding) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return padding.Left + padding.Right;
         return padding.Top + padding.Bottom;
     }
-    FORCE_INLINE float OppositePad(const FudgetPadding &padding) const
+    FORCE_INLINE int OppositePad(const FudgetPadding &padding) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return padding.Top + padding.Bottom;
@@ -305,7 +305,7 @@ private:
     // Temporary values used during layout frame:
 
     // Available space with all slot paddings subtracted 
-    float _no_padding_space;
+    int _no_padding_space;
 
     bool _has_expanding;
     bool _has_grow_expanding;

@@ -57,18 +57,18 @@ public:
         FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
-    Float2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state,
+    Int2 Measure(FudgetControl *control, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state,
         const FudgetSingleLineTextOptions &text_options) override;
 
     /// <inheritdoc />
-    float GetKerning(Char a, Char b, float scale) const override;
+    int GetKerning(Char a, Char b, float scale) const override;
 
     /// <inheritdoc />
     int HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range,
-        FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Float2 &point) override;
+        FudgetVisualControlState state, const FudgetSingleLineTextOptions &text_options, const Int2 &point) override;
 
     /// <inheritdoc />
-    float GetFontHeight() const override;
+    int GetFontHeight() const override;
 
 private:
     FudgetDrawable *_sel_area;

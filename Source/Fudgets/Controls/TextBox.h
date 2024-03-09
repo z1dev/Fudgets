@@ -98,7 +98,7 @@ public:
     void OnSizeChanged() override;
 
     /// <inheritdoc />
-    int CharIndexAt(Float2 pos) override;
+    int CharIndexAt(Int2 pos) override;
 
     /// <inheritdoc />
     void DoPositionChanged(int old_caret_pos, int old_sel_pos) override;
@@ -128,16 +128,16 @@ public:
     CursorType GetContextCursor() const override;
 
     /// <inheritdoc />
-    Float2 GetLayoutHintSize() const override;
+    Int2 GetLayoutHintSize() const override;
 
     /// <inheritdoc />
-    Float2 GetLayoutMinSize() const override;
+    Int2 GetLayoutMinSize() const override;
 
     /// <inheritdoc />
-    Float2 GetLayoutMaxSize() const override;
+    Int2 GetLayoutMaxSize() const override;
 
     /// <inheritdoc />
-    bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
+    bool OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size) override;
 
     /// <summary>
     /// Whether the lines of a text should wrap to the new line if they are too long.
@@ -265,14 +265,14 @@ private:
 
     FudgetDrawArea _caret_draw;
     float _caret_blink_time;
-    float _caret_width;
+    int _caret_width;
 
     // Rightmost X position of the caret when moving with the up and down arrows. This is changed to -1 when
     // the caret position changes by a method that should reset it.
-    float _caret_updown_x;
+    int _caret_updown_x;
 
     // How much the contents of the text box are scrolled left or up. It is always positive
-    Float2 _scroll_pos;
+    Int2 _scroll_pos;
     String _text;
     // There was a change in the text or the control size changed that requires new measurements for the lines.
     // The measurements will take place the next time the data is needed.
@@ -286,8 +286,8 @@ private:
     FudgetAutoSizing _auto_size;
 
     // The space used for calculating the cached size.
-    float _measure_space;
+    int _measure_space;
     // Used for auto sizing
-    Float2 _cached_size;
+    Int2 _cached_size;
 };
 

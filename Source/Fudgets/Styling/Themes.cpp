@@ -184,15 +184,15 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	main_theme->SetResource((int)FudgetBasicPainterIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
 
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::FrameDraw, FudgetDrawableBuilder::End());
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.4f, .5f, .8f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.4f, .5f, .8f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::FocusedFrameDraw, FudgetDrawableBuilder::End());
 	FudgetDrawableBuilder::Begin();
-	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetPadding(2.f), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
+	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
-	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(4.f));
+	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(4));
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonHoveredSurface, Color(.85f, .85f, .85f, 1.f));

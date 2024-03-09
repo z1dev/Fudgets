@@ -146,7 +146,7 @@ public:
     /// the processing will appear.
     /// </summary>
     /// <returns>Item dimensions in the list control</returns>
-    API_PROPERTY() virtual Float2 GetDefaultItemSize() const { return _default_size; }
+    API_PROPERTY() virtual Int2 GetDefaultItemSize() const { return _default_size; }
     /// <summary>
     /// In list controls with fixed sized items, this is the size of the item to draw. If the item
     /// size is not fixed, this is the size used for unprocessed items while the item sizes haven't been
@@ -154,7 +154,7 @@ public:
     /// the processing will appear.
     /// </summary>
     /// <param name="value">Item dimensions to set</param>
-    API_PROPERTY() virtual void SetDefaultItemSize(Float2 value);
+    API_PROPERTY() virtual void SetDefaultItemSize(Int2 value);
 
     /// <summary>
     /// Gets the size of an item in the list control at the given data index. For controls with fixed sized
@@ -163,7 +163,7 @@ public:
     /// </summary>
     /// <param name="index">The index of the data item to measure</param>
     /// <returns>Item dimensions at index</returns>
-    API_FUNCTION() virtual Float2 GetItemSize(int index);
+    API_FUNCTION() virtual Int2 GetItemSize(int index);
 
     /// <summary>
     /// Whether items in the list control all have the same size. If so, use the default item size to get or
@@ -188,12 +188,12 @@ private:
     bool _owned_data;
 
     int _current;
-    Float2 _scroll_pos;
+    Int2 _scroll_pos;
     bool _fixed_item_size;
 
-    Float2 _default_size;
+    Int2 _default_size;
 
-    Array<float> _item_heights;
+    Array<int> _item_heights;
     int _size_processed;
 };
 

@@ -217,7 +217,7 @@ public:
     /// </summary>
     /// <param name="pos">Local position in the control</param>
     /// <returns>Index of character in the text</returns>
-    API_FUNCTION() virtual int CharIndexAt(Float2 pos) { return 0; };
+    API_FUNCTION() virtual int CharIndexAt(Int2 pos) { return 0; };
 
     /// <inheritdoc />
     FudgetInputResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;

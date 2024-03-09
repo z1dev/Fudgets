@@ -151,28 +151,28 @@ int FudgetGUIRoot::FudgetGUIRoot::ChangeControlAlwaysOnTop(FudgetControl *contro
 	return new_index;
 }
 
-Float2 FudgetGUIRoot::GetSize() const
+Int2 FudgetGUIRoot::GetSize() const
 {
 	if (_root != nullptr)
 		return _root->GetSize();
 	return Base::GetHintSize();
 }
 
-Float2 FudgetGUIRoot::GetHintSize() const
+Int2 FudgetGUIRoot::GetHintSize() const
 {
 	if (_root != nullptr)
 		return _root->GetSize();
 	return Base::GetHintSize();
 }
 
-Float2 FudgetGUIRoot::GetMinSize() const
+Int2 FudgetGUIRoot::GetMinSize() const
 {
 	if (_root != nullptr)
 		return _root->GetSize();
 	return Base::GetHintSize();
 }
 
-Float2 FudgetGUIRoot::GetMaxSize() const
+Int2 FudgetGUIRoot::GetMaxSize() const
 {
 	if (_root != nullptr)
 		return _root->GetSize();
@@ -329,7 +329,7 @@ bool FudgetGUIRoot::IsNavigationKey(KeyboardKeys key) const
 	return key == KeyboardKeys::ArrowLeft || key == KeyboardKeys::ArrowRight || key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown || key == KeyboardKeys::Tab;
 }
 
-void FudgetGUIRoot::OnResized(Float2 new_size)
+void FudgetGUIRoot::OnResized(Int2 new_size)
 {
 	SizeModified();
 	if (Resized.IsBinded())

@@ -89,7 +89,7 @@ enum class FudgetSizeType : uint8
     /// The maximum suggested size for a control. Layouts might make a control grow larger than the
     /// hint size, but can use this size to limit that. Layouts are allowed to ignore this value based
     /// on a slot's settings or the layout's function.
-    /// Negative values count as "infinite" size (near float limits.)
+    /// Negative values count as "infinite" size (near int limits.)
     /// </summary>
     Max,
 };
@@ -565,14 +565,14 @@ public:
     /// property (C#) or calling SetHintSize(C++).
     /// </summary>
     /// <returns>The size requested by the control or its user. Not always same as the actual size.</returns>
-    API_PROPERTY() virtual Float2 GetHintSize() const { return _hint_size; }
+    API_PROPERTY() virtual Int2 GetHintSize() const { return _hint_size; }
 
     /// <summary>
     /// The size preferred by the control that serves as a hint to the layout, which might ignore it if it doesn't fit.
     /// The standard controls should offer a sane value by default.
     /// </summary>
     /// <param name="value">The preferred size for the control.</param>
-    API_PROPERTY() virtual void SetHintSize(Float2 value);
+    API_PROPERTY() virtual void SetHintSize(Int2 value);
 
     /// <summary>
     /// The size preferred by the control for layouting purposes. This is different from GetHintSize as it can differ
@@ -581,7 +581,7 @@ public:
     /// parent layout is finalized.
     /// </summary>
     /// <returns>The size requested by the control from the parent's layout</returns>
-    API_PROPERTY(Attributes="HideInEditor, NoSerialize") virtual Float2 GetLayoutHintSize() const { return _hint_size; }
+    API_PROPERTY(Attributes="HideInEditor, NoSerialize") virtual Int2 GetLayoutHintSize() const { return _hint_size; }
 
     /// <summary>
     /// Gets the minimum size the control can be resized to while still showing its contents. The control might become
@@ -589,13 +589,13 @@ public:
     /// 
     /// </summary>
     /// <returns>The minimum size the control needs to show its contents</returns>
-    API_PROPERTY() virtual Float2 GetMinSize() const { return _min_size; }
+    API_PROPERTY() virtual Int2 GetMinSize() const { return _min_size; }
 
     /// <summary>
     /// Sets the minimum size for the control which is a hint for the layout when it has to compress its controls.
     /// </summary>
     /// <param name="value">The new minimum size.</param>
-    API_PROPERTY() virtual void SetMinSize(Float2 value);
+    API_PROPERTY() virtual void SetMinSize(Int2 value);
 
     /// <summary>
     /// The smallest size the control can fit in for layouting purposes. This is different from GetMinSize as it can
@@ -604,21 +604,21 @@ public:
     /// the parent layout is finalized.
     /// </summary>
     /// <returns>The minimum size requested by the control from the parent's layout</returns>
-    API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Float2 GetLayoutMinSize() const { return _min_size; }
+    API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Int2 GetLayoutMinSize() const { return _min_size; }
 
     /// <summary>
     /// Gets the size that determines how big a control can grow at most. The control might become larger
     /// than this size if the layout it is in doesn't respect the property.
     /// </summary>
     /// <returns>The maximum size the control is allowed to have</returns>
-    API_PROPERTY() virtual Float2 GetMaxSize() const { return _max_size; }
+    API_PROPERTY() virtual Int2 GetMaxSize() const { return _max_size; }
 
     /// <summary>
     /// Gets the size that determines how big a control can grow at most. The control might become larger
     /// than this size if the layout it is in doesn't respect the property.
     /// </summary>
     /// <returns>The maximum size the control is allowed to have</returns>
-    API_PROPERTY() virtual void SetMaxSize(Float2 value);
+    API_PROPERTY() virtual void SetMaxSize(Int2 value);
 
     /// <summary>
     /// The largest size the control needs for layouting purposes. This is different from GetMaxSize as it can
@@ -627,7 +627,7 @@ public:
     /// the parent layout is finalized.
     /// </summary>
     /// <returns>The maximum size requested by the control from the parent's layout</returns>
-    API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Float2 GetLayoutMaxSize() const { return _max_size; }
+    API_PROPERTY(Attributes = "HideInEditor, NoSerialize") virtual Int2 GetLayoutMaxSize() const { return _max_size; }
 
     /// <summary>
     /// Gets the size that the control currently occupies in its parent's layout. Be aware that this might result in
@@ -635,7 +635,7 @@ public:
     /// change it.
     /// </summary>
     /// <returns>The current size of the control.</returns>
-    API_PROPERTY() virtual Float2 GetSize() const;
+    API_PROPERTY() virtual Int2 GetSize() const;
 
     /// <summary>
     /// Gets the position of this control in its parent's layout, relative to the top-left corner of the parent's
@@ -643,20 +643,20 @@ public:
     /// the tree.
     /// </summary>
     /// <returns>The control's current position</returns>
-    API_PROPERTY() Float2 GetPosition() const;
+    API_PROPERTY() Int2 GetPosition() const;
 
     /// <summary>
     /// Modifies the position of the control in its parent's layout, relative to the top-left corner if
     /// the layout allows free positioning.
     /// </summary>
     /// <param name="value">The requested new position</param>
-    API_PROPERTY() virtual void SetPosition(Float2 value);
+    API_PROPERTY() virtual void SetPosition(Int2 value);
 
     /// <summary>
     /// The position of the control as set in SetPosition or in the last layout frame. Calling this is safe from
     /// most contexts but might result in an outdated value.
     /// </summary>
-    API_PROPERTY() virtual Float2 GetHintPosition() const { return _pos; }
+    API_PROPERTY() virtual Int2 GetHintPosition() const { return _pos; }
 
     ///// <summary>
     ///// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
@@ -670,48 +670,48 @@ public:
     /// Gets the current width the control takes up in its parent's  layout.
     /// </summary>
     /// <returns>The current width of the control</returns>
-    API_PROPERTY() virtual float GetWidth() const { return GetSize().X; }
+    API_PROPERTY() virtual int GetWidth() const { return GetSize().X; }
 
     /// <summary>
     /// Gets the current height the control takes up in its parent's  layout.
     /// </summary>
     /// <returns>The current height of the control</returns>
-    API_PROPERTY() virtual float GetHeight() const { return GetSize().Y; }
+    API_PROPERTY() virtual int GetHeight() const { return GetSize().Y; }
 
     /// <summary>
     /// Gets the local bounding rectangle of the control relative to its parent, calculating the size if necessary.
     /// </summary>
-    API_PROPERTY() Rectangle GetBoundsInParent() const { return Rectangle(GetPosition(), GetSize()); }
+    API_PROPERTY() Rectangle GetBoundsInParent() const { return Rectangle(Float2(GetPosition()), Float2(GetSize())); }
 
     /// <summary>
     /// Gets the bounding rectangle of the control relative to itself, calculating the size if necessary. The
     /// top-left corner of the rectangle is always at zero coordinates.
     /// </summary>
-    API_PROPERTY() Rectangle GetBounds() const { return Rectangle(Float2(0.f), GetSize()); }
+    API_PROPERTY() Rectangle GetBounds() const { return Rectangle(Float2(0.f), Float2(GetSize())); }
 
     /// <summary>
     /// Gets the left side's coordinate of this control in its parent's layout, relative to the top-left corner.
     /// </summary>
     /// <returns>The X component of the position</returns>
-    API_PROPERTY() virtual float GetLeft() const { return _pos.X; }
+    API_PROPERTY() virtual int GetLeft() const { return _pos.X; }
 
     /// <summary>
     /// Gets the top side's coordinate of this control in its parent's layout, relative to the top-left corner.
     /// </summary>
     /// <returns>The Y component of the position</returns>
-    API_PROPERTY() virtual float GetTop() const { return _pos.Y; }
+    API_PROPERTY() virtual int GetTop() const { return _pos.Y; }
 
     /// <summary>
     /// Gets the right side's coordinate of this control in its parent's layout, relative to the top-left corner.
     /// </summary>
     /// <returns>The coordinate of the control's right side</returns>
-    API_PROPERTY() float GetRight() const { return GetLeft() + GetWidth(); }
+    API_PROPERTY() int GetRight() const { return GetLeft() + GetWidth(); }
 
     /// <summary>
     /// Gets the bottom side's coordinate of this control in its parent's layout, relative to the top-left corner.
     /// </summary>
     /// <returns>The coordinate of the control's bottom side</returns>
-    API_PROPERTY() float GetBottom() const { return GetTop() + GetHeight(); }
+    API_PROPERTY() int GetBottom() const { return GetTop() + GetHeight(); }
 
     /// <summary>
     /// Whether the control might change any of its requested sizes depending on the available space. For example when
@@ -732,7 +732,7 @@ public:
     /// <param name="min_size">The smallest size in either direction the control can still fit in.</param>
     /// <param name="max_size">The largest size that might be useful for the control.</param>
     /// <returns>Whether the control (or its contents in case of container) would return true when calling SizeDependsOnSpace</returns>
-    API_FUNCTION() virtual bool OnMeasure(Float2 available, API_PARAM(Out) Float2 &wanted, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size);
+    API_FUNCTION() virtual bool OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size);
 
     /// <summary>
     /// Marks layouts dirty when the control changes in a way that influences its size.
@@ -833,7 +833,7 @@ public:
     /// </summary>
     /// <param name="local">The coordinate relative to the top-left corner of the control</param>
     /// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
-    API_FUNCTION() virtual Float2 CachedLocalToGlobal(Float2 local) const;
+    API_FUNCTION() virtual Float2 CachedLocalToGlobal(Float2 local, Float2 offset = Float2::Zero) const;
 
     /// <summary>
     /// Converts a coordinate from global UI space to local control space. Can be used multiple times after
@@ -841,7 +841,7 @@ public:
     /// </summary>
     /// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
     /// <returns>The coordinate relative to the top-left corner of the control</returns>
-    API_FUNCTION() virtual Float2 CachedGlobalToLocal(Float2 global) const;
+    API_FUNCTION() virtual Float2 CachedGlobalToLocal(Float2 global, Float2 offset = Float2::Zero) const;
 
     /// <summary>
     /// Converts a rectangle from local control space to global UI space. Can be used multiple times after
@@ -849,7 +849,7 @@ public:
     /// </summary>
     /// <param name="local">The rectangle with a location relative to the top-left corner of the control</param>
     /// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
-    API_FUNCTION() virtual Rectangle CachedLocalToGlobal(const Rectangle &local) const;
+    API_FUNCTION() virtual Rectangle CachedLocalToGlobal(const Rectangle &local, Float2 offset = Float2::Zero) const;
 
     /// <summary>
     /// Converts a rectangle from global UI space to local control space. Can be used multiple times after
@@ -857,7 +857,7 @@ public:
     /// </summary>
     /// <param name="global">TThe rectangle with a location relative to the top-left corner of the UI screen</param>
     /// <returns>The coordinate relative to the top-left corner of the control</returns>
-    API_FUNCTION() virtual Rectangle CachedGlobalToLocal(const Rectangle &global) const;
+    API_FUNCTION() virtual Rectangle CachedGlobalToLocal(const Rectangle &global, Float2 offset = Float2::Zero) const;
 
     // Control flags
 
@@ -1145,7 +1145,7 @@ public:
     /// <param name="pos">Position relative to the control</param>
     /// <param name="size">Size of control</param>
     /// <param name="color">Color to use for filling</param>
-    API_FUNCTION() void FillRectangle(Float2 pos, Float2 size, Color color);
+    API_FUNCTION() void FillRectangle(Int2 pos, Int2 size, Color color);
 
     /// <summary>
     /// Wrapper to Render2D's FillRectangle.
@@ -1359,7 +1359,7 @@ public:
     /// <param name="color">The text color.</param>
     /// <param name="location">The text location.</param>
     /// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-    API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
+    API_FUNCTION() void DrawText(Font* font, const StringView& text, const Color& color, const Int2& location, MaterialBase* customMaterial = nullptr);
 
     /// <summary>
     /// Wrapper to Render2D's DrawText
@@ -1370,7 +1370,7 @@ public:
     /// <param name="color">The text color.</param>
     /// <param name="location">The text location.</param>
     /// <param name="customMaterial">The custom material for font characters rendering. It must contain texture parameter named Font used to sample font texture.</param>
-    API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Float2& location, MaterialBase* customMaterial = nullptr);
+    API_FUNCTION() void DrawText(Font* font, const StringView& text, API_PARAM(Ref) const TextRange& textRange, const Color& color, const Int2& location, MaterialBase* customMaterial = nullptr);
 
     /// <summary>
     /// Wrapper to Render2D's DrawText
@@ -1881,7 +1881,7 @@ public:
 
     /// <summary>
     /// Tries to get the font draw settings for the passed id. The result will be a valid draw settings
-    /// whether the original value is a draw setting, a Float2, a color or a material id.
+    /// whether the original value is a draw setting, a Int2, a color or a material id.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
     /// <param name="id">Id of a font draw settings value in the active styles</param>
@@ -2199,7 +2199,7 @@ private:
     /// </summary>
     /// <param name="pos">The new position</param>
     /// <param name="size">The new size</param>
-    virtual void LayoutUpdate(Float2 pos, Float2 size);
+    virtual void LayoutUpdate(Int2 pos, Int2 size);
 
     // Creates an array of names based on the control's type and its ancestor classes' type names, starting with the most derived class.
     void CreateClassNames();
@@ -2215,12 +2215,12 @@ private:
     // Cursor shown for controls that don't let the mouse pass through on mouse move.
     CursorType _cursor;
 
-    Float2 _pos;
-    Float2 _size;
+    Int2 _pos;
+    Int2 _size;
 
-    Float2 _hint_size;
-    Float2 _min_size;
-    Float2 _max_size;
+    Int2 _hint_size;
+    Int2 _min_size;
+    Int2 _max_size;
 
     FudgetControlState _state_flags;
 

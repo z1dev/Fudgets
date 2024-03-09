@@ -16,7 +16,7 @@ class FUDGETS_API FudgetStackLayout : public FudgetLayout
 
 protected:
 	/// <inheritdoc />
-	void LayoutChildren(Float2 space, FudgetContainer *owner, int count) override;
+	void LayoutChildren(Int2 space, FudgetContainer *owner, int count) override;
 
 	/// <inheritdoc />
 	FudgetLayoutFlag GetInitFlags() const override;

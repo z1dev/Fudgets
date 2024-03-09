@@ -50,14 +50,14 @@ public partial struct FudgetTextDrawSettings
     /// <summary>
     /// Initialize structure with white font and no other influencing setting
     /// </summary>
-    public FudgetTextDrawSettings() : this(new Float2(0.0f), Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    public FudgetTextDrawSettings() : this(new Int2(0), Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0), -1)
     {
     }
 
     /// <summary>
     /// Initialize structure with every setting
     /// </summary>
-    public FudgetTextDrawSettings(Float2 offset, Color color, TextAlignment horzAlign, TextAlignment vertAlign, FudgetPadding padding, int material_id)
+    public FudgetTextDrawSettings(Int2 offset, Color color, TextAlignment horzAlign, TextAlignment vertAlign, FudgetPadding padding, int material_id)
     {
         Offset = offset;
         Color = color;
@@ -70,28 +70,28 @@ public partial struct FudgetTextDrawSettings
     /// <summary>
     /// Initialize structure with text color
     /// </summary>
-    public FudgetTextDrawSettings(Color color) : this(new Float2(0.0f), color, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    public FudgetTextDrawSettings(Color color) : this(new Int2(0), color, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0), -1)
     {
     }
 
     /// <summary>
     /// Initialize structure with draw offset
     /// </summary>
-    public FudgetTextDrawSettings(Float2 offset) : this(offset, Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0.0f), -1)
+    public FudgetTextDrawSettings(Int2 offset) : this(offset, Color.White, TextAlignment.Near, TextAlignment.Center, new FudgetPadding(0), -1)
     {
     }
 
     /// <summary>
     /// Initialize structure with padding
     /// </summary>
-    public FudgetTextDrawSettings(FudgetPadding padding) : this(new Float2(0.0f), Color.White, TextAlignment.Near, TextAlignment.Center, padding, -1)
+    public FudgetTextDrawSettings(FudgetPadding padding) : this(new Int2(0), Color.White, TextAlignment.Near, TextAlignment.Center, padding, -1)
     {
     }
 
     /// <summary>
     /// Initialize structure with text alignment
     /// </summary>
-    public FudgetTextDrawSettings(TextAlignment horzAlign, TextAlignment vertAlign) : this(new Float2(0.0f), Color.White, horzAlign, vertAlign, new FudgetPadding(0.0f), -1)
+    public FudgetTextDrawSettings(TextAlignment horzAlign, TextAlignment vertAlign) : this(new Int2(0), Color.White, horzAlign, vertAlign, new FudgetPadding(0), -1)
     {
     }
 }
@@ -112,7 +112,7 @@ public partial struct FudgetDrawArea
         TextureOffset = new Float2(0.0f);
         TextureScale = new Float2(1.0f);
         Texture = null;
-        Borders = new FudgetPadding(-1.0f);
+        Borders = new FudgetBorder(-1f);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public partial struct FudgetDrawArea
     /// <param name="borders">The width of borders on each side</param>
     /// <param name="color">Color of the border</param>
     /// <param name="border_type">Where to draw the border</param>
-    public FudgetDrawArea(FudgetPadding borders, Color color, FudgetFrameType border_type) 
+    public FudgetDrawArea(FudgetBorder borders, Color color, FudgetFrameType border_type) 
     {
         AreaType = FudgetFillType.Color |
             (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
@@ -150,7 +150,7 @@ public partial struct FudgetDrawArea
         Texture = texture;
         TextureOffset = tex_offset;
         TextureScale = tex_scale;
-        Borders = new FudgetPadding(-1.0f);
+        Borders = new FudgetBorder(-1f);
     }
 
     /// <summary>
@@ -164,7 +164,7 @@ public partial struct FudgetDrawArea
     /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
     /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
     /// <param name="tint">Color to multiply the texture with</param>
-    public FudgetDrawArea(TextureBase texture, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch, bool point_tex, Float2 tex_offset, Float2 tex_scale, Color tint)
+    public FudgetDrawArea(TextureBase texture, FudgetBorder border_widths, FudgetFrameType border_type, bool stretch, bool point_tex, Float2 tex_offset, Float2 tex_scale, Color tint)
     {
         AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_tex ? FudgetFillType.Point : FudgetFillType.None) |
             (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
@@ -192,7 +192,7 @@ public partial struct FudgetDrawArea
         TextureOffset = tex_offset;
         TextureScale = tex_scale;
         Texture = texture;
-        Borders = borders_9p;
+        Borders = borders_9p.AsBorder;
     }
 
     /// <summary>
@@ -213,7 +213,7 @@ public partial struct FudgetDrawArea
         TextureScale = tex_scale;
         Texture = null;
         SpriteHandle = new FudgetSpriteHandle(sprite_handle);
-        Borders = new FudgetPadding(-1.0f);
+        Borders = new FudgetBorder(-1f);
     }
 
     /// <summary>
@@ -227,7 +227,7 @@ public partial struct FudgetDrawArea
     /// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
     /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
     /// <param name="tint">Color to multiply the sprite with</param>
-    FudgetDrawArea(SpriteHandle sprite_handle, FudgetPadding border_widths, FudgetFrameType border_type, bool stretch, bool point_sprite, Float2 tex_offset, Float2 tex_scale, Color tint)
+    FudgetDrawArea(SpriteHandle sprite_handle, FudgetBorder border_widths, FudgetFrameType border_type, bool stretch, bool point_sprite, Float2 tex_offset, Float2 tex_scale, Color tint)
     {
         AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_sprite ? FudgetFillType.Point : FudgetFillType.None) |
             (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
@@ -259,6 +259,6 @@ public partial struct FudgetDrawArea
         TextureScale = tex_scale;
         Texture = null;
         SpriteHandle = new FudgetSpriteHandle(sprite_handle);
-        Borders = borders_9p;
+        Borders = borders_9p.AsBorder;
     }
 }

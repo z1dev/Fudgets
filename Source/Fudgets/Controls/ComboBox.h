@@ -89,9 +89,9 @@ public:
     /// <inheritdoc />
     FudgetLayoutFlag ProxyInterfaceGetInitFlags() const override;
     /// <inheritdoc />
-    void ProxyInterfacePreLayoutChildren(Float2 space) override;
+    void ProxyInterfacePreLayoutChildren(Int2 space) override;
     /// <inheritdoc />
-    void ProxyInterfaceLayoutChildren(Float2 space) override;
+    void ProxyInterfaceLayoutChildren(Int2 space) override;
 
     ///// <inheritdoc />
     //bool ProxyInterfaceMeasure(Float2 available, API_PARAM(Out) Float2 &wanted_size, API_PARAM(Out) Float2 &min_size, API_PARAM(Out) Float2 &max_size) override;
@@ -123,7 +123,7 @@ private:
     FudgetFramedFieldPainter *_frame_painter;
     FudgetPartPainterMapping default_frame_painter_mapping;
 
-    float _button_width;
+    int _button_width;
 
     /// <summary>
     /// LineEdit control for input

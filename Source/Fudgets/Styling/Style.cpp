@@ -641,9 +641,9 @@ bool FudgetStyle::TextDrawSettingsFromVariant(const Variant &var, FudgetTextDraw
         return true;
     }
 
-    if (var.Type.Type == VariantType::Float2)
+    if (var.Type.Type == VariantType::Int2)
     {
-        result = FudgetTextDrawSettings(var.AsFloat2());
+        result = FudgetTextDrawSettings(var.AsInt2());
         return true;
     }
 
