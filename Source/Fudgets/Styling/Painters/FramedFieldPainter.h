@@ -15,12 +15,12 @@ enum class FudgetFramedFieldPainterIds
     DownFieldBackground,
     DisabledFieldBackground,
     FocusedFieldBackground,
-    FieldPadding,
-    HoveredFieldPadding,
-    PressedFieldPadding,
-    DownFieldPadding,
-    DisabledFieldPadding,
-    FocusedFieldPadding,
+    FieldDrawPadding,
+    HoveredFieldDrawPadding,
+    PressedFieldDrawPadding,
+    DownFieldDrawPadding,
+    DisabledFieldDrawPadding,
+    FocusedFieldDrawPadding,
 
     FrameDraw,
     HoveredFrameDraw,
@@ -28,13 +28,14 @@ enum class FudgetFramedFieldPainterIds
     DownFrameDraw,
     FocusedFrameDraw,
     DisabledFrameDraw,
-    FramePadding,
-    HoveredFramePadding,
-    PressedFramePadding,
-    DownFramePadding,
-    FocusedFramePadding,
-    DisabledFramePadding,
+    FrameDrawPadding,
+    HoveredFrameDrawPadding,
+    PressedFrameDrawPadding,
+    DownFrameDrawPadding,
+    FocusedFrameDrawPadding,
+    DisabledFrameDrawPadding,
 
+    Padding,
     ContentPadding,
 };
 
@@ -51,12 +52,12 @@ struct FUDGETS_API FudgetFramedFieldPainterResources
     API_FIELD() int DownFieldBackground = 0;
     API_FIELD() int DisabledFieldBackground = 0;
     API_FIELD() int FocusedFieldBackground = 0;
-    API_FIELD() int FieldPadding = 0;
-    API_FIELD() int HoveredFieldPadding = 0;
-    API_FIELD() int PressedFieldPadding = 0;
-    API_FIELD() int DownFieldPadding = 0;
-    API_FIELD() int DisabledFieldPadding = 0;
-    API_FIELD() int FocusedFieldPadding = 0;
+    API_FIELD() int FieldDrawPadding = 0;
+    API_FIELD() int HoveredFieldDrawPadding = 0;
+    API_FIELD() int PressedFieldDrawPadding = 0;
+    API_FIELD() int DownFieldDrawPadding = 0;
+    API_FIELD() int DisabledFieldDrawPadding = 0;
+    API_FIELD() int FocusedFieldDrawPadding = 0;
 
     API_FIELD() int FrameDraw = 0;
     API_FIELD() int HoveredFrameDraw = 0;
@@ -64,13 +65,14 @@ struct FUDGETS_API FudgetFramedFieldPainterResources
     API_FIELD() int DownFrameDraw = 0;
     API_FIELD() int FocusedFrameDraw = 0;
     API_FIELD() int DisabledFrameDraw = 0;
-    API_FIELD() int FramePadding = 0;
-    API_FIELD() int HoveredFramePadding = 0;
-    API_FIELD() int PressedFramePadding = 0;
-    API_FIELD() int DownFramePadding = 0;
-    API_FIELD() int FocusedFramePadding = 0;
-    API_FIELD() int DisabledFramePadding = 0;
+    API_FIELD() int FrameDrawPadding = 0;
+    API_FIELD() int HoveredFrameDrawPadding = 0;
+    API_FIELD() int PressedFrameDrawPadding = 0;
+    API_FIELD() int DownFrameDrawPadding = 0;
+    API_FIELD() int FocusedFrameDrawPadding = 0;
+    API_FIELD() int DisabledFrameDrawPadding = 0;
 
+    API_FIELD() int Padding = 0;
     API_FIELD() int ContentPadding = 0;
 };
 
@@ -92,11 +94,15 @@ public:
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;
 
+    /// <summary>
+    /// Padding inside the rectangle of the painted frame.
+    /// </summary>
+    API_PROPERTY() FORCE_INLINE FudgetPadding GetPadding() const { return _padding; }
 
     /// <summary>
-    /// Padding inside the rectangle of the painted frame that restricts the size of the contents inside the frame
+    /// Padding inside the rectangle of the painted frame that includes extra padding for contents.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _inner_padding; }
+    API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _content_padding; }
 private:
     FudgetDrawable *_field_bg;
     FudgetDrawable *_hovered_field_bg;
@@ -124,7 +130,8 @@ private:
     FudgetPadding _focused_frame_padding;
     FudgetPadding _disabled_frame_padding;
 
-    FudgetPadding _inner_padding;
+    FudgetPadding _padding;
+    FudgetPadding _content_padding;
 
     FudgetStateOrder *_state_order;
 };

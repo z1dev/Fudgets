@@ -41,7 +41,11 @@ enum class FudgetBasicPainterIds
     /// </summary>
     HoveredFrameDraw,
     /// <summary>
-    /// Padding inside the frame for the contents, used for the standard framed controls
+    /// Padding inside the frame of a control or drawable.
+    /// </summary>
+    Padding,
+    /// <summary>
+    /// Padding inside the frame of a control or drawable that includes extra padding for contents.
     /// </summary>
     ContentPadding,
 

@@ -11,7 +11,7 @@
 
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
-    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _last_mouse_pos(0.f)
+    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _button_capturing(false), _last_mouse_pos(0.f)
 {
 
 }
@@ -102,34 +102,34 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
 
-    if ((MouseIsCaptured() && _editor_capturing) || (!MouseIsCaptured() && pos.X <= GetWidth() - GetInnerPadding().Right - _button_width))
-    {
-        return _editor->OnMouseDown(pos - GetInnerPadding().UpperLeft(), global_pos, button, double_click);
-    }
-    else
-    {
-        _editor_capturing = false;
+    if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
+        return _editor->OnMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
+    else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
         return _button->OnMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
-    }
 }
 
 bool FudgetComboBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
+    if (!MouseIsCaptured())
+        return true;
 
-    if ((MouseIsCaptured() && _editor_capturing) || (!MouseIsCaptured() && pos.X <= GetWidth() - GetInnerPadding().Right - _button_width))
-        return _editor->OnMouseUp(pos - GetInnerPadding().UpperLeft(), global_pos, button);
-    else
-        return _button->OnMouseUp(pos - _button->GetPosition(), global_pos, button);
+    bool r = true;
+    if (_editor_capturing)
+        r = _editor->OnMouseUp(pos - _editor->GetPosition(), global_pos, button);
+    else if (_button_capturing)
+        r =  _button->OnMouseUp(pos - _button->GetPosition(), global_pos, button);
+
+    return r;
 }
 
 void FudgetComboBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
 
-    if ((MouseIsCaptured() && _editor_capturing) || (!MouseIsCaptured() && pos.X <= GetWidth() - GetInnerPadding().Right - _button_width))
-        _editor->OnMouseMove(pos - GetInnerPadding().UpperLeft(), global_pos);
-    else
+    if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
+        _editor->OnMouseMove(pos - _editor->GetPosition(), global_pos);
+    else if(_button_capturing || (!_editor_capturing && PosOnButton(pos)))
         _button->OnMouseMove(pos - _button->GetPosition(), global_pos);
 }
 
@@ -137,9 +137,9 @@ void FudgetComboBox::OnMouseEnter(Float2 pos, Float2 global_pos)
 {
     HandleEnterLeaveMouse(pos, global_pos, true);
 
-    if (pos.X <= GetWidth() - GetInnerPadding().Right - _button_width)
-        _editor->DoMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
-    else
+    if (PosOnEditor(pos))
+        _editor->DoMouseEnter(pos - _editor->GetPosition(), global_pos);
+    else if (PosOnButton(pos))
         _button->DoMouseEnter(pos - _button->GetPosition(), global_pos);
 }
 
@@ -154,7 +154,8 @@ void FudgetComboBox::OnMouseCaptured()
     Base::OnMouseCaptured();
     if (MouseIsCaptured())
     {
-        _editor_capturing = _last_mouse_pos.X <= GetWidth() - GetInnerPadding().Right - _button_width;
+        _editor_capturing = PosOnEditor(_last_mouse_pos);
+        _button_capturing = !_editor_capturing && PosOnButton(_last_mouse_pos);
         if (_editor_capturing)
             _editor->DoMouseCaptured();
         else
@@ -169,6 +170,8 @@ void FudgetComboBox::OnMouseReleased()
         _editor->DoMouseReleased();
     else
         _button->DoMouseReleased();
+    _editor_capturing = false;
+    _button_capturing = false;
 }
 
 void FudgetComboBox::OnSizeChanged()
@@ -205,21 +208,25 @@ void FudgetComboBox::ProxyInterfaceLayoutChildren(Int2 space)
     Int2 txt_max = Int2::Zero;
     _layout->GetSlotMeasures(0, Int2(-1), txt_wanted, txt_min, txt_max);
 
-    FudgetPadding inner = GetInnerPadding();
-    Int2 min = txt_min + inner.Size() + Int2(_button_width, 0);
+    FudgetPadding text_padding = GetTextPadding();
+    FudgetPadding button_padding = GetButtonPadding();
+    text_padding.Right = button_padding.Right + _button_width;
+
+    Int2 min = txt_min + text_padding.Size();
     min.X = Math::Max(min.X, Base::GetMinSize().X);
-    Int2 normal = txt_wanted + inner.Size() + Int2(_button_width, 0);
+    Int2 wanted = txt_wanted + text_padding.Size();
 
     if (!_layout->IsUnrestrictedSpace(space))
     {
-        normal.X = Math::Min(space.X, Base::GetMaxSize().X);
+        wanted.X = Math::Max(min.X, Math::Min(space.X, Base::GetMaxSize().X));
 
-        _layout->SetComputedBounds(0, inner.UpperLeft(), Int2::Max(Int2::Min(space, normal), min) - Int2(inner.Width() + _button_width, inner.Height()));
-        _layout->SetComputedBounds(1, Int2(Math::Max(Math::Min(space.X, normal.X), min.X) - _button_width - inner.Right, 0), Int2(_button_width, Math::Max(Math::Min(space.Y, normal.Y), min.Y)  ));
+        _layout->SetComputedBounds(0, text_padding.UpperLeft(), Int2::Max(Int2::Min(space, wanted), min) - text_padding.Size());
+        Int2 btn_pos = Int2(wanted.X - button_padding.Right - _button_width, button_padding.Top);
+        _layout->SetComputedBounds(1, btn_pos, Int2(Math::Min(_button_width, space.X - button_padding.Width()), Math::Max(Math::Min(space.Y, wanted.Y), min.Y) - button_padding.Height()));
     }
-    txt_max.Y = normal.Y;
 
-    _layout->SetControlSizes(FudgetLayoutSizeCache(space, normal, min, AddBigValues(txt_max, Int2(_button_width, 0), inner.Size()), false));
+    txt_max.Y = wanted.Y;
+    _layout->SetControlSizes(FudgetLayoutSizeCache(space, wanted, min, AddBigValues(txt_max, text_padding.Size()), false));
 }
 
 bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
@@ -239,9 +246,29 @@ FudgetControlFlag FudgetComboBox::GetInitFlags() const
         FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | FudgetControlFlag::CompoundControl | Base::GetInitFlags();
 }
 
-FudgetPadding FudgetComboBox::GetInnerPadding() const
+FudgetPadding FudgetComboBox::GetTextPadding() const
 {
     return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
+}
+
+FudgetPadding FudgetComboBox::GetButtonPadding() const
+{
+    return _frame_painter != nullptr ? _frame_painter->GetPadding() : FudgetPadding(0);
+}
+
+bool FudgetComboBox::PosOnEditor(Float2 pos) const
+{
+    FudgetPadding pad = GetTextPadding();
+    pad.Right = GetButtonPadding().Right + _button_width;
+
+    return pad.Padded(GetBounds()).Contains(pos);
+}
+
+bool FudgetComboBox::PosOnButton(Float2 pos) const
+{
+    FudgetPadding pad = GetButtonPadding();
+    Rectangle r = GetBounds();
+    return pos.Y >= r.GetTop() + pad.Top && pos.Y <= r.GetBottom() - pad.Bottom && pos.X > Math::Max((float)pad.Left, r.GetRight() - pad.Right - _button_width) && pos.X < r.GetRight() - pad.Right;
 }
 
 void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter)
@@ -249,16 +276,16 @@ void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool o
     if (MouseIsCaptured())
         return;
 
-    bool was_editor = !on_enter && _last_mouse_pos.X <= GetWidth() - GetInnerPadding().Right - _button_width;
-    bool is_editor = pos.X >= 0 && pos.X <= GetWidth() - GetInnerPadding().Right - _button_width;
+    bool was_editor = !on_enter && PosOnEditor(_last_mouse_pos);
+    bool is_editor = PosOnEditor(pos);
 
     if (was_editor && !is_editor)
         _editor->DoMouseLeave();
     else if (!was_editor && is_editor)
-        _editor->DoMouseEnter(pos - GetInnerPadding().UpperLeft(), global_pos);
+        _editor->DoMouseEnter(pos - _editor->GetPosition(), global_pos);
 
-    bool was_button = !on_enter && _last_mouse_pos.X > GetWidth() - GetInnerPadding().Right - _button_width;
-    bool is_button = pos.X > GetWidth() - GetInnerPadding().Right - _button_width;
+    bool was_button = !on_enter && !was_editor && PosOnButton(_last_mouse_pos);
+    bool is_button = !is_editor && PosOnButton(pos);
 
     if (was_button && !is_button)
         _button->DoMouseLeave();

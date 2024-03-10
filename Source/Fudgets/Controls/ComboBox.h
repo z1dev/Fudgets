@@ -110,7 +110,11 @@ protected:
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 private:
-    FudgetPadding GetInnerPadding() const;
+    FudgetPadding GetTextPadding() const;
+    FudgetPadding GetButtonPadding() const;
+
+    bool PosOnEditor(Float2 pos) const;
+    bool PosOnButton(Float2 pos) const;
 
     void HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter);
 
@@ -141,5 +145,6 @@ private:
     FudgetStringListProvider *_list_data;
 
     bool _editor_capturing;
+    bool _button_capturing;
     Float2 _last_mouse_pos;
 };

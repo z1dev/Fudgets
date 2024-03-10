@@ -192,6 +192,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	FudgetDrawableBuilder::Begin();
 	FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
 	main_theme->SetResource((int)FudgetBasicPainterIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
+	main_theme->SetResource((int)FudgetBasicPainterIds::Padding, FudgetPadding(1));
 	main_theme->SetResource((int)FudgetBasicPainterIds::ContentPadding, FudgetPadding(4));
 
 	main_theme->SetResource((int)FudgetBasicPainterIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
@@ -211,6 +212,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::FocusedFrameDraw, (int)FudgetBasicPainterIds::FocusedFrameDraw);
 	//main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::HoveredFrameDraw, (int)FudgetBasicPainterIds::HoveredFrameDraw);
 
+	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::Padding, (int)FudgetBasicPainterIds::Padding);
 	main_theme->SetForwarding((int)FudgetFramedFieldPainterIds::ContentPadding, (int)FudgetBasicPainterIds::ContentPadding);
 
 	// Button:
