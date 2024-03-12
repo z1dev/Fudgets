@@ -63,6 +63,19 @@ FudgetTheme::FudgetTheme(const FudgetTheme &ori) : FudgetTheme()
     _resources = ori._resources;
 }
 
+const String& FudgetTheme::GetClassStyleName(const String &class_name) const
+{
+    String *result = _class_styles.TryGet(class_name);
+    if (result != nullptr)
+        return *result;
+    return class_name;
+}
+
+void FudgetTheme::SetClassStyleName(const String &class_name, const String &style_name)
+{
+    _class_styles[class_name] = style_name;
+}
+
 bool FudgetTheme::GetResource(int res_id, API_PARAM(Out) Variant &result) const
 {
     auto it = _resources.find(res_id);
@@ -484,6 +497,13 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImagePadding, FudgetThemePartIds::ComboBoxButtonDisabledImagePadding);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HorzImageAlign, FudgetThemePartIds::ComboBoxButtonImageHorzAlignment);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::VertImageAlign, FudgetThemePartIds::ComboBoxButtonImageVertAlignment);
+
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetButton"), IMAGE_BUTTON_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetTextBox"), FRAMED_MULTILINE_TEXT_INPUT_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetLineEdit"), FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetListBox"), FRAMED_CONTROL_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetComboBox"), COMBOBOX_STYLE);
+    
 }
 
 
@@ -531,9 +551,9 @@ void FudgetThemes::Uninitialize(bool in_game)
 
     _data->_font_asset_map.Clear();
 
-    for (auto p : _data->_style_area_list)
+    for (auto p : _data->_draw_list)
         delete p;
-    _data->_style_area_list.clear();
+    _data->_draw_list.clear();
 
 
     for (auto p : _data->_state_order_list)
@@ -641,11 +661,14 @@ FudgetStyle* FudgetThemes::GetStyle(const String &style_name)
     return it->Value;
 }
 
-FudgetStyle* FudgetThemes::FindMatchingStyle(const Array<String> &class_names)
+FudgetStyle* FudgetThemes::FindMatchingStyle(FudgetTheme *theme, const Array<String> &class_names)
 {
+    if (theme == nullptr)
+        return nullptr;
+
     for (int ix = 0, siz = class_names.Count(); ix < siz; ++ix)
     {
-        FudgetStyle *style = GetStyle(class_names[ix]);
+        FudgetStyle *style = GetStyle(theme->GetClassStyleName(class_names[ix]));
         if (style != nullptr)
             return style;
     }
@@ -672,20 +695,20 @@ int FudgetThemes::RegisterDrawInstructionList(FudgetDrawInstructionList *drawlis
     if (drawlist == nullptr || IsDrawInstructionListRegistered(drawlist))
         return -1;
 
-    _data->_style_area_list.push_back(drawlist);
-    return (int)_data->_style_area_list.size() - 1;
+    _data->_draw_list.push_back(drawlist);
+    return (int)_data->_draw_list.size() - 1;
 }
 
 bool FudgetThemes::IsDrawInstructionListRegistered(FudgetDrawInstructionList *drawlist)
 {
-    return std::find(_data->_style_area_list.begin(), _data->_style_area_list.end(), drawlist) != _data->_style_area_list.end();
+    return std::find(_data->_draw_list.begin(), _data->_draw_list.end(), drawlist) != _data->_draw_list.end();
 }
 
 FudgetDrawInstructionList* FudgetThemes::GetDrawInstructionList(int drawlist_index)
 {
-    if (drawlist_index < 0 || drawlist_index >= _data->_style_area_list.size())
+    if (drawlist_index < 0 || drawlist_index >= _data->_draw_list.size())
         return nullptr;
-    return _data->_style_area_list[drawlist_index];
+    return _data->_draw_list[drawlist_index];
 }
 
 int FudgetThemes::RegisterStateOrder(FudgetStateOrder *orderlist)

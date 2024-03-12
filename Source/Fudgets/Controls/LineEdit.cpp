@@ -10,8 +10,8 @@
 FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
     _blink_passed(0.0f), _character_scroll_count(0), _caret_blink_time(1.0f), _caret_width(2), _scroll_pos(0), _show_border(true)
 {
-    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
-    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetLineEdit>();
+    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
+    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetLineEdit>();
 }
 
 void FudgetLineEdit::OnInitialize()

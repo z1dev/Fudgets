@@ -736,10 +736,10 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *dra
         const FudgetDrawableIndex *drawindex = var.AsStructure<FudgetDrawableIndex>();
         if (drawindex != nullptr)
         {
-            FudgetDrawInstructionList *arealist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
-            if (arealist == nullptr)
+            FudgetDrawInstructionList *drawlist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
+            if (drawlist == nullptr)
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, arealist);
+            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, drawlist);
             return true;
         }
     }

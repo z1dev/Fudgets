@@ -16,8 +16,8 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_p
     _scroll_pos(0), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
     _auto_size(FudgetAutoSizing::None), _measure_space(-1), _cached_size(-1)
 {
-    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_MULTILINE_TEXT_INPUT_STYLE);
-    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetTextBox>();
+    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_MULTILINE_TEXT_INPUT_STYLE);
+    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetTextBox>();
 }
 
 void FudgetTextBox::OnInitialize()

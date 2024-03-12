@@ -989,7 +989,7 @@ FudgetStyle* FudgetControl::GetClassStyle()
     if (!_style_name.IsEmpty())
         _cached_style = FudgetThemes::GetStyle(_style_name);
     if (_cached_style == nullptr)
-        _cached_style = FudgetThemes::FindMatchingStyle(_class_names);
+        _cached_style = FudgetThemes::FindMatchingStyle(GetActiveTheme(), _class_names);
 
     if (_cached_style != nullptr)
         SizeModified();

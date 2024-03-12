@@ -113,8 +113,8 @@ FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_p
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
 
-    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_CONTROL_STYLE);
-    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetListBox>();
+    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_CONTROL_STYLE);
+    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetListBox>();
 }
 
 FudgetListBox::~FudgetListBox()

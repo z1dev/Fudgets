@@ -68,6 +68,22 @@ public:
     FudgetTheme(const FudgetTheme &ori);
 
     /// <summary>
+    /// Retreives the name of the style associated with a class' full name. It's used to get the style when a control of
+    /// this class tries to paint itself.
+    /// </summary>
+    /// <param name="class_name">The full name of the class to get the style name for</param>
+    /// <returns>Name of the style used for the class in this theme. Returns the class name itself if not set.</returns>
+    API_FUNCTION() const String& GetClassStyleName(const String &class_name) const;
+
+    /// <summary>
+    /// Sets the name of the style to associate with a class' full name. It's used to get the style when a control of
+    /// this class tries to paint itself.
+    /// </summary>
+    /// <param name="class_name">he full name of the class to set the style name for</param>
+    /// <param name="style_name">Name of the style to use for the class in this theme.</param>
+    API_FUNCTION() void SetClassStyleName(const String &class_name, const String &style_name);
+
+    /// <summary>
     /// Gets a resource by an integer id or nothing if the resource is not found. The resource can be of any type.
     /// Its use only depends on the styles and controls that access it.
     /// </summary>
@@ -144,44 +160,6 @@ public:
         SetForwarding((int)res_id, (int)forward_id);
     }
 
-
-    //template<typename R, typename T>
-    //typename std::enable_if<std::is_enum<R>::value && Fudget_is_class<T>(), void>::type SetResource(R res_id, const T &value)
-    //{
-    //    SetResource((int)res_id, StructToVariant(value));
-    //}
-
-    //template<typename R>
-    //typename std::enable_if<std::is_enum<R>::value, void>::type SetResource(R res_id, const Variant &value)
-    //{
-    //    SetResource((int)res_id, value);
-    //}
-
-
-    //template<typename R, typename T>
-    //typename std::enable_if<std::is_enum<R>::value && std::is_enum<T>::value, void>::type SetResource(R res_id, const T &value)
-    //{
-    //    SetResource((int)res_id, EnumToVariant(value));
-    //}
-
-    //template<typename R>
-    //typename std::enable_if<std::is_enum<R>::value> SetForwarding(R res_id, int forward_id)
-    //{
-    //    return SetForwarding((int)res_id, forward_id);
-    //}
-
-    //template<typename R, typename T>
-    //typename std::enable_if<std::is_enum<R>::value && std::is_enum<T>::value> SetForwarding(R res_id, T forward_id)
-    //{
-    //    return SetForwarding((int)res_id, (int)forward_id);
-    //}
-
-    //template<typename T>
-    //typename std::enable_if<std::is_enum<T>::value> SetForwarding(int res_id, T forward_id)
-    //{
-    //    return SetForwarding(res_id, (int)forward_id);
-    //}
-
 private:
     /// <summary>
     /// Creates a theme that is a duplicate of this theme. All values will be matching. This also means that if an object
@@ -196,6 +174,11 @@ private:
     /// shouldn't be changed directly, because styles cache the values and they won't be refreshed.
     /// </summary>
     std::map<int, Variant> _resources;
+
+    /// <summary>
+    /// Mapping between a class full name to the style name they use by default in this theme.
+    /// </summary>
+    Dictionary<String, String> _class_styles;
 
     friend class FudgetThemes;
 };
@@ -405,9 +388,10 @@ public:
     /// Returns a style for the first matching name in the array. The names usually come from a control when it wants to get
     /// its class-appropriate style. If no style is found for the names, null is returned.
     /// </summary>
+    /// <param name="theme">A theme that provides the style names used for each (class) name.</param>
     /// <param name="class_names">An array of names that are looked up one by one until one matches a style</param>
     /// <returns>The style that matches one of the names or null</returns>
-    API_FUNCTION() static FudgetStyle* FindMatchingStyle(const Array<String> &class_names);
+    API_FUNCTION() static FudgetStyle* FindMatchingStyle(FudgetTheme *theme, const Array<String> &class_names);
 
     /// <summary>
     /// Creates a new painter object if the name represents a painter.
@@ -490,7 +474,7 @@ private:
 
         Dictionary<int, FontAsset*> _font_asset_map;
 
-        std::vector<FudgetDrawInstructionList*> _style_area_list;
+        std::vector<FudgetDrawInstructionList*> _draw_list;
 
         std::vector<FudgetStateOrder*> _state_order_list;
     };

@@ -80,8 +80,8 @@ FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 
 FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr)
 {
-    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::IMAGE_BUTTON_STYLE);
-    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetButton>();
+    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::IMAGE_BUTTON_STYLE);
+    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetButton>();
 }
 
 void FudgetButton::OnInitialize()
