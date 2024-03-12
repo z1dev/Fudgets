@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/Collections/Array.h"
+#include "Engine/Core/Types/Variant.h"
 
 // Moves an item at index from to index to in the array arr. Only use for fast copiable items, like pointers.
 template<typename T>
@@ -24,6 +25,52 @@ void MoveInArray(Array<T> &arr, int from, int to)
 		arr[to] = item;
 	}
 }
+
+template<typename T>
+constexpr bool Fudget_is_class()
+{
+	using T2 = std::remove_reference_t<std::remove_const_t<std::remove_volatile_t<T>>>;
+	return std::is_class<T2>::value && !std::is_enum<T2>::value && !std::is_same<Variant, T2>::value && !std::is_same<String, T2>::value && !std::is_same<StringView, T2>::value &&
+		!std::is_same<StringAnsi, T2>::value && !std::is_same<StringAnsiView, T2>::value && !std::is_same<Guid, T2>::value && !std::is_same<Float2, T2>::value &&
+		!std::is_same<Float3, T2>::value && !std::is_same<Float4, T2>::value && !std::is_same<Int2, T2>::value && !std::is_same<Int3, T2>::value &&
+		!std::is_same<Int4, T2>::value && !std::is_same<Double2, T2>::value && !std::is_same<Double3, T2>::value && !std::is_same<Double4, T2>::value &&
+		!std::is_same<Color, T2>::value && !std::is_same<Quaternion, T2>::value && !std::is_same<BoundingSphere, T2>::value &&
+		!std::is_same<Rectangle, T2>::value && !std::is_same<BoundingBox, T2>::value && !std::is_same<Transform, T2>::value && !std::is_same<Ray, T2>::value &&
+		!std::is_same<Matrix, T2>::value && !std::is_same<Array<Variant, HeapAllocation>, T2>::value && !std::is_same<Dictionary<Variant, Variant, HeapAllocation>, T2>::value &&
+		!std::is_same<Span<byte>, T2>::value && !std::is_same<CommonValue, T2>::value && !std::is_same<class AssetReference<T2>, T2>::value;
+}
+
+template<typename T>
+constexpr bool Fudget_is_resource_id()
+{
+	using T2 = std::remove_reference_t<std::remove_const_t<std::remove_volatile_t<T>>>;
+	return !std::is_same<T2, int>::value && (std::is_enum<T>::value || std::is_convertible<T, int>::value);
+}
+
+template<typename T>
+constexpr bool Fudget_is_resource_id_or_int()
+{
+	return std::is_enum<T>::value || std::is_convertible<T, int>::value;
+}
+
+template<typename T>
+static Variant StructToVariant(const T &s)
+{
+	VariantType t;
+	t.Type = VariantType::Structure;
+	t.SetTypeName(T::TypeInitializer.GetType().Fullname);
+	return Variant::Structure(std::move(t), s);
+}
+
+template<typename T>
+static Variant EnumToVariant(const T &s)
+{
+	VariantType t;
+	t.Type = VariantType::Enum;
+	t.SetTypeName(StaticType<T>().GetType().Fullname);
+	return Variant::Enum(std::move(t), s);
+}
+
 
 //extern const float MaximumFloatLimit;
 

@@ -12,7 +12,7 @@ FudgetAlignedImagePainter::FudgetAlignedImagePainter(const SpawnParams &params) 
 {
 }
 
-void FudgetAlignedImagePainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
+void FudgetAlignedImagePainter::Initialize(FudgetControl *control,  const Variant &mapping)
 {
     if (control == nullptr)
         return;
@@ -24,66 +24,66 @@ void FudgetAlignedImagePainter::Initialize(FudgetControl *control, FudgetStyle *
 
     GetMappedStateOrder(res.StateOrderIndex, _state_order);
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::Image, res.Image, _image))
+    if (!GetMappedTexture(control, res.Image, _image))
         _image = nullptr;
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImage, res.HoveredImage, _hovered_image))
+    if (!GetMappedTexture(control, res.HoveredImage, _hovered_image))
         _hovered_image = _image;
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImage, res.PressedImage, _pressed_image))
+    if (!GetMappedTexture(control, res.PressedImage, _pressed_image))
         _pressed_image = _image;
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::DownImage, res.DownImage, _down_image))
+    if (!GetMappedTexture(control, res.DownImage, _down_image))
         _down_image = _pressed_image;
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImage, res.FocusedImage, _focused_image))
+    if (!GetMappedTexture(control, res.FocusedImage, _focused_image))
         _focused_image = _image;
 
-    if (!GetMappedTexture(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImage, res.DisabledImage, _disabled_image))
+    if (!GetMappedTexture(control, res.DisabledImage, _disabled_image))
         _disabled_image = _image;
 
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::ImageTint, res.ImageTint, _image_tint))
+    if (!GetMappedColor(control, res.ImageTint, _image_tint))
         _image_tint = Color::White;
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImageTint, res.HoveredImageTint, _hovered_image_tint))
+    if (!GetMappedColor(control, res.HoveredImageTint, _hovered_image_tint))
         _hovered_image_tint = _image_tint;
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImageTint, res.PressedImageTint, _pressed_image_tint))
+    if (!GetMappedColor(control, res.PressedImageTint, _pressed_image_tint))
         _pressed_image_tint = _image_tint;
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::DownImageTint, res.DownImageTint, _down_image_tint))
+    if (!GetMappedColor(control, res.DownImageTint, _down_image_tint))
         _down_image_tint = _pressed_image_tint;
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImageTint, res.FocusedImageTint, _focused_image_tint))
+    if (!GetMappedColor(control, res.FocusedImageTint, _focused_image_tint))
         _focused_image_tint = _image_tint;
-    if (!GetMappedColor(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImageTint, res.DisabledImageTint, _disabled_image_tint))
+    if (!GetMappedColor(control, res.DisabledImageTint, _disabled_image_tint))
         _disabled_image_tint = _image_tint;
 
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::ImageOffset, res.ImageOffset, _image_offset))
+    if (!GetMappedFloat2(control, res.ImageOffset, _image_offset))
         _image_offset = Float2(0.f);
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImageOffset, res.HoveredImageOffset, _hovered_image_offset))
+    if (!GetMappedFloat2(control, res.HoveredImageOffset, _hovered_image_offset))
         _hovered_image_offset = _image_offset;
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImageOffset, res.PressedImageOffset, _pressed_image_offset))
+    if (!GetMappedFloat2(control, res.PressedImageOffset, _pressed_image_offset))
         _pressed_image_offset = _image_offset;
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::DownImageOffset, res.DownImageOffset, _down_image_offset))
+    if (!GetMappedFloat2(control, res.DownImageOffset, _down_image_offset))
         _down_image_offset = _pressed_image_offset;
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImageOffset, res.FocusedImageOffset, _focused_image_offset))
+    if (!GetMappedFloat2(control, res.FocusedImageOffset, _focused_image_offset))
         _focused_image_offset = _image_offset;
-    if (!GetMappedFloat2(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImageOffset, res.DisabledImageOffset, _disabled_image_offset))
+    if (!GetMappedFloat2(control, res.DisabledImageOffset, _disabled_image_offset))
         _disabled_image_offset = _image_offset;
 
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::ImagePadding, res.ImagePadding, _image_padding))
+    if (!GetMappedPadding(control, res.ImagePadding, _image_padding))
         _image_padding = FudgetPadding(0);
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::HoveredImagePadding, res.HoveredImagePadding, _hovered_image_padding))
+    if (!GetMappedPadding(control, res.HoveredImagePadding, _hovered_image_padding))
         _hovered_image_padding = _image_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::PressedImagePadding, res.PressedImagePadding, _pressed_image_padding))
+    if (!GetMappedPadding(control, res.PressedImagePadding, _pressed_image_padding))
         _pressed_image_padding = _image_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::DownImagePadding, res.DownImagePadding, _down_image_padding))
+    if (!GetMappedPadding(control, res.DownImagePadding, _down_image_padding))
         _down_image_padding = _pressed_image_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::FocusedImagePadding, res.FocusedImagePadding, _focused_image_padding))
+    if (!GetMappedPadding(control, res.FocusedImagePadding, _focused_image_padding))
         _focused_image_padding = _image_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetAlignedImagePainterIds::DisabledImagePadding, res.DisabledImagePadding, _disabled_image_padding))
+    if (!GetMappedPadding(control, res.DisabledImagePadding, _disabled_image_padding))
         _disabled_image_padding = _image_padding;
 
-    if (!GetMappedEnum<FudgetImageHorzAlign>(control, style_override, (int)FudgetAlignedImagePainterIds::HorzAlign, res.HorzAlign, _horz_align))
+    if (!GetMappedEnum<FudgetImageHorzAlign>(control, res.HorzAlign, _horz_align))
         _horz_align = FudgetImageHorzAlign::Stretch;
-    if (!GetMappedEnum<FudgetImageVertAlign>(control, style_override, (int)FudgetAlignedImagePainterIds::VertAlign, res.VertAlign, _vert_align))
+    if (!GetMappedEnum<FudgetImageVertAlign>(control, res.VertAlign, _vert_align))
         _vert_align = FudgetImageVertAlign::Stretch;
 }
 

@@ -40,19 +40,8 @@ public partial class FudgetPartPainter
     public bool GetMappedEnum<E>(FudgetControl control, FudgetStyle style_override, int painter_id, int mapping_id, out E result) where E: Enum
     {
         FudgetTheme theme = control.ActiveTheme;
-        int[] values = [mapping_id, painter_id];
         result = default;
-        bool success = false;
-
-        for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-        {
-            if (style_override != null)
-                success = FudgetStyle.GetEnumResource<E>(style_override, theme, values[ix], false, out result);
-            if (!success)
-                success = control.GetStyleEnum<E>(values[ix], out result);
-        }
-
-        return success;
+        return control.GetStyleEnum<E>(mapping_id, out result);
     }
 
     /// <summary>

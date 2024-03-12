@@ -75,35 +75,35 @@ private:
 };
 
 
-API_ENUM()
-enum class FudgetListBoxIds
-{
-    First = 5000,
-
-    FramePainter = First,
-    FrameStyle,
-
-    FrameDraw,
-    DisabledFrameDraw,
-    FocusedFrameDraw,
-
-    ContentPadding,
-
-    ItemPainter,
-    ItemStyle,
-
-    TextPainter,
-    TextStyle,
-
-    SelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    DisabledSelectedTextColor,
-
-    Font,
-};
+//API_ENUM()
+//enum class FudgetListBoxIds
+//{
+//    First = 5000,
+//
+//    FramePainter = First,
+//    FrameStyle,
+//
+//    FrameDraw,
+//    DisabledFrameDraw,
+//    FocusedFrameDraw,
+//
+//    ContentPadding,
+//
+//    ItemPainter,
+//    ItemStyle,
+//
+//    TextPainter,
+//    TextStyle,
+//
+//    SelectionDraw,
+//    DisabledSelectionDraw,
+//    TextColor,
+//    DisabledTextColor,
+//    SelectedTextColor,
+//    DisabledSelectedTextColor,
+//
+//    Font,
+//};
 
 /// <summary>
 /// Standard list box class that shows a list of text, with items one below the other, sized to fill the
@@ -180,9 +180,7 @@ private:
     FudgetPadding GetInnerPadding() const;
 
     FudgetFramedFieldPainter *_frame_painter;
-    FudgetPartPainterMapping _default_frame_painter_mapping;
     FudgetListItemPainter *_item_painter;
-    FudgetPartPainterMapping _default_item_painter_mapping;
 
     FudgetStringListProvider *_data;
     bool _owned_data;

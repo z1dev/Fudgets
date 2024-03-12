@@ -7,6 +7,7 @@
 
 class FudgetTheme;
 class FudgetStyle;
+class FudgetPartPainter;
 
 enum class FudgetDrawInstructionType
 {
@@ -90,18 +91,23 @@ class FUDGETS_API FudgetDrawable : public ScriptingObject
 public:
     ~FudgetDrawable();
 
+    API_FUNCTION() static FORCE_INLINE FudgetDrawable* CreateEmpty(FudgetPartPainter *owner)
+    {
+        return Create(owner, nullptr);
+    }
+
     /// <summary>
     /// Initializes a rectangular drawable from a color
     /// </summary>
     /// <param name="color">Color to draw</param>
     /// <returns>The created drawable</returns>
-    API_FUNCTION() static FudgetDrawable* FromColor(Color color);
+    API_FUNCTION() static FudgetDrawable* FromColor(FudgetPartPainter *owner, Color color);
     /// <summary>
     /// Initializes a rectangular drawable from a draw area
     /// </summary>
     /// <param name="area">The draw area</param>
     /// <returns>The created drawable</returns>
-    API_FUNCTION() static FudgetDrawable* FromDrawArea(const FudgetDrawArea &area);
+    API_FUNCTION() static FudgetDrawable* FromDrawArea(FudgetPartPainter *owner, const FudgetDrawArea &area);
 private:
     /// <summary>
     /// Initializes a rectangular drawable from a draw instruction list. The list can only come from FudgetStyle
@@ -109,7 +115,7 @@ private:
     /// </summary>
     /// <param name="drawlist">The draw instruction list</param>
     /// <returns>The created drawable</returns>
-    static FudgetDrawable* FromDrawInstructionList(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstructionList *drawlist);
+    static FudgetDrawable* FromDrawInstructionList(FudgetPartPainter *owner, FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstructionList *drawlist);
 
     /// <summary>
     /// Checks if there are any int ids of fudget resources in the list, which would force the drawable to create a new
@@ -121,13 +127,7 @@ private:
 
     static FudgetDrawInstruction* CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item);
 
-    FORCE_INLINE static FudgetDrawable* Create()
-    {
-        FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
-        result->_owned = true;
-        result->_list = new FudgetDrawInstructionList();
-        return result;
-    }
+    static FudgetDrawable* Create(FudgetPartPainter *owner, FudgetDrawInstructionList *list);
 
     FudgetDrawInstructionList *_list;
     bool _owned;
@@ -164,7 +164,7 @@ public:
 
     API_FUNCTION() static void AddResource(int id);
 
-    // Not allowed to avoid cyclic reference
+    // Not allowed to avoid circular reference
     //API_FUNCTION() static void AddAreaList(const String &drawlist_name);
 
     API_FUNCTION() static void AddColor(Color color);

@@ -79,35 +79,6 @@ private:
 };
 
 
-API_ENUM()
-enum class FudgetButtonIds
-{
-    First = 1000,
-
-    Background = First,
-    HoveredBackground,
-    PressedBackground,
-    DownBackground,
-    DisabledBackground,
-    Focusedbackground,
-
-    ContentPadding,
-
-    FramePainter,
-    FrameStyle,
-
-    ContentPainter,
-    ContentStyle,
-
-    ContentImage,
-    ContentHoveredImage,
-    ContentPressedImage,
-    ContentDownImage,
-    ContentDisabledImage,
-
-    ContentPressedOffset,
-};
-
 /// <summary>
 /// A general button class which can draw anything inside its frame
 /// </summary>
@@ -127,12 +98,10 @@ protected:
     ///// <inheritdoc />
     //FudgetControlFlag GetInitFlags() const override;
 private:
-    FudgetPadding FudgetButton::GetInnerPadding() const;
+    FudgetPadding GetInnerPadding() const;
 
     FudgetFramedFieldPainter *_frame_painter;
-    FudgetPartPainterMapping _default_frame_painter_mapping;
     FudgetStatePainter *_content_painter;
-    FudgetPartPainterMapping _default_content_painter_mapping;
 };
 
 

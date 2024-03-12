@@ -3,23 +3,23 @@
 #include "PartPainters.h"
 
 
-API_ENUM()
-enum class FudgetListBoxItemPainterIds
-{
-    First = 4000,
-
-    TextPainter = First,
-    TextStyle,
-
-    SelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    DisabledSelectedTextColor,
-
-    Font,
-};
+//API_ENUM()
+//enum class FudgetListBoxItemPainterIds
+//{
+//    First = 4000,
+//
+//    TextPainter = First,
+//    TextStyle,
+//
+//    SelectionDraw,
+//    DisabledSelectionDraw,
+//    TextColor,
+//    DisabledTextColor,
+//    SelectedTextColor,
+//    DisabledSelectedTextColor,
+//
+//    Font,
+//};
 
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetListBoxItemPainterResources
@@ -52,7 +52,7 @@ public:
     ~FudgetListBoxItemPainter();
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
+    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states) override;
     /// <inheritdoc />

@@ -153,6 +153,15 @@ public:
     }
 
     template<typename T>
+    FORCE_INLINE T* CreateChild(const String &style_name)
+    {
+        T* child = New<T>(SpawnParams(Guid::New(), T::TypeInitializer));
+        child->SetStyleName(style_name);
+        AddChild(child);
+        return child;
+    }
+
+    template<typename T>
     FORCE_INLINE T* CreateLayout()
     {
         T* layout = New<T>(SpawnParams(Guid::New(), T::TypeInitializer));

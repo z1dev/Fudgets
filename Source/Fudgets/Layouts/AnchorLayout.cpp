@@ -78,7 +78,7 @@ void FudgetAnchorLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int 
             if (left >= right)
             {
                 control_size.X = 0;
-                control_pos.X = (slot->leftPercent + slot->rightPercent) * 0.5f * space.X;
+                control_pos.X = (int)((slot->leftPercent + slot->rightPercent) * 0.5f * space.X);
             }
             else
             {

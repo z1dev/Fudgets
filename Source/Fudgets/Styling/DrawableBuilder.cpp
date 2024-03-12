@@ -1,6 +1,7 @@
 #include "DrawableBuilder.h"
 #include "Themes.h"
 #include "Style.h"
+#include "Painters/PartPainters.h"
 
 #include "Engine/Core/Log.h"
 
@@ -161,34 +162,41 @@ FudgetDrawable::~FudgetDrawable()
         delete _list;
 }
 
-FudgetDrawable* FudgetDrawable::FromColor(Color color)
+FudgetDrawable* FudgetDrawable::FromColor(FudgetPartPainter *owner, Color color)
 {
-    FudgetDrawable *result = Create();
+    if (owner == nullptr)
+        return nullptr;
+
+    FudgetDrawable *result = Create(owner, nullptr);
     result->_list->_list.push_back(new FudgetDrawInstructionColor(color));
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawArea(const FudgetDrawArea &area)
+FudgetDrawable* FudgetDrawable::FromDrawArea(FudgetPartPainter *owner, const FudgetDrawArea &area)
 {
-    FudgetDrawable *result = Create();
+    if (owner == nullptr)
+        return nullptr;
+
+    FudgetDrawable *result = Create(owner, nullptr);
     result->_list->_list.push_back(new FudgetDrawInstructionDrawArea(area));
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstructionList *arealist)
+FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetPartPainter *owner, FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstructionList *arealist)
 {
+    if (owner == nullptr)
+        return nullptr;
+
     // Check first if the area list contains any ids that must be looked up. If no ids are found,
     // the area list can be used as-is and the ownership stays with FudgetThemes.
 
     if (NoExternalResources(arealist))
     {
-        FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
-        result->_owned = false;
-        result->_list = arealist;
+        FudgetDrawable *result = Create(owner, arealist);
         return result;
     }
    
-    FudgetDrawable *result = Create();
+    FudgetDrawable *result = Create(owner, nullptr);
     for (auto item : arealist->_list)
     {
         FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, item);
@@ -267,10 +275,23 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
                 break;
             }
 
-            // GetDrawableResource is not supported to avoid cyclic referencing
+            // GetDrawableResource is not supported to avoid circular referencing (?)
 
             break;
         }
     }
     return result;
 }
+
+FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner, FudgetDrawInstructionList *list)
+{
+    if (owner == nullptr)
+        return nullptr;
+
+    FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
+    result->_owned = list == nullptr;
+    result->_list = list == nullptr ? new FudgetDrawInstructionList() : list;
+    owner->RegisterDrawable(result);
+    return result;
+}
+

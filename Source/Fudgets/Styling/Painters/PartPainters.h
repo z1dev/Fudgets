@@ -7,77 +7,9 @@
 #include "../StyleStructs.h"
 #include "../Style.h"
 
+#include <map>
 
 class FudgetStateOrder;
-
-
-API_ENUM()
-enum class FudgetBasicPainterIds
-{
-    First = 1,
-
-    /// <summary>
-    /// Background drawable or color, used for the standard framed controls
-    /// </summary>
-    Background = First,
-    /// <summary>
-    /// Hovered background drawable or color, used for the standard framed controls
-    /// </summary>
-    HoveredBackground,
-    /// <summary>
-    /// Disabled background drawable or color, used for the standard framed controls
-    /// </summary>
-    DisabledBackground,
-    /// <summary>
-    /// Frame edge drawable or color, used for the standard framed controls
-    /// </summary>
-    FrameDraw,
-    /// <summary>
-    /// Focused frame edge drawable or color, used for the standard framed controls
-    /// </summary>
-    FocusedFrameDraw,
-    /// <summary>
-    /// Hovered frame edge drawable or color, used for the standard framed controls
-    /// </summary>
-    HoveredFrameDraw,
-    /// <summary>
-    /// Padding inside the frame of a control or drawable.
-    /// </summary>
-    Padding,
-    /// <summary>
-    /// Padding inside the frame of a control or drawable that includes extra padding for contents.
-    /// </summary>
-    ContentPadding,
-
-    /// <summary>
-    /// Button surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonSurface,
-    /// <summary>
-    /// Button hovered surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonHoveredSurface,
-    /// <summary>
-    /// Button disabled surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonDisabledSurface,
-    /// <summary>
-    /// Button focused surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonFocusedSurface,
-    /// <summary>
-    /// Button pressed surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonPressedSurface,
-    /// <summary>
-    /// Button down surface drawable or color, used for the standard buttons
-    /// </summary>
-    ButtonDownSurface,
-    /// <summary>
-    /// Button offset to move contents visually when the button is pressed.
-    /// </summary>
-    ButtonContentPressedOffset,
-};
 
 
 class FudgetTheme;
@@ -93,37 +25,45 @@ API_ENUM(Attributes = "Flags")
 enum class FudgetVisualControlState
 {
     /// <summary>
-    /// Normal state that means no other state is set
+    /// Normal state that means no other state is set.
     /// </summary>
     Normal = 0,
+
     /// <summary>
-    /// Pressed appearance of a part, usually for buttons
+    /// Pressed appearance of a part, usually for buttons.
     /// </summary>
     Pressed = 1 << 0,
+
     /// <summary>
-    /// Down appearance of a part, usually for buttons
+    /// Down appearance of a part, usually for buttons.
     /// </summary>
     Down = 1 << 1,
+
     /// <summary>
-    /// Focused appearance of a part that can have the keyboard focus
+    /// Focused appearance of a part that means it's the current part for keyboard interaction.
     /// </summary>
     Focused = 1 << 2,
+
     /// <summary>
     /// Disabled appearance of a part that means the users can't interact with it
     /// </summary>
     Disabled = 1 << 3,
+
     /// <summary>
     /// Hovered appearance of a part, usually when the mouse pointer is over it
     /// </summary>
     Hovered = 1 << 4,
+
     /// <summary>
     /// Selected appearance of a part, usually for items in lists.
     /// </summary>
     Selected = 1 << 5,
+
     /// <summary>
     /// Expanded appearance of a part, usually for items in lists.
     /// </summary>
     Expanded = 1 << 6,
+
     /// <summary>
     /// Opened appearance of a part, usually for items in lists.
     /// </summary>
@@ -131,7 +71,6 @@ enum class FudgetVisualControlState
 
 };
 DECLARE_ENUM_OPERATORS(FudgetVisualControlState);
-
 
 
 /// <summary>
@@ -158,11 +97,12 @@ public:
     }
 
     /// <summary>
-    /// Initializes the painter, caching the resources it will draw with
+    /// Initializes the painter, caching the resources it will draw with.
     /// </summary>
-    /// <param name="theme">Theme used for drawing</param>
-    /// <param name="style">Style providing the resources for the drawing</param>
-    API_FUNCTION() virtual void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) {}
+    /// <param name="control">Control that holds the theme and style to use for fetching resources</param>
+    /// <param name="style_override">A style, that when not null, is used for looking up resources before the control is checked.</param>
+    /// <param name="mapping">Mapping from id to id for the specific painter. Each painter expects a different mapping structure.</param>
+    API_FUNCTION() virtual void Initialize(FudgetControl *control,  const Variant &mapping) { }
 
     /// <summary>
     /// Updates the drawing state of the painter. Called by controls in OnUpdate if they registered to get updates
@@ -199,7 +139,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedStyle(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetStyle* &result) const;
+    API_FUNCTION() bool GetMappedStyle(FudgetControl *control,  int mapping_id, API_PARAM(Out) FudgetStyle* &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a texture. First mapping_id is tested and then painter_id.
@@ -211,7 +151,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    bool GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, AssetReference<TextureBase> &result) const;
+    bool GetMappedTexture(FudgetControl *control,  int mapping_id, AssetReference<TextureBase> &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a texture. First mapping_id is tested and then painter_id.
@@ -223,7 +163,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) TextureBase* &result) const;
+    API_FUNCTION() bool GetMappedTexture(FudgetControl *control,  int mapping_id, API_PARAM(Out) TextureBase* &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a color. First mapping_id is tested and then painter_id.
@@ -235,7 +175,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedColor(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Color &result) const;
+    API_FUNCTION() bool GetMappedColor(FudgetControl *control,  int mapping_id, API_PARAM(Out) Color &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a string. First mapping_id is tested and then painter_id.
@@ -247,7 +187,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedString(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) String &result) const;
+    API_FUNCTION() bool GetMappedString(FudgetControl *control,  int mapping_id, API_PARAM(Out) String &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a float. First mapping_id is tested and then painter_id.
@@ -259,7 +199,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedFloat(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) float &result) const;
+    API_FUNCTION() bool GetMappedFloat(FudgetControl *control,  int mapping_id, API_PARAM(Out) float &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Float2. First mapping_id is tested and then painter_id.
@@ -271,7 +211,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedFloat2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float2 &result) const;
+    API_FUNCTION() bool GetMappedFloat2(FudgetControl *control,  int mapping_id, API_PARAM(Out) Float2 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Float2. First mapping_id is tested and then painter_id.
@@ -283,7 +223,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedFloat3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float3 &result) const;
+    API_FUNCTION() bool GetMappedFloat3(FudgetControl *control,  int mapping_id, API_PARAM(Out) Float3 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Float2. First mapping_id is tested and then painter_id.
@@ -295,7 +235,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedFloat4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float4 &result) const;
+    API_FUNCTION() bool GetMappedFloat4(FudgetControl *control,  int mapping_id, API_PARAM(Out) Float4 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a int. First mapping_id is tested and then painter_id.
@@ -307,7 +247,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedInt(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) int &result) const;
+    API_FUNCTION() bool GetMappedInt(FudgetControl *control,  int mapping_id, API_PARAM(Out) int &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Int2. First mapping_id is tested and then painter_id.
@@ -319,7 +259,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedInt2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int2 &result) const;
+    API_FUNCTION() bool GetMappedInt2(FudgetControl *control,  int mapping_id, API_PARAM(Out) Int2 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Int2. First mapping_id is tested and then painter_id.
@@ -331,7 +271,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedInt3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int3 &result) const;
+    API_FUNCTION() bool GetMappedInt3(FudgetControl *control,  int mapping_id, API_PARAM(Out) Int3 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a Int2. First mapping_id is tested and then painter_id.
@@ -343,7 +283,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedInt4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int4 &result) const;
+    API_FUNCTION() bool GetMappedInt4(FudgetControl *control,  int mapping_id, API_PARAM(Out) Int4 &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a padding. First mapping_id is tested and then painter_id.
@@ -355,7 +295,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedPadding(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetPadding &result) const;
+    API_FUNCTION() bool GetMappedPadding(FudgetControl *control,  int mapping_id, API_PARAM(Out) FudgetPadding &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a border. First mapping_id is tested and then painter_id.
@@ -367,19 +307,20 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedBorder(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetBorder &result) const;
+    API_FUNCTION() bool GetMappedBorder(FudgetControl *control,  int mapping_id, API_PARAM(Out) FudgetBorder &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a drawable resource. First mapping_id is tested and then painter_id.
     /// Returns whether the result was set to the value.
     /// </summary>
-    /// <param name="control">The control to use for looking up the resource if style_override doesn't have the value.</param>
+    /// <param name="control">The control to use for looking up the resource if style_override doesn't have the value. The control is also responsible for
+    /// destroying the resulting drawable.</param>
     /// <param name="style_override">The style used for looking up the resource first.</param>
     /// <param name="painter_id">A resource id. Usually this is the id provided for the painter.</param>
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedDrawable(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetDrawable* &result) const;
+    API_FUNCTION() bool CreateMappedDrawable(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
     /// Checks style_override then the control's styles for a draw area resource. First mapping_id is tested and then painter_id.
@@ -391,7 +332,7 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedDrawArea(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetDrawArea &result) const;
+    API_FUNCTION() bool GetMappedDrawArea(FudgetControl *control,  int mapping_id, API_PARAM(Out) FudgetDrawArea &result) const;
 
     /// <summary>
     /// Checks style_override then the control's styles for a font resource. First mapping_id is tested and then painter_id.
@@ -403,24 +344,14 @@ protected:
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type</returns>
-    API_FUNCTION() bool GetMappedFont(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetFont &result) const;
+    API_FUNCTION() bool GetMappedFont(FudgetControl *control,  int mapping_id, API_PARAM(Out) FudgetFont &result) const;
 
     template<typename E>
-    bool GetMappedEnum(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) E &result) const
+    bool GetMappedEnum(FudgetControl *control,  int mapping_id, API_PARAM(Out) E &result) const
     {
         FudgetTheme *theme = control->GetActiveTheme();
-        int values[2] = { mapping_id, painter_id };
         result = (E)0;
-        bool success = false;
-        for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-        {
-            if (style_override != nullptr)
-                success = FudgetStyle::GetEnumResource<E>(style_override, theme, values[ix], false, result);
-            if (!success)
-                success = control->GetStyleEnum<E>(values[ix], result);
-        }
-
-        return success;
+        return control->GetStyleEnum<E>(mapping_id, result);
     }
 
     /// <summary>
@@ -488,6 +419,15 @@ protected:
         return (state & (uint64)FudgetVisualControlState::Opened) == (uint64)FudgetVisualControlState::Opened;
     }
 
+    /// <summary>
+    /// Stores the drawable in the drawables list and destroys it when the part painter is destroyed.
+    /// </summary>
+    void RegisterDrawable(FudgetDrawable *drawable);
+
+    FudgetControl *_owner;
+
+    friend class FudgetControl;
+    friend class FudgetDrawable;
 };
 
 /// <summary>

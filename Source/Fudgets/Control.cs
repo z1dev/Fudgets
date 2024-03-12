@@ -6,6 +6,14 @@ namespace Fudgets
 {
     public partial class FudgetControl
     {
+
+        internal string StyleName
+        {
+            get => GetStyleName();
+            set => SetStyleName(value);
+        }
+
+
         /// <summary>
         /// Constructs a painter object based on a painter mapping identified by mapping_id and initializes it with the mapping. Mappings contain the name of
         /// the painter's type to be created and the mapping of painter ids to the ids of a style. That is, when the painter tries to look up a resource by an
@@ -23,7 +31,7 @@ namespace Fudgets
         /// <param name="default_mapping">An optional mapping to be used to create and initialize the new painter if nothing was found for mapping_id.</param>
         /// <param name="style_override">Id of the painter mapping in the control's style.</param>
         /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
-        public T CreateStylePainter<T>(T current, int mapping_id, FudgetStyle mapping_style = null, FudgetPartPainterMapping? default_mapping = null, FudgetStyle style_override = null) where T : FudgetPartPainter
+        public T CreateStylePainter<T>(T current, int mapping_id/*, FudgetStyle mapping_style = null, FudgetPartPainterMapping? default_mapping = null, FudgetStyle style_override = null*/) where T : FudgetPartPainter
         {
             FudgetPartPainterMapping painter_data = default;
             FudgetPartPainter painter = null;
@@ -31,19 +39,22 @@ namespace Fudgets
             if (current != null)
                 UnregisterStylePainterInternal(current);
 
-            bool valid = false;
-            if (style_override != null)
-                valid = FudgetStyle.GetPainterMappingResource(style_override, ActiveTheme, mapping_id, false, out painter_data);
-            if (!valid)
-                valid = GetStylePainterMapping(mapping_id, out painter_data);
+            //bool valid = false;
+            //if (style_override != null)
+            //    valid = FudgetStyle.GetPainterMappingResource(style_override, ActiveTheme, mapping_id, false, out painter_data);
+            //if (!valid)
+                bool valid = GetStylePainterMapping(mapping_id, out painter_data);
 
-            if (valid || default_mapping != null)
-            {
-                if (valid)
-                    painter = FudgetThemes.CreatePainter(painter_data.PainterType);
-                else if (!valid)
-                    painter = FudgetThemes.CreatePainter(default_mapping?.PainterType);
-            }
+            if (!valid)
+                return null;
+
+            //if (valid || default_mapping != null)
+            //{
+            //    if (valid)
+            painter = FudgetThemes.CreatePainter(painter_data.PainterType);
+            //    else if (!valid)
+            //        painter = FudgetThemes.CreatePainter(default_mapping?.PainterType);
+            //}
 
             if (painter != null && painter is not T)
             {
@@ -55,7 +66,7 @@ namespace Fudgets
                 RegisterStylePainterInternal(result);
 
             if (result != null)
-                result.Initialize(this, mapping_style, valid ? painter_data.ResourceMapping : default_mapping?.ResourceMapping);
+                result.Initialize(this, painter_data.ResourceMapping /*mapping_style, valid ? painter_data.ResourceMapping : default_mapping?.ResourceMapping*/);
 
             return result;
         }

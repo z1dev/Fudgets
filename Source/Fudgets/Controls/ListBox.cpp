@@ -1,7 +1,7 @@
 #include "ListBox.h"
 #include "../Styling/Painters/ListBoxPainter.h"
 #include "../Styling/Painters/FramedFieldPainter.h"
-
+#include "../Styling/PartPainterIds.h"
 
 FudgetStringListProvider::FudgetStringListProvider(const SpawnParams &params) : Base(params), _allow_duplicates(false)
 {
@@ -109,9 +109,12 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 
 
 FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _item_painter(nullptr),
-    _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0.f), _fixed_item_size(true), _default_size(Int2(-1)), _size_processed(0)
+    _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0), _fixed_item_size(true), _default_size(Int2(-1)), _size_processed(0)
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
+
+    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_CONTROL_STYLE);
+    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetListBox>();
 }
 
 FudgetListBox::~FudgetListBox()
@@ -122,45 +125,45 @@ FudgetListBox::~FudgetListBox()
 
 void FudgetListBox::OnInitialize()
 {
-    FudgetFramedFieldPainter::ResourceMapping frame_res;
-    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
-    frame_res.FrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    frame_res.HoveredFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    frame_res.PressedFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    frame_res.DownFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    frame_res.DisabledFrameDraw = (int)FudgetListBoxIds::DisabledFrameDraw;
-    frame_res.FocusedFrameDraw = (int)FudgetListBoxIds::FocusedFrameDraw;
-    frame_res.ContentPadding = (int)FudgetListBoxIds::ContentPadding;
-    _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+    //FudgetFramedFieldPainter::ResourceMapping frame_res;
+    //frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
+    //frame_res.FrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    //frame_res.HoveredFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    //frame_res.PressedFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    //frame_res.DownFrameDraw = (int)FudgetListBoxIds::FrameDraw;
+    //frame_res.DisabledFrameDraw = (int)FudgetListBoxIds::DisabledFrameDraw;
+    //frame_res.FocusedFrameDraw = (int)FudgetListBoxIds::FocusedFrameDraw;
+    //frame_res.ContentPadding = (int)FudgetListBoxIds::ContentPadding;
+    //_default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
 
-    FudgetListBoxItemPainter::ResourceMapping item_res;
-    frame_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER_INDEX;
-    item_res.TextPainter = (int)FudgetListBoxIds::TextPainter;
-    item_res.TextStyle = (int)FudgetListBoxIds::TextStyle;
+    //FudgetListBoxItemPainter::ResourceMapping item_res;
+    //frame_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER;
+    //item_res.TextPainter = (int)FudgetListBoxIds::TextPainter;
+    //item_res.TextStyle = (int)FudgetListBoxIds::TextStyle;
 
-    item_res.SelectionDraw = (int)FudgetListBoxIds::SelectionDraw;
-    item_res.DisabledSelectionDraw = (int)FudgetListBoxIds::DisabledSelectionDraw;
-    item_res.TextColor = (int)FudgetListBoxIds::TextColor;
-    item_res.DisabledTextColor = (int)FudgetListBoxIds::DisabledTextColor;
-    item_res.SelectedTextColor = (int)FudgetListBoxIds::SelectedTextColor;
-    item_res.DisabledSelectedTextColor = (int)FudgetListBoxIds::DisabledSelectedTextColor;
+    //item_res.SelectionDraw = (int)FudgetListBoxIds::SelectionDraw;
+    //item_res.DisabledSelectionDraw = (int)FudgetListBoxIds::DisabledSelectionDraw;
+    //item_res.TextColor = (int)FudgetListBoxIds::TextColor;
+    //item_res.DisabledTextColor = (int)FudgetListBoxIds::DisabledTextColor;
+    //item_res.SelectedTextColor = (int)FudgetListBoxIds::SelectedTextColor;
+    //item_res.DisabledSelectedTextColor = (int)FudgetListBoxIds::DisabledSelectedTextColor;
 
-    item_res.Font = (int)FudgetListBoxIds::Font;
+    //item_res.Font = (int)FudgetListBoxIds::Font;
 
-    _default_item_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(item_res);
+    //_default_item_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(item_res);
 }
 
 void FudgetListBox::OnStyleInitialize()
 {
-    FudgetStyle *frame_style;
-    if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
-        frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetListBoxIds::FramePainter, frame_style, &_default_frame_painter_mapping);
+    //FudgetStyle *frame_style;
+    //if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
+    //    frame_style = nullptr;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 
-    FudgetStyle *item_style;
-    if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
-        item_style = nullptr;
-    _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxIds::ItemPainter, item_style, &_default_item_painter_mapping);
+    //FudgetStyle *item_style;
+    //if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
+    //    item_style = nullptr;
+    //_item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxIds::ItemPainter);
 }
 
 void FudgetListBox::OnDraw()
@@ -182,7 +185,7 @@ void FudgetListBox::OnDraw()
     Rectangle r = Rectangle(Float2::Zero, Float2(bounds.GetWidth(), 0.f));
     for (int ix = 0; ix < count; ++ix)
     {
-        r.Size.Y = GetItemSize(ix).Y;
+        r.Size.Y = (float)GetItemSize(ix).Y;
         _item_painter->Draw(this, r, Int2(0, pos), ix, _data, GetVisualState());
         r.Location.Y += r.Size.Y;
     }

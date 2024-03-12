@@ -55,43 +55,6 @@ enum class FudgetImageVertAlign
 };
 
 
-API_ENUM()
-enum class FudgetAlignedImagePainterIds
-{
-    First = 8000,
-
-    Image = First,
-    HoveredImage,
-    PressedImage,
-    DownImage,
-    FocusedImage,
-    DisabledImage,
-
-    ImageTint,
-    HoveredImageTint,
-    PressedImageTint,
-    DownImageTint,
-    FocusedImageTint,
-    DisabledImageTint,
-
-    ImageOffset,
-    HoveredImageOffset,
-    PressedImageOffset,
-    DownImageOffset,
-    FocusedImageOffset,
-    DisabledImageOffset,
-
-    ImagePadding,
-    HoveredImagePadding,
-    PressedImagePadding,
-    DownImagePadding,
-    FocusedImagePadding,
-    DisabledImagePadding,
-
-    HorzAlign,
-    VertAlign,
-};
-
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetAlignedImagePainterResources
 {
@@ -144,7 +107,7 @@ public:
     using ResourceMapping = FudgetAlignedImagePainterResources;
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
+    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;

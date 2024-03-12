@@ -354,7 +354,7 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
         // the sizes of the expanding slots which can expand.
 
         // Sum of the weight of all expanding slots.
-        int weight_sum = 0;
+        float weight_sum = 0;
         // Number of expanding slots with valid weight.
         int weighted_cnt = 0;
         // Number of expanding slots, whether valid or invalid. used if no valid weighted slots exist.
@@ -376,7 +376,7 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
 
             if (sizes[ix] != Relevant(max_sizes[ix]))
             {
-                float weight = Math::Max(0, Relevant(slot->_weight));
+                float weight = Math::Max(0.f, Relevant(slot->_weight));
                 weight_sum += weight;
                 ++weighted_cnt;
                 weight_ratio.Add(weight / weight_sum);
@@ -405,7 +405,7 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
                 grow_ratio = weight_ratio[count - ix - 1]; //Relevant(slot->_weight) / weight_sum;
             }
 
-            int grow_by = grow_ratio * unused_space;
+            int grow_by = int(grow_ratio * unused_space);
             sizes[ix] += grow_by;
             unused_space = Math::Max(0, unused_space - grow_by);
             if (grow_ratio != 0.f)
@@ -527,7 +527,7 @@ void FudgetListLayout::LayoutChildren(Int2 space, FudgetContainer *owner, int co
         int size_x = _ori == FudgetOrientation::Horizontal ? size : Math::Max(space.X - OppositePad(slot->_padding), 0);
         int size_y = _ori == FudgetOrientation::Vertical ? size : Math::Max(space.Y - OppositePad(slot->_padding), 0);
 
-        slot->ComputedBounds = Rectangle(Float2(pos.X + slot->_padding.Left, pos.Y + slot->_padding.Top), Float2(size_x, size_y));
+        slot->ComputedBounds = Rectangle(Float2((float)pos.X + (float)slot->_padding.Left, (float)pos.Y + (float)slot->_padding.Top), Float2((float)size_x, (float)size_y));
 
         if (_ori == FudgetOrientation::Horizontal)
             pos.X += RelevantPad(slot->_padding) + size_x;
@@ -574,7 +574,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
 
     if (computed_size.X != slot->Sizes.Size.X)
     {
-        float size_X = slot->Sizes.Size.X;
+        int size_X = slot->Sizes.Size.X;
         if (computed_size.X > size_X &&
             (slot->_horz_align == FudgetLayoutHorzAlign::LeftGrow ||
             slot->_horz_align == FudgetLayoutHorzAlign::RightGrow ||
@@ -591,7 +591,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
                 if (slot->_horz_align == FudgetLayoutHorzAlign::Right || slot->_horz_align == FudgetLayoutHorzAlign::ClipRight || slot->_horz_align == FudgetLayoutHorzAlign::RightGrow)
                     computed_pos.X += dif;
                 else if (slot->_horz_align == FudgetLayoutHorzAlign::Center || slot->_horz_align == FudgetLayoutHorzAlign::ClipCenter || slot->_horz_align == FudgetLayoutHorzAlign::CenterGrow)
-                    computed_pos.X += dif * 0.5f;
+                    computed_pos.X += (int)(dif * 0.5f);
                 computed_size.X = size_X;
             }
         }
@@ -608,7 +608,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         else if (slot->_horz_align == FudgetLayoutHorzAlign::ClipCenter)
         {
             int dif = Math::Max(slot->Sizes.Min.X, computed_size.X) - computed_size.X;
-            computed_pos.X -= dif * 0.5f;
+            computed_pos.X -= (int)(dif * 0.5f);
             computed_size.X += dif;
         }
     }
@@ -632,7 +632,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
                 if (slot->_vert_align == FudgetLayoutVertAlign::Bottom || slot->_vert_align == FudgetLayoutVertAlign::ClipBottom || slot->_vert_align == FudgetLayoutVertAlign::BottomGrow)
                     computed_pos.Y += dif;
                 else if (slot->_vert_align == FudgetLayoutVertAlign::Center || slot->_vert_align == FudgetLayoutVertAlign::ClipCenter || slot->_vert_align == FudgetLayoutVertAlign::CenterGrow)
-                    computed_pos.Y += dif * 0.5f;
+                    computed_pos.Y += (int)(dif * 0.5f);
                 computed_size.Y = size_Y;
             }
         }
@@ -649,7 +649,7 @@ void FudgetListLayout::PlaceControlInSlotRectangle(int index)
         else if (slot->_vert_align == FudgetLayoutVertAlign::ClipCenter)
         {
             int dif = Math::Max(slot->Sizes.Min.Y, computed_size.Y) - computed_size.Y;
-            computed_pos.Y -= dif * 0.5f;
+            computed_pos.Y -= (int)(dif * 0.5f);
             computed_size.Y += dif;
         }
     }

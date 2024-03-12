@@ -4,40 +4,6 @@
 #include "../StateOrderBuilder.h"
 
 
-API_ENUM()
-enum class FudgetFramedFieldPainterIds
-{
-    First = 9000,
-
-    FieldBackground = First,
-    HoveredFieldBackground,
-    PressedFieldBackground,
-    DownFieldBackground,
-    DisabledFieldBackground,
-    FocusedFieldBackground,
-    FieldDrawPadding,
-    HoveredFieldDrawPadding,
-    PressedFieldDrawPadding,
-    DownFieldDrawPadding,
-    DisabledFieldDrawPadding,
-    FocusedFieldDrawPadding,
-
-    FrameDraw,
-    HoveredFrameDraw,
-    PressedFrameDraw,
-    DownFrameDraw,
-    FocusedFrameDraw,
-    DisabledFrameDraw,
-    FrameDrawPadding,
-    HoveredFrameDrawPadding,
-    PressedFrameDrawPadding,
-    DownFrameDrawPadding,
-    FocusedFrameDrawPadding,
-    DisabledFrameDrawPadding,
-
-    Padding,
-    ContentPadding,
-};
 
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetFramedFieldPainterResources
@@ -89,7 +55,7 @@ public:
     using ResourceMapping = FudgetFramedFieldPainterResources;
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
+    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;

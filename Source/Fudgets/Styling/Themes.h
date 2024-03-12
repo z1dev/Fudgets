@@ -7,6 +7,7 @@
 
 #include "Style.h"
 #include "StyleStructs.h"
+#include "../Utils/Utils.h"
 
 #include <map>
 #include <vector>
@@ -87,35 +88,99 @@ public:
     /// <summary>
     /// Sets forwarding for an integer id to another integer id. When GetResource is called with the id, the forwarded
     /// id will be looked up instead and the resource found there will be returned. Chaining multiple forwarded ids
-    /// is possible, but cyclic forwarding results in undefined behavior. (Hopefully just returns false)
+    /// is possible, but circular forwarding results in undefined behavior. (Hopefully just returns false)
     /// </summary>
     /// <param name="res_id">Unique id of the resource</param>
     /// <param name="forward_id">The value of the resource</param>
     API_FUNCTION() void SetForwarding(int res_id, int forward_id);
 
-
     template<typename T>
-    static Variant StructToVariant(const T &s)
-    {
-        VariantType t;
-        t.Type = VariantType::Structure;
-        t.SetTypeName(T::TypeInitializer.GetType().Fullname);
-        return Variant::Structure(std::move(t), s);
-    }
-
-
-    template<typename T>
-    typename std::enable_if<std::is_class<T>::value && !std::is_same<Variant, T>::value && !std::is_same<String, T>::value && !std::is_same<StringView, T>::value &&
-        !std::is_same<StringAnsi, T>::value && !std::is_same<StringAnsiView, T>::value && !std::is_same<Guid, T>::value && !std::is_same<Float2, T>::value &&
-        !std::is_same<Float3, T>::value && !std::is_same<Float4, T>::value && !std::is_same<Int2, T>::value && !std::is_same<Int3, T>::value &&
-        !std::is_same<Int4, T>::value && !std::is_same<Double2, T>::value && !std::is_same<Double3, T>::value && !std::is_same<Double4, T>::value &&
-        !std::is_same<Color, T>::value && !std::is_same<Quaternion, T>::value && !std::is_same<BoundingSphere, T>::value &&
-        !std::is_same<Rectangle, T>::value && !std::is_same<BoundingBox, T>::value && !std::is_same<Transform, T>::value && !std::is_same<Ray, T>::value &&
-        !std::is_same<Matrix, T>::value && !std::is_same<Array<Variant, HeapAllocation>, T>::value && !std::is_same<Dictionary<Variant, Variant, HeapAllocation>, T>::value &&
-        !std::is_same<Span<byte>, T>::value && !std::is_same<CommonValue, T>::value && !std::is_same<class AssetReference<T>, T>::value, void>::type SetResource(int res_id, const T &value)
+    typename std::enable_if<Fudget_is_class<T>(), void>::type SetResource(int res_id, const T &value)
     {
         SetResource(res_id, StructToVariant(value));
     }
+
+
+    template<typename R>
+    typename std::enable_if<Fudget_is_resource_id<R>(), void>::type SetResource(R res_id, const Variant &value)
+    {
+        SetResource((int)res_id, value);
+    }
+
+    template<typename R, typename T>
+    typename std::enable_if<Fudget_is_resource_id<R>() && Fudget_is_class<T>(), void>::type SetResource(R res_id, const T &value)
+    {
+        SetResource((int)res_id, StructToVariant(value));
+    }
+
+    template<typename T>
+    typename std::enable_if<std::is_enum<T>::value, void>::type SetResource(int res_id, const T &value)
+    {
+        SetResource(res_id, EnumToVariant(value));
+    }
+
+    template<typename R, typename T>
+    typename std::enable_if<Fudget_is_resource_id<R>() && std::is_enum<T>::value, void>::type SetResource(R res_id, const T &value)
+    {
+        SetResource((int)res_id, EnumToVariant(value));
+    }
+
+
+    template<typename T>
+    typename std::enable_if<Fudget_is_resource_id<T>(), void>::type SetForwarding(int res_id, T forward_id)
+    {
+        SetForwarding((int)res_id, (int)forward_id);
+    }
+
+    template<typename R>
+    typename std::enable_if<Fudget_is_resource_id<R>(), void>::type SetForwarding(R res_id, int forward_id)
+    {
+        SetForwarding((int)res_id, (int)forward_id);
+    }
+
+    template<typename R, typename T>
+    typename std::enable_if<Fudget_is_resource_id<R>() && Fudget_is_resource_id<T>(), void>::type SetForwarding(R res_id, T forward_id)
+    {
+        SetForwarding((int)res_id, (int)forward_id);
+    }
+
+
+    //template<typename R, typename T>
+    //typename std::enable_if<std::is_enum<R>::value && Fudget_is_class<T>(), void>::type SetResource(R res_id, const T &value)
+    //{
+    //    SetResource((int)res_id, StructToVariant(value));
+    //}
+
+    //template<typename R>
+    //typename std::enable_if<std::is_enum<R>::value, void>::type SetResource(R res_id, const Variant &value)
+    //{
+    //    SetResource((int)res_id, value);
+    //}
+
+
+    //template<typename R, typename T>
+    //typename std::enable_if<std::is_enum<R>::value && std::is_enum<T>::value, void>::type SetResource(R res_id, const T &value)
+    //{
+    //    SetResource((int)res_id, EnumToVariant(value));
+    //}
+
+    //template<typename R>
+    //typename std::enable_if<std::is_enum<R>::value> SetForwarding(R res_id, int forward_id)
+    //{
+    //    return SetForwarding((int)res_id, forward_id);
+    //}
+
+    //template<typename R, typename T>
+    //typename std::enable_if<std::is_enum<R>::value && std::is_enum<T>::value> SetForwarding(R res_id, T forward_id)
+    //{
+    //    return SetForwarding((int)res_id, (int)forward_id);
+    //}
+
+    //template<typename T>
+    //typename std::enable_if<std::is_enum<T>::value> SetForwarding(int res_id, T forward_id)
+    //{
+    //    return SetForwarding(res_id, (int)forward_id);
+    //}
 
 private:
     /// <summary>
@@ -136,6 +201,7 @@ private:
 };
 
 
+
 /// <summary>
 /// Base class for themes. A theme is a collection of unlimited number of styles that can draw a
 /// UI element. Themes can be queried for styles. They also contain a dictionary of colors and
@@ -147,31 +213,107 @@ class FUDGETS_API FudgetThemes
 {
     DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetThemes);
 public:
+    // State order indexes for pre-made draw order in painter objects. Each of them start with
+    // disabled and end in normal, which are not included in the name.
 
     /// <summary>
-    /// Index to get the state ordering of down OR pressed, hovered, focused, normal in this order.
+    /// Index to get the state ordering of disabled, down OR pressed, hovered, focused, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 0;
+    API_FIELD(ReadOnly) static const int DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER = 0;
     /// <summary>
-    /// Index to get the state ordering of down OR pressed, focused, hovered, normal in this order.
+    /// Index to get the state ordering of disabled, down OR pressed, focused, hovered, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 1;
+    API_FIELD(ReadOnly) static const int DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER = 1;
     /// <summary>
-    /// Index to get the state ordering of down, pressed, hovered, focused, normal in this order.
+    /// Index to get the state ordering of disabled, down, pressed, hovered, focused, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX = 2;
+    API_FIELD(ReadOnly) static const int DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER = 2;
     /// <summary>
-    /// Index to get the state ordering of down, pressed, focused, hovered, normal in this order.
+    /// Index to get the state ordering of disabled, down, pressed, focused, hovered, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER_INDEX = 3;
+    API_FIELD(ReadOnly) static const int DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER = 3;
     /// <summary>
-    /// Index to get the state ordering of hovered, focused, normal in this order.
+    /// Index to get the state ordering of disabled, hovered, focused, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int HOVERED_FOCUSED_STATE_ORDER_INDEX = 4;
+    API_FIELD(ReadOnly) static const int HOVERED_FOCUSED_STATE_ORDER = 4;
     /// <summary>
-    /// Index to get the state ordering of focused, hovered, normal in this order.
+    /// Index to get the state ordering of disabled, focused, hovered, normal in this order.
     /// </summary>
-    API_FIELD(ReadOnly) static const int FOCUSED_HOVERED_STATE_ORDER_INDEX = 5;
+    API_FIELD(ReadOnly) static const int FOCUSED_HOVERED_STATE_ORDER = 5;
+    /// <summary>
+    /// Index to get the state ordering of disabled, focused, normal in this order.
+    /// </summary>
+    API_FIELD(ReadOnly) static const int FOCUSED_STATE_ORDER = 6;
+
+
+    // Style names for styles as a default hierarchy for the built in painters and to inherit in
+    // user-made styles.
+
+    /// <summary>
+    /// Base style for controls with a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String FRAMED_CONTROL_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field
+    /// </summary>
+    API_FIELD(ReadOnly) static const String TEXT_INPUT_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field
+    /// </summary>
+    API_FIELD(ReadOnly) static const String SINGLELINE_TEXT_INPUT_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field
+    /// </summary>
+    API_FIELD(ReadOnly) static const String MULTILINE_TEXT_INPUT_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field
+    /// </summary>
+    API_FIELD(ReadOnly) static const String FRAMED_SINGLELINE_TEXT_INPUT_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field
+    /// </summary>
+    API_FIELD(ReadOnly) static const String FRAMED_MULTILINE_TEXT_INPUT_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String BUTTON_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String IMAGE_BUTTON_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String COMBOBOX_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String COMBOBOX_EDITOR_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String COMBOBOX_BUTTON_STYLE;
+
+    /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String COMBOBOX_LIST_STYLE;
+
+    /// <summary>
+    // Name of the default theme.
+    /// </summary>
+    API_FIELD(ReadOnly) static const String MAIN_THEME;
+
 
     /// <summary>
     /// Initializes the themes by allocating the main data structures. Call Uninitialize to free them. There are
@@ -194,9 +336,6 @@ public:
     /// </summary>
     /// <returns></returns>
     API_FUNCTION() static void CreateDefaultThemesAndStyles();
-
-    // Name for the base theme that's guaranteed to be present. "MainTheme"
-    API_FIELD(ReadOnly) static const String MainThemeName;
 
     /// <summary>
     /// Stores a font asset with an integer id that can be retrieved with GetFontAsset using the same id. The id must be positive
@@ -264,11 +403,11 @@ public:
 
     /// <summary>
     /// Returns a style for the first matching name in the array. The names usually come from a control when it wants to get
-    /// its class appropriate style. If no style is found for the names, null is returned.
+    /// its class-appropriate style. If no style is found for the names, null is returned.
     /// </summary>
     /// <param name="class_names">An array of names that are looked up one by one until one matches a style</param>
     /// <returns>The style that matches one of the names or null</returns>
-    API_FUNCTION() static FudgetStyle* FindMatchingStyle(const Array<String> &class_names, const String &styling_name);
+    API_FUNCTION() static FudgetStyle* FindMatchingStyle(const Array<String> &class_names);
 
     /// <summary>
     /// Creates a new painter object if the name represents a painter.

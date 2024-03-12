@@ -1,6 +1,7 @@
 #include "FramedFieldPainter.h"
 #include "../../Control.h"
 #include "../DrawableBuilder.h"
+#include "../PartPainterIds.h"
 
 // FudgetFrameFieldPainter
 
@@ -12,7 +13,7 @@ FudgetFramedFieldPainter::FudgetFramedFieldPainter(const SpawnParams &params) : 
 {
 }
 
-void FudgetFramedFieldPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
+void FudgetFramedFieldPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
     if (control == nullptr)
         return;
@@ -24,62 +25,62 @@ void FudgetFramedFieldPainter::Initialize(FudgetControl *control, FudgetStyle *s
 
     GetMappedStateOrder(res.StateOrderIndex, _state_order);
 
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FieldBackground, res.FieldBackground, _field_bg))
-        _field_bg = FudgetDrawable::FromColor(Color::White);
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFieldBackground, res.HoveredFieldBackground, _hovered_field_bg))
+    if (!CreateMappedDrawable(control, res.FieldBackground, _field_bg))
+        _field_bg = FudgetDrawable::CreateEmpty(this);
+    if (!CreateMappedDrawable(control, res.HoveredFieldBackground, _hovered_field_bg))
         _hovered_field_bg = _field_bg;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFieldBackground, res.PressedFieldBackground, _pressed_field_bg))
+    if (!CreateMappedDrawable(control, res.PressedFieldBackground, _pressed_field_bg))
         _pressed_field_bg = _field_bg;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DownFieldBackground, res.DownFieldBackground, _down_field_bg))
+    if (!CreateMappedDrawable(control, res.DownFieldBackground, _down_field_bg))
         _down_field_bg = _pressed_field_bg;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFieldBackground, res.FocusedFieldBackground, _focused_field_bg))
+    if (!CreateMappedDrawable(control, res.FocusedFieldBackground, _focused_field_bg))
         _focused_field_bg = _field_bg;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFieldBackground, res.DisabledFieldBackground, _disabled_field_bg))
+    if (!CreateMappedDrawable(control, res.DisabledFieldBackground, _disabled_field_bg))
         _disabled_field_bg = _field_bg;
 
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FieldDrawPadding, res.FieldDrawPadding, _field_padding))
+    if (!GetMappedPadding(control, res.FieldDrawPadding, _field_padding))
         _field_padding = FudgetPadding(0);
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFieldDrawPadding, res.HoveredFieldDrawPadding, _hovered_field_padding))
+    if (!GetMappedPadding(control, res.HoveredFieldDrawPadding, _hovered_field_padding))
         _hovered_field_padding = _field_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFieldDrawPadding, res.PressedFieldDrawPadding, _pressed_field_padding))
+    if (!GetMappedPadding(control, res.PressedFieldDrawPadding, _pressed_field_padding))
         _pressed_field_padding = _field_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DownFieldDrawPadding, res.DownFieldDrawPadding, _down_field_padding))
+    if (!GetMappedPadding(control, res.DownFieldDrawPadding, _down_field_padding))
         _down_field_padding = _pressed_field_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFieldDrawPadding, res.FocusedFieldDrawPadding, _focused_field_padding))
+    if (!GetMappedPadding(control, res.FocusedFieldDrawPadding, _focused_field_padding))
         _focused_field_padding = _field_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFieldDrawPadding, res.DisabledFieldDrawPadding, _disabled_field_padding))
+    if (!GetMappedPadding(control, res.DisabledFieldDrawPadding, _disabled_field_padding))
         _disabled_field_padding = _field_padding;
 
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FrameDraw, res.FrameDraw, _frame_area))
-        _frame_area = FudgetDrawable::FromDrawArea(FudgetDrawArea(FudgetPadding::Max(_field_padding, 1), Color::Gray, FudgetFrameType::Inside));
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFrameDraw, res.HoveredFrameDraw, _hovered_frame_area))
+    if (!CreateMappedDrawable(control, res.FrameDraw, _frame_area))
+        _frame_area = FudgetDrawable::CreateEmpty(this); //FudgetDrawable::FromDrawArea(FudgetDrawArea(FudgetPadding::Max(_field_padding, 1), Color::Gray, FudgetFrameType::Inside));
+    if (!CreateMappedDrawable(control, res.HoveredFrameDraw, _hovered_frame_area))
         _hovered_frame_area = _frame_area;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFrameDraw, res.PressedFrameDraw, _pressed_frame_area))
+    if (!CreateMappedDrawable(control, res.PressedFrameDraw, _pressed_frame_area))
         _pressed_frame_area = _frame_area;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DownFrameDraw, res.DownFrameDraw, _down_frame_area))
+    if (!CreateMappedDrawable(control, res.DownFrameDraw, _down_frame_area))
         _down_frame_area = _pressed_frame_area;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFrameDraw, res.FocusedFrameDraw, _focused_frame_area))
+    if (!CreateMappedDrawable(control, res.FocusedFrameDraw, _focused_frame_area))
         _focused_frame_area = _frame_area;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFrameDraw, res.DisabledFrameDraw, _disabled_frame_area))
+    if (!CreateMappedDrawable(control, res.DisabledFrameDraw, _disabled_frame_area))
         _disabled_frame_area = _frame_area;
 
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FrameDrawPadding, res.FrameDrawPadding, _frame_padding))
+    if (!GetMappedPadding(control, res.FrameDrawPadding, _frame_padding))
         _frame_padding = FudgetPadding(0);
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::HoveredFrameDrawPadding, res.HoveredFrameDrawPadding, _hovered_frame_padding))
+    if (!GetMappedPadding(control, res.HoveredFrameDrawPadding, _hovered_frame_padding))
         _hovered_frame_padding = _frame_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::PressedFrameDrawPadding, res.PressedFrameDrawPadding, _pressed_frame_padding))
+    if (!GetMappedPadding(control, res.PressedFrameDrawPadding, _pressed_frame_padding))
         _pressed_frame_padding = _frame_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DownFrameDrawPadding, res.DownFrameDrawPadding, _down_frame_padding))
+    if (!GetMappedPadding(control, res.DownFrameDrawPadding, _down_frame_padding))
         _down_frame_padding = _pressed_frame_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::FocusedFrameDrawPadding, res.FocusedFrameDrawPadding, _focused_frame_padding))
+    if (!GetMappedPadding(control, res.FocusedFrameDrawPadding, _focused_frame_padding))
         _focused_frame_padding = _frame_padding;
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::DisabledFrameDrawPadding, res.DisabledFrameDrawPadding, _disabled_frame_padding))
+    if (!GetMappedPadding(control, res.DisabledFrameDrawPadding, _disabled_frame_padding))
         _disabled_frame_padding = _frame_padding;
 
 
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::Padding, res.Padding, _padding))
+    if (!GetMappedPadding(control, res.Padding, _padding))
         _padding = FudgetPadding(0);
-    if (!GetMappedPadding(control, style_override, (int)FudgetFramedFieldPainterIds::ContentPadding, res.ContentPadding, _content_padding))
+    if (!GetMappedPadding(control, res.ContentPadding, _content_padding))
         _content_padding = FudgetPadding(0);
 }
 

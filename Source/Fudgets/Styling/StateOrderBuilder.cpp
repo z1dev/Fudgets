@@ -23,7 +23,7 @@ uint64 FudgetStateOrder::GetMatchingState(uint64 states) const
     FudgetStateOrderItemList *pos = _data;
     FudgetStateOrderItem **data = _data->_list.data();
     uint64 result = 0;
-    for (int ix = 0, cnt = pos->_list.size(); ix < cnt; ++ix)
+    for (int ix = 0, cnt = (int)pos->_list.size(); ix < cnt; ++ix)
     {
         if ((states & data[ix]->_state) != 0 || data[ix]->_state == 0)
         {
@@ -33,7 +33,7 @@ uint64 FudgetStateOrder::GetMatchingState(uint64 states) const
                 ix = -1;
                 pos = (FudgetStateOrderItemList*)data[ix];
                 data = pos->_list.data();
-                cnt = pos->_list.size();
+                cnt = (int)pos->_list.size();
             }
             else
             {

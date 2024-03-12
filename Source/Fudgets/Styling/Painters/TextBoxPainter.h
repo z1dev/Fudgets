@@ -265,21 +265,22 @@ protected:
 };
 
 
-API_ENUM()
-enum class FudgetTextBoxPainterIds
-{
-    First = 7000,
-
-    SelectionDraw = First,
-    FocusedSelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    FocusedSelectedTextColor,
-    DisabledSelectedTextColor,
-    Font,
-};
+//API_ENUM()
+//enum class FudgetTextBoxPainterIds
+//{
+//    First = 7000,
+//
+//    SelectionDraw = First,
+//    FocusedSelectionDraw,
+//    DisabledSelectionDraw,
+//    TextColor,
+//    FocusedTextColor,
+//    DisabledTextColor,
+//    SelectedTextColor,
+//    FocusedSelectedTextColor,
+//    DisabledSelectedTextColor,
+//    Font,
+//};
 
 
 API_STRUCT(Attributes = "HideInEditor")
@@ -293,6 +294,7 @@ struct FUDGETS_API FudgetTextBoxPainterResources
     API_FIELD() int FocusedSelectionDraw = 0;
     API_FIELD() int DisabledSelectionDraw = 0;
     API_FIELD() int TextColor = 0;
+    API_FIELD() int FocusedTextColor = 0;
     API_FIELD() int DisabledTextColor = 0;
     API_FIELD() int SelectedTextColor = 0;
     API_FIELD() int FocusedSelectedTextColor = 0;
@@ -312,7 +314,7 @@ public:
     using ResourceMapping = FudgetTextBoxPainterResources;
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping) override;
+    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, FudgetVisualControlState states,
@@ -355,6 +357,7 @@ private:
     FudgetDrawArea _disabled_sel_area;
 
     Color _text_color;
+    Color _focused_text_color;
     Color _disabled_text_color;
     Color _selected_text_color;
     Color _focused_selected_text_color;

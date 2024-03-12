@@ -14,7 +14,9 @@
 #include "Engine/Graphics/Textures/TextureBase.h"
 #include "Engine/Scripting/Scripting.h"
 
-FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _parent(nullptr), _owned_style(false)
+#include <algorithm>
+
+FudgetStyle::FudgetStyle() : Base(SpawnParams(Guid::New(), TypeInitializer)),  _parent(nullptr)/*, _owned_style(false)*/
 {
 
 }
@@ -24,26 +26,31 @@ FudgetStyle::~FudgetStyle()
     for (auto p : _resources)
         Delete(p.second);
 
-    for (auto s : _owned)
-        Delete(s);
+    //for (auto s : _owned)
+    //    Delete(s);
 }
 
-FudgetStyle* FudgetStyle::CreateOwnedStyle(const String &name)
+//FudgetStyle* FudgetStyle::CreateOwnedStyle(const String &name)
+//{
+//    return InheritStyleInternal(name, true);
+//}
+
+//FudgetStyle* FudgetStyle::GetOwnedStyle(const String &name) const
+//{
+//    const FudgetStyle *check_style = this;
+//
+//    for (auto style : _owned)
+//    {
+//        if (style->_name == name)
+//            return style;
+//    }
+//
+//    return nullptr;
+//}
+
+FudgetStyle* FudgetStyle::CreateInheritedStyle(const String &name)
 {
-    return InheritStyleInternal(name, true);
-}
-
-FudgetStyle* FudgetStyle::GetOwnedStyle(const String &name) const
-{
-    const FudgetStyle *check_style = this;
-
-    for (auto style : _owned)
-    {
-        if (style->_name == name)
-            return style;
-    }
-
-    return nullptr;
+    return InheritStyleInternal(name);
 }
 
 bool FudgetStyle::GetResourceValue(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result)
@@ -68,8 +75,13 @@ bool FudgetStyle::GetResourceValue(FudgetStyle *style, FudgetTheme *theme, int i
     }
 
     // There was a resource override. Get the value from the theme via the override id.
-    if (res->_resource_id >= 0 && theme != nullptr)
-        return theme->GetResource(res->_resource_id, result);
+    if (res->_resource_id >= 0)
+    {
+        if (res->_ref_style != nullptr)
+            return FudgetStyle::GetResourceValue(res->_ref_style, theme, res->_resource_id, check_theme, result);
+        if (theme != nullptr)
+            return theme->GetResource(res->_resource_id, result);
+    }
     return false;
 }
 
@@ -100,6 +112,7 @@ void FudgetStyle::SetValueOverride(int id, const Variant &value)
         return;
 
     res->_resource_id = -1;
+    res->_ref_style = nullptr;
     res->_value_override = value;
 
     for (FudgetStyle *style : _inherited)
@@ -133,10 +146,68 @@ void FudgetStyle::SetResourceOverride(int id, int resource_id)
         return;
 
     res->_resource_id = resource_id;
+    res->_ref_style = nullptr;
     res->_value_override = Variant();
 
     for (FudgetStyle *style : _inherited)
         style->ParentResourceChanged(id, res);
+}
+
+void FudgetStyle::SetResourceReference(int id, FudgetStyle *referenced_style, int referenced_id)
+{
+    if (id < 0 || referenced_id < 0 || referenced_style == nullptr || (referenced_style == this && id == referenced_id) || referenced_style->IsReferencing(this, id, referenced_id))
+        return;
+
+    auto it = _resources.find(id);
+
+    if (it == _resources.end())
+    {
+        if (_parent != nullptr)
+        {
+            // GetResource will create an override resource with no values set.
+            GetResource(id);
+            it = _resources.find(id);
+        }
+        else
+        {
+            // "Inherit" the resource here.
+            it = _resources.insert(std::make_pair(id, New<FudgetStyleResource>(this))).first;
+        }
+    }
+
+    FudgetStyleResource *res = it->second;
+    if (res->_ref_style == referenced_style && res->_resource_id == referenced_id)
+        return;
+
+    res->_resource_id = referenced_id;
+    res->_ref_style = referenced_style;
+    res->_value_override = Variant();
+
+    for (FudgetStyle *style : _inherited)
+        style->ParentResourceChanged(id, res);
+}
+
+bool FudgetStyle::IsReferencing(FudgetStyle *style, int style_id, int id)
+{
+    if (id < 0 || style_id < 0 || style == nullptr || (style == this && style_id == id))
+        return false;
+
+    FudgetStyleResource *res = style != nullptr ? style->GetResource(id) : nullptr;
+    if (res == nullptr)
+        return false;
+
+
+    if (res->_value_override != Variant::Null)
+        return false;
+
+    if (res->_resource_id >= 0)
+    {
+        if (res->_ref_style == nullptr)
+            return false;
+
+        return FudgetStyle::IsReferencing(res->_ref_style, res->_resource_id, id);
+    }
+    return false;
 }
 
 void FudgetStyle::ResetResourceOverride(int id)
@@ -153,9 +224,38 @@ void FudgetStyle::ResetResourceOverride(int id)
 
     res->_value_override = Variant();
     res->_resource_id = -1;
+    res->_ref_style = nullptr;
 
     for (FudgetStyle *style : _inherited)
         style->ParentResourceWasReset(id, res);
+}
+
+void FudgetStyle::GetAllResourceIds(bool inherited, API_PARAM(Ref) Array<int> &result)
+{
+    result.Clear();
+
+    std::vector<int> vec;
+    std::size_t cnt = 0;
+    GetAllResourceIdsInternal(inherited, vec);
+    if (inherited && _parent != nullptr)
+    {
+        std::sort(vec.begin(), vec.end());
+        auto it = std::unique(vec.begin(), vec.end());
+
+        cnt = it - vec.begin();
+    }
+    else
+        cnt = vec.size();
+
+    result.Add(vec.data(), (int32)cnt);
+}
+
+void FudgetStyle::AddReferencesFor(FudgetStyle *other, bool inherited)
+{
+    Array<int> ids;
+    other->GetAllResourceIds(inherited, ids);
+    for (int id : ids)
+        SetResourceReference(id, other, id);
 }
 
 bool FudgetStyle::GetStyleResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetStyle* &result)
@@ -390,15 +490,15 @@ bool FudgetStyle::GetDrawAreaResource(FudgetStyle *style, FudgetTheme *theme, in
     return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
 {
     Variant var;
     if (GetResourceValue(style, theme, id, check_theme, var))
     {
-        if (DrawableFromVariant(style, theme, var, result))
+        if (DrawableFromVariant(style, drawable_owner, theme, var, result))
             return true;
     }
-    result = nullptr; // FudgetDrawInstructionList();
+    result = nullptr;
     return false;
 }
 
@@ -426,21 +526,21 @@ bool FudgetStyle::GetTextDrawSettingsResource(FudgetStyle *style, FudgetTheme *t
     return false;
 }
 
-FudgetStyle* FudgetStyle::InheritStyleInternal(const String &name, bool owned)
+FudgetStyle* FudgetStyle::InheritStyleInternal(const String &name/*, bool owned*/)
 {
     String trimmed_name = name.TrimTrailing();
     if (name.IsEmpty() || name.Contains(TEXT("/")))
         return nullptr;
 
     FudgetStyle *result = nullptr;
-    if (!owned)
+    //if (!owned)
         result = FudgetThemes::CreateStyle(trimmed_name);
-    else if (GetOwnedStyle(trimmed_name) == nullptr)
-    {
-        result = New<FudgetStyle>();
-        result->_owned_style = true;
-        result->_name = trimmed_name;
-    }
+    //else if (GetOwnedStyle(trimmed_name) == nullptr)
+    //{
+    //    result = New<FudgetStyle>();
+    //    result->_owned_style = true;
+    //    result->_name = trimmed_name;
+    //}
 
     if (result == nullptr)
         return nullptr;
@@ -448,9 +548,22 @@ FudgetStyle* FudgetStyle::InheritStyleInternal(const String &name, bool owned)
     result->_parent = this;
 
     _inherited.Add(result);
-    if (owned)
-        _owned.Add(result);
+    //if (owned)
+    //    _owned.Add(result);
     return result;
+}
+
+void FudgetStyle::GetAllResourceIdsInternal(bool inherited, std::vector<int> &result)
+{
+    for (auto p : _resources)
+    {
+        const FudgetStyleResource *res = p.second;
+        if (res->_resource_id >= 0 || res->_value_override != Variant::Null)
+            result.push_back(p.first);
+    }
+
+    if (inherited && _parent != nullptr)
+        _parent->GetAllResourceIdsInternal(inherited, result);
 }
 
 FudgetStyleResource* FudgetStyle::GetResource(int id)
@@ -593,11 +706,11 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result)
     return false;
 }
 
-bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
+bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
-        result = FudgetDrawable::FromColor(var.AsColor());
+        result = FudgetDrawable::FromColor(drawable_owner, var.AsColor());
         return true;
     }
 
@@ -607,7 +720,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, co
         if (asset.Get() == nullptr)
             return false;
 
-        result = FudgetDrawable::FromDrawArea(FudgetDrawArea(asset.Get(), true, false));
+        result = FudgetDrawable::FromDrawArea(drawable_owner, FudgetDrawArea(asset.Get(), true, false));
         return true;
     }
 
@@ -616,7 +729,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, co
         const FudgetDrawArea *drawarea = var.AsStructure<FudgetDrawArea>();
         if (drawarea != nullptr)
         {
-            result = FudgetDrawable::FromDrawArea(*drawarea);
+            result = FudgetDrawable::FromDrawArea(drawable_owner , *drawarea);
             return true;
         }
 
@@ -626,7 +739,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, co
             FudgetDrawInstructionList *arealist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
             if (arealist == nullptr)
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(style, theme, arealist);
+            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, arealist);
             return true;
         }
     }
@@ -773,6 +886,24 @@ bool FudgetStyle::FloatFromVariant(const Variant &var, float &result)
         result = var.AsFloat;
         return true;
     }
+
+    if (var.Type.Type == VariantType::Int16)
+    {
+        result = (float)var.AsInt16;
+        return true;
+    }
+
+    if (var.Type.Type == VariantType::Int)
+    {
+        result = (float)var.AsInt;
+        return true;
+    }
+
+    if (var.Type.Type == VariantType::Double)
+    {
+        result = (float)var.AsDouble;
+        return true;
+    }
     return false;
 }
 
@@ -813,6 +944,25 @@ bool FudgetStyle::IntFromVariant(const Variant &var, int &result)
         result = var.AsInt;
         return true;
     }
+
+    if (var.Type.Type == VariantType::Int16)
+    {
+        result = (int)var.AsInt16;
+        return true;
+    }
+
+    if (var.Type.Type == VariantType::Float)
+    {
+        result = (int)var.AsFloat;
+        return true;
+    }
+
+    if (var.Type.Type == VariantType::Double)
+    {
+        result = (int)var.AsDouble;
+        return true;
+    }
+
     return false;
 }
 

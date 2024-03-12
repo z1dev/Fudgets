@@ -7,13 +7,15 @@
 
 #include "../Styling/Themes.h"
 #include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/PartPainterIds.h"
 
 
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
     _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _button_capturing(false), _last_mouse_pos(0.f)
 {
-
+    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::COMBOBOX_STYLE);
+    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetComboBox>();
 }
 
 FudgetComboBox::~FudgetComboBox()
@@ -23,8 +25,8 @@ FudgetComboBox::~FudgetComboBox()
 
 void FudgetComboBox::OnInitialize()
 {
-    FudgetFramedFieldPainterResources frame_res;
-    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER_INDEX;
+   /* FudgetFramedFieldPainterResources frame_res;
+    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
     frame_res.FrameDraw = (int)FudgetComboBoxIds::FrameDraw;
     frame_res.HoveredFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
     frame_res.PressedFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
@@ -32,18 +34,15 @@ void FudgetComboBox::OnInitialize()
     frame_res.DisabledFrameDraw = (int)FudgetComboBoxIds::DisabledFrameDraw;
     frame_res.FocusedFrameDraw = (int)FudgetComboBoxIds::FocusedFrameDraw;
     frame_res.ContentPadding = (int)FudgetComboBoxIds::ContentPadding;
-    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);*/
 
-    _editor = CreateChild<FudgetLineEdit>();
+    _editor = CreateChild<FudgetLineEdit>(FudgetThemes::COMBOBOX_EDITOR_STYLE);
     _editor->SetShowBorder(false);
-    _editor->SetStylingName(TEXT("Fudgets_ComboBox"));
 
-    _button = CreateChild<FudgetButton>();
+    _button = CreateChild<FudgetButton>(FudgetThemes::COMBOBOX_BUTTON_STYLE);
     _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
-    _button->SetStylingName(TEXT("Fudgets_ComboBox"));
 
-    _list_box = CreateChild<FudgetListBox>();
-    _list_box->SetStylingName(TEXT("Fudgets_ComboBox"));
+    _list_box = CreateChild<FudgetListBox>(FudgetThemes::COMBOBOX_LIST_STYLE);
 
     FudgetGUIRoot *root = GetGUIRoot();
     root->AddChild(_list_box);
@@ -58,13 +57,13 @@ void FudgetComboBox::OnInitialize()
 
 void FudgetComboBox::OnStyleInitialize()
 {
-    if (!GetStyleInt((int)FudgetComboBoxIds::ButtonWidth, _button_width))
+    if (!GetStyleInt((int)FudgetComboBoxPartIds::ButtonWidth, _button_width))
         _button_width = 20;
 
-    FudgetStyle *frame_style;
-    if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
-        frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetComboBoxIds::FramePainter, frame_style , &default_frame_painter_mapping);
+    //FudgetStyle *frame_style;
+    //if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
+    //    frame_style = nullptr;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 }
 
 void FudgetComboBox::OnDraw()
@@ -106,6 +105,8 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
         return _editor->OnMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
     else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
         return _button->OnMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
+
+    return FudgetInputResult::Consume;
 }
 
 bool FudgetComboBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)

@@ -20,7 +20,6 @@ FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params)
 
 FudgetPartPainter::~FudgetPartPainter()
 {
-
 }
 
 FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
@@ -36,332 +35,158 @@ void FudgetPartPainter::GetMappedStateOrder(int theme_order_index, FudgetStateOr
     order = FudgetThemes::GetStateOrder(theme_order_index);
 }
 
-bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetStyle* &result) const
+bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetStyle* &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = nullptr;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetStyleResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleStyle(values[ix], result);
-        //if (!success)
-        //{
-        //    Variant var;
-        //    if (theme->GetResource(values[ix], var))
-        //    {
-        //        String str;
-        //        if (FudgetStyle::StringFromVariant(values[ix], str))
-        //        {
-        //            result = FudgetThemes::GetStyle(str);
-        //            success = result != nullptr;
-        //        }
-        //    }
-        //}
-    }
-
-    return success;
+    return control->GetStyleStyle(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, AssetReference<TextureBase> &result) const
+bool FudgetPartPainter::GetMappedTexture(FudgetControl *control,  int mapping_id, AssetReference<TextureBase> &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
+
     TextureBase *tex = nullptr;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && tex == nullptr; ++ix)
-    {
-        if (style_override != nullptr)
-            FudgetStyle::GetTextureResource(style_override, theme, values[ix], false, tex);
-        if (tex == nullptr)
-            control->GetStyleTexture(values[ix], tex);
-        //if (tex == nullptr)
-        //{
-        //    Variant var;
-        //    if (theme->GetResource(values[ix], var))
-        //        FudgetStyle::TextureFromVariant(var, tex);
-        //}
-    }
+    control->GetStyleTexture(mapping_id, tex);
     result = tex;
     return tex != nullptr;
 }
 
-bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) TextureBase* &result) const
+bool FudgetPartPainter::GetMappedTexture(FudgetControl *control, int mapping_id, API_PARAM(Out) TextureBase* &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
-    result = nullptr;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && result == nullptr; ++ix)
-    {
-        if (style_override != nullptr)
-            FudgetStyle::GetTextureResource(style_override, theme, values[ix], false, result);
-        if (result == nullptr)
-            control->GetStyleTexture(values[ix], result);
-        //if (result == nullptr)
-        //{
-        //    Variant var;
-        //    if (theme->GetResource(values[ix], var))
-        //        FudgetStyle::TextureFromVariant(var, result);
-        //}
-    }
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
 
+    control->GetStyleTexture(mapping_id, result);
     return result != nullptr;
 }
 
-bool FudgetPartPainter::GetMappedColor(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Color &result) const
+bool FudgetPartPainter::GetMappedColor(FudgetControl *control, int mapping_id, API_PARAM(Out) Color &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Color::White;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetColorResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleColor(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleColor(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedString(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) String &result) const
+bool FudgetPartPainter::GetMappedString(FudgetControl *control, int mapping_id, API_PARAM(Out) String &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = String();
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetStringResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleString(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleString(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedFloat(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) float &result) const
+bool FudgetPartPainter::GetMappedFloat(FudgetControl *control, int mapping_id, API_PARAM(Out) float &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = 0.f;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetFloatResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleFloat(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleFloat(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedFloat2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float2 &result) const
+bool FudgetPartPainter::GetMappedFloat2(FudgetControl *control, int mapping_id, API_PARAM(Out) Float2 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Float2::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetFloat2Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleFloat2(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleFloat2(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedFloat3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float3 &result) const
+bool FudgetPartPainter::GetMappedFloat3(FudgetControl *control, int mapping_id, API_PARAM(Out) Float3 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Float3::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetFloat3Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleFloat3(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleFloat3(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedFloat4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Float4 &result) const
+bool FudgetPartPainter::GetMappedFloat4(FudgetControl *control, int mapping_id, API_PARAM(Out) Float4 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Float4::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetFloat4Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleFloat4(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleFloat4(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedInt(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) int &result) const
+bool FudgetPartPainter::GetMappedInt(FudgetControl *control, int mapping_id, API_PARAM(Out) int &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = 0;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetIntResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleInt(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleInt(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedInt2(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int2 &result) const
+bool FudgetPartPainter::GetMappedInt2(FudgetControl *control, int mapping_id, API_PARAM(Out) Int2 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Int2::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetInt2Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleInt2(values[ix], result);
-    }
+    return control->GetStyleInt2(mapping_id, result);
 
-    return success;
 }
 
-bool FudgetPartPainter::GetMappedInt3(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int3 &result) const
+bool FudgetPartPainter::GetMappedInt3(FudgetControl *control, int mapping_id, API_PARAM(Out) Int3 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Int3::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetInt3Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleInt3(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleInt3(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedInt4(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) Int4 &result) const
+bool FudgetPartPainter::GetMappedInt4(FudgetControl *control, int mapping_id, API_PARAM(Out) Int4 &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = Int4::Zero;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetInt4Resource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleInt4(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleInt4(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedPadding(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetPadding &result) const
+bool FudgetPartPainter::GetMappedPadding(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetPadding &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
-    result = FudgetPadding(0.f);
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetPaddingResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStylePadding(values[ix], result);
-    }
-
-    return success;
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
+    result = FudgetPadding(0);
+    return control->GetStylePadding(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedBorder(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetBorder &result) const
+bool FudgetPartPainter::GetMappedBorder(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetBorder &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = FudgetBorder(0.f);
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetBorderResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleBorder(values[ix], result);
-    }
-
-    return success;
+    return control->GetStyleBorder(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedDrawable(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetDrawable* &result) const
+bool FudgetPartPainter::CreateMappedDrawable(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetDrawable* &result)
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = nullptr;
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetDrawableResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleDrawable(values[ix], result);
-    }
-    return success;
+    return control->GetStyleDrawable(mapping_id, this, result);
 }
 
-bool FudgetPartPainter::GetMappedDrawArea(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetDrawArea &result) const
+bool FudgetPartPainter::GetMappedDrawArea(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetDrawArea &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = FudgetDrawArea();
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetDrawAreaResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleDrawArea(values[ix], result);
-    }
-    return success;
+    return control->GetStyleDrawArea(mapping_id, result);
 }
 
-bool FudgetPartPainter::GetMappedFont(FudgetControl *control, FudgetStyle *style_override, int painter_id, int mapping_id, API_PARAM(Out) FudgetFont &result) const
+bool FudgetPartPainter::GetMappedFont(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetFont &result) const
 {
-    FudgetTheme *theme = control->GetActiveTheme();
-    int values[2] = { mapping_id, painter_id };
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
     result = FudgetFont();
-    bool success = false;
-    for (int ix = mapping_id == 0 ? 1 : 0; ix < 2 && !success; ++ix)
-    {
-        if (style_override != nullptr)
-            success = FudgetStyle::GetFontResource(style_override, theme, values[ix], false, result);
-        if (!success)
-            success = control->GetStyleFont(values[ix], result);
-    }
+    return control->GetStyleFont(mapping_id, result);
+}
 
-    return success;
+void FudgetPartPainter::RegisterDrawable(FudgetDrawable *drawable)
+{
+    _owner->RegisterDrawable(this, drawable);
 }
 
 

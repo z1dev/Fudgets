@@ -376,7 +376,7 @@ void Fudget::GetWorldMatrix(Vector3 viewOrigin, API_PARAM(Out) Matrix& world) co
 #endif
 
     // Use default camera is not specified
-    Camera *camera = GetRenderCamera() == nullptr ? Camera::GetMainCamera() : GetRenderCamera();
+    Camera *camera = (Camera*)GetRenderCamera() == nullptr ? Camera::GetMainCamera() : (Camera*)GetRenderCamera();
 
     if (_renderMode == FudgetRenderMode::WorldSpace || (_renderMode == FudgetRenderMode::WorldSpaceFaceCamera && !camera))
     {

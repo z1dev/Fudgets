@@ -40,12 +40,12 @@ void FudgetMultiLineTextPainter::AddLine(API_PARAM(Ref) Int2 &pos, int start_ind
 
 
 FudgetTextBoxPainter::FudgetTextBoxPainter(const SpawnParams &params) : Base(params),
-    _text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
+    _text_color(Color::White), _focused_text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
     _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White), _state_order(nullptr)
 {
 }
 
-void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
+void FudgetTextBoxPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
     if (control == nullptr)
         return;
@@ -57,25 +57,27 @@ void FudgetTextBoxPainter::Initialize(FudgetControl *control, FudgetStyle *style
 
     GetMappedStateOrder(res.StateOrderIndex, _state_order);
 
-    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::SelectionDraw, res.SelectionDraw, _sel_area))
+    if (!GetMappedDrawArea(control, res.SelectionDraw, _sel_area))
         _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::FocusedSelectionDraw, res.FocusedSelectionDraw, _focused_sel_area))
+    if (!GetMappedDrawArea(control, res.FocusedSelectionDraw, _focused_sel_area))
         _focused_sel_area = _sel_area;
-    if (!GetMappedDrawArea(control, style_override, (int)FudgetTextBoxPainterIds::DisabledSelectionDraw, res.DisabledSelectionDraw, _disabled_sel_area))
+    if (!GetMappedDrawArea(control, res.DisabledSelectionDraw, _disabled_sel_area))
         _disabled_sel_area = _sel_area;
 
-    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::TextColor, res.TextColor, _text_color))
+    if (!GetMappedColor(control, res.TextColor, _text_color))
         _text_color = Color::Black;
-    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::DisabledTextColor, res.DisabledTextColor, _disabled_text_color))
+    if (!GetMappedColor(control, res.FocusedTextColor, _focused_text_color))
+        _focused_text_color = _text_color;
+    if (!GetMappedColor(control, res.DisabledTextColor, _disabled_text_color))
         _disabled_text_color = _text_color;
-    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::SelectedTextColor, res.SelectedTextColor, _selected_text_color))
+    if (!GetMappedColor(control, res.SelectedTextColor, _selected_text_color))
         _selected_text_color = Color::White;
-    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::FocusedSelectedTextColor, res.FocusedSelectedTextColor, _focused_selected_text_color))
+    if (!GetMappedColor(control, res.FocusedSelectedTextColor, _focused_selected_text_color))
         _focused_selected_text_color = _selected_text_color;
-    if (!GetMappedColor(control, style_override, (int)FudgetTextBoxPainterIds::DisabledSelectedTextColor, res.DisabledSelectedTextColor, _disabled_selected_text_color))
+    if (!GetMappedColor(control, res.DisabledSelectedTextColor, _disabled_selected_text_color))
         _disabled_selected_text_color = _selected_text_color;
 
-    if (!GetMappedFont(control, style_override, (int)FudgetTextBoxPainterIds::Font, res.Font, _font))
+    if (!GetMappedFont(control, res.Font, _font))
     {
         _font.Settings = FudgetFontSettings(-1, 10.f, false, false);
         FontAsset *font_asset = Content::LoadAsyncInternal<FontAsset>(TEXT("Editor/Fonts/Roboto-Regular"));
@@ -92,7 +94,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
     uint64 matched_state = _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
 
     Color selTextColor = DrawDisabled(matched_state) ? _disabled_selected_text_color : DrawFocused(matched_state) ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = DrawDisabled(matched_state) ? _disabled_text_color : _text_color;
+    Color textColor = DrawDisabled(matched_state) ? _disabled_text_color : DrawFocused(matched_state) ? _focused_text_color : _text_color;
     FudgetDrawArea sel_bg = DrawDisabled(matched_state) ? _disabled_sel_area : DrawFocused(matched_state) ? _focused_sel_area : _sel_area;
 
     int sel_min = -1; 

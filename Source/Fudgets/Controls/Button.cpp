@@ -2,6 +2,7 @@
 #include "../Styling/Themes.h"
 #include "../Styling/Painters/AlignedImagePainter.h"
 #include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/PartPainterIds.h"
 
 FudgetButtonBase::FudgetButtonBase(const SpawnParams &params) : Base(params), _down(false), _pressed(false)
 {
@@ -79,47 +80,25 @@ FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 
 FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr)
 {
-
+    FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::IMAGE_BUTTON_STYLE);
+    FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetButton>();
 }
 
 void FudgetButton::OnInitialize()
 {
-    FudgetFramedFieldPainterResources frame_res;
-    frame_res.StateOrderIndex = FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX;
-    frame_res.FrameDraw = (int)FudgetButtonIds::Background;
-    frame_res.HoveredFrameDraw = (int)FudgetButtonIds::HoveredBackground;
-    frame_res.PressedFrameDraw = (int)FudgetButtonIds::PressedBackground;
-    frame_res.DownFrameDraw = (int)FudgetButtonIds::DownBackground;
-    frame_res.DisabledFrameDraw = (int)FudgetButtonIds::DisabledBackground;
-    frame_res.FocusedFrameDraw = (int)FudgetButtonIds::Focusedbackground;
-    frame_res.ContentPadding = (int)FudgetButtonIds::ContentPadding;
-    _default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
-
-    FudgetAlignedImagePainterResources content_res;
-    content_res.StateOrderIndex = FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER_INDEX;
-    content_res.Image = (int)FudgetButtonIds::ContentImage;
-    content_res.HoveredImage = (int)FudgetButtonIds::ContentHoveredImage;
-    content_res.PressedImage = (int)FudgetButtonIds::ContentPressedImage;
-    content_res.DownImage = (int)FudgetButtonIds::ContentDownImage;
-    content_res.FocusedImage = (int)FudgetButtonIds::ContentImage;
-    content_res.DisabledImage = (int)FudgetButtonIds::ContentDisabledImage;
-
-    content_res.PressedImageOffset = (int)FudgetButtonIds::ContentPressedOffset;
-    content_res.DownImageOffset = (int)FudgetButtonIds::ContentPressedOffset;
-    _default_content_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(content_res);
 }
 
 void FudgetButton::OnStyleInitialize()
 {
-    FudgetStyle *frame_style = nullptr;
-    if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
-        frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetButtonIds::FramePainter, frame_style, &_default_frame_painter_mapping);
+    //FudgetStyle *frame_style = nullptr;
+    //if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
+    //    frame_style = nullptr;
+    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 
-    FudgetStyle *content_style = nullptr;
-    if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
-        content_style = nullptr;
-    _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetButtonIds::ContentPainter, content_style, &_default_content_painter_mapping);
+    //FudgetStyle *content_style = nullptr;
+    //if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
+    //    content_style = nullptr;
+    _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetButtonPartIds::ContentPainter);
 
 
 }

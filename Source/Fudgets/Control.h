@@ -1566,25 +1566,6 @@ public:
     API_PROPERTY() void SetStyle(FudgetStyle *value);
 
     /// <summary>
-    /// Gets the name of the control's style. To look up the active style, the control first checks if a style for
-    /// its type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
-    /// ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
-    /// until one style is found. The first style with the matching name is used. If the name is not found, the
-    /// style for the nearest type is used.
-    /// </summary>
-    /// <returns>The name of the style for this control</returns>
-    API_PROPERTY() String GetStylingName() const { return _styling_name; }
-    /// <summary>
-    /// Sets the name of the control's style. To look up the active style, the control first checks if a style for
-    /// its type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
-    /// ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
-    /// until one style is found. The first style with the matching name is used. If the name is not found, the
-    /// style for the nearest type is used.
-    /// </summary>
-    /// <param name="value">The new style name.</param>
-    API_PROPERTY() void SetStylingName(const String &value);
-
-    /// <summary>
     /// The style that's used for this type of control to decide the look of the control. Use GetStyle instead to
     /// get the style that was explicitly set with SetStyle. The functions that get a resource for the control's
     /// style all check that style first, and if a value is not found, they try it with the style returned by this
@@ -1628,7 +1609,7 @@ public:
     /// <param name="style_override">Id of the painter mapping in the control's style.</param>
     /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
     template<typename T>
-    T* CreateStylePainter(T *current, int mapping_id, FudgetStyle *mapping_style = nullptr, FudgetPartPainterMapping *default_mapping = nullptr, FudgetStyle *style_override = nullptr)
+    T* CreateStylePainter(T *current, int mapping_id)
     {
         FudgetPartPainterMapping painter_data;
         FudgetPartPainter *painter = nullptr;
@@ -1636,19 +1617,12 @@ public:
         if (current != nullptr)
             UnregisterStylePainterInternal(current);
 
-        bool valid = false;
-        if (style_override != nullptr)
-            valid = FudgetStyle::GetPainterMappingResource(style_override, GetActiveTheme(), mapping_id, false, painter_data);
-        if (!valid)
-            valid = GetStylePainterMapping(mapping_id, painter_data);
+        bool valid = GetStylePainterMapping(mapping_id, painter_data);
 
-        if (valid || default_mapping != nullptr)
-        {
-            if (valid)
+        if (!valid)
+            return nullptr;
+
                 painter = FudgetThemes::CreatePainter(painter_data.PainterType);
-            else if (!valid)
-                painter = FudgetThemes::CreatePainter(default_mapping->PainterType);
-        }
 
         T *result = dynamic_cast<T*>(painter);
         if (painter != nullptr && result == nullptr)
@@ -1657,14 +1631,11 @@ public:
             painter = nullptr;
         }
 
-        //if (result == nullptr && T::TypeInitializer.IsAssignableFrom((DEFAULT::TypeInitializer)))
-        //    result = New<DEFAULT>(SpawnParams(Guid::New(), DEFAULT::TypeInitializer));
-
         if (result != nullptr)
             RegisterStylePainterInternal(result);
 
         if (result != nullptr)
-            result->Initialize(this, mapping_style, valid ? painter_data.ResourceMapping : default_mapping->ResourceMapping);
+            result->Initialize(this, painter_data.ResourceMapping);
 
         return result;
     }
@@ -1871,14 +1842,15 @@ public:
 
     /// <summary>
     /// Tries to get a drawable for the passed id. The result will be a valid drawable if the original
-    /// value is a drawable created with FudgetDrawableBuilder or one of the types that can be drawn that
-    /// a drawable can hold.
+    /// value is an instruction list created with FudgetDrawableBuilder, or one of the types that can be
+    /// drawn with a drawable.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
     /// <param name="Id">Id of an area list value in the active styles</param>
+    /// <param name="drawable_owner">A part painter which will cause the destruction of the drawable when it is destroyed.</param>
     /// <param name="result">The area list that can be passed to DrawAreaList</param>
     /// <returns>Whether a valid value was found for the id</returns>
-    API_FUNCTION() bool GetStyleDrawable(int id, API_PARAM(Out) FudgetDrawable* &result);
+    API_FUNCTION() bool GetStyleDrawable(int id, FudgetPartPainter *drawable_owner, API_PARAM(Out) FudgetDrawable* &result);
        
     /// <summary>
     /// Tries to get a texture for the passed id. The result will be a valid 
@@ -2127,18 +2099,6 @@ protected:
     API_FUNCTION() virtual void SetParentVisibility(bool value);
 
     /// <summary>
-    /// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
-    /// will be freed once the control is destroyed.
-    /// </summary>
-    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
-
-    /// <summary>
-    /// Don't call. Exposed for C# to make CreateStylePainter possible. Removes painter from the list of painters and
-    /// destroys the object.
-    /// </summary>
-    API_FUNCTION() void UnregisterStylePainterInternal(FudgetPartPainter *painter);
-
-    /// <summary>
     /// Used internally to deregister control from OnUpdate calls. This happens after the parent was changed, but the root
     /// hasn't yet, and the control is not initialized. When overriding, make sure to not access internal data and call
     /// the base implementation.
@@ -2165,6 +2125,25 @@ protected:
     /// </summary>
     API_FUNCTION() virtual void DoParentStateChanged();
 private:
+    /// <summary>
+    /// Gets the name of the control's style. To look up the active style, the control first checks if a style for
+    /// its type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
+    /// ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
+    /// until one style is found. The first style with the matching name is used. If the name is not found, the
+    /// style for the nearest type is used.
+    /// </summary>
+    /// <returns>The name of the style for this control</returns>
+    API_FUNCTION() String GetStyleName() const { return _style_name; }
+
+    /// <summary>
+    /// Sets the name of the control's style. To look up the active style, the control first checks if a style for
+    /// its type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
+    /// ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
+    /// until one style is found. The first style with the matching name is used. If the name is not found, the
+    /// style for the nearest type is used.
+    /// </summary>
+    /// <param name="value">The new style name.</param>
+    API_FUNCTION() void SetStyleName(const String &value);
 
     void DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect);
     void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
@@ -2214,7 +2193,23 @@ private:
     // Creates an array of names based on the control's type and its ancestor classes' type names, starting with the most derived class.
     void CreateClassNames();
 
-    // Functions to get style values
+
+    /// <summary>
+    /// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
+    /// will be freed once the control is destroyed.
+    /// </summary>
+    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
+
+    /// <summary>
+    /// Don't call. Exposed for C# to make CreateStylePainter possible. Removes painter from the list of painters and
+    /// destroys the object.
+    /// </summary>
+    API_FUNCTION() void UnregisterStylePainterInternal(FudgetPartPainter *painter);
+
+    // Drawables need to be destroyed by this control, so they are added to an internal list. When the control or
+    // the painter is destroyed, so is the drawable.
+    void RegisterDrawable(FudgetPartPainter *drawable_owner, FudgetDrawable *drawable);
+
 
     FudgetContainer *_parent;
     int _index;
@@ -2247,7 +2242,7 @@ private:
     bool _changing;
 
     // Null or the style used to decide the look of the control. When null, the active style is based on the type
-    // and the styling name.
+    // or the default style name.
     FudgetStyle *_style;
 
     // Style used for drawing the control if a specific style hasn't been set. The style is determined based on the
@@ -2255,12 +2250,9 @@ private:
     // is used, but it might lack required settings.
     FudgetStyle *_cached_style;
 
-    // Name of the control's style. To look up the active style, the control first checks if a style for its
-    // type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
-    // ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
-    // until one style is found. The first style with the matching name is used. If the name is not found, the
-    // style for the nearest type is used.
-    String _styling_name;
+    // Name of the control's default style. If this is not set, the class name and its parent class names are used
+    // to look up the default style. If a style is explicitely set for the control, that's used instead.
+    String _style_name;
 
     // The theme set for this control. If not set, nearest parent's theme is used with a set theme. If none
     // found, the main theme is assumed.
@@ -2280,6 +2272,12 @@ private:
     /// Painters created for this control that should be destroyed by this control
     /// </summary>
     Array<FudgetPartPainter*> _painters;
+
+    /// <summary>
+    /// Drawable objects created by part painters. The drawables are destroyed when the painter or this control is destroyed.
+    /// </summary>
+    Dictionary<FudgetDrawable*, FudgetPartPainter*> _drawables;
+
     /// <summary>
     /// Styles created for this control that are not registered with the themes and should be destroyed by this control.
     /// </summary>
@@ -2288,4 +2286,5 @@ private:
     friend class FudgetLayout;
     friend class FudgetContainer;
     friend class FudgetGUIRoot;
+    friend class FudgetPartPainter;
 };

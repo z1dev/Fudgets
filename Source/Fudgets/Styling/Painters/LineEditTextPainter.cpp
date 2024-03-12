@@ -9,12 +9,12 @@
 
 FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) : Base(params),
     _sel_area(nullptr), _focused_sel_area(nullptr), _disabled_sel_area(nullptr),
-    _text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
+    _text_color(Color::White), _focused_text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
     _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White), _state_order(nullptr)
 {
 }
 
-void FudgetLineEditTextPainter::Initialize(FudgetControl *control, FudgetStyle *style_override, const Variant &mapping)
+void FudgetLineEditTextPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
     if (control == nullptr)
         return;
@@ -26,25 +26,27 @@ void FudgetLineEditTextPainter::Initialize(FudgetControl *control, FudgetStyle *
 
     GetMappedStateOrder(res.StateOrderIndex, _state_order);
 
-    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::SelectionDraw, res.SelectionDraw, _sel_area))
-        _sel_area = FudgetDrawable::FromColor(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::FocusedSelectionDraw, res.FocusedSelectionDraw, _focused_sel_area))
+    if (!CreateMappedDrawable(control, res.SelectionDraw, _sel_area))
+        _sel_area = FudgetDrawable::CreateEmpty(this); //FudgetDrawable::FromColor(Color(0.2f, 0.4f, 0.8f, 1.0f));
+    if (!CreateMappedDrawable(control, res.FocusedSelectionDraw, _focused_sel_area))
         _focused_sel_area = _sel_area;
-    if (!GetMappedDrawable(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledSelectionDraw, res.DisabledSelectionDraw, _disabled_sel_area))
+    if (!CreateMappedDrawable(control, res.DisabledSelectionDraw, _disabled_sel_area))
         _disabled_sel_area = _sel_area;
 
-    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::TextColor, res.TextColor, _text_color))
+    if (!GetMappedColor(control, res.TextColor, _text_color))
         _text_color = Color::Black;
-    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledTextColor, res.DisabledTextColor, _disabled_text_color))
+    if (!GetMappedColor(control, res.FocusedTextColor, _focused_text_color))
+        _focused_text_color = _text_color;
+    if (!GetMappedColor(control, res.DisabledTextColor, _disabled_text_color))
         _disabled_text_color = _text_color;
-    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::SelectedTextColor, res.SelectedTextColor, _selected_text_color))
+    if (!GetMappedColor(control, res.SelectedTextColor, _selected_text_color))
         _selected_text_color = Color::White;
-    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::FocusedSelectedTextColor, res.FocusedSelectedTextColor, _focused_selected_text_color))
+    if (!GetMappedColor(control, res.FocusedSelectedTextColor, _focused_selected_text_color))
         _focused_selected_text_color = _selected_text_color;
-    if (!GetMappedColor(control, style_override, (int)FudgetLineEditTextPainterIds::DisabledSelectedTextColor, res.DisabledSelectedTextColor, _disabled_selected_text_color))
+    if (!GetMappedColor(control, res.DisabledSelectedTextColor, _disabled_selected_text_color))
         _disabled_selected_text_color = _selected_text_color;
 
-    if (!GetMappedFont(control, style_override, (int)FudgetLineEditTextPainterIds::Font, res.Font, _font))
+    if (!GetMappedFont(control, res.Font, _font))
     {
         _font.Settings = FudgetFontSettings(-1, 10.f, false, false);
         FontAsset *font_asset = Content::LoadAsyncInternal<FontAsset>(TEXT("Editor/Fonts/Roboto-Regular"));
@@ -61,7 +63,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     uint64 matching_states = _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
 
     Color selTextColor = DrawDisabled(matching_states) ? _disabled_selected_text_color : DrawFocused(matching_states) ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = DrawDisabled(matching_states) ? _disabled_text_color : _text_color;
+    Color textColor = DrawDisabled(matching_states) ? _disabled_text_color : DrawFocused(matching_states) ? _focused_text_color : _text_color;
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
@@ -95,7 +97,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         {
             control->DrawText(_font.Font, text, range2, textColor, opt);
 
-            r.Location = Int2(r.Location.X + _font.Font->MeasureText(text, range2).X, r.Location.Y);
+            r.Location = Int2(int(r.Location.X + _font.Font->MeasureText(text, range2).X), (int)r.Location.Y);
             if (range2.EndIndex < range.EndIndex)
             {
                 Char prev_char = text[range2.EndIndex - 1];
@@ -154,10 +156,10 @@ Int2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView
 int FudgetLineEditTextPainter::GetKerning(Char a, Char b, float scale) const
 {
     if (_font.Font == nullptr)
-        return 0.f;
+        return 0;
 
     scale = scale / FontManager::FontScale;
-    return _font.Font->GetKerning(a, b) * scale;
+    return int(_font.Font->GetKerning(a, b) * scale);
 }
 
 int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, FudgetVisualControlState state, const FudgetSingleLineTextOptions &options, const Int2 &point)
@@ -179,7 +181,7 @@ int FudgetLineEditTextPainter::HitTest(FudgetControl *control, const Rectangle &
 int FudgetLineEditTextPainter::GetFontHeight() const
 {
     if (_font.Font == nullptr)
-        return 0.f;
+        return 0;
 
     return _font.Font->GetHeight();
 }

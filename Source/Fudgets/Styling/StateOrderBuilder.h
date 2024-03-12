@@ -30,7 +30,7 @@ struct FudgetStateOrderItemList : public FudgetStateOrderItem
 /// The result of FudgetStateOrderBuilder is an index, that should be stored in the StateOrderIndex member, when filling
 /// the ***Resources structure of each painter.
 /// The index should be cached and reused as much as possible instead of building new state priority data. FudgetStates
-/// contains a few ***_STATE_ORDER_INDEX values for pre-built state priority data as well.
+/// contains a few ***_STATE_ORDER values for pre-built state priority data as well.
 /// 
 /// Check the FudgetVisualControlState enum in PartPainters.h for a partial list of possible states. The enum values
 /// are not used, they are converted to uint64, so new states can be included.
@@ -84,7 +84,7 @@ private:
 /// index to make the painter use the corresponding state order. The order can also be accessed by FudgetThemes::GetStateOrder,
 /// but it's usually not necessary, unless you are making a new style-aware part painter.
 /// 
-/// FudgetStates contains a few ***_STATE_ORDER_INDEX values for pre-built state priority data as well.
+/// FudgetStates contains a few ***_STATE_ORDER values for pre-built state priority data as well.
 /// 
 /// For usage of the built state order, check the Initialize function of the included painters that use states, for fetching
 /// the state order from the themes, and the first lines of the Draw function.

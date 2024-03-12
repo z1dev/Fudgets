@@ -262,30 +262,78 @@ private:
     // Used during layouting to check if the sizing rule allows its slot to expand. It uses data provided from PreLayoutChildren
     bool IsExpandingRule(FudgetDistributedSizingRule rule) const;
 
+    template<typename R, typename A>
+    FORCE_INLINE R Relevant(A value) const
+    {
+        if (_ori == FudgetOrientation::Horizontal)
+            return value.X;
+        return value.Y;
+    }
+
     FORCE_INLINE int Relevant(Int2 value) const
     {
-        if (_ori == FudgetOrientation::Horizontal)
-            return value.X;
-        return value.Y;
+        return Relevant<int>(value);
     }
-    FORCE_INLINE int& RelevantRef(Int2 &value) const
+
+    FORCE_INLINE float Relevant(Float2 value) const
+    {
+        return Relevant<float>(value);
+    }
+
+    template<typename R, typename A>
+    FORCE_INLINE R& RelevantRef(A &value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.X;
         return value.Y;
     }
+
+    FORCE_INLINE int& RelevantRef(Int2 value) const
+    {
+        return RelevantRef<int>(value);
+    }
+
+    FORCE_INLINE float& RelevantRef(Float2 value) const
+    {
+        return RelevantRef<float>(value);
+    }
+
+    template<typename R, typename A>
+    FORCE_INLINE R Opposite(A value) const
+    {
+        if (_ori == FudgetOrientation::Horizontal)
+            return value.Y;
+        return value.X;
+    }
+
     FORCE_INLINE int Opposite(Int2 value) const
     {
-        if (_ori == FudgetOrientation::Horizontal)
-            return value.Y;
-        return value.X;
+        return Opposite<int>(value);
     }
-    FORCE_INLINE int& OppositeRef(Int2 &value) const
+
+    FORCE_INLINE float Opposite(Float2 value) const
+    {
+        return Opposite<float>(value);
+    }
+
+    template<typename R, typename A>
+    FORCE_INLINE R& OppositeRef(A &value) const
     {
         if (_ori == FudgetOrientation::Horizontal)
             return value.Y;
         return value.X;
     }
+
+    FORCE_INLINE int& OppositeRef(Int2 value) const
+    {
+        return OppositeRef<int>(value);
+    }
+
+    FORCE_INLINE float& OppositeRef(Float2 value) const
+    {
+        return OppositeRef<float>(value);
+    }
+
     FORCE_INLINE int RelevantPad(const FudgetPadding &padding) const
     {
         if (_ori == FudgetOrientation::Horizontal)

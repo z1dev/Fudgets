@@ -7,37 +7,37 @@ class FudgetFramedFieldPainter;
 class FudgetSingleLineTextPainter;
 
 
-API_ENUM()
-enum class FudgetLineEditIds
-{
-    First = 3000,
-
-    FramePainter = First,
-    FrameStyle,
-
-    FrameDraw,
-    FocusedFrameDraw,
-    DisabledFrameDraw,
-
-    ContentPadding,
-
-    TextPainter,
-    TextStyle,
-
-    SelectionDraw,
-    DisabledSelectionDraw,
-    TextColor,
-    DisabledTextColor,
-    SelectedTextColor,
-    DisabledSelectedTextColor,
-
-    Font,
-
-    CaretDraw,
-    CaretBlinkTime,
-    CaretWidth,
-    CaretScrollCount,
-};
+//API_ENUM()
+//enum class FudgetLineEditIds
+//{
+//    First = 3000,
+//
+//    FramePainter = First,
+//    FrameStyle,
+//
+//    FrameDraw,
+//    FocusedFrameDraw,
+//    DisabledFrameDraw,
+//
+//    ContentPadding,
+//
+//    TextPainter,
+//    TextStyle,
+//
+//    SelectionDraw,
+//    DisabledSelectionDraw,
+//    TextColor,
+//    DisabledTextColor,
+//    SelectedTextColor,
+//    DisabledSelectedTextColor,
+//
+//    Font,
+//
+//    CaretDraw,
+//    CaretBlinkTime,
+//    CaretWidth,
+//    CaretScrollCount,
+//};
 
 
 /// <summary>
@@ -134,9 +134,7 @@ private:
     void Process(const StringView &value);
 
     FudgetFramedFieldPainter *_frame_painter;
-    FudgetPartPainterMapping _default_frame_painter_mapping;
     FudgetSingleLineTextPainter *_text_painter;
-    FudgetPartPainterMapping _default_text_painter_mapping;
 
     float _blink_passed;
     int _character_scroll_count;
