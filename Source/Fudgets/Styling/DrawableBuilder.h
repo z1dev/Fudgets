@@ -96,6 +96,8 @@ public:
         return Create(owner, nullptr);
     }
 
+    API_PROPERTY() bool IsEmpty() const { return _list->_list.empty(); }
+
     /// <summary>
     /// Initializes a rectangular drawable from a color
     /// </summary>

@@ -10,10 +10,14 @@
 // 
 // Creating controls:
 // 
+// Initialization:
+// override GetInitFlags. call base
+// 
 // (WARNING: Styling might change a lot in the future!)
 // Style:
-// 1. Create enum of ids required to read resources from styles. The values MUST be distinct from other ids.
-// 2. Override `OnInitialize` and read the resource for the ids into member variables. Sane defaults need
+// 1. Create enum or static const int ids required to read resources from styles. The values MUST be distinct from other ids.
+// 2. Override `OnInitialize` for compound controls to create child controls.
+// 3. Override `OnStyleInitialize` and read the resource for the ids into member variables. Sane defaults need
 //    to be provided if the resource does not exist.
 // 
 // Drawing:
@@ -21,7 +25,8 @@
 // 2. Override `OnDraw` and call the painters for the drawing
 // 3. Add any custom painting 
 // 
-// 
+// Input:
+// mouse down up move functions, keydown up, oncharinput, wants navigation keys
 //
 
 
@@ -378,7 +383,7 @@ enum class FudgetInputResult
 {
     /// <summary>
     /// The mouse or key press event should be ignored. For mouse events, this won't let the event pass through
-    /// to the control below, but will prevent any automatic handling, like changing the focused the control.
+    /// to the control below, but will prevent any automatic handling, like changing the focused control.
     /// For key events, this will let the system handle the input as if no control received it.
     /// </summary>
     Ignore,
@@ -1504,7 +1509,7 @@ public:
     /// </summary>
     /// <param name="area">Settings for filling the rectangle</param>
     /// <param name="rect">Rectangle to fill</param>
-    API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect);
+    API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect, const Color &tint = Color::White);
 
     /// <summary>
     /// Draws a rectangular area filled with color or texture, depending on the area settings
@@ -1512,14 +1517,14 @@ public:
     /// <param name="area">Settings for filling the rectangle</param>
     /// <param name="pos">Position of the rectangle</param>
     /// <param name="size">Size of the rectangle</param>
-    API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size);
+    API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size, const Color &tint = Color::White);
 
     /// <summary>
     /// Draws a list of styled areas in a rectangle
     /// </summary>
     /// <param name="area">List of styled areas filling the rectangle</param>
     /// <param name="rect">Rectangle to fill</param>
-    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect);
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect, const Color &tint = Color::White);
 
     /// <summary>
     /// Draws a list of styled areas in a rectangle
@@ -1527,7 +1532,7 @@ public:
     /// <param name="area">List of styled areas filling the rectangle</param>
     /// <param name="pos">Position of the rectangle</param>
     /// <param name="size">Size of the rectangle</param>
-    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size);
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size, const Color &tint = Color::White);
 
     /// <summary>
     /// Wrapper to Render2D's PushClip
@@ -2145,7 +2150,7 @@ private:
     /// <param name="value">The new style name.</param>
     API_FUNCTION() void SetStyleName(const String &value);
 
-    void DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect);
+    void DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint = Color::White);
     void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
     void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
 

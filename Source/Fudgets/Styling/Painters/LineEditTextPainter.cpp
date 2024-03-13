@@ -145,7 +145,7 @@ Int2 FudgetLineEditTextPainter::Measure(FudgetControl *control, const StringView
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
     opt.Scale = options.Scale;
-    opt.VerticalAlignment = options.VerticalAlignment;
+    opt.VerticalAlignment = TextAlignment::Near;
     opt.HorizontalAlignment = TextAlignment::Near;
     opt.TextWrapping = TextWrapping::NoWrap;
     opt.Bounds = Rectangle(Float2::Zero, Float2::Zero);

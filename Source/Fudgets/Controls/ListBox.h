@@ -74,37 +74,6 @@ private:
     bool _allow_duplicates;
 };
 
-
-//API_ENUM()
-//enum class FudgetListBoxIds
-//{
-//    First = 5000,
-//
-//    FramePainter = First,
-//    FrameStyle,
-//
-//    FrameDraw,
-//    DisabledFrameDraw,
-//    FocusedFrameDraw,
-//
-//    ContentPadding,
-//
-//    ItemPainter,
-//    ItemStyle,
-//
-//    TextPainter,
-//    TextStyle,
-//
-//    SelectionDraw,
-//    DisabledSelectionDraw,
-//    TextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    DisabledSelectedTextColor,
-//
-//    Font,
-//};
-
 /// <summary>
 /// Standard list box class that shows a list of text, with items one below the other, sized to fill the
 /// width of the content area of the control.
@@ -117,7 +86,6 @@ class FUDGETS_API FudgetListBox : public FudgetListControl
 public:
     ~FudgetListBox();
 
-
     /// <inheritdoc />
     void OnInitialize() override;
 
@@ -126,6 +94,19 @@ public:
 
     /// <inheritdoc />
     void OnDraw() override;
+
+    /// <inheritdoc />
+    FudgetInputResult OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
+    /// <inheritdoc />
+    bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+    /// <inheritdoc />
+    void OnMouseMove(Float2 pos, Float2 global_pos) override;
+    /// <inheritdoc />
+    void OnMouseLeave() override;
+    /// <inheritdoc />
+    bool WantsNavigationKey(KeyboardKeys key) override;
+    /// <inheritdoc />
+    FudgetInputResult OnKeyDown(KeyboardKeys key) override;
 
     /// <summary>
     /// Gets the data provider currently set for this list control.
@@ -157,15 +138,6 @@ public:
     API_PROPERTY() virtual void SetDefaultItemSize(Int2 value);
 
     /// <summary>
-    /// Gets the size of an item in the list control at the given data index. For controls with fixed sized
-    /// items this is always the same as the default item size. If the item size is not fixed, this will still
-    /// return the default item size if the item at index hasn't yet been processed.
-    /// </summary>
-    /// <param name="index">The index of the data item to measure</param>
-    /// <returns>Item dimensions at index</returns>
-    API_FUNCTION() virtual Int2 GetItemSize(int index);
-
-    /// <summary>
     /// Whether items in the list control all have the same size. If so, use the default item size to get or
     /// set that size.
     /// </summary>
@@ -176,6 +148,24 @@ public:
     /// </summary>
     /// <param name="value">Whether items should all be the same size</param>
     API_PROPERTY() virtual void SetItemsHaveFixedSize(bool value);
+
+    /// <summary>
+    /// Gets the size of an item at index, calculating or measuring it if necessary. For controls with fixed sized
+    /// items this is always the same as the default item size. This can be faster than calling GetItemRect and
+    /// checking its size, if the item's location is not needed.
+    /// </summary>
+    /// <param name="item_index">Index of the item in the list</param>
+    /// <returns>Item size of the item at the index</returns>
+    Int2 GetItemSize(int item_index) override;
+    /// <inheritdoc />
+    int ItemIndexAt(Float2 point) override;
+    /// <inheritdoc />
+    bool IsItemSelected(int item_index) const override;
+    /// <inheritdoc />
+    Rectangle GetItemRect(int item_index) override;
+protected:
+    /// <inheritdoc />
+    FudgetControlFlag GetInitFlags() const override;
 private:
     FudgetPadding GetInnerPadding() const;
 
@@ -185,13 +175,32 @@ private:
     FudgetStringListProvider *_data;
     bool _owned_data;
 
-    int _current;
-    Int2 _scroll_pos;
-    bool _fixed_item_size;
+    // Index of the focused item which was last selected or moved to. The focused item is always visible.
+    int _focus_index;
 
+    Int2 _scroll_pos;
+    // Index of the first visible item at the top.
+    int _top_item;
+    // Position of the first visible item at the top, relative to the virtual origin of the contents.
+    Int2 _top_item_pos;
+    // Scrolling keeps the top item fully in view.
+    bool _snap_top_item;
+
+    // Whether every item has the same size
+    bool _fixed_item_size;
+    // The default size of items in the list. Setting _fixed_item_size to true makes every item have the default size.
+    // Otherwise the items will be treated like having this size before they are measured.
     Int2 _default_size;
 
+    // Height of each item in the list when _fixed_item_size is false. This list is not always complete if the items
+    // are measured in small blocks. Not measured items have a value of -1 in this list. Check _size_processed to tell
+    // the number of fully measured items.
     Array<int> _item_heights;
+    // Number of list box items with their sizes measured. Only used if _fixed_item_size is false and the items are
+    // measured in small blocks.
     int _size_processed;
+
+    // Index of item currently under the mouse pointer.
+    int _hovered_index;
 };
 

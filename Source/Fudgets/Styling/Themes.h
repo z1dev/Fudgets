@@ -293,6 +293,11 @@ public:
     API_FIELD(ReadOnly) static const String COMBOBOX_LIST_STYLE;
 
     /// <summary>
+    /// Base style for controls with a text input field and a frame
+    /// </summary>
+    API_FIELD(ReadOnly) static const String LISTBOX_STYLE;
+
+    /// <summary>
     // Name of the default theme.
     /// </summary>
     API_FIELD(ReadOnly) static const String MAIN_THEME;

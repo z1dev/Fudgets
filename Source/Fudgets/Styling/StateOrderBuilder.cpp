@@ -27,7 +27,7 @@ uint64 FudgetStateOrder::GetMatchingState(uint64 states) const
     {
         if ((states & data[ix]->_state) != 0 || data[ix]->_state == 0)
         {
-            result = data[ix]->_state;
+            result |= data[ix]->_state;
             if (data[ix]->_has_sub_items)
             {
                 ix = -1;

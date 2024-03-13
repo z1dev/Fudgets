@@ -31,41 +31,6 @@ enum class FudgetTextBoxSizingMode
 };
 
 
-//API_ENUM()
-//enum class FudgetTextBoxIds
-//{
-//    First = 6000,
-//
-//    FramePainter = First,
-//    FrameStyle,
-//
-//    FrameDraw,
-//    DisabledFrameDraw,
-//    FocusedFrameDraw,
-//
-//    ContentPadding,
-//
-//    TextPainter,
-//    TextStyle,
-//
-//    TextSelBg,
-//    DisabledTextSelBg,
-//
-//    TextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    DisabledSelectedTextColor,
-//
-//    Font,
-//
-//    CaretDraw,
-//    CaretBlinkTime,
-//    CaretWidth,
-//    CaretScrollCount,
-//    BeamCursor,
-//    SnapTopLine,
-//};
-
 /// <summary>
 /// Multiline input box for unformatted basic text. Text can span over multiple lines either
 /// when lines are too long and word wrapping is enabled, or if there are newline characters

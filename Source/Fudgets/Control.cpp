@@ -787,7 +787,7 @@ void FudgetControl::FillTriangle(const Float2& p0, const Float2& p1, const Float
     Render2D::FillTriangle(CachedLocalToGlobal(p0), CachedLocalToGlobal(p1), CachedLocalToGlobal(p2), color);
 }
 
-void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
+void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect, const Color &tint)
 {
     CacheGlobalToLocal();
     bool draw_color = (area.AreaType & FudgetFillType::Color) == FudgetFillType::Color;
@@ -821,19 +821,19 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
                 return;
             if (borders.Left == borders.Right && borders.Left == borders.Top && borders.Top == borders.Bottom)
             {
-                DrawRectangle(r, area.Tint, (float)area.Borders.Left);
+                DrawRectangle(r, area.Tint * tint, (float)area.Borders.Left);
                 return;
             }
 
             // Draw borders normally with lines
             if (borders.Left > 0)
-                DrawLine(r.GetUpperLeft() - (float)borders.Top * 0.5f, r.GetBottomLeft() + (float)borders.Bottom * 0.5f, area.Tint, (float)borders.Left);
+                DrawLine(r.GetUpperLeft() - (float)borders.Top * 0.5f, r.GetBottomLeft() + (float)borders.Bottom * 0.5f, area.Tint * tint, (float)borders.Left);
             if (borders.Right > 0)
-                DrawLine(r.GetUpperRight() - (float)borders.Top * 0.5f, r.GetBottomRight() + (float)borders.Bottom * 0.5f, area.Tint, (float)borders.Right);
+                DrawLine(r.GetUpperRight() - (float)borders.Top * 0.5f, r.GetBottomRight() + (float)borders.Bottom * 0.5f, area.Tint * tint, (float)borders.Right);
             if (borders.Top > 0)
-                DrawLine(r.GetUpperLeft() - (float)borders.Left * 0.5f, r.GetUpperRight() + (float)borders.Right * 0.5f, area.Tint, (float)borders.Top);
+                DrawLine(r.GetUpperLeft() - (float)borders.Left * 0.5f, r.GetUpperRight() + (float)borders.Right * 0.5f, area.Tint * tint, (float)borders.Top);
             if (borders.Bottom > 0)
-                DrawLine(r.GetBottomLeft() - (float)borders.Left * 0.5f, r.GetBottomRight() + (float)borders.Right * 0.5f, area.Tint, (float)borders.Bottom);
+                DrawLine(r.GetBottomLeft() - (float)borders.Left * 0.5f, r.GetBottomRight() + (float)borders.Right * 0.5f, area.Tint * tint, (float)borders.Bottom);
 
             return;
         }
@@ -860,29 +860,29 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
             // Draw border in 4 parts, top, left, right, bottom
 
             if (borders.Top > 0.0f)
-                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, Rectangle(r.GetUpperLeft(), Float2(r.GetWidth(), (float)borders.Top)), area.Tint, stretch, point);
+                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, Rectangle(r.GetUpperLeft(), Float2(r.GetWidth(), (float)borders.Top)), area.Tint * tint, stretch, point);
             if (borders.Left > 0.0f)
-                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, (float)borders.Top), Rectangle(Float2(r.GetLeft(), r.GetTop() + (float)borders.Top), Float2((float)borders.Left, r.GetHeight() - (float)borders.Height())), area.Tint, stretch, point);
+                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, (float)borders.Top), Rectangle(Float2(r.GetLeft(), r.GetTop() + (float)borders.Top), Float2((float)borders.Left, r.GetHeight() - (float)borders.Height())), area.Tint * tint, stretch, point);
             if (borders.Right > 0.0f)
-                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(r.GetWidth() - (float)borders.Right, (float)borders.Top), Rectangle(Float2(r.GetRight() - (float)borders.Right, r.GetTop() + (float)borders.Top), Float2((float)borders.Right, r.GetHeight() - (float)borders.Height())), area.Tint, stretch, point);
+                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(r.GetWidth() - (float)borders.Right, (float)borders.Top), Rectangle(Float2(r.GetRight() - (float)borders.Right, r.GetTop() + (float)borders.Top), Float2((float)borders.Right, r.GetHeight() - (float)borders.Height())), area.Tint * tint, stretch, point);
             if (borders.Bottom > 0.0f)
-                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, r.GetHeight() - (float)borders.Bottom), Rectangle(Float2(0.0f, r.GetBottom() - (float)borders.Bottom), Float2(r.GetWidth(), (float)borders.Bottom)), area.Tint, stretch, point);
+                DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset - Float2(0.0f, r.GetHeight() - (float)borders.Bottom), Rectangle(Float2(0.0f, r.GetBottom() - (float)borders.Bottom), Float2(r.GetWidth(), (float)borders.Bottom)), area.Tint * tint, stretch, point);
             return;
         }
 
-        DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, r, area.Tint, stretch, point);
+        DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, r, area.Tint * tint, stretch, point);
         return;
     }
 
     if (draw_color)
     {
-        FillRectangle(rect, area.Tint);
+        FillRectangle(rect, area.Tint * tint);
         return;
     }
 
     if ((area.AreaType & FudgetFillType::Sliced) != FudgetFillType::Sliced)
     {
-        DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, rect, area.Tint, stretch, point);
+        DrawTextureInner(area.Texture, area.SpriteHandle.ToHandle(), area.TextureScale, area.TextureOffset, rect, area.Tint * tint, stretch, point);
         return;
     }
 
@@ -890,35 +890,35 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, const Rectangle &rect)
     {
         if (!point)
         {
-            Draw9SlicingPrecalculatedTexture(area.Texture, rect, borders.AsPadding(), area.Tint);
+            Draw9SlicingPrecalculatedTexture(area.Texture, rect, borders.AsPadding(), area.Tint * tint);
             return;
         }
-        Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, borders.AsPadding(), area.Tint);
+        Draw9SlicingPrecalculatedTexturePoint(area.Texture, rect, borders.AsPadding(), area.Tint * tint);
         return;
     }
 
     if (!point)
     {
-        Draw9SlicingPrecalculatedSprite(area.SpriteHandle.ToHandle(), rect, borders.AsPadding(), area.Tint);
+        Draw9SlicingPrecalculatedSprite(area.SpriteHandle.ToHandle(), rect, borders.AsPadding(), area.Tint * tint);
         return;
     }
 
-    Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle.ToHandle(), rect, borders.AsPadding(), area.Tint);
+    Draw9SlicingPrecalculatedSpritePoint(area.SpriteHandle.ToHandle(), rect, borders.AsPadding(), area.Tint * tint);
 }
 
-void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size)
+void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size, const Color &tint)
 {
-    DrawArea(area, Rectangle(pos, size));
+    DrawArea(area, Rectangle(pos, size), tint);
 }
 
-void FudgetControl::DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect)
+void FudgetControl::DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect, const Color &tint)
 {
-    DrawAreaList(*drawable->_list, rect);
+    DrawAreaList(*drawable->_list, rect, tint);
 }
 
-void FudgetControl::DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size)
+void FudgetControl::DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size, const Color &tint)
 {
-    DrawAreaList(*drawable->_list, Rectangle(pos, size));
+    DrawAreaList(*drawable->_list, Rectangle(pos, size), tint);
 }
 
 void FudgetControl::PushClip(const Rectangle &rect)
@@ -1720,7 +1720,7 @@ void FudgetControl::DoParentStateChanged()
     SetState(FudgetControlState::ParentHidden, !_parent->IsVisible());
 }
 
-void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect)
+void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint)
 {
     Rectangle r = rect;
     for (const auto item : area._list)
@@ -1728,19 +1728,19 @@ void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Re
         switch (item->_type)
         {
             case FudgetDrawInstructionType::DrawArea:
-                DrawArea(((FudgetDrawInstructionDrawArea*)(item))->_draw_area, r);
+                DrawArea(((FudgetDrawInstructionDrawArea*)(item))->_draw_area, r, tint);
                 break;
             case FudgetDrawInstructionType::Padding:
                 r = ((FudgetDrawInstructionPadding*)(item))->_padding.Padded(r);
                 break;
             case FudgetDrawInstructionType::FillColor:
-                FillRectangle(r, ((FudgetDrawInstructionColor*)(item))->_color);
+                FillRectangle(r, ((FudgetDrawInstructionColor*)(item))->_color * tint);
                 break;
             case FudgetDrawInstructionType::Blur:
                 DrawBlur(r, ((FudgetDrawInstructionFloat*)(item))->_value);
                 break;
             case FudgetDrawInstructionType::AreaList:
-                DrawAreaList(*((FudgetDrawInstructionList*)(item)), r);
+                DrawAreaList(*((FudgetDrawInstructionList*)(item)), r, tint);
                 break;
         }
     }

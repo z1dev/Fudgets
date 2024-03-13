@@ -14,8 +14,6 @@
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
     _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _button_capturing(false), _last_mouse_pos(0.f)
 {
-    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::COMBOBOX_STYLE);
-    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetComboBox>();
 }
 
 FudgetComboBox::~FudgetComboBox()
@@ -254,7 +252,7 @@ FudgetPadding FudgetComboBox::GetTextPadding() const
 
 FudgetPadding FudgetComboBox::GetButtonPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetPadding() : FudgetPadding(0);
+    return _frame_painter != nullptr ? _frame_painter->GetVisualPadding() : FudgetPadding(0);
 }
 
 bool FudgetComboBox::PosOnEditor(Float2 pos) const

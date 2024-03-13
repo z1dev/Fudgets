@@ -11,30 +11,6 @@ class FudgetStringListProvider;
 class FudgetFramedFieldPainter;
 
 
-//API_ENUM()
-//enum class FudgetComboBoxIds
-//{
-//    First = 2000,
-//
-//    FramePainter = First,
-//    FrameStyle,
-//
-//    FrameDraw,
-//    FocusedFrameDraw,
-//    DisabledFrameDraw,
-//
-//    ContentPadding,
-//
-//    ButtonImage,
-//    ButtonHoveredImage,
-//    ButtonDisabledImage,
-//    ButtonWidth,
-//
-//    CaretDraw,
-//    CaretBlinkTime,
-//    CaretWidth,
-//    CaretScrollCount,
-//};
 
 /// <summary>
 /// Standard combo box control that has an editable part, a button and opens a drop down window with a list of choices.

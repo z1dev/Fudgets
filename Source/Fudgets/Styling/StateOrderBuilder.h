@@ -45,7 +45,7 @@ public:
     ~FudgetStateOrder() { delete _data; }
 
     /// <summary>
-    /// Finds the state flag that first matches in this state order. It's enough for one of the flags to match in any
+    /// Finds the state flag(s) that first match in this state order. It's enough for one of the flags to match in any
     /// of the items in the state order to match. For example if an item is specifying both Focused and Selected, and
     /// the state flags only have either Focused or Selected, but not both, it will still match.
     /// To make sure both are required, make a state order with one of the flags first, and a sub-item for the other

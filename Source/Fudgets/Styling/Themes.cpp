@@ -48,6 +48,7 @@ const String FudgetThemes::COMBOBOX_STYLE = TEXT("Fudgets_ComboboxStyle");
 const String FudgetThemes::COMBOBOX_EDITOR_STYLE = TEXT("Fudgets_ComboboxEditorStyle");
 const String FudgetThemes::COMBOBOX_BUTTON_STYLE = TEXT("Fudgets_ComboboxButtonStyle");
 const String FudgetThemes::COMBOBOX_LIST_STYLE = TEXT("Fudgets_ComboboxListStyle");
+const String FudgetThemes::LISTBOX_STYLE = TEXT("Fudgets_ListboxStyle");
 
 
 // FudgetTheme
@@ -223,10 +224,10 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
     FudgetStateOrderBuilder::End();
 
-    // Basic
+    // Basic resources
 
     main_theme->SetResource(FudgetThemePartIds::Background, Color::White);
-    main_theme->SetResource(FudgetThemePartIds::HoveredBackground, Color::White);
+    main_theme->SetResource(FudgetThemePartIds::FocusedBackground, Color::White);
     main_theme->SetResource(FudgetThemePartIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
 
     FudgetDrawableBuilder::Begin();
@@ -238,7 +239,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     //FudgetDrawableBuilder::Begin();
     //FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
     //main_theme->SetResource(FudgetThemePartIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
-    main_theme->SetResource(FudgetThemePartIds::Padding, FudgetPadding(1));
+    main_theme->SetResource(FudgetThemePartIds::VisualPadding, FudgetPadding(1));
     main_theme->SetResource(FudgetThemePartIds::ContentPadding, FudgetPadding(4));
     main_theme->SetForwarding(FudgetThemePartIds::ButtonContentPadding, FudgetThemePartIds::ContentPadding);
 
@@ -265,35 +266,55 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::CaretScrollCount, 5);
     main_theme->SetResource(FudgetThemePartIds::BeamCursor, CursorType::IBeam);
 
+    // Style names used for each default class
+
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetButton"), IMAGE_BUTTON_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetTextBox"), FRAMED_MULTILINE_TEXT_INPUT_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetLineEdit"), FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetListBox"), FRAMED_CONTROL_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetComboBox"), COMBOBOX_STYLE);
+    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetListBox"), LISTBOX_STYLE);
+
+    // Painter resource mappings
+
     FudgetFramedFieldPainterResources frame_res;
     frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
-    frame_res.FieldBackground = (int)FudgetFramedControlPartIds::FieldBackground;
-    frame_res.HoveredFieldBackground = (int)FudgetFramedControlPartIds::HoveredFieldBackground;
-    frame_res.PressedFieldBackground = (int)FudgetFramedControlPartIds::PressedFieldBackground;
-    frame_res.DownFieldBackground = (int)FudgetFramedControlPartIds::DownFieldBackground;
-    frame_res.DisabledFieldBackground = (int)FudgetFramedControlPartIds::DisabledFieldBackground;
-    frame_res.FocusedFieldBackground = (int)FudgetFramedControlPartIds::FocusedFieldBackground;
-    frame_res.FieldDrawPadding = (int)FudgetFramedControlPartIds::FieldDrawPadding;
-    frame_res.HoveredFieldDrawPadding = (int)FudgetFramedControlPartIds::HoveredFieldDrawPadding;
-    frame_res.PressedFieldDrawPadding = (int)FudgetFramedControlPartIds::PressedFieldDrawPadding;
-    frame_res.DownFieldDrawPadding = (int)FudgetFramedControlPartIds::DownFieldDrawPadding;
-    frame_res.DisabledFieldDrawPadding = (int)FudgetFramedControlPartIds::DisabledFieldDrawPadding;
-    frame_res.FocusedFieldDrawPadding = (int)FudgetFramedControlPartIds::FocusedFieldDrawPadding;
 
-    frame_res.FrameDraw = (int)FudgetFramedControlPartIds::FrameDraw;
-    frame_res.HoveredFrameDraw = (int)FudgetFramedControlPartIds::HoveredFrameDraw;
-    frame_res.PressedFrameDraw = (int)FudgetFramedControlPartIds::PressedFrameDraw;
-    frame_res.DownFrameDraw = (int)FudgetFramedControlPartIds::DownFrameDraw;
-    frame_res.FocusedFrameDraw = (int)FudgetFramedControlPartIds::FocusedFrameDraw;
-    frame_res.DisabledFrameDraw = (int)FudgetFramedControlPartIds::DisabledFrameDraw;
-    frame_res.FrameDrawPadding = (int)FudgetFramedControlPartIds::FrameDrawPadding;
-    frame_res.HoveredFrameDrawPadding = (int)FudgetFramedControlPartIds::HoveredFrameDrawPadding;
-    frame_res.PressedFrameDrawPadding = (int)FudgetFramedControlPartIds::PressedFrameDrawPadding;
-    frame_res.DownFrameDrawPadding = (int)FudgetFramedControlPartIds::DownFrameDrawPadding;
-    frame_res.FocusedFrameDrawPadding = (int)FudgetFramedControlPartIds::FocusedFrameDrawPadding;
-    frame_res.DisabledFrameDrawPadding = (int)FudgetFramedControlPartIds::DisabledFrameDrawPadding;
+    FudgetFramedFieldLayer bg_layer;
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Focused,
+        FudgetFramedControlPartIds::FocusedFieldBackground, FudgetFramedControlPartIds::FocusedFieldPadding, FudgetFramedControlPartIds::FocusedFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Hovered,
+        FudgetFramedControlPartIds::HoveredFieldBackground, FudgetFramedControlPartIds::HoveredFieldPadding, FudgetFramedControlPartIds::HoveredFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Pressed,
+        FudgetFramedControlPartIds::PressedFieldBackground, FudgetFramedControlPartIds::PressedFieldPadding, FudgetFramedControlPartIds::PressedFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Down,
+        FudgetFramedControlPartIds::DownFieldBackground, FudgetFramedControlPartIds::DownFieldPadding, FudgetFramedControlPartIds::DownFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Disabled,
+        FudgetFramedControlPartIds::DisabledFieldBackground, FudgetFramedControlPartIds::DisabledFieldPadding, FudgetFramedControlPartIds::DisabledFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Selected,
+        FudgetFramedControlPartIds::SelectedFieldBackground, FudgetFramedControlPartIds::SelectedFieldPadding, FudgetFramedControlPartIds::SelectedFieldTint));
+    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Normal,
+        FudgetFramedControlPartIds::FieldBackground, FudgetFramedControlPartIds::FieldPadding, FudgetFramedControlPartIds::FieldTint));
+    FudgetFramedFieldLayer frame_layer;
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Focused,
+        FudgetFramedControlPartIds::FocusedFrameDraw, FudgetFramedControlPartIds::FocusedFramePadding, FudgetFramedControlPartIds::FocusedFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Hovered,
+        FudgetFramedControlPartIds::HoveredFrameDraw, FudgetFramedControlPartIds::HoveredFramePadding, FudgetFramedControlPartIds::HoveredFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Pressed,
+        FudgetFramedControlPartIds::PressedFrameDraw, FudgetFramedControlPartIds::PressedFramePadding, FudgetFramedControlPartIds::PressedFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Down,
+        FudgetFramedControlPartIds::DownFrameDraw, FudgetFramedControlPartIds::DownFramePadding, FudgetFramedControlPartIds::DownFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Disabled,
+        FudgetFramedControlPartIds::DisabledFrameDraw, FudgetFramedControlPartIds::DisabledFramePadding, FudgetFramedControlPartIds::DisabledFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Selected,
+        FudgetFramedControlPartIds::SelectedFrameDraw, FudgetFramedControlPartIds::SelectedFramePadding, FudgetFramedControlPartIds::SelectedFrameTint));
+    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Normal,
+        FudgetFramedControlPartIds::FrameDraw, FudgetFramedControlPartIds::FramePadding, FudgetFramedControlPartIds::FrameTint));
 
-    frame_res.Padding = (int)FudgetFramedControlPartIds::Padding;
+    frame_res.Layers.Add(bg_layer);
+    frame_res.Layers.Add(frame_layer);
+
+    frame_res.VisualPadding = (int)FudgetFramedControlPartIds::VisualPadding;
     frame_res.ContentPadding = (int)FudgetFramedControlPartIds::ContentPadding;
    
     main_theme->SetResource(FudgetThemePartIds::FieldFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res));
@@ -367,6 +388,13 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     main_theme->SetResource(FudgetThemePartIds::AlignedImageContentPainter, FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(btn_img_res));
 
+
+    FudgetListBoxItemPainterResources lb_item_res;
+    lb_item_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER;
+    lb_item_res.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
+
+    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(lb_item_res));
+
     // Built-in styles:
 
     FudgetStyle *frame_style = CreateOrGetStyle(FRAMED_CONTROL_STYLE);
@@ -378,7 +406,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::FocusedFrameDraw, FudgetThemePartIds::FocusedFrameDraw);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::HoveredFrameDraw, FudgetThemePartIds::HoveredFrameDraw);
 
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::Padding, FudgetThemePartIds::Padding);
+    frame_style->SetResourceOverride(FudgetFramedControlPartIds::VisualPadding, FudgetThemePartIds::VisualPadding);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ContentPadding);
 
     FudgetStyle *text_style = CreateOrGetStyle(TEXT_INPUT_STYLE);
@@ -498,14 +526,12 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HorzImageAlign, FudgetThemePartIds::ComboBoxButtonImageHorzAlignment);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::VertImageAlign, FudgetThemePartIds::ComboBoxButtonImageVertAlignment);
 
-    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetButton"), IMAGE_BUTTON_STYLE);
-    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetTextBox"), FRAMED_MULTILINE_TEXT_INPUT_STYLE);
-    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetLineEdit"), FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
-    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetListBox"), FRAMED_CONTROL_STYLE);
-    main_theme->SetClassStyleName(TEXT("Fudgets.FudgetComboBox"), COMBOBOX_STYLE);
-    
-}
+    FudgetStyle *listbox_style = frame_style->CreateInheritedStyle(LISTBOX_STYLE);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::ItemPainter, FudgetThemePartIds::ListItemPainter);
 
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::TextPainter, FudgetThemePartIds::SingleLineInputTextPainter);
+    listbox_style->AddReferencesFor(text_style);
+}
 
 void FudgetThemes::Uninitialize(bool in_game)
 {

@@ -14,7 +14,7 @@ FudgetListBoxItemPainter::~FudgetListBoxItemPainter()
 {
 }
 
-void FudgetListBoxItemPainter::Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping)
+void FudgetListBoxItemPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
     if (control == nullptr)
         return;
@@ -28,7 +28,7 @@ void FudgetListBoxItemPainter::Initialize(FudgetControl *control, /*FudgetStyle 
     //if (!GetMappedStyle(control, style_override, (int)FudgetListBoxItemPainterIds::TextStyle, res.TextStyle, text_style))
     //    text_style = nullptr;
 
-    _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, res.TextPainter/* text_style, nullptr, style_override*/);
+    _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, res.TextPainter);
 }
 
 void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, FudgetVisualControlState states)

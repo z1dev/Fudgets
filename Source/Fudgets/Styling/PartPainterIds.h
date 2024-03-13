@@ -14,33 +14,135 @@ enum class FudgetThemePartIds
     First = 1,
 
     /// <summary>
-    /// Background drawable or color, used for the standard framed controls
+    /// Background drawable or color, used for standard framed controls
     /// </summary>
     Background = First,
     /// <summary>
-    /// Hovered background drawable or color, used for the standard framed controls
+    /// Hovered background drawable or color, used for standard framed controls
     /// </summary>
     HoveredBackground,
     /// <summary>
-    /// Disabled background drawable or color, used for the standard framed controls
+    /// Disabled background drawable or color, used for standard framed controls
     /// </summary>
     DisabledBackground,
     /// <summary>
-    /// Frame edge drawable or color, used for the standard framed controls
+    /// Focused background drawable or color, used for standard framed controls
+    /// </summary>
+    FocusedBackground,
+    /// <summary>
+    /// Selected background drawable or color, used for standard framed controls
+    /// </summary>
+    SelectedBackground,
+
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of standard framed controls
+    /// </summary>
+    BackgroundPadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of hovered standard framed controls
+    /// </summary>
+    HoveredBackgroundPadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of disabled standard framed controls
+    /// </summary>
+    DisabledBackgroundPadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of focused standard framed controls
+    /// </summary>
+    FocusedBackgroundPadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the selected background of standard framed controls
+    /// </summary>
+    SelectedBackgroundPadding,
+
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the background of standard framed controls
+    /// </summary>
+    BackgroundTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the background of hovered standard framed controls
+    /// </summary>
+    HoveredBackgroundTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the background of disabled standard framed controls
+    /// </summary>
+    DisabledBackgroundTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the background of focused standard framed controls
+    /// </summary>
+    FocusedBackgroundTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the selected background of standard framed controls
+    /// </summary>
+    SelectedBackgroundTint,
+
+    /// <summary>
+    /// Frame edge drawable or color, used for standard framed controls
     /// </summary>
     FrameDraw,
     /// <summary>
-    /// Focused frame edge drawable or color, used for the standard framed controls
-    /// </summary>
-    FocusedFrameDraw,
-    /// <summary>
-    /// Hovered frame edge drawable or color, used for the standard framed controls
+    /// Hovered frame edge drawable or color, used for standard framed controls
     /// </summary>
     HoveredFrameDraw,
     /// <summary>
-    /// Padding inside the frame of a control or drawable.
+    /// Disabled frame edge drawable or color, used for standard framed controls
     /// </summary>
-    Padding,
+    DisabledFrameDraw,
+    /// <summary>
+    /// Focused frame edge drawable or color, used for standard framed controls
+    /// </summary>
+    FocusedFrameDraw,
+    /// <summary>
+    /// Selected frame edge drawable or color, used for standard framed controls
+    /// </summary>
+    SelectedFrameDraw,
+
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the frame of standard framed controls
+    /// </summary>
+    FrameTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the frame of hovered standard framed controls
+    /// </summary>
+    HoveredFrameTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the frame of disabled standard framed controls
+    /// </summary>
+    DisabledFrameTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the frame of focused standard framed controls
+    /// </summary>
+    FocusedFrameTint,
+    /// <summary>
+    /// Color to multiply every pixel with when drawing the frame of selected standard framed controls
+    /// </summary>
+    SelectedFrameTint,
+
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of standard framed controls
+    /// </summary>
+    FramePadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of hovered standard framed controls
+    /// </summary>
+    HoveredFramePadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of disabled standard framed controls
+    /// </summary>
+    DisabledFramePadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of focused standard framed controls
+    /// </summary>
+    FocusedFramePadding,
+    /// <summary>
+    /// Padding to limit the bounds when drawing the background of selected standard framed controls
+    /// </summary>
+    SelectedFramePadding,
+
+    /// <summary>
+    /// Visual padding inside the frame of a control or drawable for some contents .
+    /// </summary>
+    VisualPadding,
     /// <summary>
     /// Padding inside the frame of a control or drawable that includes extra padding for contents.
     /// </summary>
@@ -416,6 +518,10 @@ enum class FudgetThemePartIds
     /// Painter information for controls with an image content that is aligned within bounds
     /// </summary>
     AlignedImageContentPainter,
+    /// <summary>
+    /// Painter information for controls with a list of items
+    /// </summary>
+    ListItemPainter,
 };
 
 API_ENUM()
@@ -431,27 +537,49 @@ enum class FudgetFramedControlPartIds
     DownFieldBackground,
     DisabledFieldBackground,
     FocusedFieldBackground,
-    FieldDrawPadding,
-    HoveredFieldDrawPadding,
-    PressedFieldDrawPadding,
-    DownFieldDrawPadding,
-    DisabledFieldDrawPadding,
-    FocusedFieldDrawPadding,
+    SelectedFieldBackground,
+
+    FieldPadding,
+    HoveredFieldPadding,
+    PressedFieldPadding,
+    DownFieldPadding,
+    DisabledFieldPadding,
+    FocusedFieldPadding,
+    SelectedFieldPadding,
+
+    FieldTint,
+    HoveredFieldTint,
+    PressedFieldTint,
+    DownFieldTint,
+    DisabledFieldTint,
+    FocusedFieldTint,
+    SelectedFieldTint,
 
     FrameDraw,
     HoveredFrameDraw,
     PressedFrameDraw,
     DownFrameDraw,
-    FocusedFrameDraw,
     DisabledFrameDraw,
-    FrameDrawPadding,
-    HoveredFrameDrawPadding,
-    PressedFrameDrawPadding,
-    DownFrameDrawPadding,
-    FocusedFrameDrawPadding,
-    DisabledFrameDrawPadding,
+    FocusedFrameDraw,
+    SelectedFrameDraw,
 
-    Padding,
+    FramePadding,
+    HoveredFramePadding,
+    PressedFramePadding,
+    DownFramePadding,
+    DisabledFramePadding,
+    FocusedFramePadding,
+    SelectedFramePadding,
+
+    FrameTint,
+    HoveredFrameTint,
+    PressedFrameTint,
+    DownFrameTint,
+    DisabledFrameTint,
+    FocusedFrameTint,
+    SelectedFrameTint,
+
+    VisualPadding,
     ContentPadding,
 };
 
@@ -551,5 +679,14 @@ enum class FudgetComboBoxPartIds
     First = 5000,
 
     ButtonWidth = First,
+};
+
+API_ENUM()
+enum class FudgetListBoxPartIds
+{
+    First = 6000,
+
+    ItemPainter = First,
+    TextPainter,
 };
 

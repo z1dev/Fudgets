@@ -265,24 +265,6 @@ protected:
 };
 
 
-//API_ENUM()
-//enum class FudgetTextBoxPainterIds
-//{
-//    First = 7000,
-//
-//    SelectionDraw = First,
-//    FocusedSelectionDraw,
-//    DisabledSelectionDraw,
-//    TextColor,
-//    FocusedTextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    FocusedSelectedTextColor,
-//    DisabledSelectedTextColor,
-//    Font,
-//};
-
-
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetTextBoxPainterResources
 {

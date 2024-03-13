@@ -7,39 +7,6 @@ class FudgetFramedFieldPainter;
 class FudgetSingleLineTextPainter;
 
 
-//API_ENUM()
-//enum class FudgetLineEditIds
-//{
-//    First = 3000,
-//
-//    FramePainter = First,
-//    FrameStyle,
-//
-//    FrameDraw,
-//    FocusedFrameDraw,
-//    DisabledFrameDraw,
-//
-//    ContentPadding,
-//
-//    TextPainter,
-//    TextStyle,
-//
-//    SelectionDraw,
-//    DisabledSelectionDraw,
-//    TextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    DisabledSelectedTextColor,
-//
-//    Font,
-//
-//    CaretDraw,
-//    CaretBlinkTime,
-//    CaretWidth,
-//    CaretScrollCount,
-//};
-
-
 /// <summary>
 /// Single line input box for unformatted basic text
 /// </summary>

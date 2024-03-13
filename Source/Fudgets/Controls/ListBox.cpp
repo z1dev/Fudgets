@@ -109,12 +109,10 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 
 
 FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _item_painter(nullptr),
-    _data(nullptr), _owned_data(true), _current(-1), _scroll_pos(0), _fixed_item_size(true), _default_size(Int2(-1)), _size_processed(0)
+    _data(nullptr), _owned_data(true), _focus_index(-1), _scroll_pos(0), _top_item(0), _top_item_pos(0), _snap_top_item(false),
+    _fixed_item_size(true), _default_size(Int2(-1)), _size_processed(0), _hovered_index(-1)
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
-
-    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_CONTROL_STYLE);
-    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetListBox>();
 }
 
 FudgetListBox::~FudgetListBox()
@@ -125,32 +123,6 @@ FudgetListBox::~FudgetListBox()
 
 void FudgetListBox::OnInitialize()
 {
-    //FudgetFramedFieldPainter::ResourceMapping frame_res;
-    //frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
-    //frame_res.FrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    //frame_res.HoveredFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    //frame_res.PressedFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    //frame_res.DownFrameDraw = (int)FudgetListBoxIds::FrameDraw;
-    //frame_res.DisabledFrameDraw = (int)FudgetListBoxIds::DisabledFrameDraw;
-    //frame_res.FocusedFrameDraw = (int)FudgetListBoxIds::FocusedFrameDraw;
-    //frame_res.ContentPadding = (int)FudgetListBoxIds::ContentPadding;
-    //_default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
-
-    //FudgetListBoxItemPainter::ResourceMapping item_res;
-    //frame_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER;
-    //item_res.TextPainter = (int)FudgetListBoxIds::TextPainter;
-    //item_res.TextStyle = (int)FudgetListBoxIds::TextStyle;
-
-    //item_res.SelectionDraw = (int)FudgetListBoxIds::SelectionDraw;
-    //item_res.DisabledSelectionDraw = (int)FudgetListBoxIds::DisabledSelectionDraw;
-    //item_res.TextColor = (int)FudgetListBoxIds::TextColor;
-    //item_res.DisabledTextColor = (int)FudgetListBoxIds::DisabledTextColor;
-    //item_res.SelectedTextColor = (int)FudgetListBoxIds::SelectedTextColor;
-    //item_res.DisabledSelectedTextColor = (int)FudgetListBoxIds::DisabledSelectedTextColor;
-
-    //item_res.Font = (int)FudgetListBoxIds::Font;
-
-    //_default_item_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(item_res);
 }
 
 void FudgetListBox::OnStyleInitialize()
@@ -163,7 +135,7 @@ void FudgetListBox::OnStyleInitialize()
     //FudgetStyle *item_style;
     //if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
     //    item_style = nullptr;
-    //_item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxIds::ItemPainter);
+    _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
 }
 
 void FudgetListBox::OnDraw()
@@ -175,20 +147,73 @@ void FudgetListBox::OnDraw()
     if (_data == nullptr || _item_painter == nullptr)
         return;
 
-    int count = _data->GetCount() == 0;
+    int count = _data->GetCount();
     if (count == 0)
         return;
 
     bounds = GetInnerPadding().Padded(bounds);
+    PushClip(bounds);
 
-    int pos = 0;
-    Rectangle r = Rectangle(Float2::Zero, Float2(bounds.GetWidth(), 0.f));
-    for (int ix = 0; ix < count; ++ix)
+    Rectangle r = Rectangle(bounds.GetUpperLeft(), Float2(bounds.GetWidth(), 0.f));
+    int pos = ItemIndexAt(r.Location);
+    r.Location.Y = GetItemRect(pos).Location.Y;
+
+    for (int ix = pos; ix < count && r.Location.Y < bounds.GetBottom(); ++ix)
     {
         r.Size.Y = (float)GetItemSize(ix).Y;
-        _item_painter->Draw(this, r, Int2(0, pos), ix, _data, GetVisualState());
+        FudgetVisualControlState hover_state = (_hovered_index == ix ? FudgetVisualControlState::Hovered : (FudgetVisualControlState)0);
+        FudgetVisualControlState select_state = (IsItemSelected(ix) ? FudgetVisualControlState::Selected : (FudgetVisualControlState)0);
+        _item_painter->Draw(this, r, Int2(0, pos), ix, _data, (GetVisualState() & ~FudgetVisualControlState::Hovered) | hover_state | select_state);
         r.Location.Y += r.Size.Y;
     }
+
+    PopClip();
+}
+
+FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
+{
+    if (button != MouseButton::Left)
+        return FudgetInputResult::Consume;
+
+    _hovered_index = -1;
+
+    return FudgetInputResult::Consume;
+}
+
+bool FudgetListBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
+{
+    if (button == MouseButton::Left)
+    {
+
+    }
+    return true;
+}
+
+void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
+{
+    if (MouseIsCaptured())
+    {
+
+    }
+    else
+    {
+        _hovered_index = ItemIndexAt(pos);
+    }
+}
+
+void FudgetListBox::OnMouseLeave()
+{
+    _hovered_index = -1;
+}
+
+bool FudgetListBox::WantsNavigationKey(KeyboardKeys key)
+{
+    return key == KeyboardKeys::ArrowUp || key == KeyboardKeys::ArrowDown;
+}
+
+FudgetInputResult FudgetListBox::OnKeyDown(KeyboardKeys key)
+{
+    return FudgetInputResult::Consume;
 }
 
 void FudgetListBox::SetDataProvider(FudgetStringListProvider *data)
@@ -201,8 +226,19 @@ void FudgetListBox::SetDataProvider(FudgetStringListProvider *data)
 
     _owned_data = false;
     _data = data;
-    _current = -1;
+    _focus_index = -1;
+    _size_processed = 0;
     _scroll_pos = Int2::Zero;
+    _item_heights.Clear();
+
+    if (!_fixed_item_size && _data != nullptr)
+    {
+        _item_heights.AddUninitialized(_data->GetCount());
+        for (int ix = 0, siz = _data->GetCount(); ix < siz; ++ix)
+            _item_heights[ix] = -1;
+    }
+
+    // TODO: react to data changes, item insertion etc.
 }
 
 void FudgetListBox::SetDefaultItemSize(Int2 value)
@@ -212,22 +248,99 @@ void FudgetListBox::SetDefaultItemSize(Int2 value)
     _default_size = value;
 }
 
-Int2 FudgetListBox::GetItemSize(int index)
-{
-    if (_data == nullptr || _size_processed <= index)
-        return _default_size;
-
-    if (_item_heights.IsEmpty())
-        return _default_size;
-
-    return Int2(_default_size.X, _item_heights[index]);
-}
-
 void FudgetListBox::SetItemsHaveFixedSize(bool value)
 {
     if (_fixed_item_size == value)
         return;
     _fixed_item_size = value;
+    _size_processed = 0;
+    _item_heights.Clear();
+
+    if (!_fixed_item_size && _data != nullptr)
+    {
+        _item_heights.AddUninitialized(_data->GetCount());
+        for (int ix = 0, siz = _data->GetCount(); ix < siz; ++ix)
+            _item_heights[ix] = -1;
+    }
+}
+
+int FudgetListBox::ItemIndexAt(Float2 point)
+{
+    Int2 pt = Int2((int)point.X, (int)point.Y) - _top_item_pos;
+
+    int index = _top_item;
+    int top_pos = _top_item_pos.Y;
+    int pos_height = GetItemSize(index).Y;
+    int count = _data->GetCount();
+
+    while (pt.Y < top_pos && index > 0)
+    {
+        pos_height = GetItemSize(--index).Y;
+        top_pos -= pos_height;
+    }
+
+    while (pt.Y >= top_pos + pos_height && index < count - 1)
+    {
+        top_pos += pos_height;
+        pos_height = GetItemSize(++index).Y;
+    }
+
+    return index;
+}
+
+bool FudgetListBox::IsItemSelected(int item_index) const
+{
+    return false;
+}
+
+Int2 FudgetListBox::GetItemSize(int item_index)
+{
+    if (_data == nullptr || _fixed_item_size || _item_heights[item_index] < 0)
+    {
+        if (_item_painter != nullptr && _data != nullptr && _fixed_item_size && _default_size.Y <= 0)
+        {
+            _default_size = _item_painter->Measure(this, item_index, _data, FudgetVisualControlState::Normal);
+            _default_size.X = (int)GetInnerPadding().Padded(GetBounds()).GetWidth();
+        }
+
+        return _default_size;
+    }
+
+    if (_item_heights.Count() <= item_index)
+        return _default_size;
+
+    return Int2(_default_size.X, _item_heights[item_index]);
+}
+
+Rectangle FudgetListBox::GetItemRect(int item_index)
+{
+    int count = _data->GetCount();
+    if (item_index < 0 || item_index > count)
+        return Rectangle::Empty;
+
+    int index = _top_item;
+    Int2 pos = _top_item_pos;
+    Int2 pos_size = GetItemSize(index);
+
+    while (item_index < index)
+    {
+        pos_size = GetItemSize(--index);
+        pos.Y -= pos_size.Y;
+    }
+    while (item_index > index)
+    {
+        pos.Y += pos_size.Y;
+        pos_size = GetItemSize(++index);
+    }
+
+    return Rectangle(pos, pos_size);
+}
+
+FudgetControlFlag FudgetListBox::GetInitFlags() const
+{
+    return FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave | FudgetControlFlag::CanHandleMouseUpDown |
+        FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::FocusOnMouseLeft |
+        FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | Base::GetInitFlags();
 }
 
 FudgetPadding FudgetListBox::GetInnerPadding() const

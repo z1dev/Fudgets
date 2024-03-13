@@ -26,20 +26,10 @@ struct FUDGETS_API FudgetListBoxItemPainterResources
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetListBoxItemPainterResources);
 
+    API_FIELD() int StateOrderIndex = -1;
+
     API_FIELD() int TextPainter = 0;
-    API_FIELD() int TextStyle = 0;
-
-    API_FIELD() int SelectionDraw = 0;
-    API_FIELD() int DisabledSelectionDraw = 0;
-    API_FIELD() int TextColor = 0;
-    API_FIELD() int DisabledTextColor = 0;
-    API_FIELD() int SelectedTextColor = 0;
-    API_FIELD() int DisabledSelectedTextColor = 0;
-
-    API_FIELD() int Font = 0;
 };
-
-
 
 API_CLASS()
 class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter

@@ -136,7 +136,7 @@ public:
     }
 
     template<typename T, typename R>
-    typename std::enable_if<Fudget_is_resource_id_or_int<T>() && Fudget_is_class<R>(), void>::type SetValueOverride(T id, const R &value)
+    typename std::enable_if<Fudget_is_enum_or_int<T>() && Fudget_is_class<R>(), void>::type SetValueOverride(T id, const R &value)
     {
         SetValueOverride((int)id, StructToVariant(value));
     }
@@ -151,7 +151,7 @@ public:
     API_FUNCTION() void SetResourceOverride(int id, int resource_id);
 
     template<typename R, typename T>
-    typename std::enable_if<Fudget_is_resource_id_or_int<R>() && Fudget_is_resource_id<T>(), void>::type SetResourceOverride(R id, T resource_id)
+    typename std::enable_if<Fudget_is_enum_or_int<R>() && Fudget_is_resource_id<T>(), void>::type SetResourceOverride(R id, T resource_id)
     {
         return SetResourceOverride((int)id, (int)resource_id);
     }
@@ -167,7 +167,7 @@ public:
     API_FUNCTION() void SetResourceReference(int id, FudgetStyle *referenced_style, int referenced_id);
 
     template<typename R, typename T>
-    typename std::enable_if<Fudget_is_resource_id_or_int<R>() && Fudget_is_resource_id<T>(), void>::type SetResourceReference(R id, FudgetStyle *referenced_style, T referenced_id)
+    typename std::enable_if<Fudget_is_enum_or_int<R>() && Fudget_is_resource_id<T>(), void>::type SetResourceReference(R id, FudgetStyle *referenced_style, T referenced_id)
     {
         return SetResourceReference((int)id, referenced_style, (int)referenced_id);
     }

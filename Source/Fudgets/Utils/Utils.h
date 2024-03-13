@@ -48,7 +48,7 @@ constexpr bool Fudget_is_resource_id()
 }
 
 template<typename T>
-constexpr bool Fudget_is_resource_id_or_int()
+constexpr bool Fudget_is_enum_or_int()
 {
 	return std::is_enum<T>::value || std::is_convertible<T, int>::value;
 }
