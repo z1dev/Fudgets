@@ -2,8 +2,8 @@
 #include "../Container.h"
 
 FudgetAnchorLayoutSlot::FudgetAnchorLayoutSlot(const SpawnParams &params) : Base(params),
-    leftAnchor(FudgetHorizontalAnchor::None), rightAnchor(FudgetHorizontalAnchor::None),
-    topAnchor(FudgetVerticalAnchor::None), bottomAnchor(FudgetVerticalAnchor::None),
+    leftAnchor(FudgetHorizontalAnchor::Left), rightAnchor(FudgetHorizontalAnchor::None),
+    topAnchor(FudgetVerticalAnchor::Top), bottomAnchor(FudgetVerticalAnchor::None),
     leftPercent(0.f), rightPercent(0.f), topPercent(0.f), bottomPercent(0.f)
 {
 

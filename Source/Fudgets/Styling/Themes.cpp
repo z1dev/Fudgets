@@ -274,7 +274,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     main_theme->SetForwarding(FudgetThemePartIds::ListItemSelectedBackground, FudgetThemePartIds::SelectedTextBackground);
     main_theme->SetForwarding(FudgetThemePartIds::ListItemHoveredBackground, FudgetThemePartIds::SelectedTextBackground);
-    main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.6f));
+    main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.4f));
     main_theme->SetForwarding(FudgetThemePartIds::ListItemFocusedSelectedBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
     main_theme->SetForwarding(FudgetThemePartIds::ListItemDisabledSelectedBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
 
@@ -369,16 +369,16 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetListBoxItemPainterMapping lb_item_map;
     lb_item_map.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Disabled | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::DisabledSelectedBackground, FudgetListBoxPartIds::DisabledSelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Focused | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::FocusedSelectedBackground, FudgetListBoxPartIds::FocusedSelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::HoveredSelectedBackground, FudgetListBoxPartIds::HoveredSelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::SelectedBackground, FudgetListBoxPartIds::SelectedBackgroundTint));
     lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered,
         FudgetListBoxPartIds::HoveredBackground, FudgetListBoxPartIds::HoveredBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::SelectedBackground, FudgetListBoxPartIds::SelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::HoveredSelectedBackground, FudgetListBoxPartIds::HoveredSelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Focused | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::FocusedSelectedBackground, FudgetListBoxPartIds::FocusedSelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Disabled | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::DisabledSelectedBackground, FudgetListBoxPartIds::DisabledSelectedBackgroundTint));
 
     main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(FudgetThemes::FOCUSED_HOVERED_STATE_ORDER, lb_item_map));
 

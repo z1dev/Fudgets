@@ -157,12 +157,15 @@ void FudgetListBox::OnDraw()
     int pos = ItemIndexAt(r.Location);
     r.Location.Y = GetItemRect(pos).Location.Y;
 
+    FudgetVisualControlState state = GetVisualState();
+    FudgetVisualControlState disabled_state = state & FudgetVisualControlState::Disabled;
+    FudgetVisualControlState focused_state = state & FudgetVisualControlState::Focused;
     for (int ix = pos; ix < count && r.Location.Y < bounds.GetBottom(); ++ix)
     {
         r.Size.Y = (float)GetItemSize(ix).Y;
         FudgetVisualControlState hover_state = (_hovered_index == ix ? FudgetVisualControlState::Hovered : (FudgetVisualControlState)0);
         FudgetVisualControlState select_state = (IsItemSelected(ix) ? FudgetVisualControlState::Selected : (FudgetVisualControlState)0);
-        _item_painter->Draw(this, r, Int2::Zero, ix, _data, (GetVisualState() & ~FudgetVisualControlState::Hovered) | hover_state | select_state);
+        _item_painter->Draw(this, r, Int2::Zero, ix, _data, focused_state | disabled_state | hover_state | select_state);
         r.Location.Y += r.Size.Y;
     }
 
