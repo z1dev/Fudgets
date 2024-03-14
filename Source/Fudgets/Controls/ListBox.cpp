@@ -130,14 +130,7 @@ void FudgetListBox::OnStyleInitialize()
     if (_frame_painter != nullptr)
         _top_item_pos -= GetInnerPadding().UpperLeft();
 
-    //FudgetStyle *frame_style;
-    //if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
-    //    frame_style = nullptr;
     _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
-
-    //FudgetStyle *item_style;
-    //if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
-    //    item_style = nullptr;
     _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
 
     if (_frame_painter != nullptr)

@@ -322,6 +322,7 @@ private:
         uint64 _state;
 
         FudgetDrawable *_sel_draw;
+        Color _sel_draw_tint;
         Color _text_color;
         Color _sel_text_color;
     };

@@ -263,14 +263,20 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::SelectedTextColor, Color::White);
     main_theme->SetForwarding(FudgetThemePartIds::FocusedSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
     main_theme->SetForwarding(FudgetThemePartIds::DisabledSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
-    main_theme->SetResource(FudgetThemePartIds::TextSelectionBackground, Color(0.2f, 0.4f, 0.9f, 1.0f));
-    main_theme->SetForwarding(FudgetThemePartIds::FocusedTextSelectionBackground, FudgetThemePartIds::TextSelectionBackground);
-    main_theme->SetResource(FudgetThemePartIds::DisabledTextSelectionBackground, Color(0.5f, 0.5f, 0.5f, 1.0f));
+    main_theme->SetResource(FudgetThemePartIds::SelectedTextBackground, Color(0.2f, 0.4f, 0.9f, 1.0f));
+    main_theme->SetForwarding(FudgetThemePartIds::FocusedSelectedTextBackground, FudgetThemePartIds::SelectedTextBackground);
+    main_theme->SetResource(FudgetThemePartIds::DisabledSelectedTextBackground, Color(0.5f, 0.5f, 0.5f, 1.0f));
     main_theme->SetForwarding(FudgetThemePartIds::CaretDraw, FudgetThemePartIds::TextColor);
     main_theme->SetResource(FudgetThemePartIds::CaretBlinkTime, 0.8f);
     main_theme->SetResource(FudgetThemePartIds::CaretWidth, 1.f);
     main_theme->SetResource(FudgetThemePartIds::CaretScrollCount, 5);
     main_theme->SetResource(FudgetThemePartIds::BeamCursor, CursorType::IBeam);
+
+    main_theme->SetForwarding(FudgetThemePartIds::ListItemSelectedBackground, FudgetThemePartIds::SelectedTextBackground);
+    main_theme->SetForwarding(FudgetThemePartIds::ListItemHoveredBackground, FudgetThemePartIds::SelectedTextBackground);
+    main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.6f));
+    main_theme->SetForwarding(FudgetThemePartIds::ListItemFocusedSelectedBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
+    main_theme->SetForwarding(FudgetThemePartIds::ListItemDisabledSelectedBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
 
     // Style names used for each default class
 
@@ -329,11 +335,11 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetTextPainterMapping text_field_map;
     text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Focused,
-        FudgetTextFieldPartIds::FocusedTextSelectionBackground, FudgetTextFieldPartIds::FocusedTextColor, FudgetTextFieldPartIds::FocusedSelectedTextColor));
+        FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetTextFieldPartIds::FocusedTextColor, FudgetTextFieldPartIds::FocusedSelectedTextColor));
     text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Disabled,
-        FudgetTextFieldPartIds::DisabledTextSelectionBackground, FudgetTextFieldPartIds::DisabledTextColor, FudgetTextFieldPartIds::DisabledSelectedTextColor));
+        FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetTextFieldPartIds::DisabledTextColor, FudgetTextFieldPartIds::DisabledSelectedTextColor));
     text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Normal,
-        FudgetTextFieldPartIds::TextSelectionBackground, FudgetTextFieldPartIds::TextColor, FudgetTextFieldPartIds::SelectedTextColor));
+        FudgetTextFieldPartIds::SelectedTextBackground, FudgetTextFieldPartIds::SelectedTextBackground, FudgetTextFieldPartIds::TextColor, FudgetTextFieldPartIds::SelectedTextColor));
 
     text_field_map.Font = (int)FudgetTextFieldPartIds::Font;
     main_theme->SetResource(FudgetThemePartIds::SingleLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(FudgetThemes::FOCUSED_STATE_ORDER, text_field_map));
@@ -363,8 +369,18 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetListBoxItemPainterMapping lb_item_map;
     lb_item_map.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Disabled | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::DisabledSelectedBackground, FudgetListBoxPartIds::DisabledSelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Focused | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::FocusedSelectedBackground, FudgetListBoxPartIds::FocusedSelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered | FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::HoveredSelectedBackground, FudgetListBoxPartIds::HoveredSelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Selected,
+        FudgetListBoxPartIds::SelectedBackground, FudgetListBoxPartIds::SelectedBackgroundTint));
+    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered,
+        FudgetListBoxPartIds::HoveredBackground, FudgetListBoxPartIds::HoveredBackgroundTint));
 
-    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(FudgetThemes::HOVERED_FOCUSED_STATE_ORDER, lb_item_map));
+    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(FudgetThemes::FOCUSED_HOVERED_STATE_ORDER, lb_item_map));
 
     // Built-in styles:
 
@@ -381,9 +397,12 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ContentPadding);
 
     FudgetStyle *text_style = CreateOrGetStyle(TEXT_INPUT_STYLE);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::TextSelectionBackground, FudgetThemePartIds::TextSelectionBackground);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedTextSelectionBackground, FudgetThemePartIds::FocusedTextSelectionBackground);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledTextSelectionBackground, FudgetThemePartIds::DisabledTextSelectionBackground);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::SelectedTextBackground, FudgetThemePartIds::SelectedTextBackground);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::SelectedTextBackgroundTint, FudgetThemePartIds::SelectedTextBackgroundTint);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedSelectedTextBackgroundTint, FudgetThemePartIds::FocusedSelectedTextBackgroundTint);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledSelectedTextBackgroundTint, FudgetThemePartIds::DisabledSelectedTextBackgroundTint);
 
     text_style->SetResourceOverride(FudgetTextFieldPartIds::TextColor, FudgetThemePartIds::TextColor);
     text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedTextColor, FudgetThemePartIds::FocusedTextColor);
@@ -499,9 +518,18 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetStyle *listbox_style = frame_style->CreateInheritedStyle(LISTBOX_STYLE);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::ItemPainter, FudgetThemePartIds::ListItemPainter);
-
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::TextPainter, FudgetThemePartIds::SingleLineInputTextPainter);
-    listbox_style->AddReferencesFor(text_style);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackground, FudgetThemePartIds::ListItemSelectedBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackgroundTint, FudgetThemePartIds::ListItemSelectedBackgroundTint);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackground, FudgetThemePartIds::ListItemHoveredBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackgroundTint, FudgetThemePartIds::ListItemHoveredBackgroundTint);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackground, FudgetThemePartIds::ListItemHoveredSelectedBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackgroundTint, FudgetThemePartIds::ListItemHoveredSelectedBackgroundTint);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackground, FudgetThemePartIds::ListItemFocusedSelectedBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackgroundTint, FudgetThemePartIds::ListItemFocusedSelectedBackgroundTint);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackground, FudgetThemePartIds::ListItemDisabledSelectedBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackgroundTint, FudgetThemePartIds::ListItemDisabledSelectedBackgroundTint);
+
 }
 
 void FudgetThemes::Uninitialize(bool in_game)

@@ -29,6 +29,8 @@ void FudgetLineEditTextPainter::Initialize(FudgetControl *control, const Variant
 
         if (!CreateMappedDrawable(control, mapping.SelectionDraw, new_mapping._sel_draw))
             new_mapping._sel_draw = FudgetDrawable::Empty;
+        if (!GetMappedColor(control, mapping.SelectionTint, new_mapping._sel_draw_tint))
+            new_mapping._sel_draw_tint = Color::White;
         if (!GetMappedColor(control, mapping.TextColor, new_mapping._text_color))
             new_mapping._text_color = Color::White;
         if (!GetMappedColor(control, mapping.SelectedTextColor, new_mapping._sel_text_color))
@@ -53,8 +55,9 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
 
     uint64 matched_state = GetMatchingState(states);
 
-    Color textColor = Color::Black;
-    Color selTextColor = Color::White;
+    Color text_color = Color::Black;
+    Color sel_text_color = Color::White;
+    Color sel_bg_tint = Color::White;
     FudgetDrawable *sel_bg = FudgetDrawable::Empty;
 
     bool failed = false;
@@ -65,8 +68,9 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
             if (mapping._sel_draw != nullptr)
             {
                 sel_bg = mapping._sel_draw;
-                textColor = mapping._text_color;
-                selTextColor = mapping._sel_text_color;
+                sel_bg_tint = mapping._sel_draw_tint;
+                text_color = mapping._text_color;
+                sel_text_color = mapping._sel_text_color;
             }
             else
             {
@@ -90,7 +94,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     if (options.Spans.IsInvalid() || options.Spans.Length() == 0 || (options.Spans.Length() > 0 && (options.Spans[0].RangeSpan.IsInvalid() || options.Spans[0].RangeSpan.Length() == 0)))
     {
         opt.Bounds = bounds;
-        control->DrawText(_font.Font, text, range, textColor, opt);
+        control->DrawText(_font.Font, text, range, text_color, opt);
     }
     else
     {
@@ -108,7 +112,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
 
         if (range2.StartIndex < range2.EndIndex)
         {
-            control->DrawText(_font.Font, text, range2, textColor, opt);
+            control->DrawText(_font.Font, text, range2, text_color, opt);
 
             r.Location = Int2(int(r.Location.X + _font.Font->MeasureText(text, range2).X), (int)r.Location.Y);
             if (range2.EndIndex < range.EndIndex)
@@ -126,8 +130,8 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         if (range2.StartIndex < range2.EndIndex)
         {
             Float2 selRectSize = _font.Font->MeasureText(text, range2);
-            control->DrawDrawable(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
-            control->DrawText(_font.Font, text, range2, selTextColor, opt);
+            control->DrawDrawable(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)), sel_bg_tint);
+            control->DrawText(_font.Font, text, range2, sel_text_color, opt);
 
             if (range2.EndIndex < range.EndIndex && sel_max < range.EndIndex)
             {
@@ -144,7 +148,7 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         {
             range2.StartIndex = Math::Max(range.StartIndex, sel_max);
             range2.EndIndex = range.EndIndex;
-            control->DrawText(_font.Font, text, range2, textColor, opt);
+            control->DrawText(_font.Font, text, range2, text_color, opt);
         }
     }
 }

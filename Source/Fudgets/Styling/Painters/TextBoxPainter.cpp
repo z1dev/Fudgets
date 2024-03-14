@@ -62,6 +62,8 @@ void FudgetTextBoxPainter::Initialize(FudgetControl *control, const Variant &map
 
         if (!CreateMappedDrawable(control, mapping.SelectionDraw, new_mapping._sel_draw))
             new_mapping._sel_draw = FudgetDrawable::Empty;
+        if (!GetMappedColor(control, mapping.SelectionTint, new_mapping._sel_draw_tint))
+            new_mapping._sel_draw_tint = Color::White;
         if (!GetMappedColor(control, mapping.TextColor, new_mapping._text_color))
             new_mapping._text_color = Color::White;
         if (!GetMappedColor(control, mapping.SelectedTextColor, new_mapping._sel_text_color))
@@ -88,6 +90,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
 
     Color text_color = Color::Black;
     Color sel_text_color = Color::White;
+    Color sel_bg_tint = Color::White;
     FudgetDrawable *sel_bg = FudgetDrawable::Empty;
 
     bool failed = false;
@@ -98,6 +101,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             if (mapping._sel_draw != nullptr)
             {
                 sel_bg = mapping._sel_draw;
+                sel_bg_tint = mapping._sel_draw_tint;
                 text_color = mapping._text_color;
                 sel_text_color = mapping._sel_text_color;
             }
@@ -186,7 +190,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             if (line.EndIndex > sel_max)
                 skip_width += Math::CeilToInt(_font.Font->GetKerning(measurements.Text[sel_end - 1], measurements.Text[sel_end]) * scale);
 
-            control->DrawDrawable(sel_bg, opt.Bounds);
+            control->DrawDrawable(sel_bg, opt.Bounds, sel_bg_tint);
             control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_pos, sel_len), sel_text_color, opt);
         }
 

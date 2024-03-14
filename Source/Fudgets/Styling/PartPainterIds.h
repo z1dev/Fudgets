@@ -320,17 +320,31 @@ enum class FudgetThemePartIds
     DisabledSelectedTextColor,
 
     /// <summary>
+    /// Tint for background of text input field's text selection
+    /// </summary>
+    SelectedTextBackground,
+    /// <summary>
+    /// Tint for background of focused text input field's text selection
+    /// </summary>
+    FocusedSelectedTextBackground,
+    /// <summary>
+    /// Tint for background of disabled text input field's text selection
+    /// </summary>
+    DisabledSelectedTextBackground,
+
+
+    /// <summary>
     /// Background of text input field's text selection
     /// </summary>
-    TextSelectionBackground,
+    SelectedTextBackgroundTint,
     /// <summary>
     /// Background of focused text input field's text selection
     /// </summary>
-    FocusedTextSelectionBackground,
+    FocusedSelectedTextBackgroundTint,
     /// <summary>
     /// Background of disabled text input field's text selection
     /// </summary>
-    DisabledTextSelectionBackground,
+    DisabledSelectedTextBackgroundTint,
 
     /// <summary>
     /// Color or drawable for drawing the caret in input fields.
@@ -492,7 +506,47 @@ enum class FudgetThemePartIds
     /// </summary>
     ComboBoxButtonImageVertAlignment,
 
+    /// <summary>
+    /// Background for selected items in list controls
+    /// </summary>
+    ListItemSelectedBackground,
+    /// <summary>
+    /// Background for hovered items in list controls
+    /// </summary>
+    ListItemHoveredBackground,
+    /// <summary>
+    /// Background for hovered and selected items in list controls
+    /// </summary>
+    ListItemHoveredSelectedBackground,
+    /// <summary>
+    /// Background for focused and selected items in list controls
+    /// </summary>
+    ListItemFocusedSelectedBackground,
+    /// <summary>
+    /// Background for disabled and selected items in list controls
+    /// </summary>
+    ListItemDisabledSelectedBackground,
 
+    /// <summary>
+    /// Tint for selected items in list controls
+    /// </summary>
+    ListItemSelectedBackgroundTint,
+    /// <summary>
+    /// Tint for hovered items in list controls
+    /// </summary>
+    ListItemHoveredBackgroundTint,
+    /// <summary>
+    /// Tint for hovered and selected items in list controls
+    /// </summary>
+    ListItemHoveredSelectedBackgroundTint,
+    /// <summary>
+    /// Tint for focused and selected items in list controls
+    /// </summary>
+    ListItemFocusedSelectedBackgroundTint,
+    /// <summary>
+    /// Tint for disabled and selected items in list controls
+    /// </summary>
+    ListItemDisabledSelectedBackgroundTint,
 
     /// <summary>
     /// Painter information for field controls
@@ -588,9 +642,12 @@ enum class FudgetTextFieldPartIds
 {
     First = 2000,
 
-    TextSelectionBackground = First,
-    FocusedTextSelectionBackground,
-    DisabledTextSelectionBackground,
+    SelectedTextBackground = First,
+    FocusedSelectedTextBackground,
+    DisabledSelectedTextBackground,
+    SelectedTextBackgroundTint = First,
+    FocusedSelectedTextBackgroundTint,
+    DisabledSelectedTextBackgroundTint,
 
     TextColor,
     FocusedTextColor,
@@ -688,5 +745,18 @@ enum class FudgetListBoxPartIds
 
     ItemPainter = First,
     TextPainter,
+
+    SelectedBackground,
+    HoveredBackground,
+    HoveredSelectedBackground,
+    FocusedSelectedBackground,
+    DisabledSelectedBackground,
+
+    SelectedBackgroundTint,
+    HoveredBackgroundTint,
+    HoveredSelectedBackgroundTint,
+    FocusedSelectedBackgroundTint,
+    DisabledSelectedBackgroundTint,
+
 };
 
