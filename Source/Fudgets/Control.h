@@ -1627,7 +1627,7 @@ public:
         if (!valid)
             return nullptr;
 
-                painter = FudgetThemes::CreatePainter(painter_data.PainterType);
+        painter = FudgetThemes::CreatePainter(painter_data.PainterType);
 
         T *result = dynamic_cast<T*>(painter);
         if (painter != nullptr && result == nullptr)
@@ -1640,7 +1640,7 @@ public:
             RegisterStylePainterInternal(result);
 
         if (result != nullptr)
-            result->Initialize(this, painter_data.ResourceMapping);
+            result->DoInitialize(this, painter_data);
 
         return result;
     }

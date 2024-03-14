@@ -7,44 +7,35 @@
 #include "Engine/Render2D/FontManager.h"
 
 
-FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) : Base(params),
-    _sel_area(nullptr), _focused_sel_area(nullptr), _disabled_sel_area(nullptr),
-    _text_color(Color::White), _focused_text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
-    _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White), _state_order(nullptr)
+FudgetLineEditTextPainter::FudgetLineEditTextPainter(const SpawnParams &params) : Base(params), _font()
 {
 }
 
 void FudgetLineEditTextPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
-    if (control == nullptr)
-        return;
+    Mapping res = *mapping.AsStructure<Mapping>();
 
-    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
-    ResourceMapping res;
-    if (ptrres != nullptr)
-        res = *ptrres;
+    Array<DrawMapping> mappings;
+    HashSet<uint64> states;
+    for (const FudgetTextFieldMapping &mapping : res.Mappings)
+    {
+        DrawMapping new_mapping;
 
-    GetMappedStateOrder(res.StateOrderIndex, _state_order);
+        // Duplicate states are not allowed
+        if (states.Contains(mapping.State))
+            continue;
+        states.Add(mapping.State);
+        new_mapping._state = mapping.State;
 
-    if (!CreateMappedDrawable(control, res.SelectionDraw, _sel_area))
-        _sel_area = FudgetDrawable::CreateEmpty(this); //FudgetDrawable::FromColor(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!CreateMappedDrawable(control, res.FocusedSelectionDraw, _focused_sel_area))
-        _focused_sel_area = _sel_area;
-    if (!CreateMappedDrawable(control, res.DisabledSelectionDraw, _disabled_sel_area))
-        _disabled_sel_area = _sel_area;
-
-    if (!GetMappedColor(control, res.TextColor, _text_color))
-        _text_color = Color::Black;
-    if (!GetMappedColor(control, res.FocusedTextColor, _focused_text_color))
-        _focused_text_color = _text_color;
-    if (!GetMappedColor(control, res.DisabledTextColor, _disabled_text_color))
-        _disabled_text_color = _text_color;
-    if (!GetMappedColor(control, res.SelectedTextColor, _selected_text_color))
-        _selected_text_color = Color::White;
-    if (!GetMappedColor(control, res.FocusedSelectedTextColor, _focused_selected_text_color))
-        _focused_selected_text_color = _selected_text_color;
-    if (!GetMappedColor(control, res.DisabledSelectedTextColor, _disabled_selected_text_color))
-        _disabled_selected_text_color = _selected_text_color;
+        if (!CreateMappedDrawable(control, mapping.SelectionDraw, new_mapping._sel_draw))
+            new_mapping._sel_draw = FudgetDrawable::Empty;
+        if (!GetMappedColor(control, mapping.TextColor, new_mapping._text_color))
+            new_mapping._text_color = Color::White;
+        if (!GetMappedColor(control, mapping.SelectedTextColor, new_mapping._sel_text_color))
+            new_mapping._sel_text_color = Color::White;
+        mappings.Add(new_mapping);
+    }
+    _mappings.Add(mappings);
 
     if (!GetMappedFont(control, res.Font, _font))
     {
@@ -60,10 +51,32 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
     if (_font.Font == nullptr)
         return;
 
-    uint64 matching_states = _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
+    uint64 matched_state = GetMatchingState(states);
 
-    Color selTextColor = DrawDisabled(matching_states) ? _disabled_selected_text_color : DrawFocused(matching_states) ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = DrawDisabled(matching_states) ? _disabled_text_color : DrawFocused(matching_states) ? _focused_text_color : _text_color;
+    Color textColor = Color::Black;
+    Color selTextColor = Color::White;
+    FudgetDrawable *sel_bg = FudgetDrawable::Empty;
+
+    bool failed = false;
+    for (auto &mapping : _mappings)
+    {
+        if (mapping._state == 0 || (!failed && matched_state != 0 && (mapping._state & matched_state) == matched_state))
+        {
+            if (mapping._sel_draw != nullptr)
+            {
+                sel_bg = mapping._sel_draw;
+                textColor = mapping._text_color;
+                selTextColor = mapping._sel_text_color;
+            }
+            else
+            {
+                if (mapping._state == 0)
+                    break;
+
+                failed = true;
+            }
+        }
+    }
 
     TextLayoutOptions opt;
     opt.BaseLinesGapScale = 1;
@@ -113,7 +126,6 @@ void FudgetLineEditTextPainter::Draw(FudgetControl *control, const Rectangle &bo
         if (range2.StartIndex < range2.EndIndex)
         {
             Float2 selRectSize = _font.Font->MeasureText(text, range2);
-            FudgetDrawable *sel_bg = DrawDisabled(matching_states) ? _disabled_sel_area : DrawFocused(matching_states) ? _focused_sel_area : _sel_area;
             control->DrawDrawable(sel_bg, Rectangle(opt.Bounds.Location, Float2(selRectSize.X, opt.Bounds.Size.Y)));
             control->DrawText(_font.Font, text, range2, selTextColor, opt);
 

@@ -16,13 +16,7 @@ FudgetListBoxItemPainter::~FudgetListBoxItemPainter()
 
 void FudgetListBoxItemPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
-    if (control == nullptr)
-        return;
-
-    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
-    ResourceMapping res;
-    if (ptrres != nullptr)
-        res = *ptrres;
+    Mapping res = *mapping.AsStructure<Mapping>();
 
     //FudgetStyle *text_style = nullptr;
     //if (!GetMappedStyle(control, style_override, (int)FudgetListBoxItemPainterIds::TextStyle, res.TextStyle, text_style))

@@ -31,7 +31,7 @@ namespace Fudgets
         /// <param name="default_mapping">An optional mapping to be used to create and initialize the new painter if nothing was found for mapping_id.</param>
         /// <param name="style_override">Id of the painter mapping in the control's style.</param>
         /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
-        public T CreateStylePainter<T>(T current, int mapping_id/*, FudgetStyle mapping_style = null, FudgetPartPainterMapping? default_mapping = null, FudgetStyle style_override = null*/) where T : FudgetPartPainter
+        public T CreateStylePainter<T>(T current, int mapping_id) where T : FudgetPartPainter
         {
             FudgetPartPainterMapping painter_data = default;
             FudgetPartPainter painter = null;
@@ -39,22 +39,12 @@ namespace Fudgets
             if (current != null)
                 UnregisterStylePainterInternal(current);
 
-            //bool valid = false;
-            //if (style_override != null)
-            //    valid = FudgetStyle.GetPainterMappingResource(style_override, ActiveTheme, mapping_id, false, out painter_data);
-            //if (!valid)
-                bool valid = GetStylePainterMapping(mapping_id, out painter_data);
+            bool valid = GetStylePainterMapping(mapping_id, out painter_data);
 
             if (!valid)
                 return null;
 
-            //if (valid || default_mapping != null)
-            //{
-            //    if (valid)
             painter = FudgetThemes.CreatePainter(painter_data.PainterType);
-            //    else if (!valid)
-            //        painter = FudgetThemes.CreatePainter(default_mapping?.PainterType);
-            //}
 
             if (painter != null && painter is not T)
             {
@@ -66,7 +56,7 @@ namespace Fudgets
                 RegisterStylePainterInternal(result);
 
             if (result != null)
-                result.Initialize(this, painter_data.ResourceMapping /*mapping_style, valid ? painter_data.ResourceMapping : default_mapping?.ResourceMapping*/);
+                result.DoInitialize(this, ref painter_data);
 
             return result;
         }

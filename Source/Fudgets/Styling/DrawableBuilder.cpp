@@ -152,6 +152,8 @@ void FudgetDrawableBuilder::EndSubData()
 // FudgetDrawable
 
 
+FudgetDrawable* FudgetDrawable::Empty = CreateEmpty();
+
 FudgetDrawable::FudgetDrawable(const SpawnParams &params) : Base(params), _list(nullptr), _owned(false)
 {
 }
@@ -292,6 +294,14 @@ FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner, FudgetDrawInstr
     result->_owned = list == nullptr;
     result->_list = list == nullptr ? new FudgetDrawInstructionList() : list;
     owner->RegisterDrawable(result);
+    return result;
+}
+
+FudgetDrawable* FudgetDrawable::CreateEmpty()
+{
+    FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
+    result->_owned = true;
+    result->_list = new FudgetDrawInstructionList();
     return result;
 }
 

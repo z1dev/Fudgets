@@ -3,30 +3,10 @@
 #include "PartPainters.h"
 
 
-//API_ENUM()
-//enum class FudgetListBoxItemPainterIds
-//{
-//    First = 4000,
-//
-//    TextPainter = First,
-//    TextStyle,
-//
-//    SelectionDraw,
-//    DisabledSelectionDraw,
-//    TextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    DisabledSelectedTextColor,
-//
-//    Font,
-//};
-
 API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetListBoxItemPainterResources
+struct FUDGETS_API FudgetListBoxItemPainterMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetListBoxItemPainterResources);
-
-    API_FIELD() int StateOrderIndex = -1;
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetListBoxItemPainterMapping);
 
     API_FIELD() int TextPainter = 0;
 };
@@ -37,7 +17,7 @@ class FUDGETS_API FudgetListBoxItemPainter : public FudgetListItemPainter
     using Base = FudgetListItemPainter;
     DECLARE_SCRIPTING_TYPE(FudgetListBoxItemPainter);
 public:
-    using ResourceMapping = FudgetListBoxItemPainterResources;
+    using Mapping = FudgetListBoxItemPainterMapping;
 
     ~FudgetListBoxItemPainter();
 

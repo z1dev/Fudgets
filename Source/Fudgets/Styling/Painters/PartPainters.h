@@ -6,6 +6,7 @@
 #include "../../MarginStructs.h"
 #include "../StyleStructs.h"
 #include "../Style.h"
+#include "../../Utils/Utils.h"
 
 #include <map>
 
@@ -85,15 +86,13 @@ public:
     ~FudgetPartPainter();
 
     template<typename T>
-    static FudgetPartPainterMapping InitializeMapping(const typename T::ResourceMapping &resource_mapping)
+    static FudgetPartPainterMapping InitializeMapping(int state_order_index, const typename T::Mapping &resource_mapping)
     {
-        FudgetPartPainterMapping value;
-        value.PainterType = T::TypeInitializer.GetType().Fullname;
-        VariantType t;
-        t.Type = VariantType::Structure;
-        t.SetTypeName(T::ResourceMapping::TypeInitializer.GetType().Fullname);
-        value.ResourceMapping = Variant::Structure(std::move(t), resource_mapping);
-        return value;
+        FudgetPartPainterMapping result;
+        result.PainterType = T::TypeInitializer.GetType().Fullname;
+        result.StateOrderIndex = state_order_index;
+        result.Mapping = StructToVariant(resource_mapping);
+        return result;
     }
 
     /// <summary>
@@ -354,76 +353,39 @@ protected:
         return control->GetStyleEnum<E>(mapping_id, result);
     }
 
-    /// <summary>
-    /// Checks if the passed state flags contain a given state.
-    /// </summary>
-    /// <param name="states">The state flags</param>
-    /// <param name="to_check">The state to check</param>
-    /// <returns>Whether the checked state was found in the flags</returns>
-    template<typename T>
-    bool HasState(T states, T to_check) const
-    {
-        return ((uint64)states & (uint64)to_check) == (uint64)to_check;
-    }
-
-    /// <summary>
-    /// Checks if the passed state flag matches the pressed state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawPressed(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Pressed) == (uint64)FudgetVisualControlState::Pressed;
-    }
-    /// <summary>
-    /// Checks if the passed state flag matches the down state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawDown(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Down) == (uint64)FudgetVisualControlState::Down;
-    }
-    /// <summary>
-    /// Checks if the passed state flag matches the focused state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawFocused(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Focused) == (uint64)FudgetVisualControlState::Focused;
-    }
-    /// <summary>
-    /// Checks if the passed state flag matches the disabled state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawDisabled(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Disabled) == (uint64)FudgetVisualControlState::Disabled;
-    }
-    /// <summary>
-    /// Checks if the passed state flag matches the hovered state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawHovered(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Hovered) == (uint64)FudgetVisualControlState::Hovered;
-    }
-
-    API_FUNCTION() FORCE_INLINE bool DrawSelected(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Selected) == (uint64)FudgetVisualControlState::Selected;
-    }
-
-    API_FUNCTION() FORCE_INLINE bool DrawExpanded(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Expanded) == (uint64)FudgetVisualControlState::Expanded;
-    }
-    /// <summary>
-    /// Checks if the passed state flag matches the opened state.
-    /// </summary>
-    API_FUNCTION() FORCE_INLINE bool DrawOpened(uint64 state) const
-    {
-        return (state & (uint64)FudgetVisualControlState::Opened) == (uint64)FudgetVisualControlState::Opened;
-    }
+    ///// <summary>
+    ///// Checks if the passed state flags contain a given state.
+    ///// </summary>
+    ///// <param name="states">The state flags</param>
+    ///// <param name="to_check">The state to check</param>
+    ///// <returns>Whether the checked state was found in the flags</returns>
+    //template<typename T>
+    //bool HasState(T states, T to_check) const
+    //{
+    //    return ((uint64)states & (uint64)to_check) == (uint64)to_check;
+    //}
 
     /// <summary>
     /// Stores the drawable in the drawables list and destroys it when the part painter is destroyed.
     /// </summary>
     void RegisterDrawable(FudgetDrawable *drawable);
 
+
+    template<typename T>
+    typename std::enable_if<Fudget_is_enum_or_int64<T>(), uint64>::type GetMatchingState(T states) const
+    {
+        return _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
+    }
+private:
+
+    /// <summary>
+    /// Calls initialize after some internal setup and calls Initialize.
+    /// </summary>
+    /// <param name="control">The control invoking the initialization</param>
+    /// <param name="resource_mapping">Mapping of style ids that a painter can look up in the style of its control when drawing.</param>
+    API_FUNCTION(Internal) void DoInitialize(FudgetControl *control, API_PARAM(Ref) const FudgetPartPainterMapping &resource_mapping);
+
+    API_FIELD() FudgetStateOrder *_state_order;
     FudgetControl *_owner;
 
     friend class FudgetControl;
@@ -446,6 +408,7 @@ public:
     /// <param name="bounds">Bounds to draw inside. This is usually the result of padding on the control's bounds.</param>
     /// <param name="states">State flags of the part to paint</param>
     API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) {}
+
 };
 
 

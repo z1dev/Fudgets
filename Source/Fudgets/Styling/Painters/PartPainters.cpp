@@ -13,7 +13,7 @@
 // FudgetPartPainter
 
 
-FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params)
+FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params), _state_order(nullptr)
 {
 
 }
@@ -189,6 +189,11 @@ void FudgetPartPainter::RegisterDrawable(FudgetDrawable *drawable)
     _owner->RegisterDrawable(this, drawable);
 }
 
+void FudgetPartPainter::DoInitialize(FudgetControl *control, API_PARAM(Ref) const FudgetPartPainterMapping &resource_mapping)
+{
+    GetMappedStateOrder(resource_mapping.StateOrderIndex, _state_order);
+    Initialize(control, resource_mapping.Mapping);
+}
 
 // FudgetStatePainter
 

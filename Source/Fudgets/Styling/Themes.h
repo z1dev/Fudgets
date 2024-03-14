@@ -15,7 +15,7 @@
 class FudgetPartPainter;
 struct FudgetDrawInstructionList;
 class FudgetStateOrder;
-
+class FudgetDrawable;
 
 /// <summary>
 /// Simple struct used as a theme resource that acts like a pointer to a different resource. If a requested resource
@@ -499,4 +499,7 @@ private:
 
     static bool _initialized;
     static Data *_data;
+
+    // Number of times Initialize was called without a paired Uninitialize.
+    static int _initialized_count;
 };

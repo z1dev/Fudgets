@@ -1,4 +1,5 @@
 ﻿using FlaxEngine.Utilities;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Numerics;
 
@@ -11,18 +12,20 @@ public partial class FudgetPartPainter
 {
     /// <summary>
     /// Initializes a FudgetPartPainterMapping structure, setting the PainterType value to the full name of the generic type.
-    /// The type has to be a derived class of FudgetPartPainter. The resourceMapping value is stored as the mapping in the
+    /// The type has to be a derived class of FudgetPartPainter. The resource_mapping value is stored as the mapping in the
     /// structure. It must be the exact type required by the specific painter's initialization which is usually called the
-    /// same as the painter and ending with "Resources".
+    /// same as the painter and ending with "Mapping".
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="resourceMapping"></param>
-    /// <returns></returns>
-    public static FudgetPartPainterMapping InitializeMapping<T>(object resourceMapping) where T : FudgetPartPainter, new()
+    /// <typeparam name="T">The painter's type that will be created based on the mapping data</typeparam>
+    /// <param name="state_order_index">Ordering of states. States with priority will be drawn if the control's state matches. Latter states are not considered for drawing.</param>
+    /// <param name="resource_mapping">Mapping of ids used for finding the right id in the control's style when drawing.</param>
+    /// <returns>An initialization data that should be set as the resource in a theme for a painter id.</returns>
+    public static FudgetPartPainterMapping InitializeMapping<T>(int state_order_index, object resource_mapping) where T : FudgetPartPainter, new()
     {
         FudgetPartPainterMapping result;
         result.PainterType = typeof(T).FullName;
-        result.ResourceMapping = resourceMapping;
+        result.StateOrderIndex = state_order_index;
+        result.Mapping = resource_mapping;
         return result;
     }
 
@@ -37,22 +40,22 @@ public partial class FudgetPartPainter
     /// <param name="mapping_id">A resource id. Usually an id in the owner control's style that is used for looking up values instead of the painter's own id.</param>
     /// <param name="result">The variable to receive the result</param>
     /// <returns>Whether the mapped id or the painter id was referring to an enum of the correct type.</returns>
-    public bool GetMappedEnum<E>(FudgetControl control, FudgetStyle style_override, int painter_id, int mapping_id, out E result) where E: Enum
+    protected bool GetMappedEnum<E>(FudgetControl control, FudgetStyle style_override, int painter_id, int mapping_id, out E result) where E: Enum
     {
         FudgetTheme theme = control.ActiveTheme;
         result = default;
         return control.GetStyleEnum<E>(mapping_id, out result);
     }
 
-    /// <summary>
-    /// Shortcut to check if the flags in states contains the flags from to_check.
-    /// </summary>
-    /// <typeparam name="T">A type that supports binary operators like &amp;</typeparam>
-    /// <param name="states">Value to check for flags</param>
-    /// <param name="to_check">Flags to look for in the value</param>
-    /// <returns>Whether the states flags contain the to_check flag(s) or not</returns>
-    public bool HasState<T>(T states, T to_check) where T : IBinaryNumber<T>
-    {
-        return (states & to_check) == to_check;
-    }
+    ///// <summary>
+    ///// Shortcut to check if the flags in states contains the flags from to_check.
+    ///// </summary>
+    ///// <typeparam name="T">A type that supports binary operators like &amp;</typeparam>
+    ///// <param name="states">Value to check for flags</param>
+    ///// <param name="to_check">Flags to look for in the value</param>
+    ///// <returns>Whether the states flags contain the to_check flag(s) or not</returns>
+    //public bool HasState<T>(T states, T to_check) where T : IBinaryNumber<T>
+    //{
+    //    return (states & to_check) == to_check;
+    //}
 }

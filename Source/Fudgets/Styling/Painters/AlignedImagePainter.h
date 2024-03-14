@@ -55,40 +55,35 @@ enum class FudgetImageVertAlign
 };
 
 
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetAlignedImagePainterResources
+API_STRUCT()
+struct FUDGETS_API FudgetAlignedImageMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImagePainterResources);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImageMapping);
 
-    API_FIELD() int StateOrderIndex = -1;
+    template<typename S, typename I, typename P, typename O, typename T>
+    FudgetAlignedImageMapping(S state, I image, P padding, O offset, T tint) : State((uint64)state), Image((int)image), Padding((int)padding), Offset((int)offset), Tint((int)tint) {}
+    FudgetAlignedImageMapping() {}
+
+    API_FIELD() uint64 State = 0;
 
     API_FIELD() int Image = 0;
-    API_FIELD() int HoveredImage = 0;
-    API_FIELD() int PressedImage = 0;
-    API_FIELD() int DownImage = 0;
-    API_FIELD() int FocusedImage = 0;
-    API_FIELD() int DisabledImage = 0;
+    API_FIELD() int Padding = 0;
+    API_FIELD() int Offset = 0;
+    API_FIELD() int Tint = 0;
+};
 
-    API_FIELD() int ImageTint = 0;
-    API_FIELD() int HoveredImageTint = 0;
-    API_FIELD() int PressedImageTint = 0;
-    API_FIELD() int DownImageTint = 0;
-    API_FIELD() int FocusedImageTint = 0;
-    API_FIELD() int DisabledImageTint = 0;
+template<>
+struct TIsPODType<FudgetAlignedImageMapping>
+{
+    enum { Value = true };
+};
 
-    API_FIELD() int ImageOffset = 0;
-    API_FIELD() int HoveredImageOffset = 0;
-    API_FIELD() int PressedImageOffset = 0;
-    API_FIELD() int DownImageOffset = 0;
-    API_FIELD() int FocusedImageOffset = 0;
-    API_FIELD() int DisabledImageOffset = 0;
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetAlignedImagePainterMapping
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImagePainterMapping);
 
-    API_FIELD() int ImagePadding = 0;
-    API_FIELD() int HoveredImagePadding = 0;
-    API_FIELD() int PressedImagePadding = 0;
-    API_FIELD() int DownImagePadding = 0;
-    API_FIELD() int FocusedImagePadding = 0;
-    API_FIELD() int DisabledImagePadding = 0;
+    API_FIELD() Array<FudgetAlignedImageMapping> Mappings;
 
     API_FIELD() int HorzAlign = 0;
     API_FIELD() int VertAlign = 0;
@@ -104,7 +99,7 @@ class FUDGETS_API FudgetAlignedImagePainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetAlignedImagePainter);
 public:
-    using ResourceMapping = FudgetAlignedImagePainterResources;
+    using Mapping = FudgetAlignedImagePainterMapping;
 
     /// <inheritdoc />
     void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
@@ -112,36 +107,19 @@ public:
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;
 private:
-    AssetReference<TextureBase> _image;
-    AssetReference<TextureBase> _hovered_image;
-    AssetReference<TextureBase> _pressed_image;
-    AssetReference<TextureBase> _down_image;
-    AssetReference<TextureBase> _focused_image;
-    AssetReference<TextureBase> _disabled_image;
+    struct DrawMapping
+    {
+        uint64 _state;
 
-    Color _image_tint;
-    Color _hovered_image_tint;
-    Color _pressed_image_tint;
-    Color _down_image_tint;
-    Color _focused_image_tint;
-    Color _disabled_image_tint;
+        AssetReference<TextureBase> _image;
+        Color _tint;
+        Float2 _offset;
+        FudgetPadding _padding;
+    };
 
-    Float2 _image_offset;
-    Float2 _hovered_image_offset;
-    Float2 _pressed_image_offset;
-    Float2 _down_image_offset;
-    Float2 _focused_image_offset;
-    Float2 _disabled_image_offset;
-
-    FudgetPadding _image_padding;
-    FudgetPadding _hovered_image_padding;
-    FudgetPadding _pressed_image_padding;
-    FudgetPadding _down_image_padding;
-    FudgetPadding _focused_image_padding;
-    FudgetPadding _disabled_image_padding;
+    Array<DrawMapping> _mappings;
 
     FudgetImageHorzAlign _horz_align;
     FudgetImageVertAlign _vert_align;
 
-    FudgetStateOrder *_state_order;
 };

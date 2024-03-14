@@ -2,40 +2,36 @@
 
 #include "PartPainters.h"
 
-//
-//API_ENUM()
-//enum class FudgetLineEditTextPainterIds
-//{
-//    First = 10000,
-//
-//    SelectionDraw = First,
-//    FocusedSelectionDraw,
-//    DisabledSelectionDraw,
-//    TextColor,
-//    FocusedTextColor,
-//    DisabledTextColor,
-//    SelectedTextColor,
-//    FocusedSelectedTextColor,
-//    DisabledSelectedTextColor,
-//    Font,
-//};
 
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetLineEditTextPainterResources
+
+API_STRUCT()
+struct FUDGETS_API FudgetTextFieldMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetLineEditTextPainterResources);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextFieldMapping);
 
-    API_FIELD() int StateOrderIndex = -1;
+    template<typename S, typename F, typename T, typename ST>
+    FudgetTextFieldMapping(S state, F sel_bg_draw, T text_color, ST sel_text_color) : State((uint64)state), SelectionDraw((int)sel_bg_draw), TextColor((int)text_color), SelectedTextColor((int)sel_text_color) {}
+    FudgetTextFieldMapping() {}
+
+    API_FIELD() uint64 State = 0;
 
     API_FIELD() int SelectionDraw = 0;
-    API_FIELD() int FocusedSelectionDraw = 0;
-    API_FIELD() int DisabledSelectionDraw = 0;
     API_FIELD() int TextColor = 0;
-    API_FIELD() int FocusedTextColor = 0;
-    API_FIELD() int DisabledTextColor = 0;
     API_FIELD() int SelectedTextColor = 0;
-    API_FIELD() int FocusedSelectedTextColor = 0;
-    API_FIELD() int DisabledSelectedTextColor = 0;
+};
+template<>
+struct TIsPODType<FudgetTextFieldMapping>
+{
+    enum { Value = true };
+};
+
+API_STRUCT(Attributes = "HideInEditor")
+struct FUDGETS_API FudgetTextPainterMapping
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextPainterMapping);
+
+    API_FIELD() Array<FudgetTextFieldMapping> Mappings;
+
     API_FIELD() int Font = 0;
 };
 
@@ -49,7 +45,7 @@ class FUDGETS_API FudgetLineEditTextPainter : public FudgetSingleLineTextPainter
     using Base = FudgetSingleLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetLineEditTextPainter);
 public:
-    using ResourceMapping = FudgetLineEditTextPainterResources;
+    using Mapping = FudgetTextPainterMapping;
 
     /// <inheritdoc />
     void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
@@ -73,18 +69,16 @@ public:
     int GetFontHeight() const override;
 
 private:
-    FudgetDrawable *_sel_area;
-    FudgetDrawable *_focused_sel_area;
-    FudgetDrawable *_disabled_sel_area;
+    struct DrawMapping
+    {
+        uint64 _state;
 
-    Color _text_color;
-    Color _focused_text_color;
-    Color _disabled_text_color;
-    Color _selected_text_color;
-    Color _focused_selected_text_color;
-    Color _disabled_selected_text_color;
+        FudgetDrawable *_sel_draw;
+        Color _text_color;
+        Color _sel_text_color;
+    };
+
+    Array<DrawMapping> _mappings;
 
     FudgetFont _font;
-
-    FudgetStateOrder *_state_order;
 };

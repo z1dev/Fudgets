@@ -87,15 +87,17 @@ API_CLASS()
 class FUDGETS_API FudgetDrawable : public ScriptingObject
 {
     using Base = ScriptingObject;
+
     DECLARE_SCRIPTING_TYPE(FudgetDrawable);
 public:
     ~FudgetDrawable();
 
-    API_FUNCTION() static FORCE_INLINE FudgetDrawable* CreateEmpty(FudgetPartPainter *owner)
-    {
-        return Create(owner, nullptr);
-    }
+    // A drawable that does nothing. Used when checking for nullptr is inconvenient.
+    API_FIELD() static FudgetDrawable *Empty;
 
+    /// <summary>
+    /// Returns true when the drawable has no instructions for drawing and does nothing when drawn.
+    /// </summary>
     API_PROPERTY() bool IsEmpty() const { return _list->_list.empty(); }
 
     /// <summary>
@@ -130,6 +132,7 @@ private:
     static FudgetDrawInstruction* CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item);
 
     static FudgetDrawable* Create(FudgetPartPainter *owner, FudgetDrawInstructionList *list);
+    static FudgetDrawable* CreateEmpty();
 
     FudgetDrawInstructionList *_list;
     bool _owned;

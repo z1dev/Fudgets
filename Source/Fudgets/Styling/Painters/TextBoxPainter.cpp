@@ -1,4 +1,5 @@
 #include "TextBoxPainter.h"
+#include "../DrawableBuilder.h"
 #include "../../MarginStructs.h"
 #include "../Style.h"
 #include "../Themes.h"
@@ -39,43 +40,35 @@ void FudgetMultiLineTextPainter::AddLine(API_PARAM(Ref) Int2 &pos, int start_ind
 
 
 
-FudgetTextBoxPainter::FudgetTextBoxPainter(const SpawnParams &params) : Base(params),
-    _text_color(Color::White), _focused_text_color(Color::White), _disabled_text_color(Color::White), _selected_text_color(Color::White),
-    _focused_selected_text_color(Color::White), _disabled_selected_text_color(Color::White), _state_order(nullptr)
+FudgetTextBoxPainter::FudgetTextBoxPainter(const SpawnParams &params) : Base(params), _font()
 {
 }
 
 void FudgetTextBoxPainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
-    if (control == nullptr)
-        return;
+    Mapping res = *mapping.AsStructure<Mapping>();
 
-    const ResourceMapping *ptrres = mapping.AsStructure<ResourceMapping>();
-    ResourceMapping res;
-    if (ptrres != nullptr)
-        res = *ptrres;
+    Array<DrawMapping> mappings;
+    HashSet<uint64> states;
+    for (const FudgetTextFieldMapping &mapping : res.Mappings)
+    {
+        DrawMapping new_mapping;
 
-    GetMappedStateOrder(res.StateOrderIndex, _state_order);
+        // Duplicate states are not allowed
+        if (states.Contains(mapping.State))
+            continue;
+        states.Add(mapping.State);
+        new_mapping._state = mapping.State;
 
-    if (!GetMappedDrawArea(control, res.SelectionDraw, _sel_area))
-        _sel_area = FudgetDrawArea(Color(0.2f, 0.4f, 0.8f, 1.0f));
-    if (!GetMappedDrawArea(control, res.FocusedSelectionDraw, _focused_sel_area))
-        _focused_sel_area = _sel_area;
-    if (!GetMappedDrawArea(control, res.DisabledSelectionDraw, _disabled_sel_area))
-        _disabled_sel_area = _sel_area;
-
-    if (!GetMappedColor(control, res.TextColor, _text_color))
-        _text_color = Color::Black;
-    if (!GetMappedColor(control, res.FocusedTextColor, _focused_text_color))
-        _focused_text_color = _text_color;
-    if (!GetMappedColor(control, res.DisabledTextColor, _disabled_text_color))
-        _disabled_text_color = _text_color;
-    if (!GetMappedColor(control, res.SelectedTextColor, _selected_text_color))
-        _selected_text_color = Color::White;
-    if (!GetMappedColor(control, res.FocusedSelectedTextColor, _focused_selected_text_color))
-        _focused_selected_text_color = _selected_text_color;
-    if (!GetMappedColor(control, res.DisabledSelectedTextColor, _disabled_selected_text_color))
-        _disabled_selected_text_color = _selected_text_color;
+        if (!CreateMappedDrawable(control, mapping.SelectionDraw, new_mapping._sel_draw))
+            new_mapping._sel_draw = FudgetDrawable::Empty;
+        if (!GetMappedColor(control, mapping.TextColor, new_mapping._text_color))
+            new_mapping._text_color = Color::White;
+        if (!GetMappedColor(control, mapping.SelectedTextColor, new_mapping._sel_text_color))
+            new_mapping._sel_text_color = Color::White;
+        mappings.Add(new_mapping);
+    }
+    _mappings.Add(mappings);
 
     if (!GetMappedFont(control, res.Font, _font))
     {
@@ -91,11 +84,32 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
     if (_font.Font == nullptr)
         return;
 
-    uint64 matched_state = _state_order != nullptr ? _state_order->GetMatchingState((uint64)states) : 0;
+    uint64 matched_state = GetMatchingState(states);
 
-    Color selTextColor = DrawDisabled(matched_state) ? _disabled_selected_text_color : DrawFocused(matched_state) ? _focused_selected_text_color : _selected_text_color;
-    Color textColor = DrawDisabled(matched_state) ? _disabled_text_color : DrawFocused(matched_state) ? _focused_text_color : _text_color;
-    FudgetDrawArea sel_bg = DrawDisabled(matched_state) ? _disabled_sel_area : DrawFocused(matched_state) ? _focused_sel_area : _sel_area;
+    Color text_color = Color::Black;
+    Color sel_text_color = Color::White;
+    FudgetDrawable *sel_bg = FudgetDrawable::Empty;
+
+    bool failed = false;
+    for (auto &mapping : _mappings)
+    {
+        if (mapping._state == 0 || (!failed && matched_state != 0 && (mapping._state & matched_state) == matched_state))
+        {
+            if (mapping._sel_draw != nullptr)
+            {
+                sel_bg = mapping._sel_draw;
+                text_color = mapping._text_color;
+                sel_text_color = mapping._sel_text_color;
+            }
+            else
+            {
+                if (mapping._state == 0)
+                    break;
+
+                failed = true;
+            }
+        }
+    }
 
     int sel_min = -1; 
     int sel_max = -1; 
@@ -136,7 +150,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             int len = line.EndIndex - line.StartIndex;
             opt.Bounds = Rectangle(line.Location + bounds.Location + offset, line.Size);
             
-            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), text_color, opt);
             continue;
         }
 
@@ -154,7 +168,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             if (line.EndIndex < sel_max)
                 skip_width += Math::CeilToInt(_font.Font->GetKerning(measurements.Text[sel_min - 1], measurements.Text[sel_min]) * scale);
 
-            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + line.StartIndex, len), text_color, opt);
         }
 
         // Selection
@@ -172,8 +186,8 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             if (line.EndIndex > sel_max)
                 skip_width += Math::CeilToInt(_font.Font->GetKerning(measurements.Text[sel_end - 1], measurements.Text[sel_end]) * scale);
 
-            control->DrawArea(sel_bg, opt.Bounds);
-            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_pos, sel_len), selTextColor, opt);
+            control->DrawDrawable(sel_bg, opt.Bounds);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_pos, sel_len), sel_text_color, opt);
         }
 
         // Line after selection
@@ -182,7 +196,7 @@ void FudgetTextBoxPainter::Draw(FudgetControl *control, const Rectangle &bounds,
             int len = line.EndIndex - sel_max;
             opt.Bounds = Rectangle(line.Location + bounds.Location + offset + Int2(skip_width, 0), line.Size - Int2(skip_width, 0));
 
-            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_max, len), textColor, opt);
+            control->DrawText(_font.Font, StringView(measurements.Text.Get() + sel_max, len), text_color, opt);
         }
     }
 }

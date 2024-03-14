@@ -32,6 +32,7 @@ bool FudgetThemes::_edittime_initialized = false;
 #endif
 bool FudgetThemes::_initialized = false;
 FudgetThemes::Data* FudgetThemes::_data = nullptr;
+int FudgetThemes::_initialized_count = 0;
 
 
 const String FudgetThemes::MAIN_THEME = TEXT("Fudgets_MainTheme");
@@ -168,6 +169,8 @@ void FudgetThemes::Initialize(bool in_game)
         _data = _edittime_data = new Data;
     }
 #endif
+
+    ++_initialized_count;
 }
 
 void FudgetThemes::CreateDefaultThemesAndStyles()
@@ -260,6 +263,9 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::SelectedTextColor, Color::White);
     main_theme->SetForwarding(FudgetThemePartIds::FocusedSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
     main_theme->SetForwarding(FudgetThemePartIds::DisabledSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
+    main_theme->SetResource(FudgetThemePartIds::TextSelectionBackground, Color(0.2f, 0.4f, 0.9f, 1.0f));
+    main_theme->SetForwarding(FudgetThemePartIds::FocusedTextSelectionBackground, FudgetThemePartIds::TextSelectionBackground);
+    main_theme->SetResource(FudgetThemePartIds::DisabledTextSelectionBackground, Color(0.5f, 0.5f, 0.5f, 1.0f));
     main_theme->SetForwarding(FudgetThemePartIds::CaretDraw, FudgetThemePartIds::TextColor);
     main_theme->SetResource(FudgetThemePartIds::CaretBlinkTime, 0.8f);
     main_theme->SetResource(FudgetThemePartIds::CaretWidth, 1.f);
@@ -277,123 +283,88 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     // Painter resource mappings
 
-    FudgetFramedFieldPainterResources frame_res;
-    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
+    FudgetFramedFieldPainterMapping frame_map;
 
     FudgetFramedFieldLayer bg_layer;
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Focused,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Focused,
         FudgetFramedControlPartIds::FocusedFieldBackground, FudgetFramedControlPartIds::FocusedFieldPadding, FudgetFramedControlPartIds::FocusedFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Hovered,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Hovered,
         FudgetFramedControlPartIds::HoveredFieldBackground, FudgetFramedControlPartIds::HoveredFieldPadding, FudgetFramedControlPartIds::HoveredFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Pressed,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Pressed,
         FudgetFramedControlPartIds::PressedFieldBackground, FudgetFramedControlPartIds::PressedFieldPadding, FudgetFramedControlPartIds::PressedFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Down,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Down,
         FudgetFramedControlPartIds::DownFieldBackground, FudgetFramedControlPartIds::DownFieldPadding, FudgetFramedControlPartIds::DownFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Disabled,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Disabled,
         FudgetFramedControlPartIds::DisabledFieldBackground, FudgetFramedControlPartIds::DisabledFieldPadding, FudgetFramedControlPartIds::DisabledFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Selected,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Selected,
         FudgetFramedControlPartIds::SelectedFieldBackground, FudgetFramedControlPartIds::SelectedFieldPadding, FudgetFramedControlPartIds::SelectedFieldTint));
-    bg_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Normal,
+    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Normal,
         FudgetFramedControlPartIds::FieldBackground, FudgetFramedControlPartIds::FieldPadding, FudgetFramedControlPartIds::FieldTint));
     FudgetFramedFieldLayer frame_layer;
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Focused,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Focused,
         FudgetFramedControlPartIds::FocusedFrameDraw, FudgetFramedControlPartIds::FocusedFramePadding, FudgetFramedControlPartIds::FocusedFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Hovered,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Hovered,
         FudgetFramedControlPartIds::HoveredFrameDraw, FudgetFramedControlPartIds::HoveredFramePadding, FudgetFramedControlPartIds::HoveredFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Pressed,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Pressed,
         FudgetFramedControlPartIds::PressedFrameDraw, FudgetFramedControlPartIds::PressedFramePadding, FudgetFramedControlPartIds::PressedFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Down,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Down,
         FudgetFramedControlPartIds::DownFrameDraw, FudgetFramedControlPartIds::DownFramePadding, FudgetFramedControlPartIds::DownFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Disabled,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Disabled,
         FudgetFramedControlPartIds::DisabledFrameDraw, FudgetFramedControlPartIds::DisabledFramePadding, FudgetFramedControlPartIds::DisabledFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Selected,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Selected,
         FudgetFramedControlPartIds::SelectedFrameDraw, FudgetFramedControlPartIds::SelectedFramePadding, FudgetFramedControlPartIds::SelectedFrameTint));
-    frame_layer.Fields.Add(FudgetFramedField(FudgetVisualControlState::Normal,
+    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Normal,
         FudgetFramedControlPartIds::FrameDraw, FudgetFramedControlPartIds::FramePadding, FudgetFramedControlPartIds::FrameTint));
 
-    frame_res.Layers.Add(bg_layer);
-    frame_res.Layers.Add(frame_layer);
+    frame_map.Layers.Add(bg_layer);
+    frame_map.Layers.Add(frame_layer);
 
-    frame_res.VisualPadding = (int)FudgetFramedControlPartIds::VisualPadding;
-    frame_res.ContentPadding = (int)FudgetFramedControlPartIds::ContentPadding;
+    frame_map.VisualPadding = (int)FudgetFramedControlPartIds::VisualPadding;
+    frame_map.ContentPadding = (int)FudgetFramedControlPartIds::ContentPadding;
    
-    main_theme->SetResource(FudgetThemePartIds::FieldFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res));
+    main_theme->SetResource(FudgetThemePartIds::FieldFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(FudgetThemes::FOCUSED_HOVERED_STATE_ORDER, frame_map));
 
-    frame_res.StateOrderIndex = FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER;
-
-    main_theme->SetResource(FudgetThemePartIds::ButtonFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res));
+    main_theme->SetResource(FudgetThemePartIds::ButtonFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER, frame_map));
     main_theme->SetForwarding(FudgetThemePartIds::ComboBoxButtonFramePainter, FudgetThemePartIds::ButtonFramePainter);
 
-    FudgetLineEditTextPainterResources line_text_res;
-    line_text_res.StateOrderIndex = FudgetThemes::FOCUSED_STATE_ORDER;
-    line_text_res.SelectionDraw = (int)FudgetTextFieldPartIds::TextSelectionBackground;
-    line_text_res.FocusedSelectionDraw = (int)FudgetTextFieldPartIds::FocusedTextSelectionBackground;
-    line_text_res.DisabledSelectionDraw = (int)FudgetTextFieldPartIds::DisabledTextSelectionBackground;
-    line_text_res.TextColor = (int)FudgetTextFieldPartIds::TextColor;
-    line_text_res.FocusedTextColor = (int)FudgetTextFieldPartIds::FocusedTextColor;
-    line_text_res.DisabledTextColor = (int)FudgetTextFieldPartIds::DisabledTextColor;
-    line_text_res.SelectedTextColor = (int)FudgetTextFieldPartIds::SelectedTextColor;
-    line_text_res.FocusedSelectedTextColor = (int)FudgetTextFieldPartIds::FocusedSelectedTextColor;
-    line_text_res.DisabledSelectedTextColor = (int)FudgetTextFieldPartIds::DisabledSelectedTextColor;
-    line_text_res.Font = (int)FudgetTextFieldPartIds::Font;
-    main_theme->SetResource(FudgetThemePartIds::SingleLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(line_text_res));
+    FudgetTextPainterMapping text_field_map;
+    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Focused,
+        FudgetTextFieldPartIds::FocusedTextSelectionBackground, FudgetTextFieldPartIds::FocusedTextColor, FudgetTextFieldPartIds::FocusedSelectedTextColor));
+    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Disabled,
+        FudgetTextFieldPartIds::DisabledTextSelectionBackground, FudgetTextFieldPartIds::DisabledTextColor, FudgetTextFieldPartIds::DisabledSelectedTextColor));
+    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Normal,
+        FudgetTextFieldPartIds::TextSelectionBackground, FudgetTextFieldPartIds::TextColor, FudgetTextFieldPartIds::SelectedTextColor));
 
-    FudgetTextBoxPainterResources text_box_res;
-    text_box_res.StateOrderIndex = FudgetThemes::FOCUSED_STATE_ORDER;
-    text_box_res.SelectionDraw = (int)FudgetTextFieldPartIds::TextSelectionBackground;
-    text_box_res.FocusedSelectionDraw = (int)FudgetTextFieldPartIds::FocusedTextSelectionBackground;
-    text_box_res.DisabledSelectionDraw = (int)FudgetTextFieldPartIds::DisabledTextSelectionBackground;
-    text_box_res.TextColor = (int)FudgetTextFieldPartIds::TextColor;
-    text_box_res.FocusedTextColor = (int)FudgetTextFieldPartIds::FocusedTextColor;
-    text_box_res.DisabledTextColor = (int)FudgetTextFieldPartIds::DisabledTextColor;
-    text_box_res.SelectedTextColor = (int)FudgetTextFieldPartIds::SelectedTextColor;
-    text_box_res.FocusedSelectedTextColor = (int)FudgetTextFieldPartIds::FocusedSelectedTextColor;
-    text_box_res.DisabledSelectedTextColor = (int)FudgetTextFieldPartIds::DisabledSelectedTextColor;
-    text_box_res.Font = (int)FudgetTextFieldPartIds::Font;
-    main_theme->SetResource(FudgetThemePartIds::MultiLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetTextBoxPainter>(text_box_res));
+    text_field_map.Font = (int)FudgetTextFieldPartIds::Font;
+    main_theme->SetResource(FudgetThemePartIds::SingleLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(FudgetThemes::FOCUSED_STATE_ORDER, text_field_map));
 
-    FudgetAlignedImagePainterResources btn_img_res;
-    btn_img_res.StateOrderIndex = FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER;
+    main_theme->SetResource(FudgetThemePartIds::MultiLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetTextBoxPainter>(FudgetThemes::FOCUSED_STATE_ORDER, text_field_map));
 
-    btn_img_res.Image = (int)FudgetAlignedImagePartIds::Image;
-    btn_img_res.HoveredImage = (int)FudgetAlignedImagePartIds::HoveredImage;
-    btn_img_res.PressedImage = (int)FudgetAlignedImagePartIds::PressedImage;
-    btn_img_res.DownImage = (int)FudgetAlignedImagePartIds::DownImage;
-    btn_img_res.FocusedImage = (int)FudgetAlignedImagePartIds::FocusedImage;
-    btn_img_res.DisabledImage = (int)FudgetAlignedImagePartIds::DisabledImage;
+    FudgetAlignedImagePainterMapping btn_img_map;
+    
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Disabled, FudgetAlignedImagePartIds::DisabledImage, FudgetAlignedImagePartIds::DisabledImagePadding,
+        FudgetAlignedImagePartIds::DisabledImageOffset, FudgetAlignedImagePartIds::DisabledImageTint));
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Hovered, FudgetAlignedImagePartIds::HoveredImage, FudgetAlignedImagePartIds::HoveredImagePadding,
+        FudgetAlignedImagePartIds::HoveredImageOffset, FudgetAlignedImagePartIds::HoveredImageTint));
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Pressed, FudgetAlignedImagePartIds::PressedImage, FudgetAlignedImagePartIds::PressedImagePadding,
+        FudgetAlignedImagePartIds::PressedImageOffset, FudgetAlignedImagePartIds::PressedImageTint));
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Down, FudgetAlignedImagePartIds::DownImage, FudgetAlignedImagePartIds::DownImagePadding,
+        FudgetAlignedImagePartIds::DownImageOffset, FudgetAlignedImagePartIds::DownImageTint));
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Focused, FudgetAlignedImagePartIds::FocusedImage, FudgetAlignedImagePartIds::FocusedImagePadding,
+        FudgetAlignedImagePartIds::FocusedImageOffset, FudgetAlignedImagePartIds::FocusedImageTint));
+    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Normal, FudgetAlignedImagePartIds::Image, FudgetAlignedImagePartIds::ImagePadding,
+        FudgetAlignedImagePartIds::ImageOffset, FudgetAlignedImagePartIds::ImageTint));
 
-    btn_img_res.ImageTint = (int)FudgetAlignedImagePartIds::ImageTint;
-    btn_img_res.HoveredImageTint = (int)FudgetAlignedImagePartIds::HoveredImageTint;
-    btn_img_res.PressedImageTint = (int)FudgetAlignedImagePartIds::PressedImageTint;
-    btn_img_res.DownImageTint = (int)FudgetAlignedImagePartIds::DownImageTint;
-    btn_img_res.FocusedImageTint = (int)FudgetAlignedImagePartIds::FocusedImageTint;
-    btn_img_res.DisabledImageTint = (int)FudgetAlignedImagePartIds::DisabledImageTint;
+    btn_img_map.HorzAlign = (int)FudgetAlignedImagePartIds::HorzImageAlign;
+    btn_img_map.VertAlign = (int)FudgetAlignedImagePartIds::VertImageAlign;
 
-    btn_img_res.ImageOffset = (int)FudgetAlignedImagePartIds::ImageOffset;
-    btn_img_res.HoveredImageOffset = (int)FudgetAlignedImagePartIds::HoveredImageOffset;
-    btn_img_res.PressedImageOffset = (int)FudgetAlignedImagePartIds::PressedImageOffset;
-    btn_img_res.DownImageOffset = (int)FudgetAlignedImagePartIds::DownImageOffset;
-    btn_img_res.FocusedImageOffset = (int)FudgetAlignedImagePartIds::FocusedImageOffset;
-    btn_img_res.DisabledImageOffset = (int)FudgetAlignedImagePartIds::DisabledImageOffset;
-
-    btn_img_res.ImagePadding = (int)FudgetAlignedImagePartIds::ImagePadding;
-    btn_img_res.HoveredImagePadding = (int)FudgetAlignedImagePartIds::HoveredImagePadding;
-    btn_img_res.PressedImagePadding = (int)FudgetAlignedImagePartIds::PressedImagePadding;
-    btn_img_res.DownImagePadding = (int)FudgetAlignedImagePartIds::DownImagePadding;
-    btn_img_res.FocusedImagePadding = (int)FudgetAlignedImagePartIds::FocusedImagePadding;
-    btn_img_res.DisabledImagePadding = (int)FudgetAlignedImagePartIds::DisabledImagePadding;
-
-    btn_img_res.HorzAlign = (int)FudgetAlignedImagePartIds::HorzImageAlign;
-    btn_img_res.VertAlign = (int)FudgetAlignedImagePartIds::VertImageAlign;
-
-    main_theme->SetResource(FudgetThemePartIds::AlignedImageContentPainter, FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(btn_img_res));
+    main_theme->SetResource(FudgetThemePartIds::AlignedImageContentPainter, FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER, btn_img_map));
 
 
-    FudgetListBoxItemPainterResources lb_item_res;
-    lb_item_res.StateOrderIndex = FudgetThemes::HOVERED_FOCUSED_STATE_ORDER;
-    lb_item_res.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
+    FudgetListBoxItemPainterMapping lb_item_map;
+    lb_item_map.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
 
-    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(lb_item_res));
+    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(FudgetThemes::HOVERED_FOCUSED_STATE_ORDER, lb_item_map));
 
     // Built-in styles:
 
@@ -605,6 +576,9 @@ void FudgetThemes::Uninitialize(bool in_game)
     delete(_data);
     _data = nullptr;
 #endif
+
+    if (--_initialized_count == 0)
+        Delete(FudgetDrawable::Empty);
 }
 
 

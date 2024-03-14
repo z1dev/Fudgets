@@ -21,10 +21,12 @@ struct FUDGETS_API FudgetPartPainterMapping
 	/// </summary>
 	API_FIELD() StringAnsi PainterType;
 
+	API_FIELD() int StateOrderIndex = -1;
+
 	/// <summary>
-	/// Must be one of the Fudget***PainterResource structs that correspond to the painter named in PainterType.
+	/// Must be one of the Fudget***PainterMapping structs that correspond to the painter named in PainterType.
 	/// </summary>
-	API_FIELD() Variant ResourceMapping;
+	API_FIELD() Variant Mapping;
 };
 
 

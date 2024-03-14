@@ -54,6 +54,12 @@ constexpr bool Fudget_is_enum_or_int()
 }
 
 template<typename T>
+constexpr bool Fudget_is_enum_or_int64()
+{
+	return std::is_enum<T>::value || std::is_convertible<T, int64>::value;
+}
+
+template<typename T>
 static Variant StructToVariant(const T &s)
 {
 	VariantType t;

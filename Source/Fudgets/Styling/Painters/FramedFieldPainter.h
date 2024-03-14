@@ -5,24 +5,23 @@
 
 
 API_STRUCT()
-struct FUDGETS_API FudgetFramedField
+struct FUDGETS_API FudgetFieldMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedField);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFieldMapping);
 
     template<typename S, typename D, typename P, typename T>
-    FudgetFramedField(S state, D drawable, P padding, T  tint) : State((int)state), Drawable((int)drawable), Padding((int)padding), Tint((int)tint) {}
-    FudgetFramedField() {}
+    FudgetFieldMapping(S state, D drawable, P padding, T  tint) : State((uint64)state), Drawable((int)drawable), Padding((int)padding), Tint((int)tint) {}
+    FudgetFieldMapping() {}
 
-    API_FIELD() int State = 0;
+    API_FIELD() uint64 State = 0;
 
     API_FIELD() int Drawable = 0;
     API_FIELD() int Padding = 0;
     API_FIELD() int Tint = 0;
 };
 
-
 template<>
-struct TIsPODType<FudgetFramedField>
+struct TIsPODType<FudgetFieldMapping>
 {
     enum { Value = true };
 };
@@ -32,65 +31,15 @@ struct FUDGETS_API FudgetFramedFieldLayer
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldLayer);
 
-    API_FIELD() Array<FudgetFramedField> Fields;
+    API_FIELD() Array<FudgetFieldMapping> Mappings;
 };
 
 API_STRUCT()
-struct FUDGETS_API FudgetFramedFieldPainterResources
+struct FUDGETS_API FudgetFramedFieldPainterMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldPainterResources);
-
-    API_FIELD() int StateOrderIndex = -1;
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldPainterMapping);
 
     API_FIELD() Array<FudgetFramedFieldLayer> Layers;
-
-    /*API_FIELD() int FieldBackground = 0;
-    API_FIELD() int HoveredFieldBackground = 0;
-    API_FIELD() int PressedFieldBackground = 0;
-    API_FIELD() int DownFieldBackground = 0;
-    API_FIELD() int DisabledFieldBackground = 0;
-    API_FIELD() int FocusedFieldBackground = 0;
-    API_FIELD() int SelectedFieldBackground = 0;
-
-    API_FIELD() int FieldTint = 0;
-    API_FIELD() int HoveredFieldTint = 0;
-    API_FIELD() int PressedFieldTint = 0;
-    API_FIELD() int DownFieldTint = 0;
-    API_FIELD() int DisabledFieldTint = 0;
-    API_FIELD() int FocusedFieldTint = 0;
-    API_FIELD() int SelectedFieldTint = 0;
-
-    API_FIELD() int FieldPadding = 0;
-    API_FIELD() int HoveredFieldPadding = 0;
-    API_FIELD() int PressedFieldPadding = 0;
-    API_FIELD() int DownFieldPadding = 0;
-    API_FIELD() int DisabledFieldPadding = 0;
-    API_FIELD() int FocusedFieldPadding = 0;
-    API_FIELD() int SelectedFieldPadding = 0;
-
-    API_FIELD() int FrameDraw = 0;
-    API_FIELD() int HoveredFrameDraw = 0;
-    API_FIELD() int PressedFrameDraw = 0;
-    API_FIELD() int DownFrameDraw = 0;
-    API_FIELD() int DisabledFrameDraw = 0;
-    API_FIELD() int FocusedFrameDraw = 0;
-    API_FIELD() int SelectedFrameDraw = 0;
-
-    API_FIELD() int FrameTint = 0;
-    API_FIELD() int HoveredFrameTint = 0;
-    API_FIELD() int PressedFrameTint = 0;
-    API_FIELD() int DownFrameTint = 0;
-    API_FIELD() int DisabledFrameTint = 0;
-    API_FIELD() int FocusedFrameTint = 0;
-    API_FIELD() int SelectedFrameTint = 0;
-
-    API_FIELD() int FramePadding = 0;
-    API_FIELD() int HoveredFramePadding = 0;
-    API_FIELD() int PressedFramePadding = 0;
-    API_FIELD() int DownFramePadding = 0;
-    API_FIELD() int DisabledFramePadding = 0;
-    API_FIELD() int FocusedFramePadding = 0;
-    API_FIELD() int SelectedFramePadding = 0;*/
 
     API_FIELD() int VisualPadding = 0;
     API_FIELD() int ContentPadding = 0;
@@ -106,10 +55,10 @@ class FUDGETS_API FudgetFramedFieldPainter : public FudgetStatePainter
     using Base = FudgetStatePainter;
     DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
 public:
-    using ResourceMapping = FudgetFramedFieldPainterResources;
+    using Mapping = FudgetFramedFieldPainterMapping;
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
+    void Initialize(FudgetControl *control, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;
@@ -124,19 +73,16 @@ public:
     /// </summary>
     API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _content_padding; }
 private:
-    struct DrawField
+    struct DrawMapping
     {
-        int _state;
+        uint64 _state;
 
         FudgetDrawable *_drawable;
         Color _tint;
         FudgetPadding _padding;
     };
-
-    Array<Array<DrawField>> _layers;
+    Array<Array<DrawMapping>> _layers;
 
     FudgetPadding _visual_padding;
     FudgetPadding _content_padding;
-
-    FudgetStateOrder *_state_order;
 };

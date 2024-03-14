@@ -2,6 +2,7 @@
 
 #include "Engine/Scripting/ScriptingObject.h"
 
+#include "LineEditTextPainter.h"
 #include "PartPainters.h"
 
 
@@ -265,24 +266,6 @@ protected:
 };
 
 
-API_STRUCT(Attributes = "HideInEditor")
-struct FUDGETS_API FudgetTextBoxPainterResources
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextBoxPainterResources);
-
-    API_FIELD() int StateOrderIndex = -1;
-
-    API_FIELD() int SelectionDraw = 0;
-    API_FIELD() int FocusedSelectionDraw = 0;
-    API_FIELD() int DisabledSelectionDraw = 0;
-    API_FIELD() int TextColor = 0;
-    API_FIELD() int FocusedTextColor = 0;
-    API_FIELD() int DisabledTextColor = 0;
-    API_FIELD() int SelectedTextColor = 0;
-    API_FIELD() int FocusedSelectedTextColor = 0;
-    API_FIELD() int DisabledSelectedTextColor = 0;
-    API_FIELD() int Font = 0;
-};
 
 /// <summary>
 /// Text painter for multi-line text boxes with unformatted text.
@@ -293,7 +276,7 @@ class FUDGETS_API FudgetTextBoxPainter : public FudgetMultiLineTextPainter
     using Base = FudgetMultiLineTextPainter;
     DECLARE_SCRIPTING_TYPE(FudgetTextBoxPainter);
 public:
-    using ResourceMapping = FudgetTextBoxPainterResources;
+    using Mapping = FudgetTextPainterMapping;
 
     /// <inheritdoc />
     void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
@@ -334,18 +317,16 @@ public:
     int GetFontHeight() const override;
 
 private:
-    FudgetDrawArea _sel_area;
-    FudgetDrawArea _focused_sel_area;
-    FudgetDrawArea _disabled_sel_area;
+    struct DrawMapping
+    {
+        uint64 _state;
 
-    Color _text_color;
-    Color _focused_text_color;
-    Color _disabled_text_color;
-    Color _selected_text_color;
-    Color _focused_selected_text_color;
-    Color _disabled_selected_text_color;
+        FudgetDrawable *_sel_draw;
+        Color _text_color;
+        Color _sel_text_color;
+    };
+
+    Array<DrawMapping> _mappings;
 
     FudgetFont _font;
-
-    FudgetStateOrder *_state_order;
 };
