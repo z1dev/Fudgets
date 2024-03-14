@@ -127,6 +127,9 @@ void FudgetListBox::OnInitialize()
 
 void FudgetListBox::OnStyleInitialize()
 {
+    if (_frame_painter != nullptr)
+        _top_item_pos -= GetInnerPadding().UpperLeft();
+
     //FudgetStyle *frame_style;
     //if (!GetStyleStyle((int)FudgetListBoxIds::FrameStyle, frame_style))
     //    frame_style = nullptr;
@@ -136,6 +139,9 @@ void FudgetListBox::OnStyleInitialize()
     //if (!GetStyleStyle((int)FudgetListBoxIds::ItemStyle, item_style))
     //    item_style = nullptr;
     _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
+
+    if (_frame_painter != nullptr)
+        _top_item_pos += GetInnerPadding().UpperLeft();
 }
 
 void FudgetListBox::OnDraw()
@@ -163,7 +169,7 @@ void FudgetListBox::OnDraw()
         r.Size.Y = (float)GetItemSize(ix).Y;
         FudgetVisualControlState hover_state = (_hovered_index == ix ? FudgetVisualControlState::Hovered : (FudgetVisualControlState)0);
         FudgetVisualControlState select_state = (IsItemSelected(ix) ? FudgetVisualControlState::Selected : (FudgetVisualControlState)0);
-        _item_painter->Draw(this, r, Int2(0, pos), ix, _data, (GetVisualState() & ~FudgetVisualControlState::Hovered) | hover_state | select_state);
+        _item_painter->Draw(this, r, Int2::Zero, ix, _data, (GetVisualState() & ~FudgetVisualControlState::Hovered) | hover_state | select_state);
         r.Location.Y += r.Size.Y;
     }
 
