@@ -1,6 +1,6 @@
 #include "ListBox.h"
 #include "../Styling/Painters/ListBoxPainter.h"
-#include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
 
 FudgetStringListProvider::FudgetStringListProvider(const SpawnParams &params) : Base(params), _allow_duplicates(false)
@@ -130,7 +130,7 @@ void FudgetListBox::OnStyleInitialize()
     if (_frame_painter != nullptr)
         _top_item_pos -= GetInnerPadding().UpperLeft();
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
     _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
 
     if (_frame_painter != nullptr)

@@ -163,7 +163,7 @@ enum class FudgetThemePartIds
     /// Image padding for combobox buttons with aligned image content
     /// </summary>
     ComboBoxButtonImagePadding,
-   
+
     /// <summary>
     /// Horizontal alignment of contents in a combobox button
     /// </summary>
@@ -204,9 +204,9 @@ enum class FudgetThemePartIds
     /// </summary>
     MultiLineInputTextPainter,
     /// <summary>
-    /// Painter information for controls with an image content that is aligned within bounds
+    /// Painter information for controls with content that can be drawn by a drawable
     /// </summary>
-    AlignedImageContentPainter,
+    DrawableContentPainter,
     /// <summary>
     /// Painter information for controls with a list of items
     /// </summary>
@@ -226,6 +226,19 @@ enum class FudgetFramedControlPartIds
 
     VisualPadding,
     ContentPadding,
+};
+
+API_ENUM()
+enum class FudgetContentPartIds
+{
+    First = 1200,
+
+    ContentPainter = First,
+
+    Drawable,
+    Padding,
+    Offset,
+    Tint,
 };
 
 API_ENUM()
@@ -269,22 +282,7 @@ enum class FudgetButtonPartIds
 {
     First = 3000,
 
-    ContentPainter = First,
     ContentPressedOffset,
-};
-
-API_ENUM()
-enum class FudgetAlignedImagePartIds
-{
-    First = 4000,
-
-    Image = First,
-    ImageTint,
-    ImageOffset,
-    ImagePadding,
-
-    HorzImageAlign,
-    VertImageAlign,
 };
 
 API_ENUM()

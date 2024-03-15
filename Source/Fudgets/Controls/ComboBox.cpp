@@ -6,7 +6,7 @@
 #include "../Utils/Utils.h"
 
 #include "../Styling/Themes.h"
-#include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
 
 
@@ -32,7 +32,7 @@ void FudgetComboBox::OnInitialize()
     frame_res.DisabledFrameDraw = (int)FudgetComboBoxIds::DisabledFrameDraw;
     frame_res.FocusedFrameDraw = (int)FudgetComboBoxIds::FocusedFrameDraw;
     frame_res.ContentPadding = (int)FudgetComboBoxIds::ContentPadding;
-    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);*/
+    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(frame_res);*/
 
     _editor = CreateChild<FudgetLineEdit>(FudgetThemes::COMBOBOX_EDITOR_STYLE);
     _editor->SetShowBorder(false);
@@ -61,7 +61,7 @@ void FudgetComboBox::OnStyleInitialize()
     //FudgetStyle *frame_style;
     //if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
     //    frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 }
 
 void FudgetComboBox::OnDraw()

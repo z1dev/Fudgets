@@ -2,7 +2,7 @@
 
 #include "ListControl.h"
 
-class FudgetFramedFieldPainter;
+class FudgetDrawablePainter;
 class FudgetListItemPainter;
 
 
@@ -169,7 +169,7 @@ protected:
 private:
     FudgetPadding GetInnerPadding() const;
 
-    FudgetFramedFieldPainter *_frame_painter;
+    FudgetDrawablePainter *_frame_painter;
     FudgetListItemPainter *_item_painter;
 
     FudgetStringListProvider *_data;

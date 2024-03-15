@@ -4,9 +4,9 @@
 
 
 API_STRUCT()
-struct FUDGETS_API FudgetFramedFieldPainterMapping
+struct FUDGETS_API FudgetDrawablePainterMapping
 {
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetFramedFieldPainterMapping);
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawablePainterMapping);
 
     API_FIELD() int Drawable = 0;
     API_FIELD() int Padding = 0;
@@ -21,12 +21,12 @@ struct FUDGETS_API FudgetFramedFieldPainterMapping
 /// list boxes, drop down menus.
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetFramedFieldPainter : public FudgetStatePainter
+class FUDGETS_API FudgetDrawablePainter : public FudgetStatePainter
 {
     using Base = FudgetStatePainter;
-    DECLARE_SCRIPTING_TYPE(FudgetFramedFieldPainter);
+    DECLARE_SCRIPTING_TYPE(FudgetDrawablePainter);
 public:
-    using Mapping = FudgetFramedFieldPainterMapping;
+    using Mapping = FudgetDrawablePainterMapping;
 
     /// <inheritdoc />
     void Initialize(FudgetControl *control, const Variant &mapping) override;

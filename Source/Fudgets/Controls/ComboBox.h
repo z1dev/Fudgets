@@ -8,7 +8,7 @@ class FudgetLineEdit;
 class FudgetButton;
 class FudgetListBox;
 class FudgetStringListProvider;
-class FudgetFramedFieldPainter;
+class FudgetDrawablePainter;
 
 
 
@@ -100,7 +100,7 @@ private:
     /// </summary>
     FudgetProxyLayout *_layout;
 
-    FudgetFramedFieldPainter *_frame_painter;
+    FudgetDrawablePainter *_frame_painter;
 
     int _button_width;
 

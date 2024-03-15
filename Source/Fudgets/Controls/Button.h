@@ -3,7 +3,7 @@
 #include "../Control.h"
 //#include "../Styling/Painters/PartPainters.h"
 
-class FudgetFramedFieldPainter;
+class FudgetDrawablePainter;
 class FudgetStatePainter;
 
 
@@ -94,14 +94,13 @@ public:
     void OnStyleInitialize() override;
     /// <inheritdoc />
     void OnDraw() override;
-protected:
-    ///// <inheritdoc />
-    //FudgetControlFlag GetInitFlags() const override;
 private:
     FudgetPadding GetInnerPadding() const;
 
-    FudgetFramedFieldPainter *_frame_painter;
+    FudgetDrawablePainter *_frame_painter;
     FudgetStatePainter *_content_painter;
+
+    Float2 _content_pressed_offset;
 };
 
 

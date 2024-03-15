@@ -1,7 +1,7 @@
 #include "Button.h"
 #include "../Styling/Themes.h"
-#include "../Styling/Painters/AlignedImagePainter.h"
-#include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/Painters/ContentPainter.h"
+#include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
 
 FudgetButtonBase::FudgetButtonBase(const SpawnParams &params) : Base(params), _down(false), _pressed(false)
@@ -78,7 +78,7 @@ FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 
 
 
-FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr)
+FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr), _content_pressed_offset(Float2::Zero)
 {
     //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::IMAGE_BUTTON_STYLE);
     //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetButton>();
@@ -93,14 +93,15 @@ void FudgetButton::OnStyleInitialize()
     //FudgetStyle *frame_style = nullptr;
     //if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
     //    frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 
     //FudgetStyle *content_style = nullptr;
     //if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
     //    content_style = nullptr;
-    _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetButtonPartIds::ContentPainter);
+    _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetContentPartIds::ContentPainter);
 
-
+    if (!GetStyleFloat2((int)FudgetButtonPartIds::ContentPressedOffset, _content_pressed_offset))
+        _content_pressed_offset = Float2::Zero;
 }
 
 FudgetPadding FudgetButton::GetInnerPadding() const
@@ -114,7 +115,13 @@ void FudgetButton::OnDraw()
     if (_frame_painter != nullptr)
         _frame_painter->Draw(this, bounds, GetVisualState());
     if (_content_painter != nullptr)
-        _content_painter->Draw(this, bounds, GetVisualState());
+    {
+        Rectangle r = GetInnerPadding().Padded(bounds);
+        uint64 state = GetVisualState();
+        if ((state & uint64(FudgetVisualControlState::Pressed | FudgetVisualControlState::Down)) != 0)
+            r.Location += _content_pressed_offset;
+        _content_painter->Draw(this, r, state);
+    }
 }
 
 //FudgetControlFlag FudgetButton::GetInitFlags() const

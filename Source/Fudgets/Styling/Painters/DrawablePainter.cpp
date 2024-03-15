@@ -1,4 +1,4 @@
-#include "FramedFieldPainter.h"
+#include "DrawablePainter.h"
 #include "../../Control.h"
 #include "../DrawableBuilder.h"
 #include "../PartPainterIds.h"
@@ -6,11 +6,11 @@
 // FudgetFrameFieldPainter
 
 
-FudgetFramedFieldPainter::FudgetFramedFieldPainter(const SpawnParams &params) : Base(params), _drawable(nullptr)
+FudgetDrawablePainter::FudgetDrawablePainter(const SpawnParams &params) : Base(params), _drawable(nullptr)
 {
 }
 
-void FudgetFramedFieldPainter::Initialize(FudgetControl *control, const Variant &mapping)
+void FudgetDrawablePainter::Initialize(FudgetControl *control, const Variant &mapping)
 {
     Mapping res = *mapping.AsStructure<Mapping>();
 
@@ -27,7 +27,7 @@ void FudgetFramedFieldPainter::Initialize(FudgetControl *control, const Variant 
         _content_padding = FudgetPadding(0);
 }
 
-void FudgetFramedFieldPainter::Draw(FudgetControl *control, const Rectangle &bounds, uint64 states)
+void FudgetDrawablePainter::Draw(FudgetControl *control, const Rectangle &bounds, uint64 states)
 {
     control->DrawDrawable(_drawable, _drawable->FindMatchingState(states), _padding.Padded(bounds), _tint.FindMatchingColor(states));
 }

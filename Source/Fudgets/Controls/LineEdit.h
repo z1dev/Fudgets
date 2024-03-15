@@ -3,7 +3,7 @@
 #include "TextBoxBase.h"
 //#include "../Styling/Painters/PartPainters.h"
 
-class FudgetFramedFieldPainter;
+class FudgetDrawablePainter;
 class FudgetSingleLineTextPainter;
 
 
@@ -100,7 +100,7 @@ private:
 
     void Process(const StringView &value);
 
-    FudgetFramedFieldPainter *_frame_painter;
+    FudgetDrawablePainter *_frame_painter;
     FudgetSingleLineTextPainter *_text_painter;
 
     float _blink_passed;

@@ -2,7 +2,7 @@
 
 #include "../Styling/Themes.h"
 #include "../Layouts/Layout.h"
-#include "../Styling/Painters/FramedFieldPainter.h"
+#include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
 
 #include "Engine/Core/Types/StringBuilder.h"
@@ -22,7 +22,7 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_p
 
 void FudgetTextBox::OnInitialize()
 {
-    //FudgetFramedFieldPainter::ResourceMapping frame_res;
+    //FudgetDrawablePainter::ResourceMapping frame_res;
     //frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
     //frame_res.FrameDraw = (int)FudgetTextBoxIds::FrameDraw;
     //frame_res.HoveredFrameDraw = (int)FudgetTextBoxIds::FrameDraw;
@@ -31,7 +31,7 @@ void FudgetTextBox::OnInitialize()
     //frame_res.DisabledFrameDraw = (int)FudgetTextBoxIds::DisabledFrameDraw;
     //frame_res.FocusedFrameDraw = (int)FudgetTextBoxIds::FocusedFrameDraw;
     //frame_res.ContentPadding = (int)FudgetTextBoxIds::ContentPadding;
-    //_default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_res);
+    //_default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(frame_res);
 
     //FudgetTextBoxPainter::ResourceMapping text_res;
     //text_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
@@ -55,7 +55,7 @@ void FudgetTextBox::OnStyleInitialize()
     //if (!GetStyleStyle((int)FudgetTextBoxIds::FrameStyle, frame_style))
     //    frame_style = nullptr;
 
-    _frame_painter = CreateStylePainter<FudgetFramedFieldPainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 
     //FudgetStyle *text_style;
     //if (!GetStyleStyle((int)FudgetTextBoxIds::TextStyle, text_style))

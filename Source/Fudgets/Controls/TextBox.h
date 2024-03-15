@@ -3,7 +3,7 @@
 #include "TextBoxBase.h"
 #include "../Styling/Painters/TextBoxPainter.h"
 
-class FudgetFramedFieldPainter;
+class FudgetDrawablePainter;
 
 
 /// <summary>
@@ -203,7 +203,7 @@ private:
 
 
 
-    FudgetFramedFieldPainter *_frame_painter;
+    FudgetDrawablePainter *_frame_painter;
     FudgetMultiLineTextPainter *_text_painter;
 
     FudgetMultilineTextMeasurements _text_measurements;
