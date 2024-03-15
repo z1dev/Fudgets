@@ -68,10 +68,12 @@ struct FudgetPadding;
 struct FudgetBorder;
 struct FudgetFontSettings;
 struct FudgetFont;
+struct FudgetDrawColors;
 class FudgetPartPainter;
 struct FudgetDrawInstructionList;
+class FudgetDrawable;
 
-enum class FudgetVisualControlState;
+enum class FudgetVisualControlState : uint64;
 
 
 /// <summary>
@@ -1047,9 +1049,16 @@ public:
     API_PROPERTY() virtual bool VirtuallyHovered() const;
 
     /// <summary>
-    /// The control's appearance to the user.
+    /// The control's appearance to the user. Usually this is one of the FudgetVisualControlState enum flags, but can hold any
+    /// custom state flag as well.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetVisualControlState GetVisualState() const { return _visual_state; }
+    API_PROPERTY() FORCE_INLINE virtual uint64 GetVisualState() const { return _visual_state; }
+
+    /// <summary>
+    /// The control's appearance to the user. Internally this is a 64 bit unsigned integer. The FudgetVisualControlState
+    /// enum flags define the standard states, but custom values can be set as well.
+    /// </summary>
+    API_PROPERTY() FORCE_INLINE virtual FudgetVisualControlState GetVisualStateAsEnum() const { return (FudgetVisualControlState)_visual_state; }
 
     /// <summary>
     /// Returns the container at the root of the UI, which covers the UI usable area. For example the screen.
@@ -1520,19 +1529,23 @@ public:
     API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size, const Color &tint = Color::White);
 
     /// <summary>
-    /// Draws a list of styled areas in a rectangle
+    /// Draws a drawable inside a rectangle.
     /// </summary>
-    /// <param name="area">List of styled areas filling the rectangle</param>
-    /// <param name="rect">Rectangle to fill</param>
-    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect, const Color &tint = Color::White);
+    /// <param name="drawable">The drawable to draw.</param>
+    /// <param name="stateindex">The index of the state in the drawable</param>
+    /// <param name="rect">The bounds for drawing</param>
+    /// <param name="tint">A color to multiply with every drawn pixel</param>
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, int stateindex, const Rectangle &rect, const Color &tint = Color::White);
 
     /// <summary>
-    /// Draws a list of styled areas in a rectangle
+    /// Draws a drawable inside a rectangle.
     /// </summary>
-    /// <param name="area">List of styled areas filling the rectangle</param>
-    /// <param name="pos">Position of the rectangle</param>
-    /// <param name="size">Size of the rectangle</param>
-    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size, const Color &tint = Color::White);
+    /// <param name="drawable">The drawable to draw.</param>
+    /// <param name="stateindex">The index of the state in the drawable</param>
+    /// <param name="pos">The position of the bounds for drawing</param>
+    /// <param name="size">The size of the bounds for drawing</param>
+    /// <param name="tint">A color to multiply with every drawn pixel</param>
+    API_FUNCTION() void DrawDrawable(FudgetDrawable *drawable, int stateindex, Float2 pos, Float2 size, const Color &tint = Color::White);
 
     /// <summary>
     /// Wrapper to Render2D's PushClip
@@ -1691,6 +1704,15 @@ public:
     /// <param name="result">Variable that receives the color</param>
     /// <returns>Whether a valid value was found for the id</returns>
     API_FUNCTION() bool GetStyleColor(int id, API_PARAM(Out) Color &result);
+
+    /// <summary>
+    /// Returns a list of draw colors for the control based on an id.
+    /// The resulting value depends on both the style and the theme currently active for this control.
+    /// </summary>
+    /// <param name="id">Id associated with the draw colors in the active styles</param>
+    /// <param name="result">Variable that receives the color</param>
+    /// <returns>Whether a valid value was found for the id</returns>
+    API_FUNCTION() bool GetStyleDrawColors(int id, API_PARAM(Out) FudgetDrawColors &result);
 
     /// <summary>
     /// Returns a bool value for the control based on an id.
@@ -1853,7 +1875,7 @@ public:
     /// </summary>
     /// <param name="Id">Id of an area list value in the active styles</param>
     /// <param name="drawable_owner">A part painter which will cause the destruction of the drawable when it is destroyed.</param>
-    /// <param name="result">The area list that can be passed to DrawAreaList</param>
+    /// <param name="result">Value that receives the drawable on success.</param>
     /// <returns>Whether a valid value was found for the id</returns>
     API_FUNCTION() bool GetStyleDrawable(int id, FudgetPartPainter *drawable_owner, API_PARAM(Out) FudgetDrawable* &result);
        
@@ -2022,11 +2044,20 @@ protected:
     API_FUNCTION() virtual void SetState(FudgetControlState states, bool value);
 
     /// <summary>
-    /// Adds or removes the passed visual state flag or flags depending on the value.
+    /// Adds or removes the passed visual state enum flag or flags depending on the value. The state is
+    /// a 64 bit unsigned integer, but FudgetVisualControlState can be used to set the default states.
     /// </summary>
     /// <param name="states">The flag or flags to set or unset</param>
     /// <param name="value">True if the flag should be set, false if it should be unset </param>
     API_FUNCTION() void SetVisualState(FudgetVisualControlState state, bool value);
+
+    /// <summary>
+    /// Adds or removes the passed visual state flag or flags depending on the value. The state is
+    /// a 64 bit unsigned integer, but FudgetVisualControlState can be used to set the default states.
+    /// </summary>
+    /// <param name="states">The flag or flags to set or unset</param>
+    /// <param name="value">True if the flag should be set, false if it should be unset </param>
+    API_FUNCTION() void SetVisualState(uint64 state, bool value);
 
     /// <summary>
     /// Called recursively by the gui root when the deserialization was complete on a Fudget object. This function shouldn't
@@ -2150,7 +2181,7 @@ private:
     /// <param name="value">The new style name.</param>
     API_FUNCTION() void SetStyleName(const String &value);
 
-    void DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint = Color::White);
+    void DrawDrawableInstructions(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint = Color::White);
     void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
     void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
 
@@ -2234,7 +2265,7 @@ private:
 
     FudgetControlState _state_flags;
 
-    FudgetVisualControlState _visual_state;
+    uint64 _visual_state;
 
     // This is reset on each Draw and calculated when needed to simplify GlobalToLocal and LocalToGlobal in draw calls.
     // It's only used during the drawing functions. It can be manually reset when needed

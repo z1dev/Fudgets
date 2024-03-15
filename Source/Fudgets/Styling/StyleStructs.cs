@@ -262,3 +262,41 @@ public partial struct FudgetDrawArea
         Borders = borders_9p.AsBorder;
     }
 }
+
+public partial struct FudgetDrawColors
+{
+    /// <summary>
+    /// Returns the index of a state within the colors list that matches the passed state flags. The index of the first
+    /// state that fully matches is returned. The 0 state in the colors list matches any combination of state flags.
+    /// </summary>
+    /// <param name="states">State flags to match</param>
+    /// <returns>Index to the first matching state in the colors list or -1 on failure</returns>
+    public int FindMatchingState(ulong states)
+    {
+        for (int ix = 0, siz = _states.Length; ix < siz; ++ix)
+        {
+            ulong state = _states[ix];
+            if ((states & state) == state)
+                return ix;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Finds a color for the state matching the passed state flags and returns it if there was a match. Otherwise returns white. The first
+    /// state that fully matches is used. The 0 state in the colors list matches any combination of state flags.
+    /// Use FindMatchingState instead to check the success of the state matching.
+    /// </summary>
+    /// <param name="states">State flags to match</param>
+    /// <returns>Color matching the states flags or a white color if no match was found.</returns>
+    public Color FindMatchingColor(ulong states)
+	{
+
+        int ix = FindMatchingState(states);
+		if (ix < 0)
+			return Color.White;
+		return _colors[ix];
+	}
+
+}
+

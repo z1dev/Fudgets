@@ -47,6 +47,14 @@ constexpr bool Fudget_is_resource_id()
 	return !std::is_same<T2, int>::value && (std::is_enum<T>::value || std::is_convertible<T, int>::value);
 }
 
+template<typename T, typename T2>
+constexpr bool Fudget_is_enum_and_not_type2()
+{
+	using T3 = std::remove_reference_t<std::remove_const_t<std::remove_volatile_t<T>>>;
+	using T4 = std::remove_reference_t<std::remove_const_t<std::remove_volatile_t<T2>>>;
+	return !std::is_same<T3, T4>::value && (std::is_enum<T>::value || std::is_convertible<T, T4>::value);
+}
+
 template<typename T>
 constexpr bool Fudget_is_enum_or_int()
 {

@@ -21,6 +21,7 @@ struct FudgetBorder;
 struct Color;
 struct FudgetFontSettings;
 struct FudgetFont;
+struct FudgetDrawColors;
 class FudgetDrawable;
 class FudgetStyle;
 struct FudgetPartPainterMapping;
@@ -264,6 +265,20 @@ public:
     /// <param name="result">Receives retrieved value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetColorResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Color &result);
+
+
+    /// <summary>
+    /// Retrieves the draw colors list resource by an id either from the style, one of its parent styles or the theme, checked in this order.
+    /// The id might refer to a resource override, in which case the style attempts to retreive the value from the theme.
+    /// The value is stored in result, unless the id wasn't found.
+    /// </summary>
+    /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
+    /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
+    /// <param name="id">The id to look up for a resource value or resource override</param>
+    /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
+    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <returns>Whether a resource with the id was found and stored in result</returns>
+    API_FUNCTION() static bool GetDrawColorsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawColors &result);
 
 
     /// <summary>
@@ -548,6 +563,7 @@ public:
     static bool Int3FromVariant(const Variant &var, Int3 &result);
     static bool Int4FromVariant(const Variant &var, Int4 &result);
     static bool ColorFromVariant(const Variant &var, Color &result);
+    static bool DrawColorsFromVariant(const Variant &var, FudgetDrawColors &result);
 
 protected:
     /// <summary>

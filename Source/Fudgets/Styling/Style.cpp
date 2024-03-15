@@ -310,6 +310,18 @@ bool FudgetStyle::GetColorResource(FudgetStyle *style, FudgetTheme *theme, int i
     return false;
 }
 
+bool FudgetStyle::GetDrawColorsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawColors &result)
+{
+    Variant var;
+    if (GetResourceValue(style, theme, id, check_theme, var))
+    {
+        if (DrawColorsFromVariant(var, result))
+            return true;
+    }
+    result = FudgetDrawColors();
+    return false;
+}
+
 bool FudgetStyle::GetBoolResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) bool &result)
 {
     Variant var;
@@ -733,13 +745,21 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *dra
             return true;
         }
 
+        const FudgetDrawColors *drawcolors = var.AsStructure<FudgetDrawColors>();
+        if (drawcolors != nullptr)
+        {
+            result = FudgetDrawable::FromDrawColors(drawable_owner, *drawcolors);
+            return true;
+        }
+
         const FudgetDrawableIndex *drawindex = var.AsStructure<FudgetDrawableIndex>();
         if (drawindex != nullptr)
         {
-            FudgetDrawInstructionList *drawlist = FudgetThemes::GetDrawInstructionList(drawindex->Index);
-            if (drawlist == nullptr)
+            std::vector<uint64> states;
+            std::vector<FudgetDrawInstructionList*> lists;
+            if (!FudgetThemes::GetDrawInstructionList(drawindex->Index, states, lists))
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, drawlist);
+            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, states, lists);
             return true;
         }
     }
@@ -1005,3 +1025,29 @@ bool FudgetStyle::ColorFromVariant(const Variant &var, Color &result)
     }
     return false;
 }
+
+bool FudgetStyle::DrawColorsFromVariant(const Variant &var, FudgetDrawColors &result)
+{
+    if (var.Type.Type == VariantType::Color)
+    {
+        result = FudgetDrawColors();
+        result._states.Add(0);
+        result._colors.Add(var.AsColor());
+        return true;
+    }
+
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetDrawColors *colors = var.AsStructure<FudgetDrawColors>();
+        if (colors == nullptr)
+        {
+            result = FudgetDrawColors();
+            return false;
+        }
+        result = *colors;
+        return true;
+    }
+    return false;
+}
+
+

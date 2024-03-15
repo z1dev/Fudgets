@@ -4,7 +4,6 @@
 #include "DrawableBuilder.h"
 
 #include "DrawableBuilder.h"
-#include "StateOrderBuilder.h"
 
 #include "PartPainterIds.h"
 
@@ -178,105 +177,89 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetTheme *main_theme = New<FudgetTheme>();
     _data->_theme_map[MAIN_THEME] = main_theme;
 
-
-    // DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER = 0
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed | (uint64)FudgetVisualControlState::Down);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::End();
-    // DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER = 1
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed | (uint64)FudgetVisualControlState::Down);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::End();
-    // DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER = 2
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Down);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::End();
-    // DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER = 3
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Down);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Pressed);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::End();
-    // HOVERED_FOCUSED_STATE_ORDER = 4
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::End();
-    // FOCUSED_HOVERED_STATE_ORDER = 5
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Hovered);
-    FudgetStateOrderBuilder::End();
-    // FOCUSED_STATE_ORDER = 5
-    FudgetStateOrderBuilder::Begin();
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Disabled);
-    FudgetStateOrderBuilder::AddState((uint64)FudgetVisualControlState::Focused);
-    FudgetStateOrderBuilder::End();
-
     // Basic resources
 
-    main_theme->SetResource(FudgetThemePartIds::Background, Color::White);
-    main_theme->SetResource(FudgetThemePartIds::FocusedBackground, Color::White);
-    main_theme->SetResource(FudgetThemePartIds::DisabledBackground, Color(.9f, .9f, .9f, 1.f));
+    FudgetDrawableBuilder::MakeDrawColors(Color(.9f, .9f, .9f, 1.f), FudgetVisualControlState::Disabled);
+    FudgetDrawableBuilder::MakeDrawColors(Color(.9f, .9f, 1.f, 1.f), FudgetVisualControlState::Focused);
+    FudgetDrawableBuilder::MakeDrawColors(Color::White);
+    main_theme->SetResource(FudgetThemePartIds::FieldBackground, FudgetDrawableBuilder::EndDrawColors());
 
-    FudgetDrawableBuilder::Begin();
-    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.5f, .5f, .5f, 1.f), FudgetFrameType::Inside));
-    main_theme->SetResource(FudgetThemePartIds::FrameDraw, FudgetDrawableBuilder::End());
-    FudgetDrawableBuilder::Begin();
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
+    FudgetDrawableBuilder::AddResource(FudgetThemePartIds::FieldBackground);
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.4f, .4f, .4f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Focused);
+    FudgetDrawableBuilder::AddResource(FudgetThemePartIds::FieldBackground);
     FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.4f, .5f, .8f, 1.f), FudgetFrameType::Inside));
-    main_theme->SetResource(FudgetThemePartIds::FocusedFrameDraw, FudgetDrawableBuilder::End());
-    //FudgetDrawableBuilder::Begin();
-    //FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.6f, .6f, .6f, 1.f), FudgetFrameType::Inside));
-    //main_theme->SetResource(FudgetThemePartIds::HoveredFrameDraw, FudgetDrawableBuilder::End());
+    FudgetDrawableBuilder::Begin();
+    FudgetDrawableBuilder::AddResource(FudgetThemePartIds::FieldBackground);
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(1), Color(.9f, .9f, .8f, 1.f), FudgetFrameType::Inside));
+    main_theme->SetResource(FudgetThemePartIds::FrameDraw, FudgetDrawableBuilder::End());
     main_theme->SetResource(FudgetThemePartIds::VisualPadding, FudgetPadding(1));
     main_theme->SetResource(FudgetThemePartIds::ContentPadding, FudgetPadding(4));
     main_theme->SetForwarding(FudgetThemePartIds::ButtonContentPadding, FudgetThemePartIds::ContentPadding);
 
-    main_theme->SetResource(FudgetThemePartIds::ButtonSurface, Color(.7f, .7f, .7f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonHoveredSurface, Color(.85f, .85f, .85f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonDisabledSurface, Color(.6f, .6f, .6f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonFocusedSurface, Color(.70f, .75f, .80f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonPressedSurface, Color(.65f, .65f, .65f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonDownSurface, Color(.6f, .6f, .6f, 1.f));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.6f, .6f, .6f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Down);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.6f, .6f, .6f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Pressed);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.65f, .65f, .65f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Hovered);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.85f, .85f, .85f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(FudgetVisualControlState::Focused);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.65f, .65f, .85f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    FudgetDrawableBuilder::Begin(0);
+    FudgetDrawableBuilder::BeginSubData();
+    FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
+    FudgetDrawableBuilder::AddColor(Color(.75f, .75f, .75f, 1.f));
+    FudgetDrawableBuilder::EndSubData();
+    FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea(FudgetBorder(3), Color(.3f, .3f, .3f, 1.f), FudgetFrameType::Inside));
+    main_theme->SetResource(FudgetThemePartIds::ButtonSurface, FudgetDrawableBuilder::End());
     main_theme->SetResource(FudgetThemePartIds::ButtonContentPressedOffset, Float2(0.f, 1.f));
-    main_theme->SetResource(FudgetThemePartIds::ButtonPressedImageOffset, Float2(0.f, 1.f));
 
-    main_theme->SetResource(FudgetThemePartIds::ComboBoxButtonPressedImageOffset, Float2(0.f, 1.f));
+    main_theme->SetForwarding(FudgetThemePartIds::ComboBoxButtonSurface, FudgetThemePartIds::ButtonSurface);
+    main_theme->SetResource(FudgetThemePartIds::ComboBoxButtonContentPressedOffset, Float2(0.f, 1.f));
 
-    main_theme->SetResource(FudgetThemePartIds::TextColor, Color::Black);
-    main_theme->SetForwarding(FudgetThemePartIds::FocusedTextColor, FudgetThemePartIds::TextColor);
-    main_theme->SetForwarding(FudgetThemePartIds::DisabledTextColor, FudgetThemePartIds::TextColor);
-    main_theme->SetResource(FudgetThemePartIds::SelectedTextColor, Color::White);
-    main_theme->SetForwarding(FudgetThemePartIds::FocusedSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
-    main_theme->SetForwarding(FudgetThemePartIds::DisabledSelectedTextColor, FudgetThemePartIds::SelectedTextColor);
-    main_theme->SetResource(FudgetThemePartIds::SelectedTextBackground, Color(0.2f, 0.4f, 0.9f, 1.0f));
-    main_theme->SetForwarding(FudgetThemePartIds::FocusedSelectedTextBackground, FudgetThemePartIds::SelectedTextBackground);
-    main_theme->SetResource(FudgetThemePartIds::DisabledSelectedTextBackground, Color(0.5f, 0.5f, 0.5f, 1.0f));
-    main_theme->SetForwarding(FudgetThemePartIds::CaretDraw, FudgetThemePartIds::TextColor);
+    FudgetDrawableBuilder::MakeDrawColors(Color(0.8f, 0.8f, 0.8f, 1.f), FudgetVisualControlState::Disabled);
+    FudgetDrawableBuilder::MakeDrawColors(Color::White, FudgetVisualControlState::Selected);
+    FudgetDrawableBuilder::MakeDrawColors(Color::Black);
+    main_theme->SetResource(FudgetThemePartIds::FieldTextColor, FudgetDrawableBuilder::EndDrawColors());
+
+    FudgetDrawableBuilder::MakeDrawColors(Color(0.5f, 0.5f, 0.5f, 1.f), FudgetVisualControlState::Disabled);
+    FudgetDrawableBuilder::MakeDrawColors(Color(0.2f, 0.4f, 0.9f, 1.f), FudgetVisualControlState::Selected | FudgetVisualControlState::Focused);
+    FudgetDrawableBuilder::MakeDrawColors(Color(0.2f, 0.3f, 0.6f, 1.f), FudgetVisualControlState::Selected);
+    main_theme->SetResource(FudgetThemePartIds::FieldTextBackground, FudgetDrawableBuilder::EndDrawColors());
+    main_theme->SetResource(FudgetThemePartIds::CaretDraw, Color::Black);
     main_theme->SetResource(FudgetThemePartIds::CaretBlinkTime, 0.8f);
     main_theme->SetResource(FudgetThemePartIds::CaretWidth, 1.f);
     main_theme->SetResource(FudgetThemePartIds::CaretScrollCount, 5);
     main_theme->SetResource(FudgetThemePartIds::BeamCursor, CursorType::IBeam);
 
-    main_theme->SetForwarding(FudgetThemePartIds::ListItemSelectedBackground, FudgetThemePartIds::SelectedTextBackground);
-    main_theme->SetForwarding(FudgetThemePartIds::ListItemHoveredBackground, FudgetThemePartIds::SelectedTextBackground);
-    main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.4f));
-    main_theme->SetForwarding(FudgetThemePartIds::ListItemFocusedSelectedBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
-    main_theme->SetForwarding(FudgetThemePartIds::ListItemDisabledSelectedBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
+    //main_theme->SetForwarding(FudgetThemePartIds::ListItemSelectedBackground, FudgetThemePartIds::SelectedTextBackground);
+    //main_theme->SetForwarding(FudgetThemePartIds::ListItemHoveredBackground, FudgetThemePartIds::SelectedTextBackground);
+    //main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.4f));
+    //main_theme->SetForwarding(FudgetThemePartIds::ListItemFocusedSelectedBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
+    //main_theme->SetForwarding(FudgetThemePartIds::ListItemDisabledSelectedBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
 
     // Style names used for each default class
 
@@ -290,126 +273,56 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     // Painter resource mappings
 
     FudgetFramedFieldPainterMapping frame_map;
-
-    FudgetFramedFieldLayer bg_layer;
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Focused,
-        FudgetFramedControlPartIds::FocusedFieldBackground, FudgetFramedControlPartIds::FocusedFieldPadding, FudgetFramedControlPartIds::FocusedFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Hovered,
-        FudgetFramedControlPartIds::HoveredFieldBackground, FudgetFramedControlPartIds::HoveredFieldPadding, FudgetFramedControlPartIds::HoveredFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Pressed,
-        FudgetFramedControlPartIds::PressedFieldBackground, FudgetFramedControlPartIds::PressedFieldPadding, FudgetFramedControlPartIds::PressedFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Down,
-        FudgetFramedControlPartIds::DownFieldBackground, FudgetFramedControlPartIds::DownFieldPadding, FudgetFramedControlPartIds::DownFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Disabled,
-        FudgetFramedControlPartIds::DisabledFieldBackground, FudgetFramedControlPartIds::DisabledFieldPadding, FudgetFramedControlPartIds::DisabledFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Selected,
-        FudgetFramedControlPartIds::SelectedFieldBackground, FudgetFramedControlPartIds::SelectedFieldPadding, FudgetFramedControlPartIds::SelectedFieldTint));
-    bg_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Normal,
-        FudgetFramedControlPartIds::FieldBackground, FudgetFramedControlPartIds::FieldPadding, FudgetFramedControlPartIds::FieldTint));
-    FudgetFramedFieldLayer frame_layer;
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Focused,
-        FudgetFramedControlPartIds::FocusedFrameDraw, FudgetFramedControlPartIds::FocusedFramePadding, FudgetFramedControlPartIds::FocusedFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Hovered,
-        FudgetFramedControlPartIds::HoveredFrameDraw, FudgetFramedControlPartIds::HoveredFramePadding, FudgetFramedControlPartIds::HoveredFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Pressed,
-        FudgetFramedControlPartIds::PressedFrameDraw, FudgetFramedControlPartIds::PressedFramePadding, FudgetFramedControlPartIds::PressedFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Down,
-        FudgetFramedControlPartIds::DownFrameDraw, FudgetFramedControlPartIds::DownFramePadding, FudgetFramedControlPartIds::DownFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Disabled,
-        FudgetFramedControlPartIds::DisabledFrameDraw, FudgetFramedControlPartIds::DisabledFramePadding, FudgetFramedControlPartIds::DisabledFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Selected,
-        FudgetFramedControlPartIds::SelectedFrameDraw, FudgetFramedControlPartIds::SelectedFramePadding, FudgetFramedControlPartIds::SelectedFrameTint));
-    frame_layer.Mappings.Add(FudgetFieldMapping(FudgetVisualControlState::Normal,
-        FudgetFramedControlPartIds::FrameDraw, FudgetFramedControlPartIds::FramePadding, FudgetFramedControlPartIds::FrameTint));
-
-    frame_map.Layers.Add(bg_layer);
-    frame_map.Layers.Add(frame_layer);
+    frame_map.Drawable = (int)FudgetFramedControlPartIds::FrameDraw;
+    frame_map.Padding = (int)FudgetFramedControlPartIds::FramePadding;
+    frame_map.Tint = (int)FudgetFramedControlPartIds::FrameTint;
 
     frame_map.VisualPadding = (int)FudgetFramedControlPartIds::VisualPadding;
     frame_map.ContentPadding = (int)FudgetFramedControlPartIds::ContentPadding;
    
-    main_theme->SetResource(FudgetThemePartIds::FieldFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(FudgetThemes::FOCUSED_HOVERED_STATE_ORDER, frame_map));
-
-    main_theme->SetResource(FudgetThemePartIds::ButtonFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER, frame_map));
+    main_theme->SetResource(FudgetThemePartIds::FieldFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_map));
+    main_theme->SetResource(FudgetThemePartIds::ButtonFramePainter, FudgetPartPainter::InitializeMapping<FudgetFramedFieldPainter>(frame_map));
     main_theme->SetForwarding(FudgetThemePartIds::ComboBoxButtonFramePainter, FudgetThemePartIds::ButtonFramePainter);
 
     FudgetTextPainterMapping text_field_map;
-    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Focused,
-        FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetTextFieldPartIds::FocusedTextColor, FudgetTextFieldPartIds::FocusedSelectedTextColor));
-    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Disabled,
-        FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetTextFieldPartIds::DisabledTextColor, FudgetTextFieldPartIds::DisabledSelectedTextColor));
-    text_field_map.Mappings.Add(FudgetTextFieldMapping(FudgetVisualControlState::Normal,
-        FudgetTextFieldPartIds::SelectedTextBackground, FudgetTextFieldPartIds::SelectedTextBackground, FudgetTextFieldPartIds::TextColor, FudgetTextFieldPartIds::SelectedTextColor));
+    text_field_map.TextColor = (int)FudgetTextFieldPartIds::TextColor;
+    text_field_map.BackgroundDraw = (int)FudgetTextFieldPartIds::TextBackground;
+    text_field_map.BackgroundTint = (int)FudgetTextFieldPartIds::TextBackgroundTint;
 
     text_field_map.Font = (int)FudgetTextFieldPartIds::Font;
-    main_theme->SetResource(FudgetThemePartIds::SingleLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(FudgetThemes::FOCUSED_STATE_ORDER, text_field_map));
+    main_theme->SetResource(FudgetThemePartIds::SingleLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(text_field_map));
 
-    main_theme->SetResource(FudgetThemePartIds::MultiLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetTextBoxPainter>(FudgetThemes::FOCUSED_STATE_ORDER, text_field_map));
+    main_theme->SetResource(FudgetThemePartIds::MultiLineInputTextPainter, FudgetPartPainter::InitializeMapping<FudgetTextBoxPainter>(text_field_map));
 
     FudgetAlignedImagePainterMapping btn_img_map;
-    
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Disabled, FudgetAlignedImagePartIds::DisabledImage, FudgetAlignedImagePartIds::DisabledImagePadding,
-        FudgetAlignedImagePartIds::DisabledImageOffset, FudgetAlignedImagePartIds::DisabledImageTint));
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Hovered, FudgetAlignedImagePartIds::HoveredImage, FudgetAlignedImagePartIds::HoveredImagePadding,
-        FudgetAlignedImagePartIds::HoveredImageOffset, FudgetAlignedImagePartIds::HoveredImageTint));
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Pressed, FudgetAlignedImagePartIds::PressedImage, FudgetAlignedImagePartIds::PressedImagePadding,
-        FudgetAlignedImagePartIds::PressedImageOffset, FudgetAlignedImagePartIds::PressedImageTint));
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Down, FudgetAlignedImagePartIds::DownImage, FudgetAlignedImagePartIds::DownImagePadding,
-        FudgetAlignedImagePartIds::DownImageOffset, FudgetAlignedImagePartIds::DownImageTint));
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Focused, FudgetAlignedImagePartIds::FocusedImage, FudgetAlignedImagePartIds::FocusedImagePadding,
-        FudgetAlignedImagePartIds::FocusedImageOffset, FudgetAlignedImagePartIds::FocusedImageTint));
-    btn_img_map.Mappings.Add(FudgetAlignedImageMapping(FudgetVisualControlState::Normal, FudgetAlignedImagePartIds::Image, FudgetAlignedImagePartIds::ImagePadding,
-        FudgetAlignedImagePartIds::ImageOffset, FudgetAlignedImagePartIds::ImageTint));
+    btn_img_map.Image = (int)FudgetAlignedImagePartIds::Image;
+    btn_img_map.Offset = (int)FudgetAlignedImagePartIds::ImageOffset;
+    btn_img_map.Padding = (int)FudgetAlignedImagePartIds::ImagePadding;
+    btn_img_map.Tint = (int)FudgetAlignedImagePartIds::ImageTint;
 
     btn_img_map.HorzAlign = (int)FudgetAlignedImagePartIds::HorzImageAlign;
     btn_img_map.VertAlign = (int)FudgetAlignedImagePartIds::VertImageAlign;
 
-    main_theme->SetResource(FudgetThemePartIds::AlignedImageContentPainter, FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(FudgetThemes::DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER, btn_img_map));
+    main_theme->SetResource(FudgetThemePartIds::AlignedImageContentPainter, FudgetPartPainter::InitializeMapping<FudgetAlignedImagePainter>(btn_img_map));
 
 
     FudgetListBoxItemPainterMapping lb_item_map;
     lb_item_map.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered,
-        FudgetListBoxPartIds::HoveredBackground, FudgetListBoxPartIds::HoveredBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::SelectedBackground, FudgetListBoxPartIds::SelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Hovered | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::HoveredSelectedBackground, FudgetListBoxPartIds::HoveredSelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Focused | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::FocusedSelectedBackground, FudgetListBoxPartIds::FocusedSelectedBackgroundTint));
-    lb_item_map.Mappings.Add(FudgetListItemMapping(FudgetVisualControlState::Disabled | FudgetVisualControlState::Selected,
-        FudgetListBoxPartIds::DisabledSelectedBackground, FudgetListBoxPartIds::DisabledSelectedBackgroundTint));
-
-    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(FudgetThemes::FOCUSED_HOVERED_STATE_ORDER, lb_item_map));
+    main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(lb_item_map));
 
     // Built-in styles:
 
     FudgetStyle *frame_style = CreateOrGetStyle(FRAMED_CONTROL_STYLE);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::FramePainter, FudgetThemePartIds::FieldFramePainter);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::FieldBackground, FudgetThemePartIds::Background);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::HoveredFieldBackground, FudgetThemePartIds::HoveredBackground);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::DisabledFieldBackground, FudgetThemePartIds::DisabledBackground);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::FrameDraw, FudgetThemePartIds::FrameDraw);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::FocusedFrameDraw, FudgetThemePartIds::FocusedFrameDraw);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::HoveredFrameDraw, FudgetThemePartIds::HoveredFrameDraw);
 
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::VisualPadding, FudgetThemePartIds::VisualPadding);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ContentPadding);
 
     FudgetStyle *text_style = CreateOrGetStyle(TEXT_INPUT_STYLE);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::SelectedTextBackground, FudgetThemePartIds::SelectedTextBackground);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedSelectedTextBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledSelectedTextBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::SelectedTextBackgroundTint, FudgetThemePartIds::SelectedTextBackgroundTint);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedSelectedTextBackgroundTint, FudgetThemePartIds::FocusedSelectedTextBackgroundTint);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledSelectedTextBackgroundTint, FudgetThemePartIds::DisabledSelectedTextBackgroundTint);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::TextBackground, FudgetThemePartIds::FieldTextBackground);
 
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::TextColor, FudgetThemePartIds::TextColor);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedTextColor, FudgetThemePartIds::FocusedTextColor);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledTextColor, FudgetThemePartIds::DisabledTextColor);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::SelectedTextColor, FudgetThemePartIds::SelectedTextColor);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::FocusedSelectedTextColor, FudgetThemePartIds::FocusedSelectedTextColor);
-    text_style->SetResourceOverride(FudgetTextFieldPartIds::DisabledSelectedTextColor, FudgetThemePartIds::DisabledSelectedTextColor);
+    text_style->SetResourceOverride(FudgetTextFieldPartIds::TextColor, FudgetThemePartIds::FieldTextColor);
     text_style->SetResourceOverride(FudgetTextFieldPartIds::Font, FudgetThemePartIds::Font);
 
     text_style->SetResourceOverride(FudgetTextFieldPartIds::CaretDraw, FudgetThemePartIds::CaretDraw);
@@ -436,11 +349,6 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetStyle *button_style = CreateOrGetStyle(BUTTON_STYLE);
     button_style->SetResourceOverride(FudgetFramedControlPartIds::FramePainter, FudgetThemePartIds::ButtonFramePainter);
     button_style->SetResourceOverride(FudgetFramedControlPartIds::FrameDraw, FudgetThemePartIds::ButtonSurface);
-    button_style->SetResourceOverride(FudgetFramedControlPartIds::HoveredFrameDraw, FudgetThemePartIds::ButtonHoveredSurface);
-    button_style->SetResourceOverride(FudgetFramedControlPartIds::DisabledFrameDraw, FudgetThemePartIds::ButtonDisabledSurface);
-    button_style->SetResourceOverride(FudgetFramedControlPartIds::FocusedFrameDraw, FudgetThemePartIds::ButtonFocusedSurface);
-    button_style->SetResourceOverride(FudgetFramedControlPartIds::PressedFrameDraw, FudgetThemePartIds::ButtonPressedSurface);
-    button_style->SetResourceOverride(FudgetFramedControlPartIds::DownFrameDraw, FudgetThemePartIds::ButtonDownSurface);
 
     button_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ButtonContentPadding);
     button_style->SetResourceOverride(FudgetButtonPartIds::ContentPressedOffset, FudgetThemePartIds::ButtonContentPressedOffset);
@@ -448,29 +356,9 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetStyle *image_button_style = button_style->CreateInheritedStyle(IMAGE_BUTTON_STYLE);
     button_style->SetResourceOverride(FudgetButtonPartIds::ContentPainter, FudgetThemePartIds::AlignedImageContentPainter);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::Image, FudgetThemePartIds::ButtonImage);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImage, FudgetThemePartIds::ButtonHoveredImage);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImage, FudgetThemePartIds::ButtonPressedImage);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImage, FudgetThemePartIds::ButtonDownImage);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImage, FudgetThemePartIds::ButtonFocusedImage);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImage, FudgetThemePartIds::ButtonDisabledImage);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImageTint, FudgetThemePartIds::ButtonImageTint);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImageTint, FudgetThemePartIds::ButtonHoveredImageTint);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImageTint, FudgetThemePartIds::ButtonPressedImageTint);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImageTint, FudgetThemePartIds::ButtonDownImageTint);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImageTint, FudgetThemePartIds::ButtonFocusedImageTint);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImageTint, FudgetThemePartIds::ButtonDisabledImageTint);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImageOffset, FudgetThemePartIds::ButtonImageOffset);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImageOffset, FudgetThemePartIds::ButtonHoveredImageOffset);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImageOffset, FudgetThemePartIds::ButtonPressedImageOffset);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImageOffset, FudgetThemePartIds::ButtonDownImageOffset);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImageOffset, FudgetThemePartIds::ButtonFocusedImageOffset);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImageOffset, FudgetThemePartIds::ButtonDisabledImageOffset);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImagePadding, FudgetThemePartIds::ButtonImagePadding);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImagePadding, FudgetThemePartIds::ButtonHoveredImagePadding);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImagePadding, FudgetThemePartIds::ButtonPressedImagePadding);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImagePadding, FudgetThemePartIds::ButtonDownImagePadding);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImagePadding, FudgetThemePartIds::ButtonFocusedImagePadding);
-    button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImagePadding, FudgetThemePartIds::ButtonDisabledImagePadding);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::HorzImageAlign, FudgetThemePartIds::ButtonContentHorzAlignment);
     button_style->SetResourceOverride(FudgetAlignedImagePartIds::VertImageAlign, FudgetThemePartIds::ButtonContentVertAlignment);
 
@@ -479,56 +367,31 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetStyle *cb_button_style = CreateOrGetStyle(COMBOBOX_BUTTON_STYLE);
     cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::FramePainter, FudgetThemePartIds::ComboBoxButtonFramePainter);
     cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::FrameDraw, FudgetThemePartIds::ComboBoxButtonSurface);
-    cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::HoveredFrameDraw, FudgetThemePartIds::ComboBoxButtonHoveredSurface);
-    cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::DisabledFrameDraw, FudgetThemePartIds::ComboBoxButtonDisabledSurface);
-    cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::FocusedFrameDraw, FudgetThemePartIds::ComboBoxButtonFocusedSurface);
-    cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::PressedFrameDraw, FudgetThemePartIds::ComboBoxButtonPressedSurface);
-    cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::DownFrameDraw, FudgetThemePartIds::ComboBoxButtonDownSurface);
 
     cb_button_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ButtonContentPadding);
 
     cb_button_style->SetResourceOverride(FudgetButtonPartIds::ContentPainter, FudgetThemePartIds::AlignedImageContentPainter);
     cb_button_style->SetResourceOverride(FudgetButtonPartIds::ContentPressedOffset, FudgetThemePartIds::ComboBoxButtonContentPressedOffset);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::Image, FudgetThemePartIds::ComboBoxButtonImage);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImage, FudgetThemePartIds::ComboBoxButtonHoveredImage);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImage, FudgetThemePartIds::ComboBoxButtonPressedImage);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImage, FudgetThemePartIds::ComboBoxButtonDownImage);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImage, FudgetThemePartIds::ComboBoxButtonFocusedImage);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImage, FudgetThemePartIds::ComboBoxButtonDisabledImage);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImageTint, FudgetThemePartIds::ComboBoxButtonImageTint);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImageTint, FudgetThemePartIds::ComboBoxButtonHoveredImageTint);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImageTint, FudgetThemePartIds::ComboBoxButtonPressedImageTint);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImageTint, FudgetThemePartIds::ComboBoxButtonDownImageTint);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImageTint, FudgetThemePartIds::ComboBoxButtonFocusedImageTint);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImageTint, FudgetThemePartIds::ComboBoxButtonDisabledImageTint);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImageOffset, FudgetThemePartIds::ComboBoxButtonImageOffset);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImageOffset, FudgetThemePartIds::ComboBoxButtonHoveredImageOffset);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImageOffset, FudgetThemePartIds::ComboBoxButtonPressedImageOffset);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImageOffset, FudgetThemePartIds::ComboBoxButtonDownImageOffset);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImageOffset, FudgetThemePartIds::ComboBoxButtonFocusedImageOffset);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImageOffset, FudgetThemePartIds::ComboBoxButtonDisabledImageOffset);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::ImagePadding, FudgetThemePartIds::ComboBoxButtonImagePadding);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HoveredImagePadding, FudgetThemePartIds::ComboBoxButtonHoveredImagePadding);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::PressedImagePadding, FudgetThemePartIds::ComboBoxButtonPressedImagePadding);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DownImagePadding, FudgetThemePartIds::ComboBoxButtonDownImagePadding);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::FocusedImagePadding, FudgetThemePartIds::ComboBoxButtonFocusedImagePadding);
-    cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::DisabledImagePadding, FudgetThemePartIds::ComboBoxButtonDisabledImagePadding);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::HorzImageAlign, FudgetThemePartIds::ComboBoxButtonImageHorzAlignment);
     cb_button_style->SetResourceOverride(FudgetAlignedImagePartIds::VertImageAlign, FudgetThemePartIds::ComboBoxButtonImageVertAlignment);
 
     FudgetStyle *listbox_style = frame_style->CreateInheritedStyle(LISTBOX_STYLE);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::ItemPainter, FudgetThemePartIds::ListItemPainter);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::TextPainter, FudgetThemePartIds::SingleLineInputTextPainter);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackground, FudgetThemePartIds::ListItemSelectedBackground);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackgroundTint, FudgetThemePartIds::ListItemSelectedBackgroundTint);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackground, FudgetThemePartIds::ListItemHoveredBackground);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackgroundTint, FudgetThemePartIds::ListItemHoveredBackgroundTint);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackground, FudgetThemePartIds::ListItemHoveredSelectedBackground);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackgroundTint, FudgetThemePartIds::ListItemHoveredSelectedBackgroundTint);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackground, FudgetThemePartIds::ListItemFocusedSelectedBackground);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackgroundTint, FudgetThemePartIds::ListItemFocusedSelectedBackgroundTint);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackground, FudgetThemePartIds::ListItemDisabledSelectedBackground);
-    listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackgroundTint, FudgetThemePartIds::ListItemDisabledSelectedBackgroundTint);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackground, FudgetThemePartIds::ListItemSelectedBackground);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackgroundTint, FudgetThemePartIds::ListItemSelectedBackgroundTint);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackground, FudgetThemePartIds::ListItemHoveredBackground);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackgroundTint, FudgetThemePartIds::ListItemHoveredBackgroundTint);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackground, FudgetThemePartIds::ListItemHoveredSelectedBackground);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackgroundTint, FudgetThemePartIds::ListItemHoveredSelectedBackgroundTint);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackground, FudgetThemePartIds::ListItemFocusedSelectedBackground);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackgroundTint, FudgetThemePartIds::ListItemFocusedSelectedBackgroundTint);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackground, FudgetThemePartIds::ListItemDisabledSelectedBackground);
+    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackgroundTint, FudgetThemePartIds::ListItemDisabledSelectedBackgroundTint);
 
 }
 
@@ -576,14 +439,11 @@ void FudgetThemes::Uninitialize(bool in_game)
 
     _data->_font_asset_map.Clear();
 
-    for (auto p : _data->_draw_list)
-        delete p;
+    for (auto inst : _data->_draw_list)
+        for (auto d : inst._instructions)
+            delete d;
+
     _data->_draw_list.clear();
-
-
-    for (auto p : _data->_state_order_list)
-        delete p;
-    _data->_state_order_list.clear();
 
 #if USE_EDITOR
     if (!in_game)
@@ -718,47 +578,25 @@ FudgetPartPainter* FudgetThemes::CreatePainter(const StringAnsi &painter_name)
     return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
 }
 
-int FudgetThemes::RegisterDrawInstructionList(FudgetDrawInstructionList *drawlist)
+int FudgetThemes::RegisterDrawInstructionList(const std::vector<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist)
 {
-    if (drawlist == nullptr || IsDrawInstructionListRegistered(drawlist))
+    if (drawlist.empty() || statelist.size() != drawlist.size())
         return -1;
 
-    _data->_draw_list.push_back(drawlist);
+    _data->_draw_list.push_back(StatedDrawInstructions(statelist, drawlist));
     return (int)_data->_draw_list.size() - 1;
 }
 
-bool FudgetThemes::IsDrawInstructionListRegistered(FudgetDrawInstructionList *drawlist)
-{
-    return std::find(_data->_draw_list.begin(), _data->_draw_list.end(), drawlist) != _data->_draw_list.end();
-}
-
-FudgetDrawInstructionList* FudgetThemes::GetDrawInstructionList(int drawlist_index)
+bool FudgetThemes::GetDrawInstructionList(int drawlist_index, std::vector<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result)
 {
     if (drawlist_index < 0 || drawlist_index >= _data->_draw_list.size())
-        return nullptr;
-    return _data->_draw_list[drawlist_index];
+        return false;
+
+    states_result = _data->_draw_list[drawlist_index]._states;
+    list_result = _data->_draw_list[drawlist_index]._instructions;
+    return true;
 }
 
-int FudgetThemes::RegisterStateOrder(FudgetStateOrder *orderlist)
-{
-    if (orderlist == nullptr || IsStateOrderRegistered(orderlist))
-        return -1;
-
-    _data->_state_order_list.push_back(orderlist);
-    return (int)_data->_state_order_list.size() - 1;
-}
-
-bool FudgetThemes::IsStateOrderRegistered(FudgetStateOrder *orderlist)
-{
-    return std::find(_data->_state_order_list.begin(), _data->_state_order_list.end(), orderlist) != _data->_state_order_list.end();
-}
-
-FudgetStateOrder* FudgetThemes::GetStateOrder(int orderlist_index)
-{
-    if (orderlist_index < 0 || orderlist_index >= _data->_state_order_list.size())
-        return nullptr;
-    return _data->_state_order_list[orderlist_index];
-}
 
 #if USE_EDITOR
 

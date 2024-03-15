@@ -72,7 +72,7 @@ namespace Fudgets
         /// with the same name. Styles with a name matching a control's or painter's full class name will be used for that control or
         /// painter by default.
         /// </summary>
-        /// <typeparam name="T">Name of class to get the style for</typeparam>
+        /// <param name="style_name">Name of class to get the style for</param>
         /// <returns>A style with the same name as the full name of the generic class</returns>
         public static FudgetStyle CreateOrGetStyle(string style_name)
         {

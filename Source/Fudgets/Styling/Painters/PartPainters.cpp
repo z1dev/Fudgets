@@ -7,13 +7,12 @@
 #include "../DrawableBuilder.h"
 #include "../../Control.h"
 
-#include "../StateOrderBuilder.h"
 
 
 // FudgetPartPainter
 
 
-FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params), _state_order(nullptr)
+FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params), _owner(nullptr)
 {
 
 }
@@ -28,11 +27,6 @@ FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
     if (style == nullptr)
         style = FudgetThemes::CreateStyle(GetType().Fullname.ToString());
     return style;
-}
-
-void FudgetPartPainter::GetMappedStateOrder(int theme_order_index, FudgetStateOrder* &order) const
-{
-    order = FudgetThemes::GetStateOrder(theme_order_index);
 }
 
 bool FudgetPartPainter::GetMappedStyle(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetStyle* &result) const
@@ -69,6 +63,14 @@ bool FudgetPartPainter::GetMappedColor(FudgetControl *control, int mapping_id, A
         return false;
     result = Color::White;
     return control->GetStyleColor(mapping_id, result);
+}
+
+bool FudgetPartPainter::GetMappedDrawColors(FudgetControl *control, int mapping_id, API_PARAM(Out) FudgetDrawColors &result) const
+{
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
+    result = FudgetDrawColors();
+    return control->GetStyleDrawColors(mapping_id, result);
 }
 
 bool FudgetPartPainter::GetMappedString(FudgetControl *control, int mapping_id, API_PARAM(Out) String &result) const
@@ -191,7 +193,6 @@ void FudgetPartPainter::RegisterDrawable(FudgetDrawable *drawable)
 
 void FudgetPartPainter::DoInitialize(FudgetControl *control, API_PARAM(Ref) const FudgetPartPainterMapping &resource_mapping)
 {
-    GetMappedStateOrder(resource_mapping.StateOrderIndex, _state_order);
     Initialize(control, resource_mapping.Mapping);
 }
 

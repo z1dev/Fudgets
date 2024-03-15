@@ -14,7 +14,6 @@
 
 class FudgetPartPainter;
 struct FudgetDrawInstructionList;
-class FudgetStateOrder;
 class FudgetDrawable;
 
 /// <summary>
@@ -196,39 +195,6 @@ class FUDGETS_API FudgetThemes
 {
     DECLARE_SCRIPTING_TYPE_NO_SPAWN(FudgetThemes);
 public:
-    // State order indexes for pre-made draw order in painter objects. Each of them start with
-    // disabled and end in normal, which are not included in the name.
-
-    /// <summary>
-    /// Index to get the state ordering of disabled, down OR pressed, hovered, focused, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int DOWNPRESSED_HOVERED_FOCUSED_STATE_ORDER = 0;
-    /// <summary>
-    /// Index to get the state ordering of disabled, down OR pressed, focused, hovered, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int DOWNPRESSED_FOCUSED_HOVERED_STATE_ORDER = 1;
-    /// <summary>
-    /// Index to get the state ordering of disabled, down, pressed, hovered, focused, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int DOWN_PRESSED_HOVERED_FOCUSED_STATE_ORDER = 2;
-    /// <summary>
-    /// Index to get the state ordering of disabled, down, pressed, focused, hovered, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int DOWN_PRESSED_FOCUSED_HOVERED_STATE_ORDER = 3;
-    /// <summary>
-    /// Index to get the state ordering of disabled, hovered, focused, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int HOVERED_FOCUSED_STATE_ORDER = 4;
-    /// <summary>
-    /// Index to get the state ordering of disabled, focused, hovered, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int FOCUSED_HOVERED_STATE_ORDER = 5;
-    /// <summary>
-    /// Index to get the state ordering of disabled, focused, normal in this order.
-    /// </summary>
-    API_FIELD(ReadOnly) static const int FOCUSED_STATE_ORDER = 6;
-
-
     // Style names for styles as a default hierarchy for the built in painters and to inherit in
     // user-made styles.
 
@@ -423,36 +389,6 @@ public:
         return BASE::TypeInitializer.IsAssignableFrom(type);
     }
 
-    /// <summary>
-    /// Used by FudgetDrawableBuilder to store the draw instruction list it created which can be used to make a FudgetDrawable.
-    /// </summary>
-    /// <param name="drawlist">Draw instruction list to register.</param>
-    /// <returns>Index of the registered draw instructions list, or -1 on error.</returns>
-    static int RegisterDrawInstructionList(FudgetDrawInstructionList *drawlist);
-    /// <summary>
-    /// Used by FudgetDrawableBuilder to check if a draw instruction list has been already created with the given name.
-    /// </summary>
-    static bool IsDrawInstructionListRegistered(FudgetDrawInstructionList *drawlist);
-    /// <summary>
-    /// Returns the draw instruction list registered with RegisterDrawInstructionList by its index
-    /// </summary>
-    API_FUNCTION() static FudgetDrawInstructionList* GetDrawInstructionList(int drawlist_index);
-
-
-    /// <summary>
-    /// Used by FudgetStateOrderBuilder to store the state order created so it can be freed later
-    /// </summary>
-    /// <param name="order">State order to register.</param>
-    /// <returns>Index of the registered state order, or -1 on error.</returns>
-    static int RegisterStateOrder(FudgetStateOrder *order);
-    /// <summary>
-    /// Used by FudgetStateOrderBuilder to check if a state order has been already created with the given name.
-    /// </summary>
-    static bool IsStateOrderRegistered(FudgetStateOrder *order);
-    /// <summary>
-    /// Returns the state order registered with RegisterStateOrder by its index
-    /// </summary>
-    API_FUNCTION() static FudgetStateOrder* GetStateOrder(int order_index);
 
 #ifdef USE_EDITOR
     /// <summary>
@@ -468,6 +404,25 @@ public:
 #endif
 
 private:
+    /// <summary>
+    /// Used by FudgetDrawableBuilder to store the draw instruction list it created which can be used to make a FudgetDrawable.
+    /// </summary>
+    /// <param name="drawlist">Draw instruction list to register.</param>
+    /// <returns>Index of the registered draw instructions list, or -1 on error.</returns>
+    static int RegisterDrawInstructionList(const std::vector<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist);
+    /// <summary>
+    /// Returns the draw instruction list registered with RegisterDrawInstructionList by its index
+    /// </summary>
+    static bool GetDrawInstructionList(int drawlist_index, std::vector<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result);
+
+    struct StatedDrawInstructions
+    {
+        StatedDrawInstructions(const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &instructions) : _states(states), _instructions(instructions) {}
+
+        std::vector<uint64> _states;
+        std::vector<FudgetDrawInstructionList*> _instructions;
+    };
+
     struct Data
     {
         // A collection of styles that provide values, like colors or floats to an element painter.
@@ -479,9 +434,7 @@ private:
 
         Dictionary<int, FontAsset*> _font_asset_map;
 
-        std::vector<FudgetDrawInstructionList*> _draw_list;
-
-        std::vector<FudgetStateOrder*> _state_order_list;
+        std::vector<StatedDrawInstructions> _draw_list;
     };
 
 #if USE_EDITOR
@@ -502,4 +455,7 @@ private:
 
     // Number of times Initialize was called without a paired Uninitialize.
     static int _initialized_count;
+
+    friend class FudgetDrawableBuilder;
+    friend class FudgetStyle;
 };

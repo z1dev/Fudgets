@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PartPainters.h"
-#include "../StateOrderBuilder.h"
 
 
 // TODO: these alignments might be unified somewhere if there are multiple
@@ -54,36 +53,15 @@ enum class FudgetImageVertAlign
     Stretch
 };
 
-
-API_STRUCT()
-struct FUDGETS_API FudgetAlignedImageMapping
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImageMapping);
-
-    template<typename S, typename I, typename P, typename O, typename T>
-    FudgetAlignedImageMapping(S state, I image, P padding, O offset, T tint) : State((uint64)state), Image((int)image), Padding((int)padding), Offset((int)offset), Tint((int)tint) {}
-    FudgetAlignedImageMapping() {}
-
-    API_FIELD() uint64 State = 0;
-
-    API_FIELD() int Image = 0;
-    API_FIELD() int Padding = 0;
-    API_FIELD() int Offset = 0;
-    API_FIELD() int Tint = 0;
-};
-
-template<>
-struct TIsPODType<FudgetAlignedImageMapping>
-{
-    enum { Value = true };
-};
-
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetAlignedImagePainterMapping
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetAlignedImagePainterMapping);
 
-    API_FIELD() Array<FudgetAlignedImageMapping> Mappings;
+    API_FIELD() int Image = 0;
+    API_FIELD() int Padding = 0;
+    API_FIELD() int Offset = 0;
+    API_FIELD() int Tint = 0;
 
     API_FIELD() int HorzAlign = 0;
     API_FIELD() int VertAlign = 0;
@@ -105,19 +83,12 @@ public:
     void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, FudgetVisualControlState states) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, uint64 states) override;
 private:
-    struct DrawMapping
-    {
-        uint64 _state;
-
-        AssetReference<TextureBase> _image;
-        Color _tint;
-        Float2 _offset;
-        FudgetPadding _padding;
-    };
-
-    Array<DrawMapping> _mappings;
+    AssetReference<TextureBase> _image;
+    FudgetPadding _padding;
+    Float2 _offset;
+    FudgetDrawColors _tint;
 
     FudgetImageHorzAlign _horz_align;
     FudgetImageVertAlign _vert_align;

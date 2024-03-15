@@ -21,8 +21,6 @@ struct FUDGETS_API FudgetPartPainterMapping
 	/// </summary>
 	API_FIELD() StringAnsi PainterType;
 
-	API_FIELD() int StateOrderIndex = -1;
-
 	/// <summary>
 	/// Must be one of the Fudget***PainterMapping structs that correspond to the painter named in PainterType.
 	/// </summary>
@@ -583,3 +581,63 @@ struct FUDGETS_API FudgetFont
 	API_FIELD() FudgetFontSettings Settings;
 };
 
+
+/// <summary>
+/// A list of states and their associated colors. Can be used directly as a resource in a theme or converted
+/// to a drawable. The conversion is implicit and happens when the style fetches a resource that needs
+/// to be a drawable.
+/// As a state and color list, part painters can use this for picking a color for a state by the same
+/// rules that drawables are picked. The first color for the first state that fully matches the drawing
+/// requested state is used. Latter states are ignored. Always add the 0 (normal) state last to make
+/// sure the other states are considered first.
+/// It's recommended to create by the FudgetDrawableBuilder. When created manually, make sure there are no
+/// duplicate states and that there are equal number of states as colors.
+/// 
+/// </summary>
+API_STRUCT()
+struct FUDGETS_API FudgetDrawColors
+{
+	DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawColors);
+
+	/// <summary>
+	/// States that are checked when drawing. The matching state's index will indicate for the part painter
+	/// which color to use. There must be equal number of items in _states and _colors.
+	/// </summary>
+	API_FIELD() Array<uint64> _states;
+	/// <summary>
+	/// Colors used for drawing. There must be equal number of items in _states and _colors.
+	/// </summary>
+	API_FIELD() Array<Color> _colors;
+
+	/// <summary>
+	/// Returns the index of a state within the colors list that matches the passed state flags. The index of the first
+	/// state that fully matches is returned. The 0 state in the colors list matches any combination of state flags.
+	/// </summary>
+	/// <param name="states">State flags to match</param>
+	/// <returns>Index to the first matching state in the colors list or -1 on failure</returns>
+	int FindMatchingState(uint64 states) const
+	{
+		for (int ix = 0, siz = _states.Count(); ix < siz; ++ix)
+		{
+			uint64 state = _states[ix];
+			if ((states & state) == state)
+				return ix;
+		}
+		return -1;
+	}
+
+	/// <summary>
+	/// Finds a color for the state matching the passed state flags and returns it if there was a match. Otherwise returns white. The first
+	/// state that fully matches is used. The 0 state in the colors list matches any combination of state flags.
+	/// Use FindMatchingState instead to check the success of the state matching.
+	/// </summary>
+	/// <param name="states">State flags to match</param>
+	/// <returns>Color matching the states flags or a white color if no match was found.</returns>
+	Color FindMatchingColor(uint64 states) const
+	{
+		int ix = FindMatchingState(states);
+		if (ix < 0)
+			return Color::White;
+		return _colors[ix];
+	}
+};

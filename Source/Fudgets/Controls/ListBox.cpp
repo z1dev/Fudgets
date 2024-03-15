@@ -157,7 +157,7 @@ void FudgetListBox::OnDraw()
     int pos = ItemIndexAt(r.Location);
     r.Location.Y = GetItemRect(pos).Location.Y;
 
-    FudgetVisualControlState state = GetVisualState();
+    FudgetVisualControlState state = GetVisualStateAsEnum();
     FudgetVisualControlState disabled_state = state & FudgetVisualControlState::Disabled;
     FudgetVisualControlState focused_state = state & FudgetVisualControlState::Focused;
     for (int ix = pos; ix < count && r.Location.Y < bounds.GetBottom(); ++ix)
@@ -165,7 +165,7 @@ void FudgetListBox::OnDraw()
         r.Size.Y = (float)GetItemSize(ix).Y;
         FudgetVisualControlState hover_state = (_hovered_index == ix ? FudgetVisualControlState::Hovered : (FudgetVisualControlState)0);
         FudgetVisualControlState select_state = (IsItemSelected(ix) ? FudgetVisualControlState::Selected : (FudgetVisualControlState)0);
-        _item_painter->Draw(this, r, Int2::Zero, ix, _data, focused_state | disabled_state | hover_state | select_state);
+        _item_painter->Draw(this, r, Int2::Zero, ix, _data, uint64(focused_state | disabled_state | hover_state | select_state));
         r.Location.Y += r.Size.Y;
     }
 
@@ -301,7 +301,7 @@ Int2 FudgetListBox::GetItemSize(int item_index)
     {
         if (_item_painter != nullptr && _data != nullptr && _fixed_item_size && _default_size.Y <= 0)
         {
-            _default_size = _item_painter->Measure(this, item_index, _data, FudgetVisualControlState::Normal);
+            _default_size = _item_painter->Measure(this, item_index, _data, 0);
             _default_size.X = (int)GetInnerPadding().Padded(GetBounds()).GetWidth();
         }
 

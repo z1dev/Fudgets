@@ -23,7 +23,7 @@
 FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params),
     _guiRoot(nullptr), _parent(nullptr), _index(-1), _flags(FudgetControlFlag::ResetFlags), _cursor(CursorType::Default),
     _pos(0), _size(0), _hint_size(120, 60), _min_size(0), _max_size(MAX_int32),
-    _state_flags(FudgetControlState::Enabled), _visual_state(FudgetVisualControlState::Normal), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
+    _state_flags(FudgetControlState::Enabled), _visual_state(0), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
     _style(nullptr), _cached_style(nullptr), _theme(nullptr), _cached_theme(nullptr)
 {
 }
@@ -371,7 +371,7 @@ bool FudgetControl::GetFocused() const
 
 bool FudgetControl::VirtuallyFocused() const
 {
-    return (_visual_state & FudgetVisualControlState::Focused) == FudgetVisualControlState::Focused;
+    return (_visual_state & (uint64)FudgetVisualControlState::Focused) == (uint64)FudgetVisualControlState::Focused;
 }
 
 void FudgetControl::SetFocused(bool value)
@@ -395,7 +395,7 @@ bool FudgetControl::GetHovered() const
 
 bool FudgetControl::VirtuallyHovered() const
 {
-    return (_visual_state & FudgetVisualControlState::Hovered) == FudgetVisualControlState::Hovered;
+    return (_visual_state & (uint64)FudgetVisualControlState::Hovered) == (uint64)FudgetVisualControlState::Hovered;
 }
 
 bool FudgetControl::GetEnabled() const
@@ -911,14 +911,18 @@ void FudgetControl::DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size
     DrawArea(area, Rectangle(pos, size), tint);
 }
 
-void FudgetControl::DrawDrawable(FudgetDrawable *drawable, const Rectangle &rect, const Color &tint)
+void FudgetControl::DrawDrawable(FudgetDrawable *drawable, int stateindex, const Rectangle &rect, const Color &tint)
 {
-    DrawAreaList(*drawable->_list, rect, tint);
+    if (stateindex < 0 || stateindex >= drawable->_lists.size())
+        return;
+    DrawDrawableInstructions(*drawable->_lists[stateindex], rect, tint);
 }
 
-void FudgetControl::DrawDrawable(FudgetDrawable *drawable, Float2 pos, Float2 size, const Color &tint)
+void FudgetControl::DrawDrawable(FudgetDrawable *drawable, int stateindex, Float2 pos, Float2 size, const Color &tint)
 {
-    DrawAreaList(*drawable->_list, Rectangle(pos, size), tint);
+    if (stateindex < 0 || stateindex >= drawable->_lists.size())
+        return;
+    DrawDrawableInstructions(*drawable->_lists[stateindex], Rectangle(pos, size), tint);
 }
 
 void FudgetControl::PushClip(const Rectangle &rect)
@@ -1108,6 +1112,20 @@ bool FudgetControl::GetStyleColor(int id, API_PARAM(Out) Color &result)
         return FudgetStyle::GetColorResource(class_style, GetActiveTheme(), id, false, result);
 
     result = Color();
+    return false;
+}
+
+bool FudgetControl::GetStyleDrawColors(int id, API_PARAM(Out) FudgetDrawColors &result)
+{
+    FudgetStyle *style = GetStyle();
+    if (style != nullptr)
+        return FudgetStyle::GetDrawColorsResource(style, GetActiveTheme(), id, false, result);
+
+    FudgetStyle *class_style = GetClassStyle();
+    if (class_style != nullptr)
+        return FudgetStyle::GetDrawColorsResource(class_style, GetActiveTheme(), id, false, result);
+
+    result = FudgetDrawColors();
     return false;
 }
 
@@ -1587,6 +1605,14 @@ void FudgetControl::SetState(FudgetControlState states, bool value)
 void FudgetControl::SetVisualState(FudgetVisualControlState states, bool value)
 {
     if (value)
+        _visual_state |= (uint64)states;
+    else
+        _visual_state &= ~(uint64)states;
+}
+
+void FudgetControl::SetVisualState(uint64 states, bool value)
+{
+    if (value)
         _visual_state |= states;
     else
         _visual_state &= ~states;
@@ -1720,7 +1746,7 @@ void FudgetControl::DoParentStateChanged()
     SetState(FudgetControlState::ParentHidden, !_parent->IsVisible());
 }
 
-void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint)
+void FudgetControl::DrawDrawableInstructions(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint)
 {
     Rectangle r = rect;
     for (const auto item : area._list)
@@ -1739,8 +1765,8 @@ void FudgetControl::DrawAreaList(const FudgetDrawInstructionList &area, const Re
             case FudgetDrawInstructionType::Blur:
                 DrawBlur(r, ((FudgetDrawInstructionFloat*)(item))->_value);
                 break;
-            case FudgetDrawInstructionType::AreaList:
-                DrawAreaList(*((FudgetDrawInstructionList*)(item)), r, tint);
+            case FudgetDrawInstructionType::InstructionList:
+                DrawDrawableInstructions(*((FudgetDrawInstructionList*)(item)), r, tint);
                 break;
         }
     }

@@ -159,7 +159,7 @@ public:
     /// <param name="state">State of the control</param>
     /// <param name="options">Options for text, like scale or wrapping mode</param>
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, FudgetVisualControlState states,
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, uint64 states,
         const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) {}
 
     /// <summary>
@@ -282,7 +282,7 @@ public:
     void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
 
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, FudgetVisualControlState states,
+    void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, uint64 states,
         const FudgetMultiLineTextOptions &options, const FudgetMultilineTextMeasurements &measurements) override;
 
     /// <inheritdoc />
@@ -317,17 +317,9 @@ public:
     int GetFontHeight() const override;
 
 private:
-    struct DrawMapping
-    {
-        uint64 _state;
-
-        FudgetDrawable *_sel_draw;
-        Color _sel_draw_tint;
-        Color _text_color;
-        Color _sel_text_color;
-    };
-
-    Array<DrawMapping> _mappings;
+    FudgetDrawable *_draw;
+    FudgetDrawColors _draw_tint;
+    FudgetDrawColors _text_color;
 
     FudgetFont _font;
 };
