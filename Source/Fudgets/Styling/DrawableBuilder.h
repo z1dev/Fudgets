@@ -6,6 +6,7 @@
 
 #include <vector>
 
+class FudgetControl;
 class FudgetTheme;
 class FudgetStyle;
 class FudgetPartPainter;
@@ -16,6 +17,7 @@ enum class FudgetDrawInstructionType
 {
     Blur,
     DrawArea,
+    DrawBorder,
     Resource,
     FillColor,
     Padding,
@@ -86,6 +88,13 @@ struct FudgetDrawInstructionDrawArea : public FudgetDrawInstruction
     FudgetDrawArea _draw_area;
 };
 
+struct FudgetDrawInstructionDrawBorder : public FudgetDrawInstruction
+{
+    using Base = FudgetDrawInstruction;
+    FudgetDrawInstructionDrawBorder() : Base(FudgetDrawInstructionType::DrawBorder) {}
+    FudgetDrawInstructionDrawBorder(const FudgetDrawBorder &draw_border) : Base(FudgetDrawInstructionType::DrawBorder), _draw_border(draw_border) {}
+    FudgetDrawBorder _draw_border;
+};
 API_CLASS()
 class FUDGETS_API FudgetDrawable : public ScriptingObject
 {
@@ -111,31 +120,47 @@ public:
     API_FUNCTION() int FindMatchingState(uint64 states) const;
 
     /// <summary>
-    /// Initializes a rectangular drawable from a color
+    /// Initializes a rectangular drawable from a color.
     /// </summary>
+    /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
+    /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
     /// <param name="color">Color to draw</param>
     /// <returns>The created drawable</returns>
-    API_FUNCTION() static FudgetDrawable* FromColor(FudgetPartPainter *owner, Color color);
+    API_FUNCTION() static FudgetDrawable* FromColor(FudgetControl *control_owner, FudgetPartPainter *painter_owner, Color color);
     /// <summary>
-    /// Initializes a rectangular drawable from a draw area
+    /// Initializes a rectangular drawable from a draw area.
     /// </summary>
+    /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
+    /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
     /// <param name="area">The draw area</param>
     /// <returns>The created drawable</returns>
-    API_FUNCTION() static FudgetDrawable* FromDrawArea(FudgetPartPainter *owner, const FudgetDrawArea &area);
+    API_FUNCTION() static FudgetDrawable* FromDrawArea(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawArea &area);
+    /// <summary>
+    /// Initializes a rectangular drawable from a draw border.
+    /// </summary>
+    /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
+    /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
+    /// <param name="border">The draw border</param>
+    /// <returns>The created drawable</returns>
+    API_FUNCTION() static FudgetDrawable* FromDrawBorder(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawBorder &border);
     /// <summary>
     /// Initializes a rectangular drawable from a draw colors list.
     /// </summary>
+    /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
+    /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
     /// <param name="colors">The draw colors</param>
     /// <returns>The created drawable</returns>
-    API_FUNCTION() static FudgetDrawable* FromDrawColors(FudgetPartPainter *owner, const FudgetDrawColors &colors);
+    API_FUNCTION() static FudgetDrawable* FromDrawColors(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawColors &colors);
 private:
     /// <summary>
     /// Initializes a rectangular drawable from a draw instruction list. The list can only come from FudgetStyle
     /// by finding it in FudgetThemes.
     /// </summary>
+    /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
+    /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
     /// <param name="drawlist">The draw instruction list</param>
     /// <returns>The created drawable</returns>
-    static FudgetDrawable* FromDrawInstructionList(FudgetPartPainter *owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
+    static FudgetDrawable* FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
 
     /// <summary>
     /// Checks if there are any int ids of fudget resources in the list, which would force the drawable to create a new
@@ -149,16 +174,16 @@ private:
 
     // Creates a new drawable from instructions. If the instructions don't contain referenced ids then the
     // ownership of the lists stays with the caller. Otherwise a copy is made and the drawable is responsible for deleting it.
-    // Passing in an owner is necessary for destroying the drawable.
-    static FudgetDrawable* Create(FudgetPartPainter *owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
+    // Passing in at least the control owner is necessary for destroying the drawable.
+    static FudgetDrawable* Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
     // Creates a new drawable with a single state and list allocated for an item. The list is deleted when the drawable is destroyed.
     // Use this when calling from one of the public From*** functions that need to add a single instruction.
-    // Passing in an owner is necessary for destroying the drawable.
-    static FudgetDrawable* Create(FudgetPartPainter *owner, uint64 state);
+    // Passing in at least the control owner is necessary for destroying the drawable.
+    static FudgetDrawable* Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, uint64 state);
     // Creates a new empty drawable with ownership staying with the drawable for any list added to it. Called when cloning an
     // instruction list that might create lists for multiple states.
-    // Passing in an owner is necessary for destroying the drawable.
-    static FudgetDrawable* Create(FudgetPartPainter *owner);
+    // Passing in at least the control owner is necessary for destroying the drawable.
+    static FudgetDrawable* Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner);
     // Creates the empty drawable. Don't call this.
     static FudgetDrawable* CreateEmpty();
 
@@ -268,6 +293,11 @@ public:
     /// </summary>
     /// <param name="area">The draw area to draw.</param>
     API_FUNCTION() static void AddDrawArea(FudgetDrawArea area);
+    /// <summary>
+    /// Adds an instruction to draw a draw border object in the area available to the drawable when drawing.
+    /// </summary>
+    /// <param name="area">The draw area to draw.</param>
+    API_FUNCTION() static void AddDrawBorder(FudgetDrawBorder border);
 
     /// <summary>
     /// Starts a nested list of instructions for drawing for the same drawable state. When adding instructions like

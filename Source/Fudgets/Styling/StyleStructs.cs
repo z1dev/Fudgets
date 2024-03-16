@@ -28,9 +28,6 @@ public partial struct FudgetSpriteHandle
 }
 
 
-/// <summary>
-/// 
-/// </summary>
 public partial struct FudgetFontSettings
 {
     /// <summary>
@@ -96,170 +93,157 @@ public partial struct FudgetTextDrawSettings
     }
 }
 
-/// <summary>
-/// 
-/// </summary>
 public partial struct FudgetDrawArea
 {
+
     /// <summary>
-    /// Initializes draw area to fill a rectangle with the specified color
+    /// Initializes the draw area to fill a rectangle with a texture
     /// </summary>
-    /// <param name="color">Color used for filling the rectangle</param>
-    public FudgetDrawArea(Color color) //: AreaType(FudgetFillType::Color), Tint(color), TextureOffset(0.0f), TextureScale(1.0f), Texture(nullptr), SpriteHandle(), Borders(-1.0f)
+    /// <param name="texture">Texture to draw inside a rectangle</param>
+    /// <param name="point_draw">Draw texture with point rendering</param>
+    /// <param name="alignment">Placement and stretching options to draw the texture inside the rectangle</param>
+    /// <param name="tint">Color to multiply the texture with</param>
+    /// <param name="tex_scale">Scale of the texture when not drawing stretched</param>
+    /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
+    public FudgetDrawArea(TextureBase texture, bool point_draw, FudgetImageAlignment alignment, Color tint, Float2 tex_scale, Float2 tex_offset)
     {
-        AreaType = FudgetFillType.Color;
-        Tint = color;
-        TextureOffset = new Float2(0.0f);
-        TextureScale = new Float2(1.0f);
-        Texture = null;
-        Borders = new FudgetBorder(-1f);
+        FillType = point_draw ? FudgetFillType.Point : FudgetFillType.Normal;
+        ImageAlignment = alignment;
+        Tint = tint;
+        Texture = texture;
+        Offset = tex_offset;
+        Scale = tex_scale;
+        Slices = new FudgetPadding(-1);
     }
 
     /// <summary>
-    /// Initializes draw area to draw a border in a rectangle with the specified color and border width.
-    /// /// </summary>
-    /// <param name="borders">The width of borders on each side</param>
-    /// <param name="color">Color of the border</param>
-    /// <param name="border_type">Where to draw the border</param>
-    public FudgetDrawArea(FudgetBorder borders, Color color, FudgetFrameType border_type) 
+	/// Initializes the draw area to fill a rectangle with a texture using 9-slicing.
+	/// </summary>
+	/// <param name="texture">Texture to draw inside a rectangle</param>
+	/// <param name="slices_9p">The division size on each side for 9-slicing</param>
+	/// <param name="point_draw">Draw texture with point rendering</param>
+	/// <param name="alignment">Placement and stretching options to draw the texture inside the rectangle</param>
+	/// <param name="tex_scale">Scale of the texture when not drawing stretched</param>
+	/// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
+	/// <param name="tint">Color to multiply the texture with</param>
+	public FudgetDrawArea(TextureBase texture, FudgetPadding slices_9p, bool point_draw, FudgetImageAlignment alignment, Color tint, Float2 tex_scale, Float2 tex_offset)
     {
-        AreaType = FudgetFillType.Color |
-            (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
-            FudgetFillType.BorderCentered);
+        FillType = (FudgetFillType.Sliced | (point_draw ? FudgetFillType.Point : FudgetFillType.Normal));
+        ImageAlignment = alignment;
+        Tint = tint;
+        Texture = texture;
+        Offset = tex_offset;
+        Scale = tex_scale;
+        Slices = slices_9p;
+    }
 
+    /// <summary>
+    /// Initializes the draw area to fill a rectangle with a texture
+    /// </summary>
+    /// <param name="sprite_handle">Sprite to draw inside a rectangle</param>
+    /// <param name="point_draw">Draw texture with point rendering</param>
+    /// <param name="alignment">Placement and stretching options to draw the texture inside the rectangle</param>
+    /// <param name="tex_scale">Scale of the texture when not drawing stretched</param>
+    /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
+    /// <param name="tint">Color to multiply the texture with</param>
+    public FudgetDrawArea(SpriteHandle sprite_handle, bool point_draw, FudgetImageAlignment alignment, Color tint, Float2 tex_scale, Float2 tex_offset)
+    {
+        FillType = point_draw ? FudgetFillType.Point : FudgetFillType.Normal;
+        ImageAlignment = alignment;
+        Tint = tint;
+        Texture = null;
+        Offset = tex_offset;
+        Scale = tex_scale;
+        SpriteHandle = new FudgetSpriteHandle(sprite_handle);
+        Slices = new FudgetPadding(-1);
+    }
+
+    /// <summary>
+    /// Initializes the draw area to fill a rectangle with a texture using 9-slicing.
+    /// </summary>
+    /// <param name="sprite_handle">Sprite to draw inside a rectangle</param>
+	/// <param name="slices_9p">The division size on each side for 9-slicing</param>
+    /// <param name="point_draw">Draw texture with point rendering</param>
+    /// <param name="alignment">Placement and stretching options to draw the texture inside the rectangle</param>
+    /// <param name="tex_scale">Scale of the texture when not drawing stretched</param>
+    /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
+    /// <param name="tint">Color to multiply the texture with</param>
+    public FudgetDrawArea(SpriteHandle sprite_handle, FudgetPadding slices_9p, bool point_draw, FudgetImageAlignment alignment, Color tint, Float2 tex_scale, Float2 tex_offset)
+    {
+        FillType = FudgetFillType.Sliced | (point_draw ? FudgetFillType.Point : FudgetFillType.Normal);
+        ImageAlignment = alignment;
+        Tint = tint;
+        Texture = null;
+        Offset = tex_offset;
+        Scale = tex_scale;
+        SpriteHandle = new FudgetSpriteHandle(sprite_handle);
+        Slices = slices_9p;
+    }
+}
+
+public partial struct FudgetDrawBorder
+{
+    /// <summary>
+    /// Initializes the border draw object to draw a border with a single color and specified border edge sizes.
+    /// /// </summary>
+    /// <param name="color">Color of the border</param>
+    /// <param name="borders">The width of border edges on each side</param>
+    /// <param name="placement">Where to draw the border on a rectangle's edges</param>
+    public FudgetDrawBorder(Color color, FudgetBorder borders, FudgetBorderPlacement placement) 
+    {
+        BorderType = FudgetBorderType.Color;
+        BorderPlacement = placement;
         Tint = color;
-        TextureOffset = new Float2(0.0f);
-        TextureScale = new Float2(1.0f);
+        Offset = new Float2(0.0f);
+        Scale = new Float2(1.0f);
         Texture = null;
         Borders = borders;
     }
 
     /// <summary>
-    /// Initializes draw area to fill a rectangle with a texture
-    /// </summary>
-    /// <param name="texture">Texture to draw in a rectangle</param>
-    /// <param name="stretch">Stretching the texture instead of tiling</param>
-    /// <param name="point_tex">Draw texture with point rendering</param>
-    /// <param name="tex_offset">Offset of the texture for tiled drawing</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
-    /// <param name="tint">Color to multiply the texture with</param>
-    public FudgetDrawArea(TextureBase texture, bool stretch, bool point_tex, Float2 tex_offset, Float2 tex_scale, Color tint)
-    {
-        AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_tex? FudgetFillType.Point : FudgetFillType.None);
-        Tint = tint;
-        Texture = texture;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
-        Borders = new FudgetBorder(-1f);
-    }
-
-    /// <summary>
-    /// Initializes draw area to fill a border with a texture
+    /// Initializes the border draw object to draw a border with a texture
     /// </summary>
     /// <param name="texture">Texture to fill inside the borders</param>
-    /// <param name="border_widths">Width of the border</param>
-    /// <param name="border_type">Where to draw the border</param>
+    /// <param name="borders">The width of border edges on each side</param>
+    /// <param name="placement">Where to draw the border on a rectangle's edges</param>
     /// <param name="stretch">Stretching the texture instead of tiling</param>
-    /// <param name="point_tex">Draw texture with point rendering</param>
-    /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
+    /// <param name="point_draw">Draw texture with point rendering</param>
     /// <param name="tint">Color to multiply the texture with</param>
-    public FudgetDrawArea(TextureBase texture, FudgetBorder border_widths, FudgetFrameType border_type, bool stretch, bool point_tex, Float2 tex_offset, Float2 tex_scale, Color tint)
-    {
-        AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_tex ? FudgetFillType.Point : FudgetFillType.None) |
-            (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
-            FudgetFillType.BorderCentered);
-        Tint = tint;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
-        Texture = texture;
-        Borders = border_widths;
-    }
-
-    /// <summary>
-    /// Initializes draw area to fill a rectangle with a texture using 9-slicing.
-    /// </summary>
-    /// <param name="texture">Texture to draw inside the border</param>
-    /// <param name="borders_9p">Fixed sized not stretched borders around the texture</param>
-    /// <param name="point_tex">Draw texture with point rendering</param>
     /// <param name="tex_offset">Offset of the texture when not drawing stretched</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
-    /// <param name="tint">Color to multiply the texture with</param>
-    public FudgetDrawArea(TextureBase texture, FudgetPadding borders_9p, bool point_tex, Float2 tex_offset, Float2 tex_scale, Color tint)
+    /// <param name="tex_scale">Scale of the texture when not drawing stretched</param>
+    public FudgetDrawBorder(TextureBase texture, FudgetBorder borders, FudgetBorderPlacement placement, bool stretch, bool point_draw, Color tint, Float2 tex_offset, Float2 tex_scale)
     {
-        AreaType = FudgetFillType.Sliced | (point_tex ? FudgetFillType.Point : FudgetFillType.None);
-        Tint = tint;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
+        BorderType = FudgetBorderType.Texture | (stretch ? FudgetBorderType.Stretch : FudgetBorderType.None) | (point_draw ? FudgetBorderType.Point : FudgetBorderType.None);
+		BorderPlacement = placement;
+        Tint = tint; 
+        Offset = tex_offset;
+        Scale = tex_scale; 
         Texture = texture;
-        Borders = borders_9p.AsBorder;
+        Borders = borders;
     }
 
+
     /// <summary>
-    /// Initializes draw area to fill a rectangle with a sprite
+    /// Initializes the border draw object to draw a border with a sprite
     /// </summary>
-    /// <param name="sprite_handle">Sprite handle for sprite to draw in a rectangle</param>
+    /// <param name="sprite_handle">Sprite to fill inside the borders</param>
+    /// <param name="borders">The width of border edges on each side</param>
+    /// <param name="placement">Where to draw the border on a rectangle's edges</param>
     /// <param name="stretch">Stretching the sprite instead of tiling</param>
-    /// <param name="point_sprite">Draw sprite with point rendering</param>
-    /// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
+    /// <param name="point_draw">Draw sprite with point rendering</param>
     /// <param name="tint">Color to multiply the sprite with</param>
-    public FudgetDrawArea(SpriteHandle sprite_handle, bool stretch, bool point_sprite, Float2 tex_offset, Float2 tex_scale, Color tint)
+    /// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
+    /// <param name="tex_scale">Scale of the sprite when not drawing stretched</param>
+    public FudgetDrawBorder(SpriteHandle sprite_handle, FudgetBorder borders, FudgetBorderPlacement placement, bool stretch, bool point_draw, Color tint, Float2 tex_offset, Float2 tex_scale)
     {
-        AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_sprite ? FudgetFillType.Point : FudgetFillType.None);
-
+        BorderType = FudgetBorderType.Texture | (stretch ? FudgetBorderType.Stretch : FudgetBorderType.None) | (point_draw ? FudgetBorderType.Point : FudgetBorderType.None);
+		BorderPlacement = placement;
         Tint = tint;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
+        Offset = tex_offset;
+        Scale = tex_scale;
         Texture = null;
         SpriteHandle = new FudgetSpriteHandle(sprite_handle);
-        Borders = new FudgetBorder(-1f);
-    }
-
-    /// <summary>
-    /// Initializes draw area to fill a border with a sprite
-    /// </summary>
-    /// <param name="sprite_handle">Sprite handle for sprite to fill inside the borders</param>
-    /// <param name="border_widths">Width of the border</param>
-    /// <param name="border_type">Where to draw the border</param>
-    /// <param name="stretch">Stretching the sprite instead of tiling</param>
-    /// <param name="point_sprite">Draw sprite with point rendering</param>
-    /// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
-    /// <param name="tint">Color to multiply the sprite with</param>
-    FudgetDrawArea(SpriteHandle sprite_handle, FudgetBorder border_widths, FudgetFrameType border_type, bool stretch, bool point_sprite, Float2 tex_offset, Float2 tex_scale, Color tint)
-    {
-        AreaType = (stretch ? FudgetFillType.Stretch : FudgetFillType.None) | (point_sprite ? FudgetFillType.Point : FudgetFillType.None) |
-            (border_type == FudgetFrameType.Inside ? FudgetFillType.BorderInside : border_type == FudgetFrameType.Outside ? FudgetFillType.BorderOutside :
-            FudgetFillType.BorderCentered);
-
-        Tint = tint;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
-        Texture = null;
-        SpriteHandle = new FudgetSpriteHandle(sprite_handle);
-        Borders = border_widths;
-    }
-
-    /// <summary>
-    /// Initializes draw area to fill a rectangle with a sprite using 9-slicing.
-    /// </summary>
-    /// <param name="sprite_handle">Sprite to draw inside the border</param>
-    /// <param name="borders_9p">Fixed sized not stretched borders around the sprite</param>
-    /// <param name="point_sprite">Draw sprite with point rendering</param>
-    /// <param name="tex_offset">Offset of the sprite when not drawing stretched</param>
-    /// <param name="tex_scale">Scale of the texture for tiled drawing</param>
-    /// <param name="tint">Color to multiply the sprite with</param>
-    public FudgetDrawArea(SpriteHandle sprite_handle, FudgetPadding borders_9p, bool point_sprite, Float2 tex_offset, Float2 tex_scale, Color tint)
-    {
-        AreaType = FudgetFillType.Sliced | (point_sprite ? FudgetFillType.Point : FudgetFillType.None);
-
-        Tint = tint;
-        TextureOffset = tex_offset;
-        TextureScale = tex_scale;
-        Texture = null;
-        SpriteHandle = new FudgetSpriteHandle(sprite_handle);
-        Borders = borders_9p.AsBorder;
+        Borders = borders;
     }
 }
 

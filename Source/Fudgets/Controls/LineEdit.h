@@ -106,7 +106,7 @@ private:
     float _blink_passed;
     int _character_scroll_count;
 
-    FudgetDrawArea _caret_draw;
+    FudgetDrawable *_caret_draw;
     float _caret_blink_time;
     int _caret_width;
 

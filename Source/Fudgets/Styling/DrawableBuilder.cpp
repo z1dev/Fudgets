@@ -2,6 +2,7 @@
 #include "Themes.h"
 #include "Style.h"
 #include "Painters/PartPainters.h"
+#include "../Control.h"
 
 #include "Engine/Core/Log.h"
 
@@ -145,6 +146,17 @@ void FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea area)
     data->_list.push_back(new FudgetDrawInstructionDrawArea(area));
 }
 
+void FudgetDrawableBuilder::AddDrawBorder(FudgetDrawBorder border)
+{
+    if (_states.empty() || _mode != BuildMode::Drawable)
+    {
+        LOG(Error, "AddDrawBorder: Not building a drawable.");
+        return;
+    }
+
+    FudgetDrawInstructionList *data = _sub_data.empty() ? _data : _sub_data.back();
+    data->_list.push_back(new FudgetDrawInstructionDrawBorder(border));
+}
 void FudgetDrawableBuilder::BeginSubData()
 {
     if (_states.empty() || _mode != BuildMode::Drawable)
@@ -254,36 +266,46 @@ int FudgetDrawable::FindMatchingState(uint64 states) const
     return -1;
 }
 
-FudgetDrawable* FudgetDrawable::FromColor(FudgetPartPainter *owner, Color color)
+FudgetDrawable* FudgetDrawable::FromColor(FudgetControl *control_owner, FudgetPartPainter *painter_owner, Color color)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr && painter_owner == nullptr)
         return nullptr;
 
-    FudgetDrawable *result = Create(owner, 0);
+    FudgetDrawable *result = Create(control_owner, painter_owner, 0);
     result->_lists.back()->_list.push_back(new FudgetDrawInstructionColor(color));
 
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawArea(FudgetPartPainter *owner, const FudgetDrawArea &area)
+FudgetDrawable* FudgetDrawable::FromDrawArea(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawArea &area)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr && painter_owner == nullptr)
         return nullptr;
 
-    FudgetDrawable *result = Create(owner, 0);
+    FudgetDrawable *result = Create(control_owner, painter_owner, 0);
     result->_lists.back()->_list.push_back(new FudgetDrawInstructionDrawArea(area));
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawColors(FudgetPartPainter *owner, const FudgetDrawColors &colors)
+FudgetDrawable* FudgetDrawable::FromDrawBorder(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawBorder &border)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr && painter_owner == nullptr)
+        return nullptr;
+
+    FudgetDrawable *result = Create(control_owner, painter_owner, 0);
+    result->_lists.back()->_list.push_back(new FudgetDrawInstructionDrawBorder(border));
+    return result;
+}
+
+FudgetDrawable* FudgetDrawable::FromDrawColors(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const FudgetDrawColors &colors)
+{
+    if (control_owner == nullptr && painter_owner == nullptr)
         return nullptr;
 
     if (colors._states.IsEmpty())
         return FudgetDrawable::Empty;
 
-    FudgetDrawable *result = Create(owner);
+    FudgetDrawable *result = Create(control_owner, painter_owner);
     for (int ix = 0, siz = colors._states.Count(); ix < siz; ++ix)
     {
         FudgetDrawInstructionList *new_list = new FudgetDrawInstructionList;
@@ -294,9 +316,9 @@ FudgetDrawable* FudgetDrawable::FromDrawColors(FudgetPartPainter *owner, const F
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetPartPainter *owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
+FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
 {
-    if (owner == nullptr || states.size() != lists.size())
+    if ((control_owner == nullptr && painter_owner == nullptr) || states.size() != lists.size())
         return nullptr;
 
     // Check first if the instruction list contains any ids that must be looked up. If no ids are found,
@@ -312,11 +334,11 @@ FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetPartPainter *owner
     }
     if (!has_external)
     {
-        FudgetDrawable *result = Create(owner, states, lists);
+        FudgetDrawable *result = Create(control_owner, painter_owner, states, lists);
         return result;
     }
    
-    FudgetDrawable *result = Create(owner);
+    FudgetDrawable *result = Create(control_owner, painter_owner);
 
     
     for (int ix = 0, siz = (int)states.size(); ix < siz; ++ix)
@@ -372,6 +394,9 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
         case FudgetDrawInstructionType::DrawArea:
             result = new FudgetDrawInstructionDrawArea(((FudgetDrawInstructionDrawArea*)item)->_draw_area);
             break;
+        case FudgetDrawInstructionType::DrawBorder:
+            result = new FudgetDrawInstructionDrawBorder(((FudgetDrawInstructionDrawBorder*)item)->_draw_border);
+            break;
         case FudgetDrawInstructionType::FillColor:
             result = new FudgetDrawInstructionColor(((FudgetDrawInstructionColor*)item)->_color);
             break;
@@ -417,9 +442,17 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
                 }
             }
 
-            FudgetDrawColors colors;
             {
-                FudgetDrawArea area;
+                FudgetDrawBorder border;
+                if (FudgetStyle::GetDrawBorderResource(style, theme, id, true, border))
+                {
+                    result = new FudgetDrawInstructionDrawBorder(border);
+                    break;
+                }
+            }
+
+            {
+                FudgetDrawColors colors;
                 if (FudgetStyle::GetDrawColorsResource(style, theme, id, true, colors))
                 {
                     int color_index = colors.FindMatchingState(states);
@@ -437,22 +470,25 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
+FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr)
         return nullptr;
 
     FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
     result->_owned = false;
     result->_states = states;
     result->_lists = lists;
-    owner->RegisterDrawable(result);
+    if (painter_owner != nullptr)
+        painter_owner->RegisterDrawable(result);
+    else
+        control_owner->RegisterDrawable(nullptr, result);
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner, uint64 state)
+FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, uint64 state)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr)
         return nullptr;
 
     FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
@@ -460,18 +496,24 @@ FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner, uint64 state)
     result->_states.push_back(state);
     FudgetDrawInstructionList *list = new FudgetDrawInstructionList;
     result->_lists.push_back(list);
-    owner->RegisterDrawable(result);
+    if (painter_owner != nullptr)
+        painter_owner->RegisterDrawable(result);
+    else
+        control_owner->RegisterDrawable(nullptr, result);
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::Create(FudgetPartPainter *owner)
+FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner)
 {
-    if (owner == nullptr)
+    if (control_owner == nullptr)
         return nullptr;
 
     FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
     result->_owned = true;
-    owner->RegisterDrawable(result);
+    if (painter_owner != nullptr)
+        painter_owner->RegisterDrawable(result);
+    else
+        control_owner->RegisterDrawable(nullptr, result);
     return result;
 }
 

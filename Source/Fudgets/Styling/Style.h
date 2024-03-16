@@ -14,7 +14,9 @@
 class FudgetThemes;
 class FudgetTheme;
 class FudgetPartPainter;
+class FudgetControl;
 struct FudgetDrawArea;
+struct FudgetDrawBorder;
 struct FudgetTextDrawSettings;
 struct FudgetPadding;
 struct FudgetBorder;
@@ -504,18 +506,32 @@ public:
     API_FUNCTION() static bool GetDrawAreaResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawArea &result);
 
     /// <summary>
-    /// Retrieves the FudgetDrawable resource by an id either from the style, one of its parent styles or the theme, checked in this order.
+    /// Retrieves the FudgetDrawBorder resource by an id either from the style, one of its parent styles or the theme, checked in this order.
     /// The id might refer to a resource override, in which case the style attempts to retreive the value from the theme.
     /// The value is stored in result, unless the id wasn't found.
     /// </summary>
     /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
-    /// <param name="drawable_owner">A part painter owned by painter_owner, which will cause the destruction of the drawable when it is destroyed.</param>
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
     /// <param name="result">Receives retrieved value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
-    API_FUNCTION() static bool GetDrawableResource(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result);
+    API_FUNCTION() static bool GetDrawBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawBorder &result);
+
+    /// <summary>
+    /// Retrieves the FudgetDrawable resource by an id either from the style, one of its parent styles or the theme, checked in this order.
+    /// The id might refer to a resource override, in which case the style attempts to retreive the value from the theme.
+    /// The value is stored in result, unless the id wasn't found.
+    /// </summary>
+    /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
+    /// <param name="control">A control which will destroy the drawable when it is destroyed. drawable_owner must be set if this is null.</param>
+    /// <param name="drawable_owner">A part painter owned by a control, which will cause the destruction of the drawable when it is destroyed. control must be set if this is null.</param>
+    /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
+    /// <param name="id">The id to look up for a resource value or resource override</param>
+    /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
+    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <returns>Whether a resource with the id was found and stored in result</returns>
+    API_FUNCTION() static bool GetDrawableResource(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result);
 
     /// <summary>
     /// Retrieves the TextureBase resource by an id either from the style, one of its parent styles or the theme, checked in this order.
@@ -545,8 +561,9 @@ public:
 
     static bool PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result);
     static bool StringFromVariant(const Variant &var, String &result);
-    static bool DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
+    static bool DrawableFromVariant(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
     static bool AreaFromVariant(const Variant &var, FudgetDrawArea &result);
+    static bool BorderFromVariant(const Variant &var, FudgetDrawBorder &result);
     static bool TextureFromVariant(const Variant &var, TextureBase* &result);
     static bool TextDrawSettingsFromVariant(const Variant &var, FudgetTextDrawSettings &result);
     static bool FontSettingsFromVariant(const Variant &var, FudgetFontSettings &result);

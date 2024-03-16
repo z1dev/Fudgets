@@ -1256,7 +1256,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
-    API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
+    API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
     /// Draws 9-slicing texture by calling Draw9SlicingTexturePoint, using borderWidths to calculate the border and UV parameters.
@@ -1265,7 +1265,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
-    API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
+    API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
     /// Draws 9-slicing sprite by calling Draw9SlicingSprite, using borderWidths to calculate the border and UV parameters.
@@ -1274,7 +1274,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
-    API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
+    API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
     /// Draws 9-slicing sprite by calling Draw9SlicingSpritePoint, using borderWidths to calculate the border and UV parameters.
@@ -1283,7 +1283,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
-    API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White);
+    API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
     /// Wrapper to Render2D's DrawBezier
@@ -1433,7 +1433,7 @@ public:
     API_FUNCTION() void DrawTexture(TextureBase* t, const Rectangle& rect, const Color& color = Color::White);
 
     /// <summary>
-    /// Draws a texture in a rectangle with tiling or clipping as necessary.
+    /// Draws a texture in a rectangle with tiling and clipping as necessary.
     /// </summary>
     /// <param name="t">The texture to draw.</param>
     /// <param name="size">The size to use for the texture</param>
@@ -1514,19 +1514,38 @@ public:
     API_FUNCTION() void FillTriangle(const Float2& p0, const Float2& p1, const Float2& p2, const Color& color);
 
     /// <summary>
-    /// Draws a rectangular area filled with color or texture, depending on the area settings
+    /// Fills a rectangular area with texture or sprite, depending on the area settings
     /// </summary>
     /// <param name="area">Settings for filling the rectangle</param>
     /// <param name="rect">Rectangle to fill</param>
+    /// <param name="tint">Color that is multiplied with every pixel when drawing.</param>
     API_FUNCTION() void DrawArea(const FudgetDrawArea &area, const Rectangle &rect, const Color &tint = Color::White);
 
     /// <summary>
-    /// Draws a rectangular area filled with color or texture, depending on the area settings
+    /// Fills a rectangular area with texture or sprite, depending on the area settings
     /// </summary>
     /// <param name="area">Settings for filling the rectangle</param>
     /// <param name="pos">Position of the rectangle</param>
     /// <param name="size">Size of the rectangle</param>
+    /// <param name="tint">Color that is multiplied with every pixel when drawing.</param>
     API_FUNCTION() void DrawArea(const FudgetDrawArea &area, Float2 pos, Float2 size, const Color &tint = Color::White);
+
+    /// <summary>
+    /// Draws a border with single color, texture or sprite, depending on the border settings
+    /// </summary>
+    /// <param name="area">Settings for filling the rectangle</param>
+    /// <param name="rect">Rectangle to fill</param>
+    /// <param name="tint">Color that is multiplied with every pixel when drawing.</param>
+    API_FUNCTION() void DrawBorder(const FudgetDrawBorder &area, const Rectangle &rect, const Color &tint = Color::White);
+
+    /// <summary>
+    /// Draws a border with single color, texture or sprite, depending on the border settings
+    /// </summary>
+    /// <param name="area">Settings for filling the rectangle</param>
+    /// <param name="pos">Position of the rectangle</param>
+    /// <param name="size">Size of the rectangle</param>
+    /// <param name="tint">Color that is multiplied with every pixel when drawing.</param>
+    API_FUNCTION() void DrawBorder(const FudgetDrawBorder &area, Float2 pos, Float2 size, const Color &tint = Color::White);
 
     /// <summary>
     /// Draws a drawable inside a rectangle.
@@ -2182,8 +2201,12 @@ private:
     API_FUNCTION() void SetStyleName(const String &value);
 
     void DrawDrawableInstructions(const FudgetDrawInstructionList &area, const Rectangle &rect, const Color &tint = Color::White);
-    void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, const Rectangle &rect, Color tint, bool stretch, bool point);
+    void DrawTextureInner(TextureBase *t, SpriteHandle sprite_handle, Float2 scale, Float2 offset, Rectangle rect, Color tint, FudgetImageAlignment alignment, bool point);
     void DrawTiled(GPUTexture *t, SpriteHandle sprite_handle, bool point, Float2 size, Float2 offset, const Rectangle& rect, const Color& color);
+    void Draw9SlicingPrecalculatedInner(TextureBase *t, SpriteHandle sprite_handle, Rectangle rect, const FudgetPadding &borderWidths, const Color &color, FudgetImageAlignment alignment, bool point);
+
+    // Modifies the rectangle based on the texture/sprite size and the alignment
+    void AlignDrawRectangle(Int2 tex_size, FudgetImageAlignment alignment, /*modified*/ Rectangle &rect);
 
     /// <summary>
     /// See GetStyleEnum.
@@ -2323,4 +2346,5 @@ private:
     friend class FudgetContainer;
     friend class FudgetGUIRoot;
     friend class FudgetPartPainter;
+    friend class FudgetDrawable;
 };

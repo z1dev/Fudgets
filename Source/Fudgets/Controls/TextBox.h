@@ -4,6 +4,7 @@
 #include "../Styling/Painters/TextBoxPainter.h"
 
 class FudgetDrawablePainter;
+class FudgetDrawable;
 
 
 /// <summary>
@@ -225,7 +226,7 @@ private:
     // Tytpe of auto sizing or normal sizing
     FudgetTextBoxSizingMode _sizing_mode;
 
-    FudgetDrawArea _caret_draw;
+    FudgetDrawable *_caret_draw;
     float _caret_blink_time;
     int _caret_width;
 

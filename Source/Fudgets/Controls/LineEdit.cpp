@@ -3,12 +3,13 @@
 #include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/Painters/LineEditTextPainter.h"
 #include "../Styling/PartPainterIds.h"
+#include "../Styling/DrawableBuilder.h"
 #include "Engine/Core/Types/StringBuilder.h"
 
 
 
 FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
-    _blink_passed(0.0f), _character_scroll_count(0), _caret_blink_time(1.0f), _caret_width(2), _scroll_pos(0), _show_border(true)
+    _blink_passed(0.0f), _character_scroll_count(0), _caret_draw(nullptr), _caret_blink_time(1.0f), _caret_width(2), _scroll_pos(0), _show_border(true)
 {
     //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
     //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetLineEdit>();
@@ -54,8 +55,8 @@ void FudgetLineEdit::OnStyleInitialize()
     _text_painter = CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, (int)FudgetSinglelineTextFieldPartIds::TextPainter);
 
 
-    if (!GetStyleDrawArea((int)FudgetTextFieldPartIds::CaretDraw, _caret_draw))
-        _caret_draw = FudgetDrawArea(Color::Black);
+    if (!GetStyleDrawable((int)FudgetTextFieldPartIds::CaretDraw, nullptr, _caret_draw))
+        _caret_draw = FudgetDrawable::FromColor(this, nullptr, Color::Black);
     if (!GetStyleFloat((int)FudgetTextFieldPartIds::CaretBlinkTime, _caret_blink_time))
         _caret_blink_time = 1.0f;
     if (!GetStyleInt((int)FudgetTextFieldPartIds::CaretWidth, _caret_width))
@@ -140,7 +141,7 @@ void FudgetLineEdit::OnDraw()
         range.EndIndex = GetCaretPos();
         int caret_left = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
 
-        DrawArea(_caret_draw, Rectangle(Float2((float)caret_left - 1.0f + bounds.GetLeft(), bounds.Location.Y), Float2((float)_caret_width, bounds.GetHeight())));
+        DrawDrawable(_caret_draw, 0, Rectangle(Float2((float)caret_left - 1.0f + bounds.GetLeft(), bounds.Location.Y), Float2((float)_caret_width, bounds.GetHeight())));
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)
         _blink_passed -= _caret_blink_time * 2.0f;

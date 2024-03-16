@@ -4,6 +4,7 @@
 #include "../Layouts/Layout.h"
 #include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
+#include "../Styling/DrawableBuilder.h"
 
 #include "Engine/Core/Types/StringBuilder.h"
 #include "Engine/Platform/Base/WindowBase.h"
@@ -12,7 +13,7 @@
 
 FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
     _text_measurements(), _blink_passed(0.0f), _show_beam_cursor(false), _beam_cursor(CursorType::Default), _character_scroll_count(0),
-    _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal), _caret_blink_time(1.0f), _caret_width(2), _caret_updown_x(-1),
+    _snap_top_line(false), _sizing_mode(FudgetTextBoxSizingMode::Normal), _caret_draw(nullptr), _caret_blink_time(1.0f), _caret_width(2), _caret_updown_x(-1),
     _scroll_pos(0), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
     _auto_size(FudgetAutoSizing::None), _measure_space(-1), _cached_size(-1)
 {
@@ -63,8 +64,8 @@ void FudgetTextBox::OnStyleInitialize()
     _text_painter = CreateStylePainter<FudgetMultiLineTextPainter>(_text_painter, (int)FudgetMultilineTextFieldPartIds::TextPainter);
 
 
-    if (!GetStyleDrawArea((int)FudgetTextFieldPartIds::CaretDraw, _caret_draw))
-        _caret_draw = FudgetDrawArea(Color::Black);
+    if (!GetStyleDrawable((int)FudgetTextFieldPartIds::CaretDraw, nullptr, _caret_draw))
+        _caret_draw = FudgetDrawable::FromColor(this, nullptr, Color::Black);
     if (!GetStyleFloat((int)FudgetTextFieldPartIds::CaretBlinkTime, _caret_blink_time))
         _caret_blink_time = 1.0f;
     if (!GetStyleInt((int)FudgetTextFieldPartIds::CaretWidth, _caret_width))
@@ -127,7 +128,7 @@ void FudgetTextBox::OnDraw()
     {
         Int2 caret_pos = _text_painter->GetCharacterPosition(this, GetMeasurements(), GetCaretPos()) + bounds.GetUpperLeft() - _scroll_pos;
 
-        DrawArea(_caret_draw, Rectangle(Float2(caret_pos) - Float2(1.f, 0.f),
+        DrawDrawable(_caret_draw, 0, Rectangle(Float2(caret_pos) - Float2(1.f, 0.f),
             Int2(_caret_width, _text_painter->GetCharacterLineHeight(GetMeasurements(), GetCaretPos()) )));
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)

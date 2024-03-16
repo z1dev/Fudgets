@@ -502,12 +502,24 @@ bool FudgetStyle::GetDrawAreaResource(FudgetStyle *style, FudgetTheme *theme, in
     return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawBorder &result)
 {
     Variant var;
     if (GetResourceValue(style, theme, id, check_theme, var))
     {
-        if (DrawableFromVariant(style, drawable_owner, theme, var, result))
+        if (BorderFromVariant(var, result))
+            return true;
+    }
+    result = FudgetDrawBorder();
+    return false;
+}
+
+bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
+{
+    Variant var;
+    if (GetResourceValue(style, theme, id, check_theme, var))
+    {
+        if (DrawableFromVariant(style, control, drawable_owner, theme, var, result))
             return true;
     }
     result = nullptr;
@@ -687,14 +699,13 @@ bool FudgetStyle::StringFromVariant(const Variant &var, String &result)
     return false;
 }
 
-
 bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result)
 {
-    if (var.Type.Type == VariantType::Color)
-    {
-        result = FudgetDrawArea(var.AsColor());
-        return true;
-    }
+    //if (var.Type.Type == VariantType::Color)
+    //{
+    //    result = FudgetDrawArea(var.AsColor());
+    //    return true;
+    //}
 
     if (var.Type.Type == VariantType::Asset)
     {
@@ -702,7 +713,7 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result)
         if (asset.Get() == nullptr)
             return false;
 
-        result = FudgetDrawArea(asset.Get(), true, false);
+        result = FudgetDrawArea(asset.Get(), false, FudgetImageAlignment::Fit);
         return true;
     }
 
@@ -718,11 +729,25 @@ bool FudgetStyle::AreaFromVariant(const Variant &var, FudgetDrawArea &result)
     return false;
 }
 
-bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
+bool FudgetStyle::BorderFromVariant(const Variant &var, FudgetDrawBorder &result)
+{
+    if (var.Type.Type == VariantType::Structure)
+    {
+        const FudgetDrawBorder *area = var.AsStructure<FudgetDrawBorder>();
+        if (area == nullptr)
+            return false;
+        result = *area;
+        return true;
+    }
+
+    return false;
+}
+
+bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
-        result = FudgetDrawable::FromColor(drawable_owner, var.AsColor());
+        result = FudgetDrawable::FromColor(control, drawable_owner, var.AsColor());
         return true;
     }
 
@@ -732,7 +757,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *dra
         if (asset.Get() == nullptr)
             return false;
 
-        result = FudgetDrawable::FromDrawArea(drawable_owner, FudgetDrawArea(asset.Get(), true, false));
+        result = FudgetDrawable::FromDrawArea(control, drawable_owner, FudgetDrawArea(asset.Get(), false, FudgetImageAlignment::Fit));
         return true;
     }
 
@@ -741,14 +766,14 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *dra
         const FudgetDrawArea *drawarea = var.AsStructure<FudgetDrawArea>();
         if (drawarea != nullptr)
         {
-            result = FudgetDrawable::FromDrawArea(drawable_owner , *drawarea);
+            result = FudgetDrawable::FromDrawArea(control, drawable_owner , *drawarea);
             return true;
         }
 
         const FudgetDrawColors *drawcolors = var.AsStructure<FudgetDrawColors>();
         if (drawcolors != nullptr)
         {
-            result = FudgetDrawable::FromDrawColors(drawable_owner, *drawcolors);
+            result = FudgetDrawable::FromDrawColors(control, drawable_owner, *drawcolors);
             return true;
         }
 
@@ -759,7 +784,7 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetPartPainter *dra
             std::vector<FudgetDrawInstructionList*> lists;
             if (!FudgetThemes::GetDrawInstructionList(drawindex->Index, states, lists))
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(drawable_owner, style, theme, states, lists);
+            result = FudgetDrawable::FromDrawInstructionList(control, drawable_owner, style, theme, states, lists);
             return true;
         }
     }
