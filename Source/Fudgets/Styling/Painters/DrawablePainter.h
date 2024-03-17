@@ -9,7 +9,7 @@ struct FUDGETS_API FudgetDrawablePainterMapping
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawablePainterMapping);
 
     API_FIELD() int Drawable = 0;
-    API_FIELD() int Padding = 0;
+    API_FIELD() int Margin = 0;
     API_FIELD() int Tint = 0;
 
     API_FIELD() int VisualPadding = 0;
@@ -46,7 +46,7 @@ public:
 private:
 
     FudgetDrawable *_drawable;
-    FudgetPadding _padding;
+    FudgetPadding _margin;
     FudgetDrawColors _tint;
 
     FudgetPadding _visual_padding;

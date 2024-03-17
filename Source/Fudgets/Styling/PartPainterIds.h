@@ -22,18 +22,18 @@ enum class FudgetThemePartIds
     /// </summary>
     FrameTint,
     /// <summary>
-    /// Padding to limit the bounds when drawing the background of standard framed controls
+    /// Margin outside of a frame of standard framed controls
     /// </summary>
-    FramePadding,
+    FrameMargin,
 
     /// <summary>
     /// Background drawable for input fields in controls
     /// </summary>
     FieldBackground = First,
     /// <summary>
-    /// Padding to limit the bounds when drawing the background of input fields in controls
+    /// Margin to limit the bounds when drawing the background of input fields in controls
     /// </summary>
-    FieldBackgroundPadding,
+    FieldBackgroundMargin,
     /// <summary>
     /// Color to multiply every pixel with when drawing the background of input fields in controls
     /// </summary>
@@ -48,18 +48,18 @@ enum class FudgetThemePartIds
     /// </summary>
     FieldFrameTint,
     /// <summary>
-    /// Padding to limit the bounds when drawing the frame of input fields in controls
+    /// Margin to limit the bounds when drawing the frame of input fields in controls
     /// </summary>
-    FieldFramePadding,
+    FieldFrameMargin,
 
     /// <summary>
-    /// Visual padding inside the frame of a control or drawable for some contents .
+    /// Visual thickness of the frame of input fields.
     /// </summary>
-    VisualPadding,
+    FieldFrameThickness,
     /// <summary>
-    /// Padding inside the frame of a control or drawable that includes extra padding for contents.
+    /// Padding inside the frame of input fields that includes extra padding for contents.
     /// </summary>
-    ContentPadding,
+    FieldFramePadding,
 
     /// <summary>
     /// Button surface drawable or color, used for the standard buttons
@@ -87,9 +87,9 @@ enum class FudgetThemePartIds
     /// </summary>
     ButtonImageOffset,
     /// <summary>
-    /// Image padding for buttons with aligned image content
+    /// Image margin for buttons with aligned image content
     /// </summary>
-    ButtonImagePadding,
+    ButtonImageMargin,
     /// <summary>
     /// Horizontal alignment of contents in a generic button
     /// </summary>
@@ -160,9 +160,9 @@ enum class FudgetThemePartIds
     /// </summary>
     ComboBoxButtonImageOffset,
     /// <summary>
-    /// Image padding for combobox buttons with aligned image content
+    /// Image margin for combobox buttons with aligned image content
     /// </summary>
-    ComboBoxButtonImagePadding,
+    ComboBoxButtonImageMargin,
 
     /// <summary>
     /// Horizontal alignment of contents in a combobox button
@@ -221,7 +221,7 @@ enum class FudgetFramedControlPartIds
     FramePainter = First,
 
     FrameDraw,
-    FramePadding,
+    FrameMargin,
     FrameTint,
 
     VisualPadding,
@@ -236,7 +236,7 @@ enum class FudgetContentPartIds
     ContentPainter = First,
 
     Drawable,
-    Padding,
+    Margin,
     Offset,
     Tint,
 };

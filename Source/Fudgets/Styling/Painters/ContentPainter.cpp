@@ -13,8 +13,8 @@ void FudgetContentPainter::Initialize(FudgetControl *control,  const Variant &ma
 
     if (!CreateMappedDrawable(control, res.Drawable, _drawable))
         _drawable = FudgetDrawable::Empty;
-    if (!GetMappedPadding(control, res.Padding, _padding))
-        _padding = FudgetPadding(0);
+    if (!GetMappedPadding(control, res.Margin, _margin))
+        _margin = FudgetPadding(0);
     if (!GetMappedFloat2(control, res.Offset, _offset))
         _offset = Float2::Zero;
     if (!GetMappedDrawColors(control, res.Tint, _tint))
@@ -23,7 +23,7 @@ void FudgetContentPainter::Initialize(FudgetControl *control,  const Variant &ma
 
 void FudgetContentPainter::Draw(FudgetControl *control, const Rectangle &bounds, uint64 states)
 {
-    Rectangle r = _padding.Padded(bounds);
+    Rectangle r = _margin.Padded(bounds);
     r.Location += _offset;
 
     control->DrawDrawable(_drawable, _drawable->FindMatchingState(states), r, _tint.FindMatchingColor(states));

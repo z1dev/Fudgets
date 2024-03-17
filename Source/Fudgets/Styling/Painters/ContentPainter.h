@@ -71,9 +71,9 @@ struct FUDGETS_API FudgetContentPainterMapping
     /// </summary>
     API_FIELD() int Drawable = 0;
     /// <summary>
-    /// Extra padding in the bounding rectangle.
+    /// Margin around contents inside the bounding rectangle.
     /// </summary>
-    API_FIELD() int Padding = 0;
+    API_FIELD() int Margin = 0;
     /// <summary>
     /// Offset of the drawable relative to its calculated position
     /// </summary>
@@ -104,7 +104,7 @@ public:
     void Draw(FudgetControl *control, const Rectangle &bounds, uint64 states) override;
 private:
     FudgetDrawable *_drawable;
-    FudgetPadding _padding;
+    FudgetPadding _margin;
     Float2 _offset;
     FudgetDrawColors _tint;
 };

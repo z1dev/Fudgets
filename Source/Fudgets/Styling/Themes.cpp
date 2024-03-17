@@ -194,9 +194,9 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetDrawableBuilder::AddResource(FudgetThemePartIds::FieldBackground);
     FudgetDrawableBuilder::AddDrawBorder(FudgetDrawBorder(Color(.9f, .9f, .8f, 1.f), FudgetBorder(1), FudgetBorderPlacement::Inside));
     main_theme->SetResource(FudgetThemePartIds::FrameDraw, FudgetDrawableBuilder::End());
-    main_theme->SetResource(FudgetThemePartIds::VisualPadding, FudgetPadding(1));
-    main_theme->SetResource(FudgetThemePartIds::ContentPadding, FudgetPadding(4));
-    main_theme->SetForwarding(FudgetThemePartIds::ButtonContentPadding, FudgetThemePartIds::ContentPadding);
+    main_theme->SetResource(FudgetThemePartIds::FieldFrameThickness, FudgetPadding(1));
+    main_theme->SetResource(FudgetThemePartIds::FieldFramePadding, FudgetPadding(4));
+    main_theme->SetForwarding(FudgetThemePartIds::ButtonContentPadding, FudgetThemePartIds::FieldFramePadding);
 
     FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
     FudgetDrawableBuilder::BeginSubData();
@@ -274,7 +274,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetDrawablePainterMapping frame_map;
     frame_map.Drawable = (int)FudgetFramedControlPartIds::FrameDraw;
-    frame_map.Padding = (int)FudgetFramedControlPartIds::FramePadding;
+    frame_map.Margin = (int)FudgetFramedControlPartIds::FrameMargin;
     frame_map.Tint = (int)FudgetFramedControlPartIds::FrameTint;
 
     frame_map.VisualPadding = (int)FudgetFramedControlPartIds::VisualPadding;
@@ -296,7 +296,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetContentPainterMapping btn_content_map;
     btn_content_map.Drawable = (int)FudgetContentPartIds::Drawable;
-    btn_content_map.Padding = (int)FudgetContentPartIds::Padding;
+    btn_content_map.Margin = (int)FudgetContentPartIds::Margin;
     btn_content_map.Offset = (int)FudgetContentPartIds::Offset;
     btn_content_map.Tint = (int)FudgetContentPartIds::Tint;
     main_theme->SetResource(FudgetThemePartIds::DrawableContentPainter, FudgetPartPainter::InitializeMapping<FudgetContentPainter>(btn_content_map));
@@ -312,8 +312,8 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::FramePainter, FudgetThemePartIds::FieldFramePainter);
     frame_style->SetResourceOverride(FudgetFramedControlPartIds::FrameDraw, FudgetThemePartIds::FrameDraw);
 
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::VisualPadding, FudgetThemePartIds::VisualPadding);
-    frame_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::ContentPadding);
+    frame_style->SetResourceOverride(FudgetFramedControlPartIds::VisualPadding, FudgetThemePartIds::FieldFrameThickness);
+    frame_style->SetResourceOverride(FudgetFramedControlPartIds::ContentPadding, FudgetThemePartIds::FieldFramePadding);
 
     FudgetStyle *text_style = CreateOrGetStyle(TEXT_INPUT_STYLE);
     text_style->SetResourceOverride(FudgetTextFieldPartIds::TextBackground, FudgetThemePartIds::FieldTextBackground);
@@ -354,7 +354,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     button_style->SetResourceOverride(FudgetContentPartIds::Drawable, FudgetThemePartIds::ButtonImage);
     button_style->SetResourceOverride(FudgetContentPartIds::Tint, FudgetThemePartIds::ButtonImageTint);
     button_style->SetResourceOverride(FudgetContentPartIds::Offset, FudgetThemePartIds::ButtonImageOffset);
-    button_style->SetResourceOverride(FudgetContentPartIds::Padding, FudgetThemePartIds::ButtonImagePadding);
+    button_style->SetResourceOverride(FudgetContentPartIds::Margin, FudgetThemePartIds::ButtonImageMargin);
 
     FudgetStyle *combobox_style = frame_style->CreateInheritedStyle(COMBOBOX_STYLE);
 
@@ -369,7 +369,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     cb_button_style->SetResourceOverride(FudgetContentPartIds::Drawable, FudgetThemePartIds::ComboBoxButtonImage);
     cb_button_style->SetResourceOverride(FudgetContentPartIds::Tint, FudgetThemePartIds::ComboBoxButtonImageTint);
     cb_button_style->SetResourceOverride(FudgetContentPartIds::Offset, FudgetThemePartIds::ComboBoxButtonImageOffset);
-    cb_button_style->SetResourceOverride(FudgetContentPartIds::Padding, FudgetThemePartIds::ComboBoxButtonImagePadding);
+    cb_button_style->SetResourceOverride(FudgetContentPartIds::Margin, FudgetThemePartIds::ComboBoxButtonImageMargin);
 
     FudgetStyle *listbox_style = frame_style->CreateInheritedStyle(LISTBOX_STYLE);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::ItemPainter, FudgetThemePartIds::ListItemPainter);
