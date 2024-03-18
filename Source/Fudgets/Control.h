@@ -27,7 +27,10 @@
 // 
 // Input:
 // mouse down up move functions, keydown up, oncharinput, wants navigation keys
-//
+// 
+// Data:
+// use the protected _data_proxy to register with IFudgetDataProvider objects. It in turn calls the virtual Data*** functions
+// in the control.
 
 
 #include <map>
@@ -51,6 +54,8 @@
 #include "Styling/Style.h"
 #include "Styling/Themes.h"
 
+#include "DataInterfaces.h"
+
 
 class FudgetContainer;
 class FudgetGUIRoot;
@@ -72,6 +77,7 @@ struct FudgetDrawColors;
 class FudgetPartPainter;
 struct FudgetDrawInstructionList;
 class FudgetDrawable;
+class FudgetControlDataConsumerProxy;
 
 enum class FudgetVisualControlState : uint64;
 
@@ -2179,6 +2185,88 @@ protected:
     /// sets or unsets ParentDisabled and ParentHidden flats.
     /// </summary>
     API_FUNCTION() virtual void DoParentStateChanged();
+
+
+    // IFudgetDataConsumer default implementations to make it easier to make a control into a data consumer.
+    // These do nothing.
+
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataChangeBegin() {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataChangeEnd(bool changed) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeReset() {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataReset() {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeCleared() {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataCleared() {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeUpdated(int index) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataUpdated(int index) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeAdded(int count) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataAdded(int count) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeRemoved(int index, int count) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataRemoved(int index, int count) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataToBeInserted(int index, int count) {}
+    /// <summary>
+    /// Called by _data_proxy if it is registered as a data consumer in an IFudgetDataProvider. The default
+    /// implementation doesn't do anything. Only the useful functions need to be overriden.
+    /// </summary>
+    API_FUNCTION() virtual void DataInserted(int index, int count) {}
+
+
+    /// <summary>
+    /// Can be used to register the control with an IFudgetDataProvider data provider. Calls the data
+    /// functions above like the control itself was an IFudgetDataConsumer.
+    /// </summary>
+    API_FIELD() FudgetControlDataConsumerProxy *_data_proxy;
 private:
     /// <summary>
     /// Gets the name of the control's style. To look up the active style, the control first checks if a style for
@@ -2347,4 +2435,52 @@ private:
     friend class FudgetGUIRoot;
     friend class FudgetPartPainter;
     friend class FudgetDrawable;
+    friend class FudgetControlDataConsumerProxy;
 };
+
+
+/// <summary>
+/// Flax doesn't allow default implementation to exist for interface functions, nor to make
+/// an interface function non-public. This proxy object is created for every FudgetControl
+/// and can be used to register with a data provider. It calls its owning control's protected
+/// functions that do nothing. Those can be overriden in derived classes for proper functioning.
+/// </summary>
+API_CLASS()
+class FudgetControlDataConsumerProxy : public ScriptingObject, public IFudgetDataConsumer
+{
+    using Base = ScriptingObject;
+    DECLARE_SCRIPTING_TYPE(FudgetControlDataConsumerProxy);
+public:
+    /// <inheritdoc />
+    FORCE_INLINE void DataChangeBegin() override { _owner->DataChangeBegin(); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataChangeEnd(bool changed) override { _owner->DataChangeEnd(changed); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeReset() override { _owner->DataToBeReset(); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataReset() override { _owner->DataReset(); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeCleared() override { _owner->DataToBeCleared(); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataCleared() override { _owner->DataCleared(); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeUpdated(int index) override { _owner->DataToBeUpdated(index); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataUpdated(int index) override { _owner->DataUpdated(index); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeAdded(int count) override { _owner->DataToBeAdded(count); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataAdded(int count) override { _owner->DataAdded(count); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeRemoved(int index, int count) override { _owner->DataToBeRemoved(index, count); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataRemoved(int index, int count) override { _owner->DataRemoved(index, count); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataToBeInserted(int index, int count) override { _owner->DataToBeInserted(index, count); }
+    /// <inheritdoc />
+    FORCE_INLINE void DataInserted(int index, int count) override { _owner->DataInserted(index, count); }
+
+    FudgetControl *_owner;
+};
+
+

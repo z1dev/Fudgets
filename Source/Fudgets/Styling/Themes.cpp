@@ -13,6 +13,7 @@
 #include "Painters/ListBoxPainter.h"
 #include "Painters/DrawablePainter.h"
 #include "Painters/ContentPainter.h"
+#include "Painters/ScrollBarPainter.h"
 
 #include "Engine/Core/Math/Color.h"
 #include "Engine/Content/Content.h"
@@ -198,6 +199,25 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::FieldFramePadding, FudgetPadding(4));
     main_theme->SetForwarding(FudgetThemePartIds::ButtonContentPadding, FudgetThemePartIds::FieldFramePadding);
 
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarWidth, 16);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarBeforeTrackButtonCount, 1);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarAfterTrackButtonCount, 1);
+    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize, FudgetThemePartIds::ScrollBarWidth);
+    main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize + 1, FudgetThemePartIds::ScrollBarWidth);
+    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstVerticalButtonSize, FudgetThemePartIds::ScrollBarWidth);
+    main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + 1, FudgetThemePartIds::ScrollBarWidth);
+
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalThumb, Color::Black);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalThumb, Color::Black);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarFirstHorizontalButton, Color::Black);
+    main_theme->SetResource((int)FudgetThemePartIds::ScrollBarFirstHorizontalButton + 1, Color::Black);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarFirstVerticalButton, Color::Black);
+    main_theme->SetResource((int)FudgetThemePartIds::ScrollBarFirstVerticalButton + 1, Color::Black);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalTrack, Color::LightGray);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarIsThumbSizeFixed, false);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 8);
+
     FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
     FudgetDrawableBuilder::BeginSubData();
     FudgetDrawableBuilder::AddPadding(FudgetPadding(2));
@@ -255,12 +275,6 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::CaretScrollCount, 5);
     main_theme->SetResource(FudgetThemePartIds::BeamCursor, CursorType::IBeam);
 
-    //main_theme->SetForwarding(FudgetThemePartIds::ListItemSelectedBackground, FudgetThemePartIds::SelectedTextBackground);
-    //main_theme->SetForwarding(FudgetThemePartIds::ListItemHoveredBackground, FudgetThemePartIds::SelectedTextBackground);
-    //main_theme->SetResource(FudgetThemePartIds::ListItemHoveredBackgroundTint, Color(1.f, 1.f, 1.f, 0.4f));
-    //main_theme->SetForwarding(FudgetThemePartIds::ListItemFocusedSelectedBackground, FudgetThemePartIds::FocusedSelectedTextBackground);
-    //main_theme->SetForwarding(FudgetThemePartIds::ListItemDisabledSelectedBackground, FudgetThemePartIds::DisabledSelectedTextBackground);
-
     // Style names used for each default class
 
     main_theme->SetClassStyleName(TEXT("Fudgets.FudgetButton"), IMAGE_BUTTON_STYLE);
@@ -304,7 +318,43 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     FudgetListBoxItemPainterMapping lb_item_map;
     lb_item_map.TextPainter = (int)FudgetListBoxPartIds::TextPainter;
+    lb_item_map.BgDraw = (int)FudgetListBoxPartIds::Background;
+    lb_item_map.BgTint = (int)FudgetListBoxPartIds::BackgroundTint;
     main_theme->SetResource(FudgetThemePartIds::ListItemPainter, FudgetPartPainter::InitializeMapping<FudgetListBoxItemPainter>(lb_item_map));
+
+
+    FudgetScrollBarPainterMapping sb_map;
+    sb_map.Width = (int)FudgetScrollBarPartIds::Width;
+    sb_map.IsThumbSizeFixed = (int)FudgetScrollBarPartIds::IsThumbSizeFixed;
+    sb_map.ThumbSize = (int)FudgetScrollBarPartIds::ThumbSize;
+    sb_map.MinThumbSize = (int)FudgetScrollBarPartIds::MinThumbSize;
+
+    sb_map.BgDraw = (int)FudgetScrollBarPartIds::HorzBackgroundDraw;
+    sb_map.FrameDraw = (int)FudgetScrollBarPartIds::FrameDraw;
+    sb_map.ThumbDraw = (int)FudgetScrollBarPartIds::HorzThumbDraw;
+    sb_map.TrackDraw = (int)FudgetScrollBarPartIds::HorzTrackDraw;
+    sb_map.BeforeTrackDraw = (int)FudgetScrollBarPartIds::HorzBeforeTrackDraw;
+    sb_map.AfterTrackDraw = (int)FudgetScrollBarPartIds::HorzAfterTrackDraw;
+
+    for (int ix = 0, siz = 20; ix < siz; ++ix)
+    {
+        sb_map.ButtonDraw[ix] = (int)FudgetScrollBarPartIds::FirstHorzButtonDraw + ix;
+        sb_map.ButtonSize[ix] = (int)FudgetScrollBarPartIds::FirstHorzButtonSize + ix;
+    }
+    main_theme->SetResource(FudgetThemePartIds::HorzScrollBarPainter, FudgetPartPainter::InitializeMapping<FudgetHorzScrollBarPainter>(sb_map));
+
+    sb_map.BgDraw = (int)FudgetScrollBarPartIds::VertBackgroundDraw;
+    sb_map.ThumbDraw = (int)FudgetScrollBarPartIds::VertThumbDraw;
+    sb_map.TrackDraw = (int)FudgetScrollBarPartIds::VertTrackDraw;
+    sb_map.BeforeTrackDraw = (int)FudgetScrollBarPartIds::VertBeforeTrackDraw;
+    sb_map.AfterTrackDraw = (int)FudgetScrollBarPartIds::VertAfterTrackDraw;
+
+    for (int ix = 0, siz = 20; ix < siz; ++ix)
+    {
+        sb_map.ButtonDraw[ix] = (int)FudgetScrollBarPartIds::FirstVertButtonDraw + ix;
+        sb_map.ButtonSize[ix] = (int)FudgetScrollBarPartIds::FirstVertButtonSize + ix;
+    }
+    main_theme->SetResource(FudgetThemePartIds::VertScrollBarPainter, FudgetPartPainter::InitializeMapping<FudgetVertScrollBarPainter>(sb_map));
 
     // Built-in styles:
 
@@ -374,17 +424,27 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     FudgetStyle *listbox_style = frame_style->CreateInheritedStyle(LISTBOX_STYLE);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::ItemPainter, FudgetThemePartIds::ListItemPainter);
     listbox_style->SetResourceOverride(FudgetListBoxPartIds::TextPainter, FudgetThemePartIds::SingleLineInputTextPainter);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackground, FudgetThemePartIds::ListItemSelectedBackground);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::SelectedBackgroundTint, FudgetThemePartIds::ListItemSelectedBackgroundTint);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackground, FudgetThemePartIds::ListItemHoveredBackground);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredBackgroundTint, FudgetThemePartIds::ListItemHoveredBackgroundTint);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackground, FudgetThemePartIds::ListItemHoveredSelectedBackground);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::HoveredSelectedBackgroundTint, FudgetThemePartIds::ListItemHoveredSelectedBackgroundTint);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackground, FudgetThemePartIds::ListItemFocusedSelectedBackground);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::FocusedSelectedBackgroundTint, FudgetThemePartIds::ListItemFocusedSelectedBackgroundTint);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackground, FudgetThemePartIds::ListItemDisabledSelectedBackground);
-    //listbox_style->SetResourceOverride(FudgetListBoxPartIds::DisabledSelectedBackgroundTint, FudgetThemePartIds::ListItemDisabledSelectedBackgroundTint);
-
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::Background, FudgetThemePartIds::ListItemBackground);
+    listbox_style->SetResourceOverride(FudgetListBoxPartIds::BackgroundTint, FudgetThemePartIds::ListItemBackgroundTint);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::Painter, FudgetThemePartIds::VertScrollBarPainter);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::Width, FudgetThemePartIds::ScrollBarWidth);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::IsThumbSizeFixed, FudgetThemePartIds::ScrollBarIsThumbSizeFixed);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::ThumbSize, FudgetThemePartIds::ScrollBarThumbSize);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::MinThumbSize, FudgetThemePartIds::ScrollBarMinThumbSize);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::HorzBackgroundDraw, FudgetThemePartIds::ScrollBarHorizontalBackground);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::VertBackgroundDraw, FudgetThemePartIds::ScrollBarVerticalBackground);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::FrameDraw, FudgetThemePartIds::ScrollBarFrame);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::VertThumbDraw, FudgetThemePartIds::ScrollBarVerticalThumb);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::VertTrackDraw, FudgetThemePartIds::ScrollBarVerticalTrack);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::VertBeforeTrackDraw, FudgetThemePartIds::ScrollBarVerticalBeforeTrack);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::VertAfterTrackDraw, FudgetThemePartIds::ScrollBarVerticalAfterTrack);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::BeforeTrackButtonCount, FudgetThemePartIds::ScrollBarBeforeTrackButtonCount);
+    listbox_style->SetResourceOverride(FudgetScrollBarPartIds::AfterTrackButtonCount, FudgetThemePartIds::ScrollBarAfterTrackButtonCount);
+    for (int ix = 0; ix < 20; ++ix)
+    {
+        listbox_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonDraw + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButton + ix);
+        listbox_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonSize + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + ix);
+    }
 }
 
 void FudgetThemes::Uninitialize(bool in_game)

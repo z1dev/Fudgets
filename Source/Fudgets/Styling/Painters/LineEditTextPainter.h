@@ -28,7 +28,7 @@ public:
     using Mapping = FudgetTextPainterMapping;
 
     /// <inheritdoc />
-    void Initialize(FudgetControl *control, /*FudgetStyle *style_override,*/ const Variant &mapping) override;
+    void Initialize(FudgetControl *control, const Variant &mapping) override;
 
     /// <inheritdoc />
     void Draw(FudgetControl *control, const Rectangle &bounds, const StringView &text, const FudgetTextRange &range, 

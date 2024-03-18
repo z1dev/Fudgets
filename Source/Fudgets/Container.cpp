@@ -628,12 +628,10 @@ FudgetControlFlag FudgetContainer::GetInitFlags() const
 
 void FudgetContainer::RequestLayout()
 {
-    if (HasAnyState(FudgetControlState::Hidden))
-        return;
-
     _layout->RequestLayoutChildren(false);
     for (FudgetControl *c : _children)
-        c->RequestLayout();
+        if (!c->HasAnyState(FudgetControlState::Hidden))
+            c->RequestLayout();
 }
 
 void FudgetContainer::SetParentDisabled(bool value)

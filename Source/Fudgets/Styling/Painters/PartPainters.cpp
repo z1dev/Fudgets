@@ -81,6 +81,14 @@ bool FudgetPartPainter::GetMappedString(FudgetControl *control, int mapping_id, 
     return control->GetStyleString(mapping_id, result);
 }
 
+bool FudgetPartPainter::GetMappedBool(FudgetControl *control, int mapping_id, API_PARAM(Out) bool &result) const
+{
+    if (mapping_id <= 0 || control == nullptr)
+        return false;
+    result = false;
+    return control->GetStyleBool(mapping_id, result);
+}
+
 bool FudgetPartPainter::GetMappedFloat(FudgetControl *control, int mapping_id, API_PARAM(Out) float &result) const
 {
     if (mapping_id <= 0 || control == nullptr)

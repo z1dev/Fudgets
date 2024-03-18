@@ -166,6 +166,15 @@ protected:
     API_FUNCTION() bool GetMappedString(FudgetControl *control, int mapping_id, API_PARAM(Out) String &result) const;
 
     /// <summary>
+    /// Checks the control's styles for a bool with mapping_id and returns true if it was successful stored in result.
+    /// </summary>
+    /// <param name="control">The control that provides the style and theme for looking up the resource.</param>
+    /// <param name="mapping_id">The resource id.</param>
+    /// <param name="result">The variable to receive the result</param>
+    /// <returns>Whether the mapped id was a valid id in the control's styles and matched the requested type or was converted to it.</returns>
+    API_FUNCTION() bool GetMappedBool(FudgetControl *control, int mapping_id, API_PARAM(Out) bool &result) const;
+
+    /// <summary>
     /// Checks the control's styles for a float with mapping_id and returns true if it was successful stored in result.
     /// </summary>
     /// <param name="control">The control that provides the style and theme for looking up the resource.</param>
@@ -496,7 +505,7 @@ public:
 
 
 
-class IListDataProvider;
+class IFudgetDataProvider;
 
 /// <summary>
 /// Base class for painter objects that paint items in list controls
@@ -516,7 +525,7 @@ public:
     /// <param name="item_index">Index of item in data</param>
     /// <param name="data">Source of item data</param>
     /// <param name="state">State of control</param>
-    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, uint64 state) {}
+    API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IFudgetDataProvider *data, uint64 state) {}
 
     /// <summary>
     /// Measures the list item at index.
@@ -526,6 +535,6 @@ public:
     /// <param name="data">Source of item data</param>
     /// <param name="state">State of control</param>
     /// <returns>Dimensions of the requested item</returns>
-    API_FUNCTION() virtual Int2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, uint64 state) { return Int2::Zero; }
+    API_FUNCTION() virtual Int2 Measure(FudgetControl *control, int item_index, IFudgetDataProvider *data, uint64 state) { return Int2::Zero; }
 };
 

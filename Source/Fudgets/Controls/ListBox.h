@@ -1,27 +1,47 @@
 #pragma once
 
 #include "ListControl.h"
+#include "ScrollBar.h"
+
+#include <vector>
 
 class FudgetDrawablePainter;
 class FudgetListItemPainter;
 
 
 API_CLASS ()
-class FUDGETS_API FudgetStringListProvider : public ScriptingObject, public IListDataProvider
+class FUDGETS_API FudgetStringListProvider : public ScriptingObject, public IFudgetDataProvider
 {
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetStringListProvider);
 public:
+    ~FudgetStringListProvider();
+
+    /// <inheritdoc />
+    void BeginChange() override { _consumers->BeginChange(); }
+
+    /// <inheritdoc />
+    void EndChange() override { _consumers->EndChange(); }
+
+    /// <inheritdoc />
+    void BeginDataReset() override { _consumers->BeginDataReset(); }
+
+    /// <inheritdoc />
+    void EndDataReset() override { _consumers->EndDataReset(); }
+
     /// <inheritdoc />
     int GetCount() const override { return _items.Count(); }
 
     /// <inheritdoc />
-    Variant GetData(int index) override { return _items[index]; }
+    void Clear() override;
+
+    /// <inheritdoc />
+    Variant GetValue(int index) override { return _items[index]; }
 
     /// <summary>
     /// Use SetText.
     /// </summary>
-    void SetData(int index, Variant value) override { ; }
+    void SetValue(int index, Variant value) override { ; }
 
     /// <inheritdoc />
     String GetText(int index) override { return _items[index]; }
@@ -32,12 +52,18 @@ public:
     /// <summary>
     /// Ignored.
     /// </summary>
-    int GetIntData(int index) override { return 0; }
+    int GetInt(int index) override { return 0; }
 
     /// <summary>
     /// Ignored.
     /// </summary>
-    void SetIntData(int index, int value) override { ; }
+    void SetInt(int index, int value) override { ; }
+
+    /// <inheritdoc />
+    void RegisterDataConsumer(IFudgetDataConsumer *consumer) override { _consumers->RegisterDataConsumer(consumer); }
+
+    /// <inheritdoc />
+    void UnregisterDataConsumer(IFudgetDataConsumer *consumer) override { _consumers->UnregisterDataConsumer(consumer); }
 
     /// <summary>
     /// Adds the string to the end of the list.
@@ -72,6 +98,8 @@ protected:
 private:
     Array<String> _items;
     bool _allow_duplicates;
+
+    FudgetDataConsumerRegistry *_consumers;
 };
 
 /// <summary>
@@ -164,10 +192,51 @@ public:
     /// <inheritdoc />
     Rectangle GetItemRect(int item_index) override;
 protected:
+
+    /// <inheritdoc />
+    void RequestLayout() override;
+
+    /// <inheritdoc />
+    void DataChangeBegin() override;
+    /// <inheritdoc />
+    void DataChangeEnd(bool changed) override;
+    /// <inheritdoc />
+    void DataToBeReset() override;
+    /// <inheritdoc />
+    void DataReset() override;
+    /// <inheritdoc />
+    void DataToBeCleared() override;
+    /// <inheritdoc />
+    void DataCleared() override;
+    /// <inheritdoc />
+    void DataToBeUpdated(int index) override;
+    /// <inheritdoc />
+    void DataUpdated(int index) override;
+    /// <inheritdoc />
+    void DataToBeAdded(int count) override;
+    /// <inheritdoc />
+    void DataAdded(int count) override;
+    /// <inheritdoc />
+    void DataToBeRemoved(int index, int count) override;
+    /// <inheritdoc />
+    void DataRemoved(int index, int count) override;
+    /// <inheritdoc />
+    void DataToBeInserted(int index, int count) override;
+    /// <inheritdoc />
+    void DataInserted(int index, int count) override;
+
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 private:
-    FudgetPadding GetInnerPadding() const;
+    FudgetPadding GetFramePadding() const;
+    FudgetPadding GetContentPadding() const;
+    Rectangle GetScrollBarBounds() const;
+
+    void MarkExtentsDirty() { _dirty_extents = true; }
+
+    void RecalculateListExtents();
+
+    FudgetScrollBarComponent *_v_scrollbar;
 
     FudgetDrawablePainter *_frame_painter;
     FudgetListItemPainter *_item_painter;
@@ -192,10 +261,17 @@ private:
     // Otherwise the items will be treated like having this size before they are measured.
     Int2 _default_size;
 
+    // A dirty flag when the contents changed and their size needs to be calculated to be able to show a scrollbar or limit scrolling.
+    bool _dirty_extents;
+
+    // Dimensions of the displayed list with all items included. When item sizes are not fully calculated, this is an
+    // approximated value.
+    Int2 _list_extents;
+
     // Height of each item in the list when _fixed_item_size is false. This list is not always complete if the items
     // are measured in small blocks. Not measured items have a value of -1 in this list. Check _size_processed to tell
     // the number of fully measured items.
-    Array<int> _item_heights;
+    std::vector<int> _item_heights;
     // Number of list box items with their sizes measured. Only used if _fixed_item_size is false and the items are
     // measured in small blocks.
     int _size_processed;

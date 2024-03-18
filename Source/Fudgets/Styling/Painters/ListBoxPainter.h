@@ -27,9 +27,9 @@ public:
     /// <inheritdoc />
     void Initialize(FudgetControl *control, const Variant &mapping) override;
     /// <inheritdoc />
-    void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, uint64 states) override;
+    void Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IFudgetDataProvider *data, uint64 states) override;
     /// <inheritdoc />
-    Int2 Measure(FudgetControl *control, int item_index, IListDataProvider *data, uint64 state) override;
+    Int2 Measure(FudgetControl *control, int item_index, IFudgetDataProvider *data, uint64 state) override;
 private:
     FudgetDrawable *_bg_draw;
     FudgetDrawColors _bg_tint;

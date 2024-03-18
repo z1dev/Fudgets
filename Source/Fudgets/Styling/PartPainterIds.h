@@ -62,6 +62,110 @@ enum class FudgetThemePartIds
     FieldFramePadding,
 
     /// <summary>
+    /// Default width of the vertical scroll bar or height of the horizontal scroll bar.
+    /// </summary>
+    ScrollBarWidth,
+    /// <summary>
+    /// Whether the draggable thumb button is of a fixed size instead of representing the real size of a page
+    /// relative to the range.
+    /// </summary>
+    ScrollBarIsThumbSizeFixed,
+    /// <summary>
+    /// Size of the draggable thumb button if it has a fixed size. This value is ignored for not fixed thumb sizes.
+    /// </summary>
+    ScrollBarThumbSize,
+    /// <summary>
+    /// Minimum size of the draggable thumb button when the button size depends on the visible page size.
+    /// </summary>
+    ScrollBarMinThumbSize,
+
+    /// <summary>
+    /// Drawable of the background of a horizontal scrollbar, which is drawn over the full bounds, including the position of buttons.
+    /// </summary>
+    ScrollBarHorizontalBackground,
+    /// <summary>
+    /// Drawable of the background of a vertical scrollbar, which is drawn over the full bounds, including the position of buttons.
+    /// </summary>
+    ScrollBarVerticalBackground,
+    /// <summary>
+    /// Frame drawable around a scrollbar and its buttons that is drawn last.
+    /// </summary>
+    ScrollBarFrame,
+    /// <summary>
+    /// Drawable of the draggable thumb button of a horizontal scroll bar.
+    /// </summary>
+    ScrollBarHorizontalThumb,
+    /// <summary>
+    /// Drawable of the draggable thumb button of a vertical scroll bar.
+    /// </summary>
+    ScrollBarVerticalThumb,
+    /// <summary>
+    /// Drawable background of a horizontal scroll bar that serves as the track for the thumb button.
+    /// </summary>
+    ScrollBarHorizontalTrack,
+    /// <summary>
+    /// Drawable on the horizontal scrollbar track in front of the thumb button.
+    /// </summary>
+    ScrollBarHorizontalBeforeTrack,
+    /// <summary>
+    /// Drawable on the horizontal scrollbar track after of the thumb button.
+    /// </summary>
+    ScrollBarHorizontalAfterTrack,
+    /// <summary>
+    /// Drawable background of a vertical scroll bar that serves as the track for the thumb button.
+    /// </summary>
+    ScrollBarVerticalTrack,
+    /// <summary>
+    /// Drawable on the vertical scrollbar track in front of the thumb button.
+    /// </summary>
+    ScrollBarVerticalBeforeTrack,
+    /// <summary>
+    /// Drawable on the vertical scrollbar track after of the thumb button.
+    /// </summary>
+    ScrollBarVerticalAfterTrack,
+
+    /// <summary>
+    /// Number of buttons in front of the scrollbar's track. Buttons that don't fit are not drawn. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarBeforeTrackButtonCount,
+    /// <summary>
+    /// Number of buttons after of the scrollbar's track. Buttons that don't fit are not drawn. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarAfterTrackButtonCount,
+    /// <summary>
+    /// The first button drawable on a horizontal scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarFirstHorizontalButton,
+    /// <summary>
+    /// The last button drawable on a horizontal scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarLastHorizontalButton = ScrollBarFirstHorizontalButton + 19,
+    /// <summary>
+    /// The first button size on a horizontal scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarFirstHorizontalButtonSize,
+    /// <summary>
+    /// The last button size on a horizontal scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarLastHorizontalButtonSize = ScrollBarFirstHorizontalButtonSize + 19,
+    /// <summary>
+    /// The first button drawable on a vertical scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarFirstVerticalButton,
+    /// <summary>
+    /// The last button drawable on a vertical scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarLastVerticalButton = ScrollBarFirstVerticalButton + 19,
+    /// <summary>
+    /// The first button size on a vertical scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarFirstVerticalButtonSize,
+    /// <summary>
+    /// The last button size on a vertical scrollbar. The default scrollbar supports up to 20 buttons.
+    /// </summary>
+    ScrollBarLastVerticalButtonSize = ScrollBarFirstVerticalButtonSize + 19,
+
+    /// <summary>
     /// Button surface drawable or color, used for the standard buttons
     /// </summary>
     ButtonSurface,
@@ -188,6 +292,14 @@ enum class FudgetThemePartIds
     /// </summary>
     FieldFramePainter,
     /// <summary>
+    /// Painter information for horizontal scrollbars and scrollbar controls
+    /// </summary>
+    HorzScrollBarPainter,
+    /// <summary>
+    /// Painter information for vertical scrollbars and scrollbar controls
+    /// </summary>
+    VertScrollBarPainter,
+    /// <summary>
     /// Painter information for independent button controls
     /// </summary>
     ButtonFramePainter,
@@ -240,6 +352,43 @@ enum class FudgetContentPartIds
     Offset,
     Tint,
 };
+
+API_ENUM()
+enum class FudgetScrollBarPartIds
+{
+    First = 1500,
+
+    Painter = First,
+
+    Width,
+    IsThumbSizeFixed,
+    ThumbSize,
+    MinThumbSize,
+
+    HorzBackgroundDraw,
+    VertBackgroundDraw,
+    FrameDraw,
+    HorzThumbDraw,
+    VertThumbDraw,
+    HorzTrackDraw,
+    HorzBeforeTrackDraw,
+    HorzAfterTrackDraw,
+    VertTrackDraw,
+    VertBeforeTrackDraw,
+    VertAfterTrackDraw,
+
+    BeforeTrackButtonCount,
+    AfterTrackButtonCount,
+    FirstHorzButtonDraw,
+    LastHorzButtonDraw = FirstHorzButtonDraw + 19,
+    FirstHorzButtonSize,
+    LastHorzButtonSize = FirstHorzButtonSize + 19,
+    FirstVertButtonDraw,
+    LastVertButtonDraw = FirstVertButtonDraw + 19,
+    FirstVertButtonSize,
+    LastVertButtonSize = FirstVertButtonSize + 19,
+};
+
 
 API_ENUM()
 enum class FudgetTextFieldPartIds
@@ -305,4 +454,3 @@ enum class FudgetListBoxPartIds
 
     BackgroundTint,
 };
-

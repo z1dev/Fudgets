@@ -27,7 +27,7 @@ void FudgetListBoxItemPainter::Initialize(FudgetControl *control, const Variant 
     _text_painter = control->CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, res.TextPainter);
 }
 
-void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IListDataProvider *data, uint64 states)
+void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bounds, Int2 offset, int item_index, IFudgetDataProvider *data, uint64 states)
 {
     if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
         return;
@@ -45,7 +45,7 @@ void FudgetListBoxItemPainter::Draw(FudgetControl *control, const Rectangle &bou
     _text_painter->Draw(control, bounds, text, full_range, states, opt);
 }
 
-Int2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index, IListDataProvider *data, uint64 state)
+Int2 FudgetListBoxItemPainter::Measure(FudgetControl *control, int item_index, IFudgetDataProvider *data, uint64 state)
 {
     if (_text_painter == nullptr || data == nullptr || item_index < 0 || item_index >= data->GetCount())
         return Int2::Zero;

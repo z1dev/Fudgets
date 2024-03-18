@@ -26,6 +26,8 @@ FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params
     _state_flags(FudgetControlState::Enabled), _visual_state(0), _cached_global_to_local_translation(0.f), _clipping_count(0), _changing(false),
     _style(nullptr), _cached_style(nullptr), _theme(nullptr), _cached_theme(nullptr)
 {
+    _data_proxy = New<FudgetControlDataConsumerProxy>();
+    _data_proxy->_owner = this;
 }
 
 FudgetControl::~FudgetControl()
@@ -37,6 +39,8 @@ FudgetControl::~FudgetControl()
     for (const auto &p : _drawables)
         Delete(p.Key);
     _drawables.Clear();
+
+    Delete(_data_proxy);
 }
 
 void FudgetControl::SetParent(FudgetContainer *value)
@@ -1974,4 +1978,13 @@ void FudgetControl::UnregisterStylePainterInternal(FudgetPartPainter *painter)
 void FudgetControl::RegisterDrawable(FudgetPartPainter *drawable_owner, FudgetDrawable *drawable)
 {
     _drawables.Add(drawable, drawable_owner);
+}
+
+
+// FudgetControlDataConsumerProxy
+
+
+FudgetControlDataConsumerProxy::FudgetControlDataConsumerProxy(const SpawnParams &params) : Base(params), _owner(nullptr)
+{
+
 }
