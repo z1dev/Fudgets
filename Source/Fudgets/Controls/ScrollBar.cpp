@@ -6,9 +6,8 @@
 
 FudgetScrollBarComponent::FudgetScrollBarComponent(const SpawnParams &params) : Base(params), _owner(nullptr),
     _painter(nullptr), _orientation(FudgetScrollBarOrientation::Horizontal), _bounds(Rectangle::Empty), _rects_dirty(true),
-    _before_track_rect(Rectangle::Empty), _after_track_rect(Rectangle::Empty), _thumb_rect(Rectangle::Empty),
-    _range(0), _pos(0), _page_size(0),
-    _visible(false), _visibility_mode(FudgetScrollBarVisibilityMode::Automatic)
+    _track_rect(Rectangle::Empty), _before_track_rect(Rectangle::Empty), _after_track_rect(Rectangle::Empty), _thumb_rect(Rectangle::Empty),
+    _range(0), _pos(0), _page_size(0), _visible(false), _visibility_mode(FudgetScrollBarVisibilityMode::Automatic)
 {
     for (int ix = 0; ix < 20; ++ix)
         _btn_rects[ix] = Rectangle::Empty;

@@ -20,7 +20,7 @@ FudgetDrawInstructionList::~FudgetDrawInstructionList()
 // FudgetDrawableBuilder
 
 FudgetDrawableBuilder::BuildMode FudgetDrawableBuilder::_mode = FudgetDrawableBuilder::BuildMode::None;
-std::vector<uint64> FudgetDrawableBuilder::_states;
+Array<uint64> FudgetDrawableBuilder::_states;
 std::vector<FudgetDrawInstructionList*> FudgetDrawableBuilder::_state_list;
 FudgetDrawInstructionList *FudgetDrawableBuilder::_data = nullptr;
 std::vector<FudgetDrawInstructionList*> FudgetDrawableBuilder::_sub_data;
@@ -48,7 +48,7 @@ void FudgetDrawableBuilder::Begin(uint64 states)
         }
     }
 
-    _states.push_back(states);
+    _states.Add(states);
     _data = new FudgetDrawInstructionList();
     _state_list.push_back(_data);
     _mode = BuildMode::Drawable;
@@ -58,7 +58,7 @@ FudgetDrawableIndex FudgetDrawableBuilder::End(bool abort)
 {
     FudgetDrawableIndex result;
     result.Index = -1;
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "End: Not building a drawable.");
         return result;
@@ -78,7 +78,7 @@ FudgetDrawableIndex FudgetDrawableBuilder::End(bool abort)
     }
         
 
-    _states.clear();
+    _states.Clear();
     _state_list.clear();
 
     _mode = BuildMode::None;
@@ -88,7 +88,7 @@ FudgetDrawableIndex FudgetDrawableBuilder::End(bool abort)
 
 void FudgetDrawableBuilder::AddResource(int id)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddResource: Not building a drawable.");
         return;
@@ -100,7 +100,7 @@ void FudgetDrawableBuilder::AddResource(int id)
 
 void FudgetDrawableBuilder::AddColor(Color color)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddColor: Not building a drawable.");
         return;
@@ -112,7 +112,7 @@ void FudgetDrawableBuilder::AddColor(Color color)
 
 void FudgetDrawableBuilder::AddPadding(FudgetPadding padding)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddPadding: Not building a drawable.");
         return;
@@ -124,7 +124,7 @@ void FudgetDrawableBuilder::AddPadding(FudgetPadding padding)
 
 void FudgetDrawableBuilder::AddBlur(float blur_strength)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddBlur: Not building a drawable.");
         return;
@@ -136,7 +136,7 @@ void FudgetDrawableBuilder::AddBlur(float blur_strength)
 
 void FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea area)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddDrawArea: Not building a drawable.");
         return;
@@ -148,7 +148,7 @@ void FudgetDrawableBuilder::AddDrawArea(FudgetDrawArea area)
 
 void FudgetDrawableBuilder::AddDrawBorder(FudgetDrawBorder border)
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "AddDrawBorder: Not building a drawable.");
         return;
@@ -159,7 +159,7 @@ void FudgetDrawableBuilder::AddDrawBorder(FudgetDrawBorder border)
 }
 void FudgetDrawableBuilder::BeginSubData()
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "BeginSubData: Not building a drawable.");
         return;
@@ -173,7 +173,7 @@ void FudgetDrawableBuilder::BeginSubData()
 
 void FudgetDrawableBuilder::EndSubData()
 {
-    if (_states.empty() || _mode != BuildMode::Drawable)
+    if (_states.IsEmpty() || _mode != BuildMode::Drawable)
     {
         LOG(Error, "EndSubData: Not building a drawable.");
         return;
@@ -247,7 +247,7 @@ FudgetDrawable::~FudgetDrawable()
 
 bool FudgetDrawable::IsEmpty() const
 {
-    if (_states.empty())
+    if (_states.IsEmpty())
         return true;
     for (const auto l : _lists)
         if (l->_list.empty())
@@ -257,9 +257,20 @@ bool FudgetDrawable::IsEmpty() const
 
 int FudgetDrawable::FindMatchingState(uint64 states) const
 {
-    for (int ix = 0, siz = (int)_states.size(); ix < siz; ++ix)
+    for (int ix = 0, siz = (int)_states.Count(); ix < siz; ++ix)
     {
         uint64 state = _states[ix];
+        if ((states & state) == state)
+            return ix;
+    }
+    return -1;
+}
+
+int FudgetDrawable::FindMatchingState(const Array<uint64> &drawable_states, uint64 states)
+{
+    for (int ix = 0, siz = (int)drawable_states.Count(); ix < siz; ++ix)
+    {
+        uint64 state = drawable_states[ix];
         if ((states & state) == state)
             return ix;
     }
@@ -310,15 +321,15 @@ FudgetDrawable* FudgetDrawable::FromDrawColors(FudgetControl *control_owner, Fud
     {
         FudgetDrawInstructionList *new_list = new FudgetDrawInstructionList;
         result->_lists.push_back(new_list);
-        result->_states.push_back(colors._states[ix]);
+        result->_states.Add(colors._states[ix]);
         new_list->_list.push_back(new FudgetDrawInstructionColor(colors._colors[ix]));
     }
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
+FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const Array<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &lists)
 {
-    if ((control_owner == nullptr && painter_owner == nullptr) || states.size() != lists.size())
+    if ((control_owner == nullptr && painter_owner == nullptr) || statelist.Count() != lists.size())
         return nullptr;
 
     // Check first if the instruction list contains any ids that must be looked up. If no ids are found,
@@ -334,24 +345,25 @@ FudgetDrawable* FudgetDrawable::FromDrawInstructionList(FudgetControl *control_o
     }
     if (!has_external)
     {
-        FudgetDrawable *result = Create(control_owner, painter_owner, states, lists);
+        FudgetDrawable *result = Create(control_owner, painter_owner, statelist, lists);
         return result;
     }
    
     FudgetDrawable *result = Create(control_owner, painter_owner);
 
     
-    for (int ix = 0, siz = (int)states.size(); ix < siz; ++ix)
+    for (int ix = 0, siz = (int)statelist.Count(); ix < siz; ++ix)
     {
         FudgetDrawInstructionList *new_list = new FudgetDrawInstructionList;
         result->_lists.push_back(new_list);
 
-        uint64 list_states = states[ix];
-        result->_states.push_back(list_states);
+        uint64 list_states = statelist[ix];
+        result->_states.Add(list_states);
         FudgetDrawInstructionList *list = lists[ix];
         for (int iy = 0, sizy = (int)list->_list.size(); iy < sizy; ++iy)
         {
-            FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, list->_list[iy], list_states);
+            HashSet<int> used_ids;
+            FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, list->_list[iy], list_states, used_ids);
             if (cloned != nullptr)
                 new_list->_list.push_back(cloned);
         }
@@ -374,7 +386,7 @@ bool FudgetDrawable::NoExternalResources(FudgetDrawInstructionList* drawlist)
     return true;
 }
 
-FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item, uint64 states)
+FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item, uint64 states, HashSet<int> &used_ids)
 {
     FudgetDrawInstruction *result = nullptr;
     switch (item->_type)
@@ -383,7 +395,7 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
             result = new FudgetDrawInstructionList();
             for (auto areaitem : ((FudgetDrawInstructionList*)item)->_list)
             {
-                FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, areaitem, states);
+                FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, areaitem, states, used_ids);
                 if (cloned != nullptr)
                     ((FudgetDrawInstructionList*)result)->_list.push_back(cloned);
             }
@@ -462,7 +474,29 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
                 }
             }
 
-            // GetDrawableResource is not supported right now but should be....
+            {
+                FudgetDrawInstructionList *list;
+                if (used_ids.Contains(id))
+                {
+                    LOG(Error, "Circular dependency when building Drawable. ID {1}. Memory will be leaked.", id);
+                    result = nullptr;
+                    break;
+                }
+                used_ids.Add(id);
+                if (FudgetStyle::GetDrawInstructionListForState(style, theme, states, id, true, list))
+                {
+                    FudgetDrawInstructionList *new_list = new FudgetDrawInstructionList;
+                    for (int iy = 0, sizy = (int)list->_list.size(); iy < sizy; ++iy)
+                    {
+                        FudgetDrawInstruction *cloned = CloneDrawInstructionListItem(style, theme, list->_list[iy], states, used_ids);
+                        if (cloned != nullptr)
+                            new_list->_list.push_back(cloned);
+                    }
+
+                    result = new_list;
+                    break;
+                }
+            }
 
             break;
         }
@@ -470,7 +504,7 @@ FudgetDrawInstruction* FudgetDrawable::CloneDrawInstructionListItem(FudgetStyle 
     return result;
 }
 
-FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
+FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const Array<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists)
 {
     if (control_owner == nullptr)
         return nullptr;
@@ -493,7 +527,7 @@ FudgetDrawable* FudgetDrawable::Create(FudgetControl *control_owner, FudgetPartP
 
     FudgetDrawable *result = New<FudgetDrawable>(SpawnParams(Guid::New(), FudgetDrawable::TypeInitializer));
     result->_owned = true;
-    result->_states.push_back(state);
+    result->_states.Add(state);
     FudgetDrawInstructionList *list = new FudgetDrawInstructionList;
     result->_lists.push_back(list);
     if (painter_owner != nullptr)

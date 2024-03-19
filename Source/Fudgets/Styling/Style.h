@@ -27,6 +27,7 @@ struct FudgetDrawColors;
 class FudgetDrawable;
 class FudgetStyle;
 struct FudgetPartPainterMapping;
+struct FudgetDrawInstructionList;
 
 struct FudgetStyleResource
 {
@@ -120,7 +121,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetResourceValue(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Variant &result);
 
@@ -222,7 +223,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetStyleResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetStyle* &result);
 
@@ -236,7 +237,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetPainterMappingResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetPartPainterMapping &result);
 
@@ -250,7 +251,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetStringResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) String &result);
 
@@ -264,7 +265,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetColorResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Color &result);
 
@@ -278,7 +279,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetDrawColorsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawColors &result);
 
@@ -292,7 +293,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetBoolResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) bool &result);
 
@@ -306,7 +307,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFloatResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) float &result);
 
@@ -319,7 +320,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFloat2Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float2 &result);
 
@@ -332,7 +333,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFloat3Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float3 &result);
 
@@ -345,7 +346,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFloat4Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Float4 &result);
 
@@ -358,7 +359,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetIntResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) int &result);
 
@@ -371,7 +372,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetInt2Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int2 &result);
 
@@ -384,7 +385,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetInt3Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int3 &result);
 
@@ -397,7 +398,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetInt4Resource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) Int4 &result);
 
@@ -411,7 +412,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     template<typename T>
     static bool GetEnumResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) T &result)
@@ -436,7 +437,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetPaddingResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetPadding &result);
 
@@ -449,7 +450,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetBorder &result);
 
@@ -462,7 +463,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetTextDrawResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetTextDrawSettings &result);
 
@@ -475,7 +476,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFontSettingsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetFontSettings &result);
 
@@ -488,7 +489,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetFontResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetFont &result);
 
@@ -501,7 +502,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetDrawAreaResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawArea &result);
 
@@ -514,7 +515,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetDrawBorderResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawBorder &result);
 
@@ -529,9 +530,22 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
-    API_FUNCTION() static bool GetDrawableResource(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result);
+    API_FUNCTION() static bool GetDrawableResource(FudgetStyle *style, FudgetTheme *theme, FudgetControl *control, FudgetPartPainter *drawable_owner, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result);
+
+    /// <summary>
+    /// Helper function for getting a list of instructions for a drawable resource, when another drawable is referencing a drawable index.
+    /// Used internally.
+    /// </summary>
+    /// <param name="style">The starting point to look up a value for the id. The parent styles are checked as well if nothing is found.</param>
+    /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
+    /// <param name="states">Only the drawable instruction list matching these states is returned.</param>
+    /// <param name="id">The id to look up for a resource value or resource override</param>
+    /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
+    /// <param name="result">Receives value associated with the id</param>
+    /// <returns>Whether a resource with the id was found and stored in result</returns>
+    static bool GetDrawInstructionListForState(FudgetStyle *style, FudgetTheme *theme, uint64 states, int id, bool check_theme, FudgetDrawInstructionList* &result);
 
     /// <summary>
     /// Retrieves the TextureBase resource by an id either from the style, one of its parent styles or the theme, checked in this order.
@@ -542,7 +556,7 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetTextureResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) TextureBase* &result);
 
@@ -555,13 +569,14 @@ public:
     /// <param name="theme">The theme to get the resource from for resource overrides or when the id wasn't found in the style.</param>
     /// <param name="id">The id to look up for a resource value or resource override</param>
     /// <param name="check_theme">Whether the theme is checked directly for the id if it was not found in any of the styles.</param>
-    /// <param name="result">Receives retrieved value associated with the id</param>
+    /// <param name="result">Receives value associated with the id</param>
     /// <returns>Whether a resource with the id was found and stored in result</returns>
     API_FUNCTION() static bool GetTextDrawSettingsResource(FudgetStyle *style, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetTextDrawSettings &result);
 
     static bool PainterMappingFromVariant(const Variant &var, FudgetPartPainterMapping &result);
     static bool StringFromVariant(const Variant &var, String &result);
-    static bool DrawableFromVariant(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result);
+    static bool DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, FudgetControl *control, FudgetPartPainter *drawable_owner, const Variant &var, FudgetDrawable* &result);
+    static bool DrawInstructionListForStateFromVariant(FudgetStyle *style, FudgetTheme *theme, uint64 states, const Variant &var, FudgetDrawInstructionList* &result);
     static bool AreaFromVariant(const Variant &var, FudgetDrawArea &result);
     static bool BorderFromVariant(const Variant &var, FudgetDrawBorder &result);
     static bool TextureFromVariant(const Variant &var, TextureBase* &result);

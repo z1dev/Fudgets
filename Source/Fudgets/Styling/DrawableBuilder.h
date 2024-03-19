@@ -13,15 +13,33 @@ class FudgetPartPainter;
 enum class FudgetVisualControlState : uint64;
 
 
+
+/// <summary>
+/// Stores an index that identifies a drawable's instruction list in the main themes.
+/// </summary>
+API_STRUCT()
+struct FUDGETS_API FudgetDrawableIndex
+{
+    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawableIndex);
+
+    /// <summary>
+    /// Index of the draw instructions for drawables in FudgetThemes.
+    /// </summary>
+    API_FIELD() int Index;
+};
+
+
 enum class FudgetDrawInstructionType
 {
     Blur,
     DrawArea,
     DrawBorder,
-    Resource,
+    DrawableIndex,
     FillColor,
     Padding,
-    InstructionList
+    InstructionList,
+
+    Resource,
 };
 
 struct FudgetDrawInstruction
@@ -95,6 +113,17 @@ struct FudgetDrawInstructionDrawBorder : public FudgetDrawInstruction
     FudgetDrawInstructionDrawBorder(const FudgetDrawBorder &draw_border) : Base(FudgetDrawInstructionType::DrawBorder), _draw_border(draw_border) {}
     FudgetDrawBorder _draw_border;
 };
+
+struct FudgetDrawInstructionDrawableIndex : public FudgetDrawInstruction
+{
+    using Base = FudgetDrawInstruction;
+    FudgetDrawInstructionDrawableIndex() : Base(FudgetDrawInstructionType::DrawableIndex), _index({ 0 })  {}
+    FudgetDrawInstructionDrawableIndex(const FudgetDrawableIndex &index) : Base(FudgetDrawInstructionType::DrawBorder), _index(index) {}
+    FudgetDrawableIndex _index;
+};
+
+
+
 API_CLASS()
 class FUDGETS_API FudgetDrawable : public ScriptingObject
 {
@@ -118,6 +147,15 @@ public:
     /// <param name="states">State flags to match</param>
     /// <returns>Index to the first matching state in the drawable or -1 on failure</returns>
     API_FUNCTION() int FindMatchingState(uint64 states) const;
+
+    /// <summary>
+    /// Returns the index of a state within the drawable that matches the passed state flags. The index of the first
+    /// state that fully matches is returned. The 0 state in the drawable matches any combination of state flags.
+    /// </summary>
+    /// <param name="drawable_states">List of state flags of a drawable, each representing a single state for the instructions at the same index</param>
+    /// <param name="states">State flags to match</param>
+    /// <returns>Index to the first matching state in the drawable or -1 on failure</returns>
+    API_FUNCTION() static int FindMatchingState(const Array<uint64> &drawable_states, uint64 states);
 
     /// <summary>
     /// Initializes a rectangular drawable from a color.
@@ -158,9 +196,12 @@ private:
     /// </summary>
     /// <param name="control_owner">Control responsible for destroying the drawable. If null, painter_owner must be set.</param>
     /// <param name="painter_owner">Painter tied to the drawable whose control is responsible for destroying it. If null, control_owner must be set.</param>
-    /// <param name="drawlist">The draw instruction list</param>
+    /// <param name="style">The style to fetch resources with if the instruction list contains references.</param>
+    /// <param name="theme">The theme to fetch resources with if the instruction list contains references.</param>
+    /// <param name="statelist">The state flags for each instruction list in lists</param>
+    /// <param name="lists">A list of draw instruction lists, each corresponding to one set of state flags.</param>
     /// <returns>The created drawable</returns>
-    static FudgetDrawable* FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
+    static FudgetDrawable* FromDrawInstructionList(FudgetControl *control_owner, FudgetPartPainter *painter_owner, FudgetStyle *style, FudgetTheme *theme, const Array<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &lists);
 
     /// <summary>
     /// Checks if there are any int ids of fudget resources in the list, which would force the drawable to create a new
@@ -170,12 +211,12 @@ private:
     /// <returns>Whether there are no int ids in the list, and then it can be used without taking ownership.</returns>
     static bool NoExternalResources(FudgetDrawInstructionList* drawlist);
 
-    static FudgetDrawInstruction* CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item, uint64 states);
+    static FudgetDrawInstruction* CloneDrawInstructionListItem(FudgetStyle *style, FudgetTheme *theme, FudgetDrawInstruction *item, uint64 states, HashSet<int> &used_ids);
 
     // Creates a new drawable from instructions. If the instructions don't contain referenced ids then the
     // ownership of the lists stays with the caller. Otherwise a copy is made and the drawable is responsible for deleting it.
     // Passing in at least the control owner is necessary for destroying the drawable.
-    static FudgetDrawable* Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
+    static FudgetDrawable* Create(FudgetControl *control_owner, FudgetPartPainter *painter_owner, const Array<uint64> &states, const std::vector<FudgetDrawInstructionList*> &lists);
     // Creates a new drawable with a single state and list allocated for an item. The list is deleted when the drawable is destroyed.
     // Use this when calling from one of the public From*** functions that need to add a single instruction.
     // Passing in at least the control owner is necessary for destroying the drawable.
@@ -189,25 +230,11 @@ private:
 
     bool _owned;
 
-    std::vector<uint64> _states;
+    Array<uint64> _states;
     std::vector<FudgetDrawInstructionList*> _lists;
 
     friend class FudgetStyle;
     friend class FudgetControl;
-};
-
-/// <summary>
-/// Stores an index that identifies a drawable's instruction list in the main themes.
-/// </summary>
-API_STRUCT()
-struct FUDGETS_API FudgetDrawableIndex
-{
-    DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawableIndex);
-
-    /// <summary>
-    /// Index of the draw instructions for drawables in FudgetThemes.
-    /// </summary>
-    API_FIELD() int Index;
 };
 
 /// <summary>
@@ -344,7 +371,7 @@ private:
 
     static BuildMode _mode;
 
-    static std::vector<uint64> _states;
+    static Array<uint64> _states;
     static std::vector<FudgetDrawInstructionList*> _state_list;
     static FudgetDrawInstructionList *_data;
     static std::vector<FudgetDrawInstructionList*> _sub_data;

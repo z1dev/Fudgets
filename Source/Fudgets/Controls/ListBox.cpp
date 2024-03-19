@@ -183,6 +183,9 @@ void FudgetListBox::OnStyleInitialize()
 
 void FudgetListBox::OnDraw()
 {
+    if (_dirty_extents)
+        RequestLayout();
+
     Rectangle bounds = GetBounds();
     if (_frame_painter != nullptr)
         _frame_painter->Draw(this, bounds, GetVisualState());
@@ -344,12 +347,7 @@ Int2 FudgetListBox::GetItemSize(int item_index)
 {
     if (_data == nullptr || _fixed_item_size || _item_heights[item_index] < 0)
     {
-        if (_item_painter != nullptr && _data != nullptr && _fixed_item_size && _default_size.Y <= 0)
-        {
-            _default_size = _item_painter->Measure(this, item_index, _data, 0);
-            _default_size.X = (int)GetContentPadding().Padded(GetBounds()).GetWidth();
-        }
-
+        EnsureDefaultSize();
         return _default_size;
     }
 
@@ -537,11 +535,30 @@ Rectangle FudgetListBox::GetScrollBarBounds() const
     return r;
 }
 
+void FudgetListBox::EnsureDefaultSize()
+{
+    if (_item_painter != nullptr && _data != nullptr && _fixed_item_size && _default_size.Y <= 0 && _data->GetCount() > 0)
+    {
+        _default_size = _item_painter->Measure(this, 0, _data, 0);
+        _default_size.X = (int)GetContentPadding().Padded(GetBounds()).GetWidth();
+
+        MarkExtentsDirty();
+        RecalculateListExtents();
+    }
+}
+
 void FudgetListBox::RecalculateListExtents()
 {
+    if (!_dirty_extents)
+        return;
+
+    EnsureDefaultSize();
+
     if (_fixed_item_size)
     {
         _list_extents = Int2(_default_size.X, _default_size.Y * _data->GetCount());
+        _v_scrollbar->SetScrollRange(_list_extents.Y);
+        _dirty_extents = false;
         return;
     }
 
@@ -556,5 +573,6 @@ void FudgetListBox::RecalculateListExtents()
     }
 
     _v_scrollbar->SetScrollRange(_list_extents.Y);
+    _dirty_extents = false;
 }
 

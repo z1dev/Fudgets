@@ -12,12 +12,25 @@ namespace Fudgets
         /// styles and controls that can use it.
         /// Warning: This function accepts any enum value, but only works with int backed enums
         /// </summary>
-        /// <typeparam name="T">Enum type with int backing used as the id</typeparam>
+        /// <typeparam name="T">An enum type with int backing used as the id</typeparam>
         /// <param name="enum_value">Unique id of the resource</param>
         /// <param name="resource">The value of the resource</param>
         public unsafe void SetResource<T>(T enum_value, object resource) where T: unmanaged, Enum
         {
             SetResource(*(int*)(&enum_value), resource);
+        }
+
+        /// <summary>
+        /// Makes an id act like it was a different id. When the original id is requested, the resource at the other id will be
+        /// retreived instead.
+        /// </summary>
+        /// <typeparam name="T1">An enum type with int backing used as the id</typeparam>
+        /// <typeparam name="T2">An enum type with int backing used as the other id</typeparam>
+        /// <param name="id">The original id</param>
+        /// <param name="forward_id">The replacement id that is checked for the resource instead of the original id</param>
+        public unsafe void SetForwarding<T1, T2>(T1 id, T2 forward_id) where T1 : unmanaged, Enum where T2 : unmanaged, Enum
+        {
+            SetForwarding(*(int*)(&id), *(int*)(&forward_id));
         }
 
         /// <summary>

@@ -514,12 +514,24 @@ bool FudgetStyle::GetDrawBorderResource(FudgetStyle *style, FudgetTheme *theme, 
     return false;
 }
 
-bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
+bool FudgetStyle::GetDrawableResource(FudgetStyle *style, FudgetTheme *theme, FudgetControl *control, FudgetPartPainter *drawable_owner, int id, bool check_theme, API_PARAM(Out) FudgetDrawable* &result)
 {
     Variant var;
     if (GetResourceValue(style, theme, id, check_theme, var))
     {
-        if (DrawableFromVariant(style, control, drawable_owner, theme, var, result))
+        if (DrawableFromVariant(style, theme, control, drawable_owner, var, result))
+            return true;
+    }
+    result = nullptr;
+    return false;
+}
+
+bool FudgetStyle::GetDrawInstructionListForState(FudgetStyle *style, FudgetTheme *theme, uint64 states, int id, bool check_theme, FudgetDrawInstructionList* &result)
+{
+    Variant var;
+    if (GetResourceValue(style, theme, id, check_theme, var))
+    {
+        if (DrawInstructionListForStateFromVariant(style, theme, states, var, result))
             return true;
     }
     result = nullptr;
@@ -743,7 +755,7 @@ bool FudgetStyle::BorderFromVariant(const Variant &var, FudgetDrawBorder &result
     return false;
 }
 
-bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetControl *control, FudgetPartPainter *drawable_owner, FudgetTheme *theme, const Variant &var, FudgetDrawable* &result)
+bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetTheme *theme, FudgetControl *control, FudgetPartPainter *drawable_owner, const Variant &var, FudgetDrawable* &result)
 {
     if (var.Type.Type == VariantType::Color)
     {
@@ -780,16 +792,39 @@ bool FudgetStyle::DrawableFromVariant(FudgetStyle *style, FudgetControl *control
         const FudgetDrawableIndex *drawindex = var.AsStructure<FudgetDrawableIndex>();
         if (drawindex != nullptr)
         {
-            std::vector<uint64> states;
+            Array<uint64> statelist;
             std::vector<FudgetDrawInstructionList*> lists;
-            if (!FudgetThemes::GetDrawInstructionList(drawindex->Index, states, lists))
+            if (!FudgetThemes::GetDrawInstructionList(drawindex->Index, statelist, lists))
                 return false;
-            result = FudgetDrawable::FromDrawInstructionList(control, drawable_owner, style, theme, states, lists);
+            result = FudgetDrawable::FromDrawInstructionList(control, drawable_owner, style, theme, statelist, lists);
             return true;
         }
     }
 
     return false;
+}
+
+bool FudgetStyle::DrawInstructionListForStateFromVariant(FudgetStyle *style, FudgetTheme *theme, uint64 states, const Variant &var, FudgetDrawInstructionList* &result)
+{
+    if (var.Type.Type != VariantType::Structure)
+    {
+        result = nullptr;
+        return false;
+    }
+
+    const FudgetDrawableIndex *drawindex = var.AsStructure<FudgetDrawableIndex>();
+    if (drawindex == nullptr)
+        return false;
+
+    Array<uint64> statelist;
+    std::vector<FudgetDrawInstructionList*> lists;
+    if (!FudgetThemes::GetDrawInstructionList(drawindex->Index, statelist, lists))
+        return false;
+    int index = FudgetDrawable::FindMatchingState(statelist, states);
+    if (index < 0)
+        return false;
+    result = lists[index];
+    return true;
 }
 
 bool FudgetStyle::TextureFromVariant(const Variant &var, TextureBase* &result)

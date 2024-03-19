@@ -409,17 +409,17 @@ private:
     /// </summary>
     /// <param name="drawlist">Draw instruction list to register.</param>
     /// <returns>Index of the registered draw instructions list, or -1 on error.</returns>
-    static int RegisterDrawInstructionList(const std::vector<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist);
+    static int RegisterDrawInstructionList(const Array<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist);
     /// <summary>
     /// Returns the draw instruction list registered with RegisterDrawInstructionList by its index
     /// </summary>
-    static bool GetDrawInstructionList(int drawlist_index, std::vector<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result);
+    static bool GetDrawInstructionList(int drawlist_index, Array<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result);
 
     struct StatedDrawInstructions
     {
-        StatedDrawInstructions(const std::vector<uint64> &states, const std::vector<FudgetDrawInstructionList*> &instructions) : _states(states), _instructions(instructions) {}
+        StatedDrawInstructions(const Array<uint64> &states, const std::vector<FudgetDrawInstructionList*> &instructions) : _states(states), _instructions(instructions) {}
 
-        std::vector<uint64> _states;
+        Array<uint64> _states;
         std::vector<FudgetDrawInstructionList*> _instructions;
     };
 

@@ -1339,11 +1339,11 @@ bool FudgetControl::GetStyleDrawable(int id, FudgetPartPainter *drawable_owner, 
 {
     FudgetStyle *style = GetStyle();
     if (style != nullptr)
-        return FudgetStyle::GetDrawableResource(style, this, drawable_owner, GetActiveTheme(), id, false, result);
+        return FudgetStyle::GetDrawableResource(style, GetActiveTheme(), this, drawable_owner, id, false, result);
 
     FudgetStyle *class_style = GetClassStyle();
     if (class_style != nullptr)
-        return FudgetStyle::GetDrawableResource(class_style, this, drawable_owner, GetActiveTheme(), id, false, result);
+        return FudgetStyle::GetDrawableResource(class_style, GetActiveTheme(), this, drawable_owner, id, false, result);
 
     result = nullptr;
     return false;

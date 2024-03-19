@@ -191,6 +191,13 @@ public:
     bool IsItemSelected(int item_index) const override;
     /// <inheritdoc />
     Rectangle GetItemRect(int item_index) override;
+
+    /// <summary>
+    /// Causes recalculation of the size required by all the items in the listbox when layouting is next
+    /// requested or drawing.
+    /// </summary>
+    /// <returns></returns>
+    API_FUNCTION() void MarkExtentsDirty() { _dirty_extents = true; }
 protected:
 
     /// <inheritdoc />
@@ -232,8 +239,7 @@ private:
     FudgetPadding GetContentPadding() const;
     Rectangle GetScrollBarBounds() const;
 
-    void MarkExtentsDirty() { _dirty_extents = true; }
-
+    void EnsureDefaultSize();
     void RecalculateListExtents();
 
     FudgetScrollBarComponent *_v_scrollbar;

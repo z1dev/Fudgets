@@ -213,8 +213,8 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource((int)FudgetThemePartIds::ScrollBarFirstHorizontalButton + 1, Color::Black);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarFirstVerticalButton, Color::Black);
     main_theme->SetResource((int)FudgetThemePartIds::ScrollBarFirstVerticalButton + 1, Color::Black);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalTrack, Color::LightGray);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
+    //main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalTrack, Color::LightGray);
+    //main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarIsThumbSizeFixed, false);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 8);
 
@@ -630,16 +630,16 @@ FudgetPartPainter* FudgetThemes::CreatePainter(const StringAnsi &painter_name)
     return (FudgetPartPainter*)type.GetType().Script.Spawn(ScriptingObjectSpawnParams(Guid::New(), type));
 }
 
-int FudgetThemes::RegisterDrawInstructionList(const std::vector<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist)
+int FudgetThemes::RegisterDrawInstructionList(const Array<uint64> &statelist, const std::vector<FudgetDrawInstructionList*> &drawlist)
 {
-    if (drawlist.empty() || statelist.size() != drawlist.size())
+    if (drawlist.empty() || statelist.Count() != drawlist.size())
         return -1;
 
     _data->_draw_list.push_back(StatedDrawInstructions(statelist, drawlist));
     return (int)_data->_draw_list.size() - 1;
 }
 
-bool FudgetThemes::GetDrawInstructionList(int drawlist_index, std::vector<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result)
+bool FudgetThemes::GetDrawInstructionList(int drawlist_index, Array<uint64> &states_result, std::vector<FudgetDrawInstructionList*> &list_result)
 {
     if (drawlist_index < 0 || drawlist_index >= _data->_draw_list.size())
         return false;
