@@ -151,7 +151,7 @@ FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_p
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
     _data->RegisterDataConsumer(_data_proxy);
     _v_scrollbar = New<FudgetScrollBarComponent>(SpawnParams(Guid::New(), FudgetScrollBarComponent::TypeInitializer));
-    _v_scrollbar->Initialize(this);
+    _v_scrollbar->Initialize(this, this, FudgetScrollBarOrientation::Vertical);
 }
 
 FudgetListBox::~FudgetListBox()
@@ -167,16 +167,8 @@ void FudgetListBox::OnInitialize()
 
 void FudgetListBox::OnStyleInitialize()
 {
-    Int2 up_left = GetFramePadding().UpperLeft();
-
-    if (_frame_painter != nullptr)
-        _top_item_pos -= up_left;
-
     _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
     _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
-
-    if (_frame_painter != nullptr)
-        _top_item_pos += up_left;
 
     _v_scrollbar->StyleInitialize();
 }
@@ -224,8 +216,13 @@ void FudgetListBox::OnDraw()
 
 FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
-    if (button != MouseButton::Left)
+    if (_v_scrollbar->MouseDown(pos, global_pos, button, double_click))
         return FudgetInputResult::Consume;
+
+    if (button != MouseButton::Left)
+    {
+        return FudgetInputResult::Consume;
+    }
 
     _hovered_index = -1;
 
@@ -234,15 +231,20 @@ FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, Mous
 
 bool FudgetListBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
+    if (_v_scrollbar->MouseUp(pos, global_pos, button))
+        return true;
+
     if (button == MouseButton::Left)
     {
-
     }
     return true;
 }
 
 void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
+    if (_v_scrollbar->MouseMove(pos, global_pos))
+        return;
+
     if (MouseIsCaptured())
     {
 
@@ -255,6 +257,8 @@ void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
 
 void FudgetListBox::OnMouseLeave()
 {
+    if (_v_scrollbar->MouseLeave())
+        return;
     _hovered_index = -1;
 }
 
@@ -266,6 +270,78 @@ bool FudgetListBox::WantsNavigationKey(KeyboardKeys key)
 FudgetInputResult FudgetListBox::OnKeyDown(KeyboardKeys key)
 {
     return FudgetInputResult::Consume;
+}
+
+void FudgetListBox::OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking)
+{
+    if (_default_size.Y == -1 || scrollbar != _v_scrollbar)
+        return;
+    
+    Int2 topleft = GetContentPadding().UpperLeft();
+    int32 scroll_pos = (int32)scrollbar->GetScrollPos();
+    if (_fixed_item_size)
+    {
+        
+        _top_item = scroll_pos / _default_size.Y;
+        _top_item_pos.Y = _top_item * _default_size.Y;
+        if (_snap_top_item)
+            _scroll_pos.Y = _top_item_pos.Y;
+        else
+            _scroll_pos.Y = int32(scroll_pos);
+        return;
+    }
+
+    int count = _data->GetCount();
+
+    while (_top_item > 0 && _top_item_pos.Y > scroll_pos)
+    {
+        _top_item_pos.Y -= GetItemSize(--_top_item).Y;
+    }
+
+    int item_size = GetItemSize(_top_item).Y;
+    while (_top_item < count - 1 && _top_item_pos.Y + item_size <= scroll_pos)
+    {
+        _top_item_pos.Y += item_size;
+        item_size = GetItemSize(++_top_item).Y;
+    }
+
+    if (_snap_top_item)
+        _scroll_pos.Y = _top_item_pos.Y;
+    else
+        _scroll_pos.Y = int32(scroll_pos);
+}
+
+void FudgetListBox::OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click)
+{
+}
+
+void FudgetListBox::OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track)
+{
+
+}
+
+void FudgetListBox::OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click)
+{
+    if (scrollbar != _v_scrollbar)
+        return;
+    if (before_track)
+        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() - _v_scrollbar->GetPageSize());
+    else
+        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() + _v_scrollbar->GetPageSize());
+
+}
+
+void FudgetListBox::OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track)
+{
+
+}
+
+void FudgetListBox::OnScrollBarShown(FudgetScrollBarComponent *scrollbar)
+{
+}
+
+void FudgetListBox::OnScrollBarHidden(FudgetScrollBarComponent *scrollbar)
+{
 }
 
 void FudgetListBox::SetDataProvider(FudgetStringListProvider *data)
@@ -316,7 +392,13 @@ void FudgetListBox::SetItemsHaveFixedSize(bool value)
 
 int FudgetListBox::ItemIndexAt(Float2 point)
 {
-    Int2 pt = Int2((int)point.X, (int)point.Y) - _top_item_pos;
+    if (!GetContentPadding().Padded(GetBounds()).Contains(point))
+        return -1;
+
+    Int2 pt = Int2((int)point.X, (int)point.Y) - GetContentPadding().UpperLeft() + _scroll_pos;
+
+    if (_fixed_item_size)
+        return pt.Y / _default_size.Y;
 
     int index = _top_item;
     int top_pos = _top_item_pos.Y;
@@ -345,9 +427,10 @@ bool FudgetListBox::IsItemSelected(int item_index) const
 
 Int2 FudgetListBox::GetItemSize(int item_index)
 {
+    EnsureDefaultSize();
+
     if (_data == nullptr || _fixed_item_size || _item_heights[item_index] < 0)
     {
-        EnsureDefaultSize();
         return _default_size;
     }
 
@@ -360,11 +443,17 @@ Int2 FudgetListBox::GetItemSize(int item_index)
 Rectangle FudgetListBox::GetItemRect(int item_index)
 {
     int count = _data->GetCount();
-    if (item_index < 0 || item_index > count)
+    if (item_index < 0 || item_index >= count)
         return Rectangle::Empty;
 
+    Int2 topleft = GetContentPadding().UpperLeft();
+    if (_fixed_item_size)
+    {
+        return Rectangle(Float2((float)topleft.X, (float)topleft.Y + item_index * _default_size.Y - _scroll_pos.Y), _default_size);
+    }
+
     int index = _top_item;
-    Int2 pos = _top_item_pos;
+    Int2 pos = _top_item_pos - _scroll_pos + topleft;
     Int2 pos_size = GetItemSize(index);
 
     while (item_index < index)
@@ -381,13 +470,21 @@ Rectangle FudgetListBox::GetItemRect(int item_index)
     return Rectangle(pos, pos_size);
 }
 
+void FudgetListBox::SetSnapTopItem(bool value)
+{
+    if (_snap_top_item == value)
+        return;
+    _snap_top_item = value;
+    if (value)
+        _scroll_pos.Y = _top_item_pos.Y;
+    MarkExtentsDirty();
+}
+
 void FudgetListBox::RequestLayout()
 {
     if (_dirty_extents)
         RecalculateListExtents();
     Base::RequestLayout();
-    _v_scrollbar->SetBounds(GetScrollBarBounds());
-    _v_scrollbar->SetPageSize((int)GetContentPadding().Padded(GetBounds()).Size.Y);
 }
 
 void FudgetListBox::DataChangeBegin()
@@ -543,36 +640,73 @@ void FudgetListBox::EnsureDefaultSize()
         _default_size.X = (int)GetContentPadding().Padded(GetBounds()).GetWidth();
 
         MarkExtentsDirty();
-        RecalculateListExtents();
+        //RecalculateListExtents();
     }
 }
 
 void FudgetListBox::RecalculateListExtents()
 {
-    if (!_dirty_extents)
+    if (!_dirty_extents || _data == nullptr)
+    {
+        _dirty_extents = false;
         return;
+    }
 
     EnsureDefaultSize();
 
     if (_fixed_item_size)
     {
         _list_extents = Int2(_default_size.X, _default_size.Y * _data->GetCount());
-        _v_scrollbar->SetScrollRange(_list_extents.Y);
-        _dirty_extents = false;
-        return;
+    }
+    else
+    {
+        _list_extents = Int2(_default_size.X, 0);
+        for (int ix = 0, siz = (int)_item_heights.size(); ix < siz; ++ix)
+        {
+            int h = _item_heights[ix];
+            if (h == -1)
+                _list_extents.Y += _default_size.Y;
+            else
+                _list_extents.Y += _item_heights[ix];
+        }
     }
 
-    _list_extents = Int2(_default_size.X, 0);
-    for (int ix = 0, siz = (int)_item_heights.size(); ix < siz; ++ix)
+    _dirty_extents = false;
+
+    Rectangle bounds = GetContentPadding().Padded(GetBounds());
+    if (_snap_top_item)
     {
-        int h = _item_heights[ix];
-        if (h == -1)
-            _list_extents.Y += _default_size.Y;
+        int height = (int)bounds.Size.Y;
+        int sum = 0;
+        int count = _data->GetCount();
+
+        int last_top_height = 0;
+
+        if (_fixed_item_size)
+        {
+            sum = Math::Min(count * _default_size.Y, _default_size.Y * ((height + _default_size.Y - 1) / _default_size.Y));
+            last_top_height = _default_size.Y;
+        }
         else
-            _list_extents.Y += _item_heights[ix];
+        {
+            int pos = count - 1;
+            while (pos >= 0 && sum < height)
+            {
+                last_top_height = GetItemSize(pos--).Y;
+                sum += last_top_height;
+            }
+        }
+        if (sum > height)
+        {
+            if (sum > last_top_height)
+                _list_extents.Y += last_top_height;
+            else
+                _list_extents.Y += sum - height;
+        }
     }
 
     _v_scrollbar->SetScrollRange(_list_extents.Y);
-    _dirty_extents = false;
+    _v_scrollbar->SetBounds(GetScrollBarBounds());
+    _v_scrollbar->SetPageSize((int)bounds.Size.Y);
 }
 

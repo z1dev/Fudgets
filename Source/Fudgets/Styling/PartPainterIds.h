@@ -358,7 +358,8 @@ enum class FudgetScrollBarPartIds
 {
     First = 1500,
 
-    Painter = First,
+    HorzPainter = First,
+    VertPainter,
 
     Width,
     IsThumbSizeFixed,

@@ -1,30 +1,18 @@
 #pragma once
 
 #include "PartPainters.h"
+#include "../../Controls/ScrollBar.h"
 
 class FudgetDrawable;
+enum class FudgetScrollBarOrientation : uint8;
 
-
-/// <summary>
-/// Horizontal or vertical orientation of a scrollbar.
-/// </summary>
-API_ENUM()
-enum class FudgetScrollBarOrientation : uint8
-{
-    /// <summary>
-    /// Scrollbar for horizontal scrolling
-    /// </summary>
-    Horizontal,
-    /// <summary>
-    /// Scrollbar for vertical scrolling
-    /// </summary>
-    Vertical,
-};
 
 API_STRUCT(Attributes)
 struct FUDGETS_API FudgetScrollBarPainterMapping
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetScrollBarPainterMapping);
+
+    API_FIELD() FudgetScrollBarOrientation Orientation;
 
     API_FIELD() int Width;
     API_FIELD() int IsThumbSizeFixed;
@@ -86,6 +74,7 @@ public:
     /// Returns the position and size of the parts of the scrollbar based on the scrollbar's current values.
     /// </summary>
     /// <param name="control">The control to draw the scrollbar in.</param>
+    /// <param name="orientation">The scrollbar's track orientation where the thumb is moving.</param>
     /// <param name="bounds">The bounding rectangle where the scrollbar would be drawn.</param>
     /// <param name="range">Maximum value of the scrollbar if the page size is ignored.</param>
     /// <param name="page_size">Size of the visible page that is represented by the thumb button's size when it is not fixed sized.</param>
@@ -144,9 +133,6 @@ public:
     /// <param name="bounds">Bounds of the button.</param>
     /// <param name="states">The current state of the button.</param>
     API_FUNCTION() virtual void DrawButton(FudgetControl *control, int button_index, const Rectangle &bounds, uint64 states);
-
-protected:
-    FudgetScrollBarOrientation _orientation;
 private:
 
     FORCE_INLINE float Relevant(Float2 size) const { return _orientation == FudgetScrollBarOrientation::Horizontal ? size.X : size.Y; }
@@ -159,6 +145,8 @@ private:
     int _thumb_size;
     int _min_thumb_size;
 
+    FudgetScrollBarOrientation _orientation;
+
     FudgetDrawable *_bg_draw;
     FudgetDrawable *_frame_draw;
     FudgetDrawable *_thumb_draw;
@@ -170,29 +158,4 @@ private:
     int _after_btn_count;
     FudgetDrawable *_btn_draw[20];
     int _btn_size[20] = { 0 };
-};
-
-/// <summary>
-/// Painter for scrollbar components and scrollbar controls
-/// </summary>
-API_CLASS()
-class FUDGETS_API FudgetHorzScrollBarPainter : public FudgetScrollBarPainter
-{
-    using Base = FudgetScrollBarPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetHorzScrollBarPainter);
-public:
-
-};
-
-
-/// <summary>
-/// Painter for scrollbar components and scrollbar controls
-/// </summary>
-API_CLASS()
-class FUDGETS_API FudgetVertScrollBarPainter : public FudgetScrollBarPainter
-{
-    using Base = FudgetScrollBarPainter;
-    DECLARE_SCRIPTING_TYPE(FudgetVertScrollBarPainter);
-public:
-
 };

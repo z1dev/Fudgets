@@ -55,6 +55,7 @@
 #include "Styling/Themes.h"
 
 #include "DataInterfaces.h"
+#include "Controls/ScrollBar.h"
 
 
 class FudgetContainer;
@@ -414,7 +415,7 @@ enum class FudgetInputResult
 /// Base class for controls, including containers and panels.
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
+class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable, public IFudgetScollBarOwner
 {
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetControl);
@@ -517,6 +518,25 @@ public:
     /// <param name="position">The position was changed by the parent layout</param>
     /// <param name="size">The size was changed by the parent layout</param>
     API_FUNCTION() virtual void OnPositionOrSizeChanged(bool position, bool size) {}
+
+    /// <inheritdoc />
+    void OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking) override {}
+    /// <inheritdoc />
+    void OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click) override {}
+    /// <inheritdoc />
+    void OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track) override {}
+    /// <inheritdoc />
+    void OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click) override {}
+    /// <inheritdoc />
+    void OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track) override {}
+    /// <inheritdoc />
+    void OnScrollBarThumbPressed(FudgetScrollBarComponent *scrollbar, bool double_click) override {}
+    /// <inheritdoc />
+    void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override {}
+    /// <inheritdoc />
+    void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override {}
+    /// <inheritdoc />
+    void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override {}
 
     /// <summary>
     /// Fetches the parent who is managing this control. The parent is also responsible for its destruction.

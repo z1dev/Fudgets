@@ -17,6 +17,7 @@ void FudgetScrollBarPainter::Initialize(FudgetControl *control, const Variant &m
 {
     Mapping res = *mapping.AsStructure<Mapping>();
 
+    _orientation = res.Orientation;
     if (!GetMappedInt(control, res.Width, _width))
         _width = 0;
     if (!GetMappedBool(control, res.IsThumbSizeFixed, _thumb_size_fixed))
@@ -186,18 +187,4 @@ void FudgetScrollBarPainter::DrawThumb(FudgetControl *control, const Rectangle &
 void FudgetScrollBarPainter::DrawButton(FudgetControl *control, int button_index, const Rectangle &bounds, uint64 states)
 {
     control->DrawDrawable(_btn_draw[button_index], _btn_draw[button_index]->FindMatchingState(states), bounds);
-}
-
-// FudgetHorzScrollBarPainter
-
-FudgetHorzScrollBarPainter::FudgetHorzScrollBarPainter(const SpawnParams &params) : Base(params)
-{
-    _orientation = FudgetScrollBarOrientation::Horizontal;
-}
-
-// FudgetVertScrollBarPainter
-
-FudgetVertScrollBarPainter::FudgetVertScrollBarPainter(const SpawnParams &params) : Base(params)
-{
-    _orientation = FudgetScrollBarOrientation::Vertical;
 }

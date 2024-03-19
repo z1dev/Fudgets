@@ -136,6 +136,25 @@ public:
     /// <inheritdoc />
     FudgetInputResult OnKeyDown(KeyboardKeys key) override;
 
+    /// <inheritdoc />
+    void OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking) override;
+    /// <inheritdoc />
+    void OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click) override;
+    /// <inheritdoc />
+    void OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track) override;
+    /// <inheritdoc />
+    void OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click) override;
+    /// <inheritdoc />
+    void OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track) override;
+    /// <inheritdoc />
+    void OnScrollBarThumbPressed(FudgetScrollBarComponent *scrollbar, bool double_click) override {}
+    /// <inheritdoc />
+    void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override {}
+    /// <inheritdoc />
+    void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override;
+    /// <inheritdoc />
+    void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override;
+
     /// <summary>
     /// Gets the data provider currently set for this list control.
     /// </summary>
@@ -193,6 +212,19 @@ public:
     Rectangle GetItemRect(int item_index) override;
 
     /// <summary>
+    /// When scrolling, the top item might scroll out of view in a way that only part of it is visible. When this value is
+    /// true, the topmost visible item is always fully shown.
+    /// </summary>
+    /// <returns>Whether the top item is always fully visible or might be covered in part</returns>
+    API_PROPERTY() bool GetSnapTopItem() const { return _snap_top_item; }
+    /// <summary>
+    /// When scrolling, the top item might scroll out of view in a way that only part of it is visible. When this value is
+    /// true, the topmost visible item is always fully shown.
+    /// </summary>
+    /// <param name="value">Set whether the top item should always be fully visible or is allowed to be covered in part</param>
+    API_PROPERTY() void SetSnapTopItem(bool value);
+
+    /// <summary>
     /// Causes recalculation of the size required by all the items in the listbox when layouting is next
     /// requested or drawing.
     /// </summary>
@@ -238,6 +270,8 @@ private:
     FudgetPadding GetFramePadding() const;
     FudgetPadding GetContentPadding() const;
     Rectangle GetScrollBarBounds() const;
+    FORCE_INLINE Float2 GetPosInScrollBar(Float2 pos) const { return pos - _v_scrollbar->GetBounds().GetUpperLeft(); }
+    FORCE_INLINE Int2 GetPosInScrollBar(Int2 pos) const { Float2 p = (pos - _v_scrollbar->GetBounds().GetUpperLeft()); return Int2((int)p.X, (int)p.Y); }
 
     void EnsureDefaultSize();
     void RecalculateListExtents();
