@@ -216,7 +216,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     //main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalTrack, Color::LightGray);
     //main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarIsThumbSizeFixed, false);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 8);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 16);
 
     FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
     FudgetDrawableBuilder::BeginSubData();

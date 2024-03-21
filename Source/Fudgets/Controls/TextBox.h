@@ -109,6 +109,9 @@ public:
     Int2 GetLayoutMaxSize() const override;
 
     /// <inheritdoc />
+    void OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking) override;
+
+    /// <inheritdoc />
     bool OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size) override;
 
     /// <summary>
@@ -200,6 +203,9 @@ protected:
     /// Padding of the text with the frame padding.
     /// </summary>
     API_PROPERTY() FudgetPadding GetCombinedPadding() const;
+
+    /// <inheritdoc />
+    void RequestScrollExtents() override;
 private:
     //FudgetPadding GetInnerPadding() const;
 
@@ -231,7 +237,7 @@ private:
     // bounds of the control.
     int _character_scroll_count;
 
-    // Make the line snap to the top, letting partial lines show on the bottom when scrolling down.
+    // Lines snap to the top, letting partial lines show on the bottom when scrolling down.
     bool _snap_top_line;
 
     // Tytpe of auto sizing or normal sizing

@@ -19,7 +19,8 @@ FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layou
 
 FudgetComboBox::~FudgetComboBox()
 {
-    Delete(_list_data);
+    if (_list_data != nullptr)
+        Delete(_list_data);
 }
 
 void FudgetComboBox::OnInitialize()

@@ -11,6 +11,19 @@ FudgetDataConsumerRegistry::FudgetDataConsumerRegistry(const SpawnParams &params
 
 }
 
+FudgetDataConsumerRegistry::~FudgetDataConsumerRegistry()
+{
+    for (IFudgetDataConsumer *consumer : _consumers)
+    {
+        ScriptingObject *obj = FromInterface(consumer, IFudgetDataConsumer::TypeInitializer);
+        if (obj != nullptr)
+        {
+            obj->Deleted.Unbind<FudgetDataConsumerRegistry, &FudgetDataConsumerRegistry::ScriptingObjectConsumerDestroyed>(this);
+        }
+    }
+    _consumers.Clear();
+}
+
 void FudgetDataConsumerRegistry::RegisterDataConsumer(IFudgetDataConsumer *consumer)
 {
     if (consumer == nullptr || _consumers.Find(consumer) != -1)
@@ -38,6 +51,12 @@ void FudgetDataConsumerRegistry::UnregisterDataConsumer(IFudgetDataConsumer *con
     int ix = _consumers.Find(consumer);
     if (ix != -1)
     {
+        ScriptingObject *obj = FromInterface(consumer, IFudgetDataConsumer::TypeInitializer);
+        if (obj != nullptr)
+        {
+            obj->Deleted.Unbind<FudgetDataConsumerRegistry, &FudgetDataConsumerRegistry::ScriptingObjectConsumerDestroyed>(this);
+        }
+
         _consumers.RemoveAt(ix);
     }
 }

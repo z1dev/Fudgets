@@ -17,6 +17,7 @@ FudgetTextBox::FudgetTextBox(const SpawnParams &params) : Base(params), /*_frame
     _scroll_pos(0), _lines_dirty(false), _line_wrap(false), _wrap_mode(FudgetLineWrapMode::Whitespace),
     _auto_size(FudgetAutoSizing::None), _measure_space(-1), _cached_size(-1)
 {
+    SetScrollBars(FudgetScrollBars::Both);
 }
 
 FudgetTextBox::~FudgetTextBox()
@@ -100,8 +101,10 @@ void FudgetTextBox::OnDraw()
     {
         Int2 caret_pos = _text_painter->GetCharacterPosition(this, GetMeasurements(), GetCaretPos()) + bounds.GetUpperLeft() - _scroll_pos;
 
+        PushClip(bounds);
         DrawDrawable(_caret_draw, 0, Rectangle(Float2(caret_pos) - Float2(1.f, 0.f),
             Int2(_caret_width, _text_painter->GetCharacterLineHeight(GetMeasurements(), GetCaretPos()) )));
+        PopClip();
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)
         _blink_passed -= _caret_blink_time * 2.0f;
@@ -239,6 +242,26 @@ Int2 FudgetTextBox::GetLayoutMaxSize() const
     return Base::GetMaxSize();
 }
 
+void FudgetTextBox::OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking)
+{
+    if (_text_painter == nullptr)
+        return;
+
+    if (scrollbar == GetHorizontalScrollBar())
+    {
+        _scroll_pos.X = (int)GetHorizontalScrollBar()->GetScrollPos();
+    }
+    else if (scrollbar == GetVerticalScrollBar())
+    {
+        _scroll_pos.Y = (int)GetVerticalScrollBar()->GetScrollPos();
+        if (_snap_top_line)
+        {
+            int lix = _text_painter->LineAtPos(this, GetMeasurements(), _scroll_pos.Y);
+            _scroll_pos.Y = GetMeasurements().Lines[lix].Location.Y;
+        }
+    }
+}
+
 bool FudgetTextBox::OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size)
 {
     if (_auto_size == FudgetAutoSizing::None || _text_painter == nullptr)
@@ -328,6 +351,8 @@ void FudgetTextBox::MarkTextDirty()
     _measure_space = -1;
     if (_auto_size != FudgetAutoSizing::None)
         SizeModified();
+
+    MarkExtentsDirty();
 }
 
 void FudgetTextBox::ScrollToPos()
@@ -365,12 +390,11 @@ void FudgetTextBox::ScrollToPos()
             kerning = _text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
         _scroll_pos.X = int(_text_painter->Measure(this, StringView(_text.Get() + caret_pos, end_index - caret_pos), 1.f).X + text_caret_width + kerning - bounds.GetWidth() + _caret_width * 2);
     }
-    else if (_scroll_pos.X > 0.f && text_caret_width - _scroll_pos.X < bounds.GetWidth())
+    else if (_scroll_pos.X > 0.f && GetMeasurements().Size.X - _scroll_pos.X + _caret_width * 2.0f < bounds.GetWidth())
     {
-        // Possibly empty space on the right after end of text.
+        // Empty space on the right after end of text.
 
-        if (text_width - _scroll_pos.X + _caret_width * 2.0f < bounds.GetWidth())
-            _scroll_pos.X = int(Math::Max(0.f, text_width - bounds.GetWidth() + _caret_width * 2));
+        _scroll_pos.X = int(Math::Max(0.f, GetMeasurements().Size.X - bounds.GetWidth() + _caret_width * 2));
     }
 
     if (line.Location.Y < _scroll_pos.Y)
@@ -394,6 +418,11 @@ void FudgetTextBox::ScrollToPos()
         else
             _scroll_pos.Y = int(Math::Max(0.f, line.Location.Y + line.Size.Y - bounds.GetHeight()));
     }
+
+    if (GetHorizontalScrollBar() != nullptr)
+        GetHorizontalScrollBar()->SetScrollPos(_scroll_pos.X);
+    if (GetVerticalScrollBar() != nullptr)
+        GetVerticalScrollBar()->SetScrollPos(_scroll_pos.Y);
 }
 
 void FudgetTextBox::FixScrollPos()
@@ -425,6 +454,11 @@ void FudgetTextBox::FixScrollPos()
             }
         }
     }
+
+    if (GetHorizontalScrollBar() != nullptr)
+        GetHorizontalScrollBar()->SetScrollPos(_scroll_pos.X);
+    if (GetVerticalScrollBar() != nullptr)
+        GetVerticalScrollBar()->SetScrollPos(_scroll_pos.Y);
 }
 
 void FudgetTextBox::Process()
@@ -460,6 +494,9 @@ void FudgetTextBox::SnapTopLine()
             _scroll_pos.Y = line.Location.Y;
         }
     }
+
+    if (GetVerticalScrollBar() != nullptr)
+        GetVerticalScrollBar()->SetScrollPos(_scroll_pos.Y);
 }
 
 FudgetControlFlag FudgetTextBox::GetInitFlags() const
@@ -657,6 +694,9 @@ int FudgetTextBox::GetCaretPosPageUp()
         _scroll_pos.Y = line.Location.Y;
     }
 
+    if (GetVerticalScrollBar() != nullptr)
+        GetVerticalScrollBar()->SetScrollPos(_scroll_pos.Y);
+
     return char_index;
 }
 
@@ -730,6 +770,9 @@ int FudgetTextBox::GetCaretPosPageDown()
     else
         _scroll_pos.Y = Math::Min(GetMeasurements().Size.Y - full_height, _scroll_pos.Y + height);
 
+    if (GetVerticalScrollBar() != nullptr)
+        GetVerticalScrollBar()->SetScrollPos(_scroll_pos.Y);
+
     return char_index;
 }
 
@@ -748,4 +791,67 @@ FudgetTextBoxFlags FudgetTextBox::GetTextBoxInitFlags() const
 FudgetPadding FudgetTextBox::GetCombinedPadding() const
 {
     return _content_padding + GetFramePadding();
+}
+
+void FudgetTextBox::RequestScrollExtents()
+{
+    GetMeasurements();
+
+    Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
+    bounds.Size += GetScrollBarWidths();
+    FudgetScrollBarComponent *vbar = GetVerticalScrollBar();
+    FudgetScrollBarComponent *hbar = GetHorizontalScrollBar();
+    bool hvis = hbar != nullptr && GetMeasurements().Size.X > bounds.Size.X;
+    bool vvis = vbar != nullptr && GetMeasurements().Size.Y > bounds.Size.Y;
+    Int2 bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
+
+    int expand = 0;
+    if (_snap_top_line)
+    {
+        bool changed = true;
+        while (changed)
+        {
+            int height = (int)bounds_size.Y;
+            int sum = 0;
+            int count = GetMeasurements().Lines.Count(); // _data->GetCount();
+
+            int last_top_height = 0;
+
+            int pos = count - 1;
+            while (pos >= 0 && sum < height)
+            {
+                last_top_height = GetMeasurements().Lines[pos--].Size.Y;// GetItemSize(pos--).Y;
+                sum += last_top_height;
+            }
+
+            if (sum > height)
+            {
+                if (sum > last_top_height)
+                    expand = last_top_height;
+                else
+                    expand = sum - height;
+            }
+
+            changed = (!hvis && hbar != nullptr && GetMeasurements().Size.X > bounds.Size.X) || (!vvis && vbar != nullptr && GetMeasurements().Size.Y + expand > bounds.Size.Y);
+            if (changed)
+            {
+                hvis |= hbar != nullptr && GetMeasurements().Size.X > bounds.Size.X;
+                vvis |= vbar != nullptr && GetMeasurements().Size.Y + expand > bounds.Size.Y;
+                bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
+            }
+        }
+    }
+
+
+    if (vbar != nullptr)
+    {
+        vbar->SetScrollRange(GetMeasurements().Size.Y + expand);
+        vbar->SetPageSize((int)bounds_size.Y);
+    }
+
+    if (hbar != nullptr)
+    {
+        hbar->SetScrollRange(GetMeasurements().Size.X);
+        hbar->SetPageSize((int)bounds_size.X);
+    }
 }

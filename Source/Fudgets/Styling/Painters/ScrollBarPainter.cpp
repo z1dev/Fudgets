@@ -70,7 +70,7 @@ void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectang
 void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectangle &bounds, int64 range, int64 page_size, int64 thumb_pos,
     Rectangle &track, Rectangle &before_track, Rectangle &after_track, Rectangle &thumb_button, Rectangle *buttons) const
 {
-    thumb_pos = Math::Clamp(thumb_pos, (int64)0, range - page_size);
+    thumb_pos = Math::Clamp(thumb_pos, (int64)0, Math::Max(0LL, range - page_size));
 
     before_track = Rectangle::Empty;
     after_track = Rectangle::Empty; 
@@ -87,7 +87,7 @@ void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectang
     }
 
     // Buttons are hidden if they don't fit with the minimum thumb size. A button before and after the track are shown equally. Outer buttons are hidden first.
-    int available = size - (_thumb_size_fixed ? _thumb_size : _min_thumb_size);
+    int available = Math::Max(0, size - (_thumb_size_fixed ? _thumb_size : _min_thumb_size));
 
     int cnt_before = 0;
     int cnt_after = 0;
@@ -144,13 +144,14 @@ void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectang
     }
 
     size -= siz_before + siz_after;
-    int thumb_siz = _thumb_size_fixed ? Math::Min(size, _thumb_size) : Math::Max(_min_thumb_size, int(page_size / (float)range * size));
+    int thumb_siz = Math::Min(size, _thumb_size_fixed ? Math::Min(size, _thumb_size) :
+        range * size == 0 ? Math::Max(_min_thumb_size, int(page_size)) : Math::Max(_min_thumb_size, int(page_size / (float)range * size)));
 
     bpos = bounds.GetUpperLeft();
     RelevantRef(bpos) += siz_before;
     RelevantRef(bsize) = (float)size;
     track = Rectangle(bpos, bsize);
-    int before_siz = int((size - thumb_siz) * (thumb_pos / float(range - page_size)));
+    int before_siz = range <= page_size ? 0 : int((size - thumb_siz) * (thumb_pos / float(range - page_size)));
     RelevantRef(bsize) = (float)before_siz;
     before_track = Rectangle(bpos, bsize);
     RelevantRef(bpos) += before_siz;

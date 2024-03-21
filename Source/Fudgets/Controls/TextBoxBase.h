@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Control.h"
+#include "../ScrollingControl.h"
 
 /// <summary>
 /// Passed to FudgetTextBoxBase::DoPositionChanged as a hint why the caret position might have changed
@@ -99,9 +99,9 @@ DECLARE_ENUM_OPERATORS(FudgetTextBoxFlags);
 /// Base class for multi-line textbox controls
 /// </summary>
 API_CLASS(Abstract)
-class FUDGETS_API FudgetTextBoxBase : public FudgetControl
+class FUDGETS_API FudgetTextBoxBase : public FudgetScrollingControl
 {
-    using Base = FudgetControl;
+    using Base = FudgetScrollingControl;
     DECLARE_SCRIPTING_TYPE(FudgetTextBoxBase);
 public:
     /// <summary>

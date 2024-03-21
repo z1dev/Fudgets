@@ -158,7 +158,6 @@ FudgetListBox::~FudgetListBox()
 {
     if (_data != nullptr && _owned_data)
         Delete(_data);
-    //Delete(_v_scrollbar);
 }
 
 void FudgetListBox::OnInitialize()
@@ -265,7 +264,6 @@ void FudgetListBox::OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64
     if (_default_size.Y == -1 || scrollbar != GetVerticalScrollBar())
         return;
     
-    Int2 topleft = GetCombinedPadding().UpperLeft();
     int32 scroll_pos = (int32)scrollbar->GetScrollPos();
     if (_fixed_item_size)
     {
@@ -638,9 +636,11 @@ void FudgetListBox::RequestScrollExtents()
 
     Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
     bounds.Size += GetScrollBarWidths();
-    bool hvis = _list_extents.X > bounds.Size.X;
-    bool vvis = _list_extents.Y > bounds.Size.Y;
-    Int2 bounds_size = bounds.Size + GetScrollBarWidths(hvis, vvis);
+    FudgetScrollBarComponent *vbar = GetVerticalScrollBar();
+    FudgetScrollBarComponent *hbar = GetHorizontalScrollBar();
+    bool hvis = _list_extents.X > bounds.Size.X && hbar != nullptr;
+    bool vvis = _list_extents.Y > bounds.Size.Y && vbar != nullptr;
+    Int2 bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
 
     if (_snap_top_item)
     {
@@ -676,7 +676,7 @@ void FudgetListBox::RequestScrollExtents()
                     _list_extents.Y += expand = sum - height;
             }
 
-            changed = (!hvis && _list_extents.X > bounds.Size.X) || (!vvis && _list_extents.Y > bounds.Size.Y);
+            changed = (!hvis && hbar != nullptr && _list_extents.X > bounds.Size.X) || (!vvis && vbar != nullptr && _list_extents.Y > bounds.Size.Y);
             if (changed)
             {
                 hvis |= _list_extents.X > bounds.Size.X;
@@ -687,7 +687,6 @@ void FudgetListBox::RequestScrollExtents()
         }
     }
 
-    FudgetScrollBarComponent *vbar = GetVerticalScrollBar();
     if (vbar == nullptr)
         return;
 

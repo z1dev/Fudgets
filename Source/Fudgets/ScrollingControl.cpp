@@ -179,8 +179,13 @@ FudgetPadding FudgetScrollingControl::GetFramePadding() const
 
 void FudgetScrollingControl::RequestLayout()
 {
-    if (_dirty_extents)
-        RequestScrollExtents();
+    if (!_dirty_extents)
+    {
+        Base::RequestLayout();
+        return;
+    }
+
+    RequestScrollExtents();
 
     Int2 widths = GetScrollBarWidths();
 

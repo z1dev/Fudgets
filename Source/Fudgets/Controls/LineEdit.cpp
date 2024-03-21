@@ -112,7 +112,9 @@ void FudgetLineEdit::OnDraw()
         range.EndIndex = GetCaretPos();
         int caret_left = _text_painter->Measure(this, _text, range, GetVisualState(), options).X;
 
+        PushClip(bounds);
         DrawDrawable(_caret_draw, 0, Rectangle(Float2((float)caret_left - 1.0f + bounds.GetLeft(), bounds.Location.Y), Float2((float)_caret_width, bounds.GetHeight())));
+        PopClip();
     }
     while (_blink_passed >= _caret_blink_time * 2.0f)
         _blink_passed -= _caret_blink_time * 2.0f;

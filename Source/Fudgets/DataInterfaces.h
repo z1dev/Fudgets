@@ -223,6 +223,8 @@ class FUDGETS_API FudgetDataConsumerRegistry : public ScriptingObject
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetDataConsumerRegistry);
 public:
+    ~FudgetDataConsumerRegistry();
+
     /// <summary>
     /// Registers an object implementing IFudgetDataConsumer that will be notified about data changes.
     /// </summary>
