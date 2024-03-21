@@ -508,6 +508,12 @@ void FudgetTextBoxPainter::MeasureLines(FudgetControl *control, int bounds_width
             }
             else if (options.WrapMode == FudgetLineWrapMode::Whitespace || (options.WrapMode == FudgetLineWrapMode::WhitespaceLongWord && ix == last_whitespace))
             {
+                if (last_whitespace == -1)
+                {
+                    first_width += next_width + kerning;
+                    continue;
+                }
+
                 AddLine(pos, line_first, last_whitespace, first_width, line_height, result);
 
                 line_first = last_whitespace + 1;
