@@ -189,8 +189,8 @@ int FudgetTextBoxPainter::HitTest(FudgetControl *control, const FudgetMultilineT
             break;
         }
 
-        int y_distance = point.Y > line.Location.Y + line.Size.Y ? point.Y - (line.Location.Y + line.Size.Y) : 0;
-        if (y_distance > 0 && ix < siz - 1 && (point.Y >= measurements.Lines[ix + 1].Location.Y || y_distance > measurements.Lines[ix + 1].Location.Y - point.Y))
+        int y_distance = point.Y >= line.Location.Y + line.Size.Y ? point.Y - (line.Location.Y + line.Size.Y) : -1;
+        if (y_distance >= 0 && ix < siz - 1 && (point.Y >= measurements.Lines[ix + 1].Location.Y || y_distance >= measurements.Lines[ix + 1].Location.Y - point.Y))
             continue;
         
         if (point.X < line.Location.X)
@@ -220,8 +220,8 @@ int FudgetTextBoxPainter::LineAtPos(FudgetControl *control, const FudgetMultilin
             break;
         }
 
-        int y_distance = y_position > line.Location.Y + line.Size.Y ? y_position - (line.Location.Y + line.Size.Y) : 0;
-        if (y_distance > 0 && ix < siz - 1 && (y_position >= measurements.Lines[ix + 1].Location.Y || y_distance > measurements.Lines[ix + 1].Location.Y - y_position))
+        int y_distance = y_position >= line.Location.Y + line.Size.Y ? y_position - (line.Location.Y + line.Size.Y) : -1;
+        if (y_distance >= 0 && ix < siz - 1 && (y_position >= measurements.Lines[ix + 1].Location.Y || y_distance >= measurements.Lines[ix + 1].Location.Y - y_position))
             continue;
 
         return ix;

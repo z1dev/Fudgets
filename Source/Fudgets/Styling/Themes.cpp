@@ -199,7 +199,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::FieldPadding, FudgetPadding(2));
     main_theme->SetResource(FudgetThemePartIds::ButtonPadding, FudgetPadding(4));
 
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarWidth, 10);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarWidth, 12);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarBeforeTrackButtonCount, 1);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarAfterTrackButtonCount, 1);
     main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize, FudgetThemePartIds::ScrollBarWidth);

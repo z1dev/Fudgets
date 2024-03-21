@@ -89,9 +89,9 @@ public:
     API_PROPERTY() bool IsOwnedStyle() const { return _owned_style; }*/
 
     /// <summary>
-    /// Creates a new style that inherits all its values from this one, named as the template argument class' full name, or
-    /// null if the name is already taken. The style will be registered in the main theme database and will be associated
-    /// with the template argument's type.
+    /// Creates a new style that inherits all its values from this one, named as the template argument class' full name.
+    /// The call fails if the name is already taken. The style will be registered in the main theme database and will be
+    /// associated with the template argument's type.
     /// </summary>
     /// <returns>The created style or null if style with a clashing name exists</returns>
     template<typename T>
@@ -101,11 +101,13 @@ public:
     }
 
     /// <summary>
-    /// Creates a new style that inherits all its values from this one, named as the passed string argument. The created
-    /// style will be registered in the main theme database by that name.
+    /// Creates a new style that inherits all its values from this one, named as the passed string argument. The call
+    /// fails if the name is already taken. The created style will be registered in the main theme database by that
+    /// name.
     /// </summary>
+    /// <param name="name">The name for the created style. It must be unique.</param>
     /// <returns>The created style or null if style with a clashing name exists</returns>
-    FudgetStyle* CreateInheritedStyle(const String &name);
+    API_FUNCTION() FudgetStyle* CreateInheritedStyle(const String &name);
 
     /// <summary>
     /// The name of the style that was used to create it.
