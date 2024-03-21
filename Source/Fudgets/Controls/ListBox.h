@@ -7,7 +7,10 @@
 class FudgetDrawablePainter;
 class FudgetListItemPainter;
 
-
+/// <summary>
+/// A simple implementation of IFudgetDataProvider that stores a list of strings and can provide
+/// it to data consumers.
+/// </summary>
 API_CLASS ()
 class FUDGETS_API FudgetStringListProvider : public ScriptingObject, public IFudgetDataProvider
 {
@@ -93,6 +96,11 @@ public:
     /// </summary>
     API_PROPERTY() void SetAllowDuplicates(bool value);
 protected:
+    /// <summary>
+    /// Checks whether an item exists in the stored list of strings.
+    /// </summary>
+    /// <param name="value">The string to look for.</param>
+    /// <returns>Whether the value was found in the stored list of strings.</returns>
     API_FUNCTION() bool IsDuplicate(const StringView &value) const;
 private:
     Array<String> _items;

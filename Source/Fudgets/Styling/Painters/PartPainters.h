@@ -91,14 +91,19 @@ public:
         return result;
     }
 
+    /// <summary>
+    /// The owner of a part painter is responsible for destroying the painter when it is destroyed. It is
+    /// also the control which provides its style and theme values to the painter.
+    /// </summary>
+    /// <returns></returns>
     API_PROPERTY() FudgetControl* GetOwner() const { return _owner; }
 
     /// <summary>
     /// Initializes the painter, caching the resources it will draw with.
     /// </summary>
     /// <param name="control">Control that holds the theme and style to use for fetching resources</param>
-    /// <param name="style_override">A style, that when not null, is used for looking up resources before the control is checked.</param>
-    /// <param name="mapping">Mapping from id to id for the specific painter. Each painter expects a different mapping structure.</param>
+    /// <param name="mapping">Mapping from id to id for the specific painter. Each painter expects a different mapping structure. Use InitializeMapping
+    /// for creating a resource that can be stored in the theme to create a painter from.</param>
     API_FUNCTION() virtual void Initialize(FudgetControl *control,  const Variant &mapping) { }
 
     /// <summary>

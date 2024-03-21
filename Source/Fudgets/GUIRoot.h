@@ -19,6 +19,9 @@ public:
 
     ~FudgetGUIRoot();
 
+    /// <summary>
+    /// Called by the Fudget actor when it first initializes the gui.
+    /// </summary>
     API_FUNCTION() void FudgetInit();
 
     /// <summary>

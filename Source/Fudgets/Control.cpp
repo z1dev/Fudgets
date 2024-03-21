@@ -1949,32 +1949,65 @@ void FudgetControl::Draw9SlicingPrecalculatedInner(TextureBase *t, SpriteHandle 
 
 void FudgetControl::AlignDrawRectangle(Int2 tex_size, FudgetImageAlignment alignment, Rectangle &rect)
 {
-    if ((tex_size.X < rect.GetWidth() && (alignment & FudgetImageAlignment::StretchHorz) != FudgetImageAlignment::StretchHorz) ||
-        (tex_size.X > rect.GetWidth() && (alignment & FudgetImageAlignment::ShrinkHorz) != FudgetImageAlignment::ShrinkHorz))
+    if (tex_size.X == 0 || tex_size.Y == 0)
+        return;
+
+    float w = rect.GetWidth();
+    float h = rect.GetHeight();
+    Float2 ratio = 1.f;
+    bool h_stretch = (alignment & FudgetImageAlignment::StretchHorz) == FudgetImageAlignment::StretchHorz;
+    bool v_stretch = (alignment & FudgetImageAlignment::StretchVert) == FudgetImageAlignment::StretchVert;
+    bool h_shrink = (alignment & FudgetImageAlignment::ShrinkHorz) == FudgetImageAlignment::ShrinkHorz;
+    bool v_shrink = (alignment & FudgetImageAlignment::ShrinkVert) == FudgetImageAlignment::ShrinkVert;
+
+    bool x_change = (h_stretch && tex_size.X < w) || (h_shrink && tex_size.X > w);
+    bool y_change = (v_stretch && tex_size.Y < h) || (v_shrink && tex_size.Y > h);
+
+    if ((alignment & FudgetImageAlignment::KeepAspectRatio) == FudgetImageAlignment::KeepAspectRatio)
     {
-        if ((alignment & FudgetImageAlignment::RightAlign) == FudgetImageAlignment::RightAlign)
+        if (x_change || y_change)
         {
-            rect.Location.X += rect.Size.X - tex_size.X;
+            if (!x_change || !y_change)
+            {
+                ratio.X = ratio.Y = x_change ? w / (float)tex_size.X : h / (float)tex_size.Y;
+
+                if (!x_change && h_shrink && tex_size.X * ratio.X > w)
+                {
+                    x_change = true;
+                    ratio.X = ratio.Y = w / (tex_size.X * ratio.X);
+                }
+
+                if (!y_change && v_shrink && tex_size.Y * ratio.Y > h)
+                {
+                    y_change = true;
+                    ratio.Y = ratio.X = h / (tex_size.Y * ratio.Y);
+                }
+            }
+            else
+                ratio.X = ratio.Y = Math::Min(w / (float)tex_size.X, h / (float)tex_size.Y);
         }
-        if ((alignment & FudgetImageAlignment::LeftAlign) != FudgetImageAlignment::LeftAlign)
-        {
-            rect.Location.X += float((rect.Size.X - tex_size.X) * 0.5);
-        }
-        rect.Size.X = (float)tex_size.X;
     }
-    if ((tex_size.Y < rect.GetHeight() && (alignment & FudgetImageAlignment::StretchVert) != FudgetImageAlignment::StretchVert) ||
-        (tex_size.Y > rect.GetHeight() && (alignment & FudgetImageAlignment::ShrinkVert) != FudgetImageAlignment::ShrinkVert))
+    else
     {
-        if ((alignment & FudgetImageAlignment::BottomAlign) == FudgetImageAlignment::BottomAlign)
-        {
-            rect.Location.Y += rect.Size.Y - tex_size.Y;
-        }
-        if ((alignment & FudgetImageAlignment::TopAlign) != FudgetImageAlignment::TopAlign)
-        {
-            rect.Location.Y += float((rect.Size.Y - tex_size.Y) * 0.5);
-        }
-        rect.Size.Y = (float)tex_size.Y;
+        if (x_change)
+            ratio.X = w / (float)tex_size.X;
+        if (y_change)
+            ratio.Y = h / (float)tex_size.Y;
     }
+
+    tex_size = Int2(int(ratio.X * tex_size.X), int(ratio.Y * tex_size.Y));
+
+    if (x_change || int(alignment & FudgetImageAlignment::StretchHorz) == 0)
+        rect.Location.X += float((rect.Size.X - tex_size.X) * 0.5);
+    else if ((alignment & FudgetImageAlignment::RightAlign) == FudgetImageAlignment::RightAlign)
+        rect.Location.X += rect.Size.X - tex_size.X;
+    rect.Size.X = (float)tex_size.X;
+
+    if (y_change || int(alignment & FudgetImageAlignment::StretchVert) == 0)
+        rect.Location.Y += float((rect.Size.Y - tex_size.Y) * 0.5);
+    else if ((alignment & FudgetImageAlignment::BottomAlign) == FudgetImageAlignment::BottomAlign)
+        rect.Location.Y += rect.Size.Y - tex_size.Y;
+    rect.Size.Y = (float)tex_size.Y;
 
 }
 

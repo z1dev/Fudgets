@@ -3,15 +3,31 @@
 #include "PartPainters.h"
 
 
+/// <summary>
+/// Mapping for FudgetDrawablePainter. Mapping is used to tell a part painter what Ids to look up
+/// in its owner control's style.
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetDrawablePainterMapping
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetDrawablePainterMapping);
 
+    /// <summary>
+    /// The id for a drawable to draw.
+    /// </summary>
     API_FIELD() int Drawable = 0;
+    /// <summary>
+    /// The id for a margin around the drawable to draw.
+    /// </summary>
     API_FIELD() int Margin = 0;
+    /// <summary>
+    /// The id for a color to multiply with the drawable's pixels when drawing.
+    /// </summary>
     API_FIELD() int Tint = 0;
-
+    /// <summary>
+    /// The id for a padding inside the drawable. It's not used by the painter, but can be queried by
+    /// calling the painter object's GetPadding.
+    /// </summary>
     API_FIELD() int Padding = 0;
 };
 

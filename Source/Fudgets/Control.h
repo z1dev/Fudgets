@@ -214,6 +214,9 @@ enum class FudgetControlState : uint16
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
+/// <summary>
+/// Visibility of a control determines both whether it's shown in the UI and if it takes up space when hidden.
+/// </summary>
 API_ENUM()
 enum class FudgetControlVisibility
 {
@@ -847,6 +850,7 @@ public:
     /// CacheGlobalToLocal was called once on the current draw frame.
     /// </summary>
     /// <param name="local">The coordinate relative to the top-left corner of the control</param>
+    /// <param name="offset">Offset added to the resulting global coordinates.</param>
     /// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
     API_FUNCTION() virtual Float2 CachedLocalToGlobal(Float2 local, Float2 offset = Float2::Zero) const;
 
@@ -855,6 +859,7 @@ public:
     /// CacheGlobalToLocal was called once on the current draw frame.
     /// </summary>
     /// <param name="global">The coordinate relative to the top-left corner of the UI screen</param>
+    /// <param name="offset">Offset added to the resulting local coordinates.</param>
     /// <returns>The coordinate relative to the top-left corner of the control</returns>
     API_FUNCTION() virtual Float2 CachedGlobalToLocal(Float2 global, Float2 offset = Float2::Zero) const;
 
@@ -863,6 +868,7 @@ public:
     /// CacheGlobalToLocal was called once on the current draw frame.
     /// </summary>
     /// <param name="local">The rectangle with a location relative to the top-left corner of the control</param>
+    /// <param name="offset">Offset added to the resulting global coordinates of the rectangle's location.</param>
     /// <returns>The coordinate relative to the top-left corner of the UI screen</returns>
     API_FUNCTION() virtual Rectangle CachedLocalToGlobal(const Rectangle &local, Float2 offset = Float2::Zero) const;
 
@@ -871,6 +877,7 @@ public:
     /// CacheGlobalToLocal was called once on the current draw frame.
     /// </summary>
     /// <param name="global">TThe rectangle with a location relative to the top-left corner of the UI screen</param>
+    /// <param name="offset">Offset added to the resulting local coordinates of the rectangle's location.</param>
     /// <returns>The coordinate relative to the top-left corner of the control</returns>
     API_FUNCTION() virtual Rectangle CachedGlobalToLocal(const Rectangle &global, Float2 offset = Float2::Zero) const;
 
@@ -1281,6 +1288,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
+    /// <param name="alignment">Positioning and sizing of the texture inside the rectangle.</param>
     API_FUNCTION() void Draw9SlicingPrecalculatedTexture(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
@@ -1290,6 +1298,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
+    /// <param name="alignment">Positioning and sizing of the texture inside the rectangle.</param>
     API_FUNCTION() void Draw9SlicingPrecalculatedTexturePoint(TextureBase *t, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
@@ -1299,6 +1308,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
+    /// <param name="alignment">Positioning and sizing of the sprite inside the rectangle.</param>
     API_FUNCTION() void Draw9SlicingPrecalculatedSprite(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
@@ -1308,6 +1318,7 @@ public:
     /// <param name="rect">The rectangle to draw in</param>
     /// <param name="borderWidths">The size of the stationary border on each side</param>
     /// <param name="color">The color to multiply drawn pixels with</param>
+    /// <param name="alignment">Positioning and sizing of the sprite inside the rectangle.</param>
     API_FUNCTION() void Draw9SlicingPrecalculatedSpritePoint(const SpriteHandle& spriteHandle, const Rectangle &rect, const FudgetPadding &borderWidths, const Color &color = Color::White, FudgetImageAlignment alignment = FudgetImageAlignment::Fit);
 
     /// <summary>
@@ -1884,7 +1895,7 @@ public:
     /// call ResetCreatedFonts.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
-    /// <param name="Id">Id of a FudgetFontSettings value in the active styles</param>
+    /// <param name="id">Id of a FudgetFontSettings value in the active styles</param>
     /// <param name="result">Structure with font object and its settings</param>
     /// <returns>Whether a valid value was found for the id</returns>
     API_FUNCTION() bool GetStyleFont(int id, API_PARAM(Out) FudgetFont &result);
@@ -1900,7 +1911,7 @@ public:
     /// whether the original value is a draw area, a color, a texture or a struct holding these values.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
-    /// <param name="Id">Id of a draw area value in the active styles</param>
+    /// <param name="id">Id of a draw area value in the active styles</param>
     /// <param name="result">The draw area that can be passed to DrawArea</param>
     /// <returns>Whether a valid value was found for the id</returns>
     API_FUNCTION() bool GetStyleDrawArea(int id, API_PARAM(Out) FudgetDrawArea &result);
@@ -1911,7 +1922,7 @@ public:
     /// drawn with a drawable.
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
-    /// <param name="Id">Id of an area list value in the active styles</param>
+    /// <param name="id">Id of an area list value in the active styles</param>
     /// <param name="drawable_owner">A part painter which will cause the destruction of the drawable when it is destroyed.</param>
     /// <param name="result">Value that receives the drawable on success.</param>
     /// <returns>Whether a valid value was found for the id</returns>
@@ -1921,7 +1932,7 @@ public:
     /// Tries to get a texture for the passed id. The result will be a valid 
     /// The resulting value depends on both the style and the theme currently active for this control.
     /// </summary>
-    /// <param name="Id">Id of a draw area value in the active styles</param>
+    /// <param name="id">Id of a draw area value in the active styles</param>
     /// <param name="result">The texture asset reference to receive the result</param>
     /// <returns>Whether a texture was found for the id</returns>
     API_FUNCTION() bool GetStyleTexture(int id, API_PARAM(Out) TextureBase* &result);
@@ -2128,7 +2139,7 @@ protected:
     /// Adds or removes the passed visual state enum flag or flags depending on the value. The state is
     /// a 64 bit unsigned integer, but FudgetVisualControlState can be used to set the default states.
     /// </summary>
-    /// <param name="states">The flag or flags to set or unset</param>
+    /// <param name="state">The flag or flags to set or unset</param>
     /// <param name="value">True if the flag should be set, false if it should be unset </param>
     API_FUNCTION() void SetVisualState(FudgetVisualControlState state, bool value);
 
@@ -2136,7 +2147,7 @@ protected:
     /// Adds or removes the passed visual state flag or flags depending on the value. The state is
     /// a 64 bit unsigned integer, but FudgetVisualControlState can be used to set the default states.
     /// </summary>
-    /// <param name="states">The flag or flags to set or unset</param>
+    /// <param name="state">The flag or flags to set or unset</param>
     /// <param name="value">True if the flag should be set, false if it should be unset </param>
     API_FUNCTION() void SetVisualState(uint64 state, bool value);
 
@@ -2226,7 +2237,7 @@ protected:
     /// Used internally to register control to OnUpdate calls. This happens after the parent and the root both changed and
     /// the control was initialized. When overriding, make sure to call the base implementation.
     /// </summary>
-    /// <param name="new_root">The previous root control</param>
+    /// <param name="old_root">The previous root control</param>
     API_FUNCTION() virtual void DoRootChanged(FudgetGUIRoot *old_root);
 
     /// <summary>

@@ -123,7 +123,11 @@ struct FudgetDrawInstructionDrawableIndex : public FudgetDrawInstruction
 };
 
 
-
+/// <summary>
+/// Objects of the FudgetDrawable class hold instructions for drawing different things. The instruction list can
+/// be built with the FudgetDrawableBuilder static class and set as resource in a theme. Painter classes will read
+/// the resource looking for a drawable object, and if set, use it for drawing.
+/// </summary>
 API_CLASS()
 class FUDGETS_API FudgetDrawable : public ScriptingObject
 {
@@ -133,7 +137,11 @@ class FUDGETS_API FudgetDrawable : public ScriptingObject
 public:
     ~FudgetDrawable();
 
-    API_FIELD() static FudgetDrawable*Empty;
+    /// <summary>
+    /// A drawable that can be used as a placeholder value. It holds no instructions to draw and thus drawing
+    /// with this drawable does nothing.
+    /// </summary>
+    API_FIELD() static FudgetDrawable *Empty;
 
     /// <summary>
     /// Returns true when the drawable has no instructions for drawing and does nothing when drawn.
@@ -341,9 +349,11 @@ public:
     API_FUNCTION() static void EndSubData();
 
     /// <summary>
-    /// Starts building a draw color structure if one is not already being built. The state determines when this color
-    /// is used by a part painter or control for drawing. See Begin for description on how states work on drawables.
+    /// Starts or continues building a draw color structure if one is not already being built. The state determines when this
+    /// color is used by a part painter or control for drawing. See Begin for description on how states work on drawables.
+    /// Call EndDrawColors when the color structure holds all intended states.
     /// </summary>
+    /// <param name="color">The color to set for the state</param>
     /// <param name="states">The state to add the color for</param>
     API_FUNCTION() static void MakeDrawColors(Color color, uint64 states = 0);
 

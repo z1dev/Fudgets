@@ -3,15 +3,33 @@
 #include "PartPainters.h"
 
 
+/// <summary>
+/// Mapping for FudgetLineEditTextPainter and FudgetTextBoxPainter. Mapping is used to tell a part painter
+/// what Ids to look up in its owner control's style.
+/// </summary>
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetTextPainterMapping
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetTextPainterMapping);
 
+    /// <summary>
+    /// The id for a background drawable. The drawable could for example have a background for the
+    /// selected or hovered state.
+    /// </summary>
     API_FIELD() int BackgroundDraw = 0;
+    /// <summary>
+    /// The id for a background tint color to multiply all pixels with when drawing the background. The
+    /// drawable could for example have a background for the selected or hovered state.
+    /// </summary>
     API_FIELD() int BackgroundTint = 0;
+    /// <summary>
+    /// The id for the color of the text to draw. This can be a FudgetDrawColors to have different color
+    /// when the text is selected.
+    /// </summary>
     API_FIELD() int TextColor = 0;
-
+    /// <summary>
+    /// The id for the font to use for drawing.
+    /// </summary>
     API_FIELD() int Font = 0;
 };
 

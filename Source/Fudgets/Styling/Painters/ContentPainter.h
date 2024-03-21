@@ -2,65 +2,10 @@
 
 #include "PartPainters.h"
 
-
-//// TODO: these alignments might be unified somewhere if there are multiple
-//
-///// <summary>
-///// Horizontal image alignment for FudgetContentPainter
-///// </summary>
-//API_ENUM()
-//enum class FudgetImageHorzAlign
-//{
-//    /// <summary>
-//    /// Image is aligned to the left
-//    /// </summary>
-//    Left,
-//    /// <summary>
-//    /// Image is aligned to the right
-//    /// </summary>
-//    Right,
-//    /// <summary>
-//    /// Image is aligned to be at the center horizontally
-//    /// </summary>
-//    Center,
-//    /// <summary>
-//    /// Stretch image to fill the horizontal space
-//    /// </summary>
-//    Stretch,
-//    /// <summary>
-//    /// Shrink the image horizontally if it's too big for the drawn rectangle.
-//    /// </summary>
-//    ShrinkStretch,
-//};
-//
-///// <summary>
-///// Vertical image alignment for FudgetContentPainter
-///// </summary>
-//API_ENUM()
-//enum class FudgetImageVertAlign
-//{
-//    /// <summary>
-//    /// Image is aligned to the top
-//    /// </summary>
-//    Top,
-//    /// <summary>
-//    /// Image is aligned to the bottom
-//    /// </summary>
-//    Bottom,
-//    /// <summary>
-//    /// Image is aligned to be at the center vertically
-//    /// </summary>
-//    Center,
-//    /// <summary>
-//    /// Stretch image to fill the vertical space
-//    /// </summary>
-//    Stretch,
-//    /// <summary>
-//    /// Shrink the image vertically if it's too big for the drawn rectangle.
-//    /// </summary>
-//    ShrinkStretch,
-//};
-
+/// <summary>
+/// Mapping for FudgetContentPainter. Mapping is used to tell a part painter what Ids to look up
+/// in its owner control's style.
+/// </summary>
 API_STRUCT(Attributes = "HideInEditor")
 struct FUDGETS_API FudgetContentPainterMapping
 {

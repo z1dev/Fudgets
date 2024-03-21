@@ -96,7 +96,6 @@ public:
     /// <param name="wanted_size">Receives the slot's content's requested normal size</param>
     /// <param name="wanted_min">Receives the slot's content's requested minimal size</param>
     /// <param name="wanted_max">Receives the slot's content's requested maximum size</param>
-    /// <param name="result">Receives the sizes requested by the control in the slot.</param>
     API_FUNCTION() bool GetSlotMeasures(int index, Int2 available, API_PARAM(Out) Int2 &wanted_size, API_PARAM(Out) Int2 &wanted_min, API_PARAM(Out) Int2 &wanted_max);
 protected:
     /// <inheritdoc />

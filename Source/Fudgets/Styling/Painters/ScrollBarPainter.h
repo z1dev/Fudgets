@@ -6,29 +6,88 @@
 class FudgetDrawable;
 enum class FudgetScrollBarOrientation : uint8;
 
-
+/// <summary>
+/// Mapping for FudgetScrollBarPainter. Mapping is used to tell a part painter what Ids to look up
+/// in its owner control's style.
+/// </summary>
 API_STRUCT(Attributes)
 struct FUDGETS_API FudgetScrollBarPainterMapping
 {
     DECLARE_SCRIPTING_TYPE_MINIMAL(FudgetScrollBarPainterMapping);
 
+    /// <summary>
+    /// Orientation of the scrollbar to be painted. This is not an id. It's a direct setting, because
+    /// the painter needs to know whether it should read the horizontal or vertical draw resources
+    /// during initialization.
+    /// </summary>
     API_FIELD() FudgetScrollBarOrientation Orientation;
 
+    /// <summary>
+    /// The id for the scrollbar's integer width. The width is not used for drawing by the painter, but objects can
+    /// get it with GetWidth to know how big the scrollbar bounds should be.
+    /// </summary>
     API_FIELD() int Width;
+    /// <summary>
+    /// The id for a bool that determines if the thumb button has a fixed size.
+    /// </summary>
     API_FIELD() int IsThumbSizeFixed;
+    /// <summary>
+    /// The id for an integer that is the size length of the thumb button if it is fixed sized.
+    /// </summary>
     API_FIELD() int ThumbSize;
+    /// <summary>
+    /// The id for an integer that limits the size of the thumb button. As long as there is enough space
+    /// the thumb button won't be smaller than the value.
+    /// </summary>
     API_FIELD() int MinThumbSize;
 
+    /// <summary>
+    /// The id for a background drawable for the scrollbar. It is drawn on the full bounding rectangle when drawing is
+    /// requested.
+    /// </summary>
     API_FIELD() int BgDraw;
+    /// <summary>
+    /// The id for a frame drawable for the scrollbar. The frame is drawn separately once the other parts finished
+    /// drawing.
+    /// </summary>
     API_FIELD() int FrameDraw;
+    /// <summary>
+    /// The id for the thumb button's drawable that can be dragged and which indicates the current scrolling position.
+    /// </summary>
     API_FIELD() int ThumbDraw;
+    /// <summary>
+    /// The id for the drawable of the track that the thumb button moves on.
+    /// </summary>
     API_FIELD() int TrackDraw;
+    /// <summary>
+    /// The id for a drawable of the left or top part of the track in front of the thumb button. It is drawn after the
+    /// full track finished drawing.
+    /// </summary>
     API_FIELD() int BeforeTrackDraw;
+    /// <summary>
+    /// The id for a drawable of the right or bottom part of the track following the thumb button. It is drawn after the
+    /// full track finished drawing.
+    /// </summary>
     API_FIELD() int AfterTrackDraw;
 
+    /// <summary>
+    /// The id for an integer number of buttons that can be shown to the front side of a scrollbar. This value and
+    /// AfterTrackButtonCount can't exceed 20 when added together.
+    /// </summary>
     API_FIELD() int BeforeTrackButtonCount;
+    /// <summary>
+    /// The id for an integer number of buttons that can be shown after the end side of a scrollbar. This value and
+    /// BeforeTrackButtonCount can't exceed 20 when added together.
+    /// </summary>
     API_FIELD() int AfterTrackButtonCount;
+    /// <summary>
+    /// The id for at most 20 drawable resources that can be used for drawing the buttons of the scrollbar, excluding
+    /// the thumb button.
+    /// </summary>
     API_FIELD() int ButtonDraw[20];
+    /// <summary>
+    /// The id for at most 20 integers that determine the length of the buttons of the scrollbar.
+    /// </summary>
     API_FIELD() int ButtonSize[20];
 };
 
@@ -74,7 +133,6 @@ public:
     /// Returns the position and size of the parts of the scrollbar based on the scrollbar's current values.
     /// </summary>
     /// <param name="control">The control to draw the scrollbar in.</param>
-    /// <param name="orientation">The scrollbar's track orientation where the thumb is moving.</param>
     /// <param name="bounds">The bounding rectangle where the scrollbar would be drawn.</param>
     /// <param name="range">Maximum value of the scrollbar if the page size is ignored.</param>
     /// <param name="page_size">Size of the visible page that is represented by the thumb button's size when it is not fixed sized.</param>

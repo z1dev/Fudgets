@@ -11,6 +11,10 @@
 
 struct FudgetDrawArea;
 
+/// <summary>
+/// Holds the name of a part painter and a mapping object that stores ids for resources to look up
+/// in the owning control's style when the part painter is initialized.
+/// </summary>
 API_STRUCT()
 struct FUDGETS_API FudgetPartPainterMapping
 {
@@ -183,6 +187,32 @@ enum class FudgetImageAlignment
 	/// shrinking or stretching.
 	/// </summary>
 	Tiled = 1 << 6,
+
+	/// <summary>
+	/// Makes stretching or shrinking image keep its aspect ratio, by equally scaling both dimensions to the
+	/// smaller size.
+	/// </summary>
+	KeepAspectRatio = 1 << 7,
+
+	/// <summary>
+	/// Shrink texture both horizontally and vertically if the draw area is smaller. If one side
+	/// would shrink more than the other, both sides will shrink equally to keep the aspect ratio of the image.
+	/// </summary>
+	ShrinkKeepAspectRatio = KeepAspectRatio | Shrink,
+
+	/// <summary>
+	/// Stretch texture or sprite both horizontally and vertically if there is more available space
+	/// than the texture size. If one side can't stretch as much as the other side, both sides will only stretch
+	/// by the smaller size to keep the aspect ratio of the image.
+	/// </summary>
+	StretchKeepAspectRatio = KeepAspectRatio | Stretch,
+
+	/// <summary>
+	/// Shrink and stretch texture both horizontally and vertically as needed to fit in the available space. If
+	/// one side would shrink or stretch more than the other, both sides are only changed so much to keep the aspect
+	/// ratio of the image.
+	/// </summary>
+	FitKeepAspectRatio = KeepAspectRatio | Fit,
 };
 DECLARE_ENUM_OPERATORS(FudgetImageAlignment);
 

@@ -53,7 +53,9 @@ public:
     /// <inheritdoc />
     void OnMouseMove(Float2 pos, Float2 global_pos) override;
 
-
+    /// <summary>
+    /// An action triggered when the button was pressed.
+    /// </summary>
     API_FIELD() Action EventPressed;
 protected:
     /// <summary>
@@ -98,6 +100,9 @@ protected:
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
 
+    /// <summary>
+    /// The padding for the drawn contents of the button, including the outer frame and the additional button padding.
+    /// </summary>
     API_PROPERTY() FudgetPadding GetCombinedPadding() const;
 private:
     FudgetStatePainter *_content_painter;

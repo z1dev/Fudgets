@@ -168,45 +168,49 @@ public:
     /// <summary>
     /// Called before data is updated.
     /// </summary>
-    /// <param name="index">Index of the data to be updated</param>
+    /// <param name="index">Index of the data to be updated.</param>
     API_FUNCTION() virtual void DataToBeUpdated(int index) = 0;
     /// <summary>
     /// Called after data was updated.
     /// </summary>
-    /// <param name="index">Index of the updated data</param>
+    /// <param name="index">Index of the updated data.</param>
     API_FUNCTION() virtual void DataUpdated(int index) = 0;
 
     /// <summary>
     /// Called before data is added.
     /// </summary>
-    /// <param name="index">Index of the data to be added</param>
+    /// <param name="count">Number of data items to be added.</param>
     API_FUNCTION() virtual void DataToBeAdded(int count) = 0;
     /// <summary>
     /// Called after data was added.
     /// </summary>
-    /// <param name="index">Index of the data that was added</param>
+    /// <param name="count">Number of added data items</param>
     API_FUNCTION() virtual void DataAdded(int count) = 0;
 
     /// <summary>
     /// Called before data is removed.
     /// </summary>
     /// <param name="index">Index of the data to be removed</param>
+    /// <param name="count">Number of data items to be removed.</param>
     API_FUNCTION() virtual void DataToBeRemoved(int index, int count) = 0;
     /// <summary>
     /// Called after data was removed.
     /// </summary>
     /// <param name="index">Index of the data that was removed</param>
+    /// <param name="count">Number of removed data items</param>
     API_FUNCTION() virtual void DataRemoved(int index, int count) = 0;
 
     /// <summary>
     /// Called before data is removed.
     /// </summary>
     /// <param name="index">Index of the data to be removed</param>
+    /// <param name="count">Number of data items to be inserted.</param>
     API_FUNCTION() virtual void DataToBeInserted(int index, int count) = 0;
     /// <summary>
     /// Called after data was removed.
     /// </summary>
     /// <param name="index">Index of the data that was removed</param>
+    /// <param name="count">Number of inserted data items</param>
     API_FUNCTION() virtual void DataInserted(int index, int count) = 0;
 
     friend class FudgetDataConsumerRegistry;

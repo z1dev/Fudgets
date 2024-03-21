@@ -47,6 +47,10 @@ enum class FudgetScrollBarVisibilityMode
     Automatic,
 };
 
+/// <summary>
+/// Interface type that can be implemented by objects that want to use a scrollbar and get notified about user
+/// interaction or if the scrollbar changes.
+/// </summary>
 API_INTERFACE()
 class FUDGETS_API IFudgetScollBarOwner
 {
@@ -139,6 +143,7 @@ public:
     /// <param name="owner">The control that will own this scroll bar component.</param>
     /// <param name="event_owner">The interface that should receive scrollbar change events.
     /// This is usually the same as the owner.</param>
+    /// <param name="orientation">The orientation which determines if the scrollbar scrolls horizontally or vertically.</param>
     /// <returns></returns>
     API_FUNCTION() void Initialize(FudgetControl *owner, IFudgetScollBarOwner *event_owner, FudgetScrollBarOrientation orientation);
     /// <summary>
@@ -160,9 +165,8 @@ public:
     API_PROPERTY() void SetOrientation(FudgetScrollBarOrientation value);
 
     /// <summary>
-    /// Updates the bounds of the scrollbar where drawing and input handling will take place.
+    /// Returns the bounds of the scrollbar where drawing and input handling will take place.
     /// </summary>
-    /// <param name="bounds">The new bounding rectangle of the scrollbar.</param>
     API_PROPERTY() FORCE_INLINE Rectangle GetBounds() const { return _bounds; }
     /// <summary>
     /// Updates the bounds of the scrollbar where drawing and input handling will take place.
@@ -171,9 +175,8 @@ public:
     API_PROPERTY() FORCE_INLINE void SetBounds(const Rectangle &bounds) { _bounds = bounds; _rects_dirty = true; }
 
     /// <summary>
-    /// Draws the scrollbar in the specified rectangle.
+    /// Draws the scrollbar. The scrollbar should already have a bounding rectangle by calling SetBounds.
     /// </summary>
-    /// <param name="bounds">Rectangle to draw the scrollbar in</param>
     API_FUNCTION() void Draw();
 
     /// <summary>
@@ -262,11 +265,41 @@ public:
     /// <param name="value">The new visibility mode</param>
     API_PROPERTY() void SetVisibilityMode(FudgetScrollBarVisibilityMode value);
 
+    /// <summary>
+    /// Returns whether the scrollbar's owner is currently capturing the mouse and the scrollbar wants to
+    /// intercept all mouse input.
+    /// </summary>
+    /// <returns></returns>
     API_PROPERTY() FORCE_INLINE bool MouseIsCaptured() const { return _mouse_capture != MouseCapture::None; }
 
+    /// <summary>
+    /// The mouse move event for the scrollbar.
+    /// </summary>
+    /// <param name="pos">Mouse pointer position relative to the owner of the scrollbar, not to the scrollbar.</param>
+    /// <param name="global_pos">Global mouse pointer position</param>
+    /// <returns>Whether the scrollbar wants to use the event and doesn't want the control to handle it.</returns>
     API_FUNCTION() bool MouseMove(Float2 pos, Float2 global_pos);
+    /// <summary>
+    /// The mouse down event for the scrollbar.
+    /// </summary>
+    /// <param name="pos">Mouse pointer position relative to the owner of the scrollbar, not to the scrollbar.</param>
+    /// <param name="global_pos">Global mouse pointer position</param>
+    /// <param name="button">The pressed mouse button.</param>
+    /// <param name="double_click">Whether this is an event for double clicking.</param>
+    /// <returns>Whether the scrollbar wants to use the event and doesn't want the control to handle it.</returns>
     API_FUNCTION() bool MouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click);
+    /// <summary>
+    /// The mouse up event for the scrollbar.
+    /// </summary>
+    /// <param name="pos">Mouse pointer position relative to the owner of the scrollbar, not to the scrollbar.</param>
+    /// <param name="global_pos">Global mouse pointer position</param>
+    /// <param name="button">The released mouse button.</param>
+    /// <returns>Whether the scrollbar wants to use the event and doesn't want the control to handle it.</returns>
     API_FUNCTION() bool MouseUp(Float2 pos, Float2 global_pos, MouseButton button);
+    /// <summary>
+    /// The mouse leave event for the scrollbar.
+    /// </summary>
+    /// <returns>Whether the scrollbar wants to use the event and doesn't want the control to handle it.</returns>
     API_FUNCTION() bool MouseLeave();
 private:
     FORCE_INLINE float Relevant(Float2 size) const { return _orientation == FudgetScrollBarOrientation::Horizontal ? size.X : size.Y; }

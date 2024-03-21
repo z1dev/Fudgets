@@ -602,11 +602,8 @@ public:
 protected:
     /// <summary>
     /// Creates a new style that inherits all its values from this one, or null if the name is empty or is already taken.
-    /// If named is true, the new style will be owned by this one and destroyed when this style is destroyed. The name only needs
-    /// to be unique in its parent or in the theme for non owned styles.
     /// </summary>
     /// <param name="name">Name of the new style..</param>
-    /// <param name="named">Whether the new style is a named style owned by this style and is not a style for a control class.</param>
     /// <returns>The created style or null if the name was empty or taken</returns>
     API_FUNCTION() FudgetStyle* InheritStyleInternal(const String &name);
 private:

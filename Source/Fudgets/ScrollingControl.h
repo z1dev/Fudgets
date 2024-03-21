@@ -3,16 +3,44 @@
 #include "Control.h"
 #include "Controls/ScrollBar.h"
 
-
+/// <summary>
+/// Values that determine which scrollbars to create for a control with scrollbars. Pass to
+/// SetScrollBars of FudgetScrollingControl derived controls in the constructor.
+/// </summary>
 API_ENUM()
 enum class FudgetScrollBars
 {
+    /// <summary>
+    /// No scrollbars. This is the default.
+    /// </summary>
     None,
+    /// <summary>
+    /// Horizontal scrollbar.
+    /// </summary>
     Horizontal,
+    /// <summary>
+    /// Vertical scrollbar.
+    /// </summary>
     Vertical,
+    /// <summary>
+    /// Both a horizontal and a vertical scrollbar.
+    /// </summary>
     Both
 };
 
+/// <summary>
+/// Base class for controls that can show scrollbars as part of the frame. Call SetScrollBars in the constructor of
+/// derived classes to create and initialize the scrollbars. Override the OnScrollBar*** functions to react to
+/// scrollbar changes. Call MarkExtentsDirty when something changes that should cause the recalculation of
+/// scrollbar ranges and page sizes. During layouting, RequestScrollExtents() is called, which can be overriden
+/// to calculate the extents of the control's contents to set the scrollbar ranges. GetFramePadding of this
+/// control includes the scrollbars if they are visible. Some calculations might require to exclude these. The
+/// simple version of GetScrollBarWidths returns the sizes of the visible scrollbars, but returns 0 for the side
+/// with no scrollbar. The other version of GetScrollBarWidths with the visibility arguments can be used to
+/// calculate the size of the scrollbars if the control could determine their visibility. This version still
+/// won't return a value greater than 0 if a scrollbar was never created or is hidden. While it always includes
+/// the size of the scrollbar that is visible and not automatic.
+/// </summary>
 API_CLASS()
 class FUDGETS_API FudgetScrollingControl : public FudgetControl, public IFudgetScollBarOwner
 {
@@ -107,6 +135,11 @@ protected:
     /// <inheritdoc />
     void RequestLayout() override;
 
+    /// <summary>
+    /// Override in derived classes to calculate the range and page size of the scrollbars. The function is only called if
+    /// MarkExtentsDirty was called to notify the control of the change in content sizes. At the end of the calculations,
+    /// the scrollbars should be directly updated with SetRange or SetPageSize.
+    /// </summary>
     API_FUNCTION() virtual void RequestScrollExtents() {}
 private:
     // Which scrollbars need to be created.
