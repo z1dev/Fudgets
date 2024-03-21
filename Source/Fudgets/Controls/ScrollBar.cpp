@@ -9,11 +9,18 @@ FudgetScrollBarComponent::FudgetScrollBarComponent(const SpawnParams &params) : 
     _painter(nullptr), _orientation(FudgetScrollBarOrientation::Horizontal), style_inited(false), _bounds(Rectangle::Empty), _rects_dirty(true),
     _track_rect(Rectangle::Empty), _before_track_rect(Rectangle::Empty), _after_track_rect(Rectangle::Empty), _thumb_rect(Rectangle::Empty),
     _range_min(0), _range_max(0), _scroll_pos(0), _page_size(0), _visible(false), _mouse_capture(MouseCapture::None), _old_mouse_pos(-1.f), _thumb_mouse_pos(-1.f),
-    _visibility_mode(FudgetScrollBarVisibilityMode::Automatic)
+    _visibility_mode(FudgetScrollBarVisibilityMode::Visible)
 {
     for (int ix = 0; ix < 20; ++ix)
         _btn_rects[ix] = Rectangle::Empty;
 }
+
+FudgetScrollBarComponent::~FudgetScrollBarComponent()
+{
+    if (_painter != nullptr)
+        Delete(_painter);
+}
+
 
 void FudgetScrollBarComponent::Initialize(FudgetControl *owner, IFudgetScollBarOwner *event_owner, FudgetScrollBarOrientation orientation)
 {
@@ -79,6 +86,13 @@ void FudgetScrollBarComponent::Draw()
         _painter->DrawButton(_owner, ix, _btn_rects[ix], button_states);
     }
     _painter->DrawFrame(_owner, _bounds, owner_states);
+}
+
+bool FudgetScrollBarComponent::GetAssumedVisible(bool visible) const
+{
+    if (_visibility_mode == FudgetScrollBarVisibilityMode::Automatic)
+        return visible;
+    return _visible;
 }
 
 int FudgetScrollBarComponent::GetWidth() const
@@ -161,7 +175,7 @@ void FudgetScrollBarComponent::SetVisibilityMode(FudgetScrollBarVisibilityMode v
 
 bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
 {
-    if (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos)))
+    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
     {
         if (_old_mouse_pos.X != -1.f)
             MouseLeave();
@@ -197,7 +211,7 @@ bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
 
 bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
-    if (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos)))
+    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
         return false;
 
     _old_mouse_pos = pos;
@@ -273,7 +287,7 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
 
 bool FudgetScrollBarComponent::MouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
-    if (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos)))
+    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
         return false;
     if (button == MouseButton::Left)
     {

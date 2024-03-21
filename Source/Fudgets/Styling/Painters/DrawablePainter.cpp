@@ -21,10 +21,8 @@ void FudgetDrawablePainter::Initialize(FudgetControl *control, const Variant &ma
     if (!GetMappedDrawColors(control, res.Tint, _tint))
         _tint = FudgetDrawColors();
 
-    if (!GetMappedPadding(control, res.VisualPadding, _visual_padding))
-        _visual_padding = FudgetPadding(0);
-    if (!GetMappedPadding(control, res.ContentPadding, _content_padding))
-        _content_padding = FudgetPadding(0);
+    if (!GetMappedPadding(control, res.Padding, _padding))
+        _padding = FudgetPadding(0);
 }
 
 void FudgetDrawablePainter::Draw(FudgetControl *control, const Rectangle &bounds, uint64 states)

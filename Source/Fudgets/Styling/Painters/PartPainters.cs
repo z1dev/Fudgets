@@ -17,7 +17,6 @@ public partial class FudgetPartPainter
     /// same as the painter and ending with "Mapping".
     /// </summary>
     /// <typeparam name="T">The painter's type that will be created based on the mapping data</typeparam>
-    /// <param name="state_order_index">Ordering of states. States with priority will be drawn if the control's state matches. Latter states are not considered for drawing.</param>
     /// <param name="resource_mapping">Mapping of ids used for finding the right id in the control's style when drawing.</param>
     /// <returns>An initialization data that should be set as the resource in a theme for a painter id.</returns>
     public static FudgetPartPainterMapping InitializeMapping<T>(object resource_mapping) where T : FudgetPartPainter, new()

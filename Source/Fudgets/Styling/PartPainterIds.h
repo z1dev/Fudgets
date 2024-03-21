@@ -56,10 +56,11 @@ enum class FudgetThemePartIds
     /// Visual thickness of the frame of input fields.
     /// </summary>
     FieldFrameThickness,
+
     /// <summary>
-    /// Padding inside the frame of input fields that includes extra padding for contents.
+    /// Padding inside input fields for contents. It's added to the frame thickness of fields when the frame is visible.
     /// </summary>
-    FieldFramePadding,
+    FieldPadding,
 
     /// <summary>
     /// Default width of the vertical scroll bar or height of the horizontal scroll bar.
@@ -176,7 +177,7 @@ enum class FudgetThemePartIds
     /// <summary>
     /// Padding inside the frame of a button that includes extra padding for contents.
     /// </summary>
-    ButtonContentPadding,
+    ButtonPadding,
 
     /// <summary>
     /// Placeholder image for buttons with no images set
@@ -336,14 +337,21 @@ enum class FudgetFramedControlPartIds
     FrameMargin,
     FrameTint,
 
-    VisualPadding,
-    ContentPadding,
+    FrameThickness,
+};
+
+API_ENUM()
+enum class FudgetFieldPartIds
+{
+    First = 1200,
+
+    Padding = First,
 };
 
 API_ENUM()
 enum class FudgetContentPartIds
 {
-    First = 1200,
+    First = 1400,
 
     ContentPainter = First,
 
@@ -356,7 +364,7 @@ enum class FudgetContentPartIds
 API_ENUM()
 enum class FudgetScrollBarPartIds
 {
-    First = 1500,
+    First = 1600,
 
     HorzPainter = First,
     VertPainter,
@@ -432,7 +440,8 @@ enum class FudgetButtonPartIds
 {
     First = 3000,
 
-    ContentPressedOffset,
+    Padding,
+    PressedOffset,
 };
 
 API_ENUM()

@@ -91,6 +91,8 @@ public:
         return result;
     }
 
+    API_PROPERTY() FudgetControl* GetOwner() const { return _owner; }
+
     /// <summary>
     /// Initializes the painter, caching the resources it will draw with.
     /// </summary>
@@ -325,7 +327,7 @@ private:
     /// </summary>
     /// <param name="control">The control invoking the initialization</param>
     /// <param name="resource_mapping">Mapping of style ids that a painter can look up in the style of its control when drawing.</param>
-    API_FUNCTION(Internal) void DoInitialize(FudgetControl *control, API_PARAM(Ref) const FudgetPartPainterMapping &resource_mapping);
+    API_FUNCTION(Internal) void DoInitialize(FudgetControl *control, const FudgetPartPainterMapping &resource_mapping);
 
     FudgetControl *_owner;
 

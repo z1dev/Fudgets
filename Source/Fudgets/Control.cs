@@ -18,26 +18,23 @@ namespace Fudgets
         /// Constructs a painter object based on a painter mapping identified by mapping_id and initializes it with the mapping. Mappings contain the name of
         /// the painter's type to be created and the mapping of painter ids to the ids of a style. That is, when the painter tries to look up a resource by an
         /// id, another id will be used to get the resource.
-        /// The mapping_id is looked up in the control's styles, unless style_override is not null.
-        /// If mapping_style is provided, it'll be used as the primary style to look up the resources for painting. Otherwise the control's styles are used.
-        /// If default_mapping is not null and no mapping was found by the mapping_id, the default_mapping is used to provide the painter type name and mapping data.
+        /// The mapping_id is looked up in the control's styles.
+        /// When a new painter is created in place of an existing one, the existing painter can be passed as the first argument to this function. Alternatively
+        /// if the painter is no longer needed, it should be deleted with DeleteStylePainter. Painters not deleted this way will crash the game. All painters
+        /// created for the control are automatically deleted when the control is deleted.
         /// </summary>
-        /// <typeparam name="T">Base type for the painter. The created painter must be the base type or a type derived from it.</typeparam>
+        /// <typeparam name="T">Base type for the painter. The new painter must be this type or a type derived from it.</typeparam>
         /// <param name="current">The painter that was created before, possibly on the same line. It's only needed to make sure it's freed before a
         /// new painter is created.</param>
         /// <param name="mapping_id">Id of the painter mapping in the control's style.</param>
-        /// <param name="mapping_style">An optional style to be used to look up the resources in the painter for painting. if null, the control's
-        /// styles are used instead</param>
-        /// <param name="default_mapping">An optional mapping to be used to create and initialize the new painter if nothing was found for mapping_id.</param>
-        /// <param name="style_override">Id of the painter mapping in the control's style.</param>
-        /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
+        /// <returns>The part painter that was created or null if no painter mapping matches the mapping id or the template argument.</returns>
         public T CreateStylePainter<T>(T current, int mapping_id) where T : FudgetPartPainter
         {
             FudgetPartPainterMapping painter_data = default;
             FudgetPartPainter painter = null;
 
             if (current != null)
-                UnregisterStylePainterInternal(current);
+                Destroy(current);
 
             bool valid = GetStylePainterMapping(mapping_id, out painter_data);
 
@@ -53,10 +50,7 @@ namespace Fudgets
             }
             T result = painter as T;
             if (result != null)
-                RegisterStylePainterInternal(result);
-
-            if (result != null)
-                result.DoInitialize(this, ref painter_data);
+                RegisterStylePainterInternal(result, ref painter_data);
 
             return result;
         }

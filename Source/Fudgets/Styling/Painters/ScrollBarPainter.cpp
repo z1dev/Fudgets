@@ -109,7 +109,6 @@ void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectang
             --pos_after;
         }
 
-        // Pleasing VS' stupid idiotic warning system with nonsensical tests
         if (pos_after < btn_cnt)
         {
             if (available - _btn_size[pos_after] < 0)

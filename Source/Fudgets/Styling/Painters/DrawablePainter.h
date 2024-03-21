@@ -12,8 +12,7 @@ struct FUDGETS_API FudgetDrawablePainterMapping
     API_FIELD() int Margin = 0;
     API_FIELD() int Tint = 0;
 
-    API_FIELD() int VisualPadding = 0;
-    API_FIELD() int ContentPadding = 0;
+    API_FIELD() int Padding = 0;
 };
 
 /// <summary>
@@ -37,18 +36,12 @@ public:
     /// <summary>
     /// Padding inside the rectangle of the painted frame.
     /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetPadding GetVisualPadding() const { return _visual_padding; }
-
-    /// <summary>
-    /// Padding inside the rectangle of the painted frame that includes extra padding for contents.
-    /// </summary>
-    API_PROPERTY() FORCE_INLINE FudgetPadding GetContentPadding() const { return _content_padding; }
+    API_PROPERTY() FORCE_INLINE FudgetPadding GetPadding() const { return _padding; }
 private:
 
     FudgetDrawable *_drawable;
     FudgetPadding _margin;
     FudgetDrawColors _tint;
 
-    FudgetPadding _visual_padding;
-    FudgetPadding _content_padding;
+    FudgetPadding _padding;
 };

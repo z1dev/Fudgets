@@ -6,7 +6,9 @@
 #include "Styling/Themes.h"
 #include "Styling/StyleStructs.h"
 #include "Styling/DrawableBuilder.h"
+#include "Styling/PartPainterIds.h"
 #include "Styling/Painters/PartPainters.h"
+#include "Styling/Painters/DrawablePainter.h"
 #include "Layouts/Layout.h"
 
 
@@ -33,8 +35,10 @@ FudgetControl::FudgetControl(const SpawnParams &params) : ScriptingObject(params
 FudgetControl::~FudgetControl()
 {
     RegisterToUpdate(false);
+
+    for (auto p : _painters)
+        p->_owner = nullptr;
     _painters.ClearDelete();
-    _own_styles.ClearDelete();
 
     for (const auto &p : _drawables)
         Delete(p.Key);
@@ -296,6 +300,12 @@ void FudgetControl::SetControlFlags(FudgetControlFlag flags)
             _flags |= (tmp & FudgetControlFlag::AlwaysOnTop);
     }
 
+    if ((tmp & FudgetControlFlag::Framed) != (_flags & FudgetControlFlag::Framed))
+    {
+        _flags ^= FudgetControlFlag::Framed;
+        SetFramed((_flags & FudgetControlFlag::Framed) != FudgetControlFlag::Framed);
+    }
+
     // Might not need recalculation but we can't be sure.
     SizeOrPosModified(FudgetLayoutDirtyReason::All);
 }
@@ -308,6 +318,21 @@ bool FudgetControl::HasAllFlags(FudgetControlFlag flags) const
 bool FudgetControl::HasAnyFlag(FudgetControlFlag flags) const
 {
     return (int)(flags & _flags) != 0;
+}
+
+void FudgetControl::SetFramed(bool value)
+{
+    bool had_frame = (_flags & FudgetControlFlag::Framed) == FudgetControlFlag::Framed;
+    if (had_frame == value)
+        return;
+
+    if (value)
+        _flags |= FudgetControlFlag::Framed;
+    else
+        _flags &= ~FudgetControlFlag::Framed;
+
+    ClearStyleCache();
+    SizeModified();
 }
 
 bool FudgetControl::OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size)
@@ -933,6 +958,9 @@ bool FudgetControl::ClearStyleCache(bool forced)
 
 FudgetStyle* FudgetControl::GetStyle()
 {
+    if (/*_guiRoot != nullptr &&*/ !HasAnyState(FudgetControlState::StyleInitialized) && (_parent == nullptr || _parent->HasAnyState(FudgetControlState::StyleInitialized)))
+        DoStyleInitialize();
+
     return _style;
 }
 
@@ -1288,7 +1316,9 @@ bool FudgetControl::GetStyleFont(int id, API_PARAM(Out) FudgetFont &result)
         return true;
     }
 
+#if USE_EDITOR
     FudgetThemes::SetRuntimeUse(IsInRunningGame());
+#endif
 
     FudgetStyle *style = GetStyle();
     if (style != nullptr)
@@ -1474,6 +1504,8 @@ void FudgetControl::DoDraw()
         OnPositionOrSizeChanged(pos, siz);
     }
 
+    if (HasAnyState(FudgetControlState::FrameCreated))
+        ((FudgetDrawablePainter*)_painters[0])->Draw(this, GetBounds(), GetVisualState());
     OnDraw();
 }
 
@@ -1530,6 +1562,21 @@ void FudgetControl::DoMouseReleased()
     OnMouseReleased();
 }
 
+FudgetInputResult FudgetControl::DoMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
+{
+    return OnMouseDown(pos, global_pos, button, double_click);
+}
+
+bool FudgetControl::DoMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
+{
+    return OnMouseUp(pos, global_pos, button);
+}
+
+void FudgetControl::DoMouseMove(Float2 pos, Float2 global_pos)
+{
+    OnMouseMove(pos, global_pos);
+}
+
 void FudgetControl::DoMouseEnter(Float2 pos, Float2 global_pos)
 {
     SetVisualState(FudgetVisualControlState::Hovered, true);
@@ -1568,6 +1615,13 @@ bool FudgetControl::HasAnyState(FudgetControlState states) const
 bool FudgetControl::HasAllStates(FudgetControlState states) const
 {
     return (_state_flags & states) == states;
+}
+
+FudgetPadding FudgetControl::GetFramePadding() const
+{
+    if (HasAnyState(FudgetControlState::FrameCreated))
+        return ((FudgetDrawablePainter*)_painters[0])->GetPadding();
+    return FudgetPadding();
 }
 
 void FudgetControl::SetState(FudgetControlState states, bool value)
@@ -1617,6 +1671,28 @@ void FudgetControl::DoStyleInitialize()
 #endif
     // Set the initialized flag early because this is required to access the current style.
     SetState(FudgetControlState::StyleInitialized, true);
+
+    if (HasAnyState(FudgetControlState::FrameCreated) && !_painters.IsEmpty())
+    {
+        Delete(_painters[0]);
+        SetState(FudgetControlState::FrameCreated, false);
+    }
+
+    if (HasAnyFlag(FudgetControlFlag::Framed))
+    {
+        FudgetDrawablePainter *frame_painter = CreateStylePainter<FudgetDrawablePainter>(nullptr, (int)FudgetFramedControlPartIds::FramePainter);
+        if (frame_painter == nullptr)
+        {
+            frame_painter = New<FudgetDrawablePainter>(SpawnParams(Guid::New(), FudgetDrawablePainter::TypeInitializer));
+            FudgetDrawablePainter::Mapping map;
+            RegisterStylePainterInternal(frame_painter, FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(map));
+        }
+
+        _painters.Remove(frame_painter);
+        _painters.Insert(0, frame_painter);
+        SetState(FudgetControlState::FrameCreated, true);
+    }
+
     OnStyleInitialize();
     SizeModified();
 }
@@ -1947,17 +2023,22 @@ void FudgetControl::CreateClassNames()
     }
 }
 
-void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter)
+void FudgetControl::RegisterStylePainterInternal(FudgetPartPainter *painter, API_PARAM(Ref) const FudgetPartPainterMapping &mapping)
 {
     painter->_owner = this;
     _painters.Add(painter);
+    painter->DoInitialize(this, mapping);
 }
 
 void FudgetControl::UnregisterStylePainterInternal(FudgetPartPainter *painter)
 {
     if (painter == nullptr)
         return;
-    _painters.Remove(painter);
+
+    if (painter->GetOwner() != this)
+        LOG(Warning, "Trying to delete a painter object not created for this control.");
+    else
+        _painters.Remove(painter);
 
     Array<FudgetDrawable*> to_delete;
     for (const auto &p : _drawables)
@@ -1971,8 +2052,6 @@ void FudgetControl::UnregisterStylePainterInternal(FudgetPartPainter *painter)
 
     for (auto d : to_delete)
         _drawables.RemoveValue(painter);
-
-    Delete(painter);
 }
 
 void FudgetControl::RegisterDrawable(FudgetPartPainter *drawable_owner, FudgetDrawable *drawable)

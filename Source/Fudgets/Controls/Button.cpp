@@ -78,10 +78,8 @@ FudgetControlFlag FudgetButtonBase::GetInitFlags() const
 
 
 
-FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _content_painter(nullptr), _content_pressed_offset(Float2::Zero)
+FudgetButton::FudgetButton(const SpawnParams &params) : Base(params), _content_painter(nullptr), _pressed_offset(Float2::Zero)
 {
-    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::IMAGE_BUTTON_STYLE);
-    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetButton>();
 }
 
 void FudgetButton::OnInitialize()
@@ -90,42 +88,36 @@ void FudgetButton::OnInitialize()
 
 void FudgetButton::OnStyleInitialize()
 {
-    //FudgetStyle *frame_style = nullptr;
-    //if (!GetStyleStyle((int)FudgetButtonIds::FrameStyle, frame_style))
-    //    frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    Base::OnStyleInitialize();
 
-    //FudgetStyle *content_style = nullptr;
-    //if (!GetStyleStyle((int)FudgetButtonIds::ContentStyle, content_style))
-    //    content_style = nullptr;
     _content_painter = CreateStylePainter<FudgetStatePainter>(_content_painter, (int)FudgetContentPartIds::ContentPainter);
-
-    if (!GetStyleFloat2((int)FudgetButtonPartIds::ContentPressedOffset, _content_pressed_offset))
-        _content_pressed_offset = Float2::Zero;
+    if (!GetStylePadding((int)FudgetButtonPartIds::Padding, _padding))
+        _padding = FudgetPadding(0);
+    if (!GetStyleFloat2((int)FudgetButtonPartIds::PressedOffset, _pressed_offset))
+        _pressed_offset = Float2::Zero;
 }
 
-FudgetPadding FudgetButton::GetInnerPadding() const
-{
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
-} 
 
 void FudgetButton::OnDraw()
 {
     Rectangle bounds = GetBounds();
-    if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, bounds, GetVisualState());
     if (_content_painter != nullptr)
     {
-        Rectangle r = GetInnerPadding().Padded(bounds);
+        Rectangle r = GetCombinedPadding().Padded(bounds);
         uint64 state = GetVisualState();
         if ((state & uint64(FudgetVisualControlState::Pressed | FudgetVisualControlState::Down)) != 0)
-            r.Location += _content_pressed_offset;
+            r.Location += _pressed_offset;
         _content_painter->Draw(this, r, state);
     }
 }
 
-//FudgetControlFlag FudgetButton::GetInitFlags() const
-//{
-//    return Base::GetInitFlags() | FudgetControlFlag::RegisterToUpdates;
-//}
+FudgetControlFlag FudgetButton::GetInitFlags() const
+{
+    return Base::GetInitFlags() | FudgetControlFlag::Framed;
+}
+
+FudgetPadding FudgetButton::GetCombinedPadding() const
+{
+    return _padding + GetFramePadding();
+}
 

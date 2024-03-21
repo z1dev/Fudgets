@@ -85,23 +85,26 @@ protected:
 
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
+
+    /// <summary>
+    /// Padding of the text with the frame padding.
+    /// </summary>
+    API_PROPERTY() FudgetPadding GetCombinedPadding() const;
 private:
-    FudgetPadding GetTextPadding() const;
-    FudgetPadding GetButtonPadding() const;
+    //FudgetPadding GetTextPadding() const;
+    //FudgetPadding GetButtonPadding() const;
 
     bool PosOnEditor(Float2 pos) const;
     bool PosOnButton(Float2 pos) const;
 
     void HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter);
 
-
-    /// <summary>
     /// The layout that lets controls do their own layouts
-    /// </summary>
     FudgetProxyLayout *_layout;
 
-    FudgetDrawablePainter *_frame_painter;
+    //FudgetDrawablePainter *_frame_painter;
 
+    FudgetPadding _content_padding;
     int _button_width;
 
     /// <summary>

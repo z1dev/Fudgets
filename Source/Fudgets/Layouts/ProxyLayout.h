@@ -85,7 +85,7 @@ public:
     /// updating any slot layout data with SetComputedBounds should be avoided. Care must be taken not to cause overflow
     /// when calculating any of the sizes.
     /// </summary>
-    /// <param name="size">The space used for measurement and the measured sizes of the layout. Every field should be set in the struct.</param>
+    /// <param name="sizes">The space used for measurement and the measured sizes of the layout. Every field should be set in the struct.</param>
     API_FUNCTION() void SetControlSizes(const FudgetLayoutSizeCache &sizes);
 
     /// <summary>

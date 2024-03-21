@@ -94,13 +94,16 @@ public:
     void OnStyleInitialize() override;
     /// <inheritdoc />
     void OnDraw() override;
-private:
-    FudgetPadding GetInnerPadding() const;
+protected:
+    /// <inheritdoc />
+    FudgetControlFlag GetInitFlags() const override;
 
-    FudgetDrawablePainter *_frame_painter;
+    API_PROPERTY() FudgetPadding GetCombinedPadding() const;
+private:
     FudgetStatePainter *_content_painter;
 
-    Float2 _content_pressed_offset;
+    FudgetPadding _padding;
+    Float2 _pressed_offset;
 };
 
 

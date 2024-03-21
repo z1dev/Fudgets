@@ -321,9 +321,9 @@ public:
     /// <param name="area">The draw area to draw.</param>
     API_FUNCTION() static void AddDrawArea(FudgetDrawArea area);
     /// <summary>
-    /// Adds an instruction to draw a draw border object in the area available to the drawable when drawing.
+    /// Adds an instruction to draw a border object in the area available to the drawable when drawing.
     /// </summary>
-    /// <param name="area">The draw area to draw.</param>
+    /// <param name="border">The border to draw.</param>
     API_FUNCTION() static void AddDrawBorder(FudgetDrawBorder border);
 
     /// <summary>

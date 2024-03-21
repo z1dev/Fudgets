@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Control.h"
+#include "ScrollingControl.h"
 
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Input/Enums.h"
@@ -137,9 +137,9 @@ DECLARE_ENUM_OPERATORS(FudgetSizeOverride);
 /// Container class that can have child controls and a layout to position the controls
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetContainer : public FudgetControl
+class FUDGETS_API FudgetContainer : public FudgetScrollingControl
 {
-    using Base = FudgetControl;
+    using Base = FudgetScrollingControl;
     DECLARE_SCRIPTING_TYPE(FudgetContainer);
 public:
     ~FudgetContainer();

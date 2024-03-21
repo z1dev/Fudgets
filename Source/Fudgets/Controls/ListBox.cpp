@@ -144,21 +144,21 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 // FudgetListBox
 
 
-FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _item_painter(nullptr),
+FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _item_painter(nullptr),
     _data(nullptr), _owned_data(true), _focus_index(-1), _scroll_pos(0), _top_item(0), _top_item_pos(0), _snap_top_item(false),
-    _fixed_item_size(true), _default_size(Int2(-1)), _dirty_extents(true), _list_extents(0), _size_processed(0), _hovered_index(-1)
+    _fixed_item_size(true), _default_size(Int2(-1)), _list_extents(0), _size_processed(0), _hovered_index(-1)
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
     _data->RegisterDataConsumer(_data_proxy);
-    _v_scrollbar = New<FudgetScrollBarComponent>(SpawnParams(Guid::New(), FudgetScrollBarComponent::TypeInitializer));
-    _v_scrollbar->Initialize(this, this, FudgetScrollBarOrientation::Vertical);
+
+    SetScrollBars(FudgetScrollBars::Vertical);
 }
 
 FudgetListBox::~FudgetListBox()
 {
     if (_data != nullptr && _owned_data)
         Delete(_data);
-    Delete(_v_scrollbar);
+    //Delete(_v_scrollbar);
 }
 
 void FudgetListBox::OnInitialize()
@@ -167,20 +167,19 @@ void FudgetListBox::OnInitialize()
 
 void FudgetListBox::OnStyleInitialize()
 {
-    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    Base::OnStyleInitialize();
+
     _item_painter = CreateStylePainter<FudgetListItemPainter>(_item_painter, (int)FudgetListBoxPartIds::ItemPainter);
 
-    _v_scrollbar->StyleInitialize();
+    if (!GetStylePadding((int)FudgetFieldPartIds::Padding, _content_padding))
+        _content_padding = FudgetPadding(0);
 }
 
 void FudgetListBox::OnDraw()
 {
-    if (_dirty_extents)
-        RequestLayout();
-
-    Rectangle bounds = GetBounds();
-    if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, bounds, GetVisualState());
+    Base::OnDraw();
+    //if (_frame_painter != nullptr)
+    //    _frame_painter->Draw(this, bounds, GetVisualState());
 
     if (_data == nullptr || _item_painter == nullptr)
         return;
@@ -189,10 +188,10 @@ void FudgetListBox::OnDraw()
     if (count == 0)
         return;
 
-    if (_v_scrollbar->IsVisible())
-        _v_scrollbar->Draw();
+    Rectangle bounds = GetBounds();
 
-    bounds = GetContentPadding().Padded(bounds);
+
+    bounds = GetCombinedPadding().Padded(bounds);
     PushClip(bounds);
 
     Rectangle r = Rectangle(bounds.GetUpperLeft(), Float2(bounds.GetWidth(), 0.f));
@@ -216,9 +215,6 @@ void FudgetListBox::OnDraw()
 
 FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
-    if (_v_scrollbar->MouseDown(pos, global_pos, button, double_click))
-        return FudgetInputResult::Consume;
-
     if (button != MouseButton::Left)
     {
         return FudgetInputResult::Consume;
@@ -231,9 +227,6 @@ FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, Mous
 
 bool FudgetListBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
-    if (_v_scrollbar->MouseUp(pos, global_pos, button))
-        return true;
-
     if (button == MouseButton::Left)
     {
     }
@@ -242,9 +235,6 @@ bool FudgetListBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 
 void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
-    if (_v_scrollbar->MouseMove(pos, global_pos))
-        return;
-
     if (MouseIsCaptured())
     {
 
@@ -257,8 +247,6 @@ void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
 
 void FudgetListBox::OnMouseLeave()
 {
-    if (_v_scrollbar->MouseLeave())
-        return;
     _hovered_index = -1;
 }
 
@@ -274,10 +262,10 @@ FudgetInputResult FudgetListBox::OnKeyDown(KeyboardKeys key)
 
 void FudgetListBox::OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking)
 {
-    if (_default_size.Y == -1 || scrollbar != _v_scrollbar)
+    if (_default_size.Y == -1 || scrollbar != GetVerticalScrollBar())
         return;
     
-    Int2 topleft = GetContentPadding().UpperLeft();
+    Int2 topleft = GetCombinedPadding().UpperLeft();
     int32 scroll_pos = (int32)scrollbar->GetScrollPos();
     if (_fixed_item_size)
     {
@@ -311,38 +299,38 @@ void FudgetListBox::OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64
         _scroll_pos.Y = int32(scroll_pos);
 }
 
-void FudgetListBox::OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click)
-{
-}
+//void FudgetListBox::OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click)
+//{
+//}
+//
+//void FudgetListBox::OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track)
+//{
+//
+//}
 
-void FudgetListBox::OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track)
-{
-
-}
-
-void FudgetListBox::OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click)
-{
-    if (scrollbar != _v_scrollbar)
-        return;
-    if (before_track)
-        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() - _v_scrollbar->GetPageSize());
-    else
-        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() + _v_scrollbar->GetPageSize());
-
-}
-
-void FudgetListBox::OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track)
-{
-
-}
-
-void FudgetListBox::OnScrollBarShown(FudgetScrollBarComponent *scrollbar)
-{
-}
-
-void FudgetListBox::OnScrollBarHidden(FudgetScrollBarComponent *scrollbar)
-{
-}
+//void FudgetListBox::OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click)
+//{
+//    if (scrollbar != _v_scrollbar)
+//        return;
+//    if (before_track)
+//        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() - _v_scrollbar->GetPageSize());
+//    else
+//        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() + _v_scrollbar->GetPageSize());
+//
+//}
+//
+//void FudgetListBox::OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track)
+//{
+//
+//}
+//
+//void FudgetListBox::OnScrollBarShown(FudgetScrollBarComponent *scrollbar)
+//{
+//}
+//
+//void FudgetListBox::OnScrollBarHidden(FudgetScrollBarComponent *scrollbar)
+//{
+//}
 
 void FudgetListBox::SetDataProvider(FudgetStringListProvider *data)
 {
@@ -392,10 +380,11 @@ void FudgetListBox::SetItemsHaveFixedSize(bool value)
 
 int FudgetListBox::ItemIndexAt(Float2 point)
 {
-    if (!GetContentPadding().Padded(GetBounds()).Contains(point))
+    FudgetPadding content_padding = GetCombinedPadding();
+    if (!content_padding.Padded(GetBounds()).Contains(point))
         return -1;
 
-    Int2 pt = Int2((int)point.X, (int)point.Y) - GetContentPadding().UpperLeft() + _scroll_pos;
+    Int2 pt = Int2((int)point.X, (int)point.Y) - content_padding.UpperLeft() + _scroll_pos;
 
     if (_fixed_item_size)
         return pt.Y / _default_size.Y;
@@ -446,7 +435,7 @@ Rectangle FudgetListBox::GetItemRect(int item_index)
     if (item_index < 0 || item_index >= count)
         return Rectangle::Empty;
 
-    Int2 topleft = GetContentPadding().UpperLeft();
+    Int2 topleft = GetCombinedPadding().UpperLeft();
     if (_fixed_item_size)
     {
         return Rectangle(Float2((float)topleft.X, (float)topleft.Y + item_index * _default_size.Y - _scroll_pos.Y), _default_size);
@@ -480,12 +469,12 @@ void FudgetListBox::SetSnapTopItem(bool value)
     MarkExtentsDirty();
 }
 
-void FudgetListBox::RequestLayout()
-{
-    if (_dirty_extents)
-        RecalculateListExtents();
-    Base::RequestLayout();
-}
+//void FudgetListBox::RequestLayout()
+//{
+//    if (_dirty_extents)
+//        RecalculateListExtents();
+//    Base::RequestLayout();
+//}
 
 void FudgetListBox::DataChangeBegin()
 {
@@ -604,32 +593,12 @@ FudgetControlFlag FudgetListBox::GetInitFlags() const
 {
     return FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave | FudgetControlFlag::CanHandleMouseUpDown |
         FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::FocusOnMouseLeft |
-        FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | Base::GetInitFlags();
+        FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | FudgetControlFlag::Framed | Base::GetInitFlags();
 }
 
-FudgetPadding FudgetListBox::GetFramePadding() const
+FudgetPadding FudgetListBox::GetCombinedPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetVisualPadding() : FudgetPadding(0);
-}
-
-FudgetPadding FudgetListBox::GetContentPadding() const
-{
-    if (_frame_painter != nullptr)
-    {
-        FudgetPadding pad = _frame_painter->GetContentPadding();
-        pad.Right += _v_scrollbar->GetWidth();
-        return pad;
-    }
-    return FudgetPadding(0);
-}
-
-Rectangle FudgetListBox::GetScrollBarBounds() const
-{
-    Rectangle r = GetFramePadding().Padded(GetBounds());
-    float scroll_width = Math::Min(r.Size.X, (float)_v_scrollbar->GetWidth());
-    r.Location.X += r.Size.X - scroll_width;
-    r.Size.X = scroll_width;
-    return r;
+    return _content_padding + GetFramePadding();
 }
 
 void FudgetListBox::EnsureDefaultSize()
@@ -637,20 +606,16 @@ void FudgetListBox::EnsureDefaultSize()
     if (_item_painter != nullptr && _data != nullptr && _fixed_item_size && _default_size.Y <= 0 && _data->GetCount() > 0)
     {
         _default_size = _item_painter->Measure(this, 0, _data, 0);
-        _default_size.X = (int)GetContentPadding().Padded(GetBounds()).GetWidth();
+        _default_size.X = (int)GetCombinedPadding().Padded(GetBounds()).GetWidth();
 
         MarkExtentsDirty();
-        //RecalculateListExtents();
     }
 }
 
-void FudgetListBox::RecalculateListExtents()
+void FudgetListBox::RequestScrollExtents()
 {
-    if (!_dirty_extents || _data == nullptr)
-    {
-        _dirty_extents = false;
+    if (_data == nullptr)
         return;
-    }
 
     EnsureDefaultSize();
 
@@ -671,42 +636,62 @@ void FudgetListBox::RecalculateListExtents()
         }
     }
 
-    _dirty_extents = false;
+    Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
+    bounds.Size += GetScrollBarWidths();
+    bool hvis = _list_extents.X > bounds.Size.X;
+    bool vvis = _list_extents.Y > bounds.Size.Y;
+    Int2 bounds_size = bounds.Size + GetScrollBarWidths(hvis, vvis);
 
-    Rectangle bounds = GetContentPadding().Padded(GetBounds());
     if (_snap_top_item)
     {
-        int height = (int)bounds.Size.Y;
-        int sum = 0;
-        int count = _data->GetCount();
-
-        int last_top_height = 0;
-
-        if (_fixed_item_size)
+        bool changed = true;
+        while (changed)
         {
-            sum = Math::Min(count * _default_size.Y, _default_size.Y * ((height + _default_size.Y - 1) / _default_size.Y));
-            last_top_height = _default_size.Y;
-        }
-        else
-        {
-            int pos = count - 1;
-            while (pos >= 0 && sum < height)
+            int height = (int)bounds_size.Y;
+            int sum = 0;
+            int count = _data->GetCount();
+
+            int last_top_height = 0;
+
+            if (_fixed_item_size)
             {
-                last_top_height = GetItemSize(pos--).Y;
-                sum += last_top_height;
+                sum = Math::Min(count * _default_size.Y, _default_size.Y * ((height + _default_size.Y - 1) / _default_size.Y));
+                last_top_height = _default_size.Y;
             }
-        }
-        if (sum > height)
-        {
-            if (sum > last_top_height)
-                _list_extents.Y += last_top_height;
             else
-                _list_extents.Y += sum - height;
+            {
+                int pos = count - 1;
+                while (pos >= 0 && sum < height)
+                {
+                    last_top_height = GetItemSize(pos--).Y;
+                    sum += last_top_height;
+                }
+            }
+            int expand = 0;
+            if (sum > height)
+            {
+                if (sum > last_top_height)
+                    _list_extents.Y += expand = last_top_height;
+                else
+                    _list_extents.Y += expand = sum - height;
+            }
+
+            changed = (!hvis && _list_extents.X > bounds.Size.X) || (!vvis && _list_extents.Y > bounds.Size.Y);
+            if (changed)
+            {
+                hvis |= _list_extents.X > bounds.Size.X;
+                vvis |= _list_extents.Y > bounds.Size.Y;
+                bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
+                _list_extents.Y -= expand;
+            }
         }
     }
 
-    _v_scrollbar->SetScrollRange(_list_extents.Y);
-    _v_scrollbar->SetBounds(GetScrollBarBounds());
-    _v_scrollbar->SetPageSize((int)bounds.Size.Y);
+    FudgetScrollBarComponent *vbar = GetVerticalScrollBar();
+    if (vbar == nullptr)
+        return;
+
+    vbar->SetScrollRange(_list_extents.Y);
+    vbar->SetPageSize((int)bounds_size.Y);
 }
 

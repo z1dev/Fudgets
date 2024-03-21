@@ -156,7 +156,7 @@ public:
     /// <param name="control">Control to paint in</param>
     /// <param name="bounds">Bounds to draw in. Used for clipping</param>
     /// <param name="offset">Added to the upper left of bounds, determines where the topmost line would be drawn</param>
-    /// <param name="state">State of the control</param>
+    /// <param name="states">State of the control</param>
     /// <param name="options">Options for text, like scale or wrapping mode</param>
     /// <param name="measurements">Line measurements calculated previously with Measure</param>
     API_FUNCTION() virtual void Draw(FudgetControl *control, const Rectangle &bounds, const Int2 &offset, uint64 states,

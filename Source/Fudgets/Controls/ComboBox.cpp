@@ -11,8 +11,9 @@
 
 
 
-FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), _frame_painter(nullptr),
-    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _editor_capturing(false), _button_capturing(false), _last_mouse_pos(0.f)
+FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), /*_frame_painter(nullptr),*/
+    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _list_data(nullptr), _editor_capturing(false),
+    _button_capturing(false), _last_mouse_pos(0.f)
 {
 }
 
@@ -23,19 +24,8 @@ FudgetComboBox::~FudgetComboBox()
 
 void FudgetComboBox::OnInitialize()
 {
-   /* FudgetFramedFieldPainterResources frame_res;
-    frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
-    frame_res.FrameDraw = (int)FudgetComboBoxIds::FrameDraw;
-    frame_res.HoveredFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
-    frame_res.PressedFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
-    frame_res.DownFrameDraw = (int)FudgetComboBoxIds::FrameDraw;
-    frame_res.DisabledFrameDraw = (int)FudgetComboBoxIds::DisabledFrameDraw;
-    frame_res.FocusedFrameDraw = (int)FudgetComboBoxIds::FocusedFrameDraw;
-    frame_res.ContentPadding = (int)FudgetComboBoxIds::ContentPadding;
-    default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(frame_res);*/
-
     _editor = CreateChild<FudgetLineEdit>(FudgetThemes::COMBOBOX_EDITOR_STYLE);
-    _editor->SetShowBorder(false);
+    _editor->SetFramed(false);
 
     _button = CreateChild<FudgetButton>(FudgetThemes::COMBOBOX_BUTTON_STYLE);
     _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
@@ -55,19 +45,19 @@ void FudgetComboBox::OnInitialize()
 
 void FudgetComboBox::OnStyleInitialize()
 {
+    Base::OnStyleInitialize();
+
+    if (!GetStylePadding((int)FudgetFieldPartIds::Padding, _content_padding))
+        _content_padding = FudgetPadding(0);
     if (!GetStyleInt((int)FudgetComboBoxPartIds::ButtonWidth, _button_width))
         _button_width = 20;
-
-    //FudgetStyle *frame_style;
-    //if (!GetStyleStyle((int)FudgetComboBoxIds::FrameStyle, frame_style))
-    //    frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
 }
 
 void FudgetComboBox::OnDraw()
 {
-    if (_frame_painter != nullptr)
-        _frame_painter->Draw(this, GetBounds(), GetVisualState());
+    Base::OnDraw();
+    //if (_frame_painter != nullptr)
+    //    _frame_painter->Draw(this, GetBounds(), GetVisualState());
 }
 
 //void FudgetComboBox::OnFocusChanged(bool focused, FudgetControl *other)
@@ -100,9 +90,9 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
     HandleEnterLeaveMouse(pos, global_pos, false);
 
     if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
-        return _editor->OnMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
+        return _editor->DoMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
     else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
-        return _button->OnMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
+        return _button->DoMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
 
     return FudgetInputResult::Consume;
 }
@@ -115,9 +105,9 @@ bool FudgetComboBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button
 
     bool r = true;
     if (_editor_capturing)
-        r = _editor->OnMouseUp(pos - _editor->GetPosition(), global_pos, button);
+        r = _editor->DoMouseUp(pos - _editor->GetPosition(), global_pos, button);
     else if (_button_capturing)
-        r =  _button->OnMouseUp(pos - _button->GetPosition(), global_pos, button);
+        r =  _button->DoMouseUp(pos - _button->GetPosition(), global_pos, button);
 
     return r;
 }
@@ -127,9 +117,9 @@ void FudgetComboBox::OnMouseMove(Float2 pos, Float2 global_pos)
     HandleEnterLeaveMouse(pos, global_pos, false);
 
     if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
-        _editor->OnMouseMove(pos - _editor->GetPosition(), global_pos);
+        _editor->DoMouseMove(pos - _editor->GetPosition(), global_pos);
     else if(_button_capturing || (!_editor_capturing && PosOnButton(pos)))
-        _button->OnMouseMove(pos - _button->GetPosition(), global_pos);
+        _button->DoMouseMove(pos - _button->GetPosition(), global_pos);
 }
 
 void FudgetComboBox::OnMouseEnter(Float2 pos, Float2 global_pos)
@@ -207,8 +197,8 @@ void FudgetComboBox::ProxyInterfaceLayoutChildren(Int2 space)
     Int2 txt_max = Int2::Zero;
     _layout->GetSlotMeasures(0, Int2(-1), txt_wanted, txt_min, txt_max);
 
-    FudgetPadding text_padding = GetTextPadding();
-    FudgetPadding button_padding = GetButtonPadding();
+    FudgetPadding text_padding = GetCombinedPadding();
+    FudgetPadding button_padding = GetFramePadding();
     text_padding.Right = button_padding.Right + _button_width;
 
     Int2 min = txt_min + text_padding.Size();
@@ -241,31 +231,26 @@ void FudgetComboBox::ButtonPressed()
 FudgetControlFlag FudgetComboBox::GetInitFlags() const
 {
     return FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave |
-        FudgetControlFlag::BlockMouseEvents | FudgetControlFlag::FocusOnMouseLeft | FudgetControlFlag::CaptureReleaseMouseLeft |
+        FudgetControlFlag::BlockMouseEvents | FudgetControlFlag::FocusOnMouseLeft | FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::Framed |
         FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | FudgetControlFlag::CompoundControl | Base::GetInitFlags();
 }
 
-FudgetPadding FudgetComboBox::GetTextPadding() const
+FudgetPadding FudgetComboBox::GetCombinedPadding() const
 {
-    return _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
-}
-
-FudgetPadding FudgetComboBox::GetButtonPadding() const
-{
-    return _frame_painter != nullptr ? _frame_painter->GetVisualPadding() : FudgetPadding(0);
+    return _content_padding + GetFramePadding();
 }
 
 bool FudgetComboBox::PosOnEditor(Float2 pos) const
 {
-    FudgetPadding pad = GetTextPadding();
-    pad.Right = GetButtonPadding().Right + _button_width;
+    FudgetPadding pad = GetCombinedPadding();
+    pad.Right = GetFramePadding().Right + _button_width;
 
     return pad.Padded(GetBounds()).Contains(pos);
 }
 
 bool FudgetComboBox::PosOnButton(Float2 pos) const
 {
-    FudgetPadding pad = GetButtonPadding();
+    FudgetPadding pad = GetFramePadding();
     Rectangle r = GetBounds();
     return pos.Y >= r.GetTop() + pad.Top && pos.Y <= r.GetBottom() - pad.Bottom && pos.X > Math::Max((float)pad.Left, r.GetRight() - pad.Right - _button_width) && pos.X < r.GetRight() - pad.Right;
 }

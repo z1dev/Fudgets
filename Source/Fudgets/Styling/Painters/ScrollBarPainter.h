@@ -99,6 +99,7 @@ public:
     /// </summary>
     /// <param name="control">The control to paint in.</param>
     /// <param name="bounds">Bounding rectangle of the scrollbar</param>
+    /// <param name="track_bounds">Bounding rectangle of the track where the thumb is moving</param>
     /// <param name="states">The state of the control or scrollbar</param>
     API_FUNCTION() virtual void DrawBackground(FudgetControl *control, const Rectangle &bounds, const Rectangle &track_bounds, uint64 states);
     /// <summary>

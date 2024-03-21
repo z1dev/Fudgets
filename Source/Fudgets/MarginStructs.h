@@ -73,6 +73,36 @@ struct FUDGETS_API FudgetPadding : public ISerializable
 			Bottom != other.Bottom;
 	}
 
+	FORCE_INLINE FudgetPadding& operator+=(const FudgetPadding &other)
+	{
+		Left += other.Left;
+		Top += other.Top;
+		Right += other.Right;
+		Bottom += other.Bottom;
+		return *this;
+	}
+
+	FORCE_INLINE FudgetPadding& operator-=(const FudgetPadding &other)
+	{
+		Left -= other.Left;
+		Top -= other.Top;
+		Right -= other.Right;
+		Bottom -= other.Bottom;
+		return *this;
+	}
+
+	FORCE_INLINE FudgetPadding operator+(const FudgetPadding &other) const
+	{
+		return FudgetPadding(Left + other.Left, Top + other.Top,
+			Right + other.Right, Bottom + other.Bottom);
+	}
+
+	FORCE_INLINE FudgetPadding operator-(const FudgetPadding &other) const
+	{
+		return FudgetPadding(Left - other.Left, Top - other.Top,
+			Right - other.Right, Bottom - other.Bottom);
+	}
+
 	/// <summary>
 	/// Converts padding to a Int4 with left, right, top, bottom values in this order, which is the order used in some
 	/// built-in functions that use Int4 for sides.

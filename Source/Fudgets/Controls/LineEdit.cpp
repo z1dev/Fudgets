@@ -8,53 +8,23 @@
 
 
 
-FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), _frame_painter(nullptr), _text_painter(nullptr),
-    _blink_passed(0.0f), _character_scroll_count(0), _caret_draw(nullptr), _caret_blink_time(1.0f), _caret_width(2), _scroll_pos(0), _show_border(true)
+FudgetLineEdit::FudgetLineEdit(const SpawnParams &params) : Base(params), /*_frame_painter(nullptr), */_text_painter(nullptr),
+    _blink_passed(0.0f), _character_scroll_count(0), _caret_draw(nullptr), _caret_blink_time(1.0f), _caret_width(2), _scroll_pos(0)//, _show_border(true)
 {
-    //FudgetStyle *parentstyle = FudgetThemes::GetStyle(FudgetThemes::FRAMED_SINGLELINE_TEXT_INPUT_STYLE);
-    //FudgetStyle *style = parentstyle->CreateInheritedStyle<FudgetLineEdit>();
 }
 
 void FudgetLineEdit::OnInitialize()
 {
-    //FudgetFramedFieldPainterResources frame_res;
-    //frame_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
-    //frame_res.FrameDraw = (int)FudgetLineEditIds::FrameDraw;
-    //frame_res.HoveredFrameDraw = (int)FudgetLineEditIds::FrameDraw;
-    //frame_res.PressedFrameDraw = (int)FudgetLineEditIds::FrameDraw;
-    //frame_res.DownFrameDraw = (int)FudgetLineEditIds::FrameDraw;
-    //frame_res.DisabledFrameDraw = (int)FudgetLineEditIds::DisabledFrameDraw;
-    //frame_res.FocusedFrameDraw = (int)FudgetLineEditIds::FocusedFrameDraw;
-    //frame_res.ContentPadding = (int)FudgetLineEditIds::ContentPadding;
-    //_default_frame_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(frame_res);
-
-    //FudgetLineEditTextPainterResources text_res;
-    //text_res.StateOrderIndex = FudgetThemes::FOCUSED_HOVERED_STATE_ORDER;
-    //text_res.SelectionDraw = (int)FudgetLineEditIds::SelectionDraw;
-    //text_res.FocusedSelectionDraw = (int)FudgetLineEditIds::SelectionDraw;
-    //text_res.DisabledSelectionDraw = (int)FudgetLineEditIds::DisabledSelectionDraw;
-    //text_res.TextColor = (int)FudgetLineEditIds::TextColor;
-    //text_res.DisabledTextColor = (int)FudgetLineEditIds::DisabledTextColor;
-    //text_res.SelectedTextColor = (int)FudgetLineEditIds::SelectedTextColor;
-    //text_res.FocusedSelectedTextColor = (int)FudgetLineEditIds::SelectedTextColor;
-    //text_res.DisabledSelectedTextColor = (int)FudgetLineEditIds::DisabledSelectedTextColor;
-    //text_res.Font = (int)FudgetLineEditIds::Font;
-    //_default_text_painter_mapping = FudgetPartPainter::InitializeMapping<FudgetLineEditTextPainter>(text_res);
 }
 
 void FudgetLineEdit::OnStyleInitialize()
 {
-    //FudgetStyle *frame_style;
-    //if (!GetStyleStyle((int)FudgetLineEditIds::FrameStyle, frame_style))
-    //    frame_style = nullptr;
-    _frame_painter = CreateStylePainter<FudgetDrawablePainter>(_frame_painter, (int)FudgetFramedControlPartIds::FramePainter);
+    Base::OnStyleInitialize();
 
-    //FudgetStyle *text_style;
-    //if (!GetStyleStyle((int)FudgetLineEditIds::TextStyle, text_style))
-    //    text_style = nullptr;
     _text_painter = CreateStylePainter<FudgetSingleLineTextPainter>(_text_painter, (int)FudgetSinglelineTextFieldPartIds::TextPainter);
 
-
+    if (!GetStylePadding((int)FudgetFieldPartIds::Padding, _content_padding))
+        _content_padding = FudgetPadding(0);
     if (!GetStyleDrawable((int)FudgetTextFieldPartIds::CaretDraw, nullptr, _caret_draw))
         _caret_draw = FudgetDrawable::FromColor(this, nullptr, Color::Black);
     if (!GetStyleFloat((int)FudgetTextFieldPartIds::CaretBlinkTime, _caret_blink_time))
@@ -71,7 +41,7 @@ Int2 FudgetLineEdit::GetLayoutHintSize() const
     if (_text_painter == nullptr)
         return size;
 
-    FudgetPadding inner = GetInnerPadding();
+    FudgetPadding inner = GetCombinedPadding();
     int h = _text_painter->GetFontHeight();
     return Int2(size.X, h + inner.Height());
 }
@@ -81,21 +51,22 @@ Int2 FudgetLineEdit::GetLayoutMinSize() const
     if (_text_painter == nullptr)
         return Base::GetLayoutMinSize();
 
-    FudgetPadding inner = GetInnerPadding();
+    FudgetPadding inner = GetCombinedPadding();
     int h = _text_painter->GetFontHeight();
     return Int2(inner.Width(), h + inner.Height());
 }
 
 void FudgetLineEdit::OnDraw()
 {
-    Rectangle bounds = GetBounds();
-    if (_show_border && _frame_painter != nullptr)
-        _frame_painter->Draw(this, bounds, GetVisualState());
+    Base::OnDraw();
+    //if (_show_border && _frame_painter != nullptr)
+    //    _frame_painter->Draw(this, bounds, GetVisualState());
 
     if (_text_painter == nullptr)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
+    Rectangle bounds = GetBounds();
+    FudgetPadding innerPadding = GetCombinedPadding();
     bounds = innerPadding.Padded(bounds);
     PushClip(bounds);
 
@@ -152,17 +123,17 @@ void FudgetLineEdit::OnSizeChanged()
     ScrollToPos();
 }
 
-FudgetPadding FudgetLineEdit::GetInnerPadding() const
-{
-    return _show_border && _frame_painter != nullptr ? _frame_painter->GetContentPadding() : FudgetPadding(0);
-}
+//FudgetPadding FudgetLineEdit::GetInnerPadding() const
+//{
+//    return _show_border && _frame_painter != nullptr ? _frame_painter->GetCombinedPadding() : FudgetPadding(0);
+//}
 
 int FudgetLineEdit::CharIndexAt(Int2 pos)
 {
     if (_text_painter == nullptr)
         return 0;
 
-    FudgetPadding innerPadding = GetInnerPadding();
+    FudgetPadding innerPadding = GetCombinedPadding();
     //_draw_state.Bounds = innerPadding.Padded(GetBounds());
 
     Rectangle bounds = innerPadding.Padded(GetBounds());
@@ -225,20 +196,12 @@ bool FudgetLineEdit::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button
     return Base::OnMouseUp(pos, global_pos, button);
 }
 
-void FudgetLineEdit::SetShowBorder(bool value)
-{
-    if (_show_border == value)
-        return;
-    _show_border = value;
-    SizeModified();
-}
-
 void FudgetLineEdit::ScrollToPos()
 {
     if (_text_painter == nullptr)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
+    FudgetPadding innerPadding = GetCombinedPadding();
     Rectangle bounds = innerPadding.Padded(GetBounds());
 
     int caret_pos = GetCaretPos();
@@ -290,7 +253,7 @@ void FudgetLineEdit::FixScrollPos()
     if (_text_painter == nullptr)
         return;
 
-    FudgetPadding innerPadding = GetInnerPadding();
+    FudgetPadding innerPadding = GetCombinedPadding();
     FudgetSingleLineTextOptions options;
     //options.Text = _text;
     FudgetTextRange range;
@@ -299,7 +262,7 @@ void FudgetLineEdit::FixScrollPos()
 
     Int2 textSize = _text_painter->Measure(this, _text, range, GetVisualState(), options);
 
-    int w = (int)GetInnerPadding().Padded(GetBounds()).GetWidth() + _scroll_pos;
+    int w = (int)innerPadding.Padded(GetBounds()).GetWidth() + _scroll_pos;
     if (w > textSize.X)
         _scroll_pos = Math::Max(0, textSize.X - w + _scroll_pos);
 }
@@ -341,7 +304,7 @@ void FudgetLineEdit::Process(const StringView &value)
 
 FudgetControlFlag FudgetLineEdit::GetInitFlags() const
 {
-    return FudgetControlFlag::RegisterToUpdates | Base::GetInitFlags();
+    return FudgetControlFlag::RegisterToUpdates | FudgetControlFlag::Framed | Base::GetInitFlags();
 }
 
 void FudgetLineEdit::SetTextInternal(const StringView &value)
@@ -401,3 +364,9 @@ FudgetTextBoxFlags FudgetLineEdit::GetTextBoxInitFlags() const
 {
     return FudgetTextBoxFlags::CaretVisible | FudgetTextBoxFlags::Editable | FudgetTextBoxFlags::WordSkip | FudgetTextBoxFlags::MouseSelectable | FudgetTextBoxFlags::KeySelectable;
 }
+
+FudgetPadding FudgetLineEdit::GetCombinedPadding() const
+{
+    return _content_padding + GetFramePadding();
+}
+

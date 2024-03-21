@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ListControl.h"
-#include "ScrollBar.h"
 
 #include <vector>
 
@@ -138,22 +137,22 @@ public:
 
     /// <inheritdoc />
     void OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking) override;
-    /// <inheritdoc />
-    void OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click) override;
-    /// <inheritdoc />
-    void OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track) override;
-    /// <inheritdoc />
-    void OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click) override;
-    /// <inheritdoc />
-    void OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track) override;
-    /// <inheritdoc />
-    void OnScrollBarThumbPressed(FudgetScrollBarComponent *scrollbar, bool double_click) override {}
-    /// <inheritdoc />
-    void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override {}
-    /// <inheritdoc />
-    void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override;
-    /// <inheritdoc />
-    void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override;
+    ///// <inheritdoc />
+    //void OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click) override;
+    ///// <inheritdoc />
+    //void OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track) override;
+    ///// <inheritdoc />
+    //void OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click) override;
+    ///// <inheritdoc />
+    //void OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track) override;
+    ///// <inheritdoc />
+    //void OnScrollBarThumbPressed(FudgetScrollBarComponent *scrollbar, bool double_click) override {}
+    ///// <inheritdoc />
+    //void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override {}
+    ///// <inheritdoc />
+    //void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override;
+    ///// <inheritdoc />
+    //void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override;
 
     /// <summary>
     /// Gets the data provider currently set for this list control.
@@ -224,16 +223,10 @@ public:
     /// <param name="value">Set whether the top item should always be fully visible or is allowed to be covered in part</param>
     API_PROPERTY() void SetSnapTopItem(bool value);
 
-    /// <summary>
-    /// Causes recalculation of the size required by all the items in the listbox when layouting is next
-    /// requested or drawing.
-    /// </summary>
-    /// <returns></returns>
-    API_FUNCTION() void MarkExtentsDirty() { _dirty_extents = true; }
 protected:
 
-    /// <inheritdoc />
-    void RequestLayout() override;
+    ///// <inheritdoc />
+    //void RequestLayout() override;
 
     /// <inheritdoc />
     void DataChangeBegin() override;
@@ -266,19 +259,24 @@ protected:
 
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
+
+    /// <summary>
+    /// Padding of the text with the frame padding.
+    /// </summary>
+    API_PROPERTY() FudgetPadding GetCombinedPadding() const;
+
+    /// <inheritdoc />
+    void RequestScrollExtents() override;
 private:
-    FudgetPadding GetFramePadding() const;
-    FudgetPadding GetContentPadding() const;
-    Rectangle GetScrollBarBounds() const;
-    FORCE_INLINE Float2 GetPosInScrollBar(Float2 pos) const { return pos - _v_scrollbar->GetBounds().GetUpperLeft(); }
-    FORCE_INLINE Int2 GetPosInScrollBar(Int2 pos) const { Float2 p = (pos - _v_scrollbar->GetBounds().GetUpperLeft()); return Int2((int)p.X, (int)p.Y); }
+    //Rectangle GetScrollBarBounds() const;
+    //FORCE_INLINE Float2 GetPosInScrollBar(Float2 pos) const { return pos - _v_scrollbar->GetBounds().GetUpperLeft(); }
+    //FORCE_INLINE Int2 GetPosInScrollBar(Int2 pos) const { Float2 p = (pos - _v_scrollbar->GetBounds().GetUpperLeft()); return Int2((int)p.X, (int)p.Y); }
 
     void EnsureDefaultSize();
-    void RecalculateListExtents();
 
-    FudgetScrollBarComponent *_v_scrollbar;
+    FudgetPadding _content_padding;
 
-    FudgetDrawablePainter *_frame_painter;
+    //FudgetDrawablePainter *_frame_painter;
     FudgetListItemPainter *_item_painter;
 
     FudgetStringListProvider *_data;
@@ -300,9 +298,6 @@ private:
     // The default size of items in the list. Setting _fixed_item_size to true makes every item have the default size.
     // Otherwise the items will be treated like having this size before they are measured.
     Int2 _default_size;
-
-    // A dirty flag when the contents changed and their size needs to be calculated to be able to show a scrollbar or limit scrolling.
-    bool _dirty_extents;
 
     // Dimensions of the displayed list with all items included. When item sizes are not fully calculated, this is an
     // approximated value.

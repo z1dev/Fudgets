@@ -2,6 +2,7 @@
 
 #include "TextBoxBase.h"
 #include "../Styling/Painters/TextBoxPainter.h"
+#include "ScrollBar.h"
 
 class FudgetDrawablePainter;
 class FudgetDrawable;
@@ -45,6 +46,8 @@ class FUDGETS_API FudgetTextBox : public FudgetTextBoxBase
     API_AUTO_SERIALIZATION();
 
 public:
+    ~FudgetTextBox();
+
     /// <inheritdoc />
     void OnInitialize() override;
 
@@ -89,6 +92,9 @@ public:
 
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
+
+    /// <inheritdoc />
+    void OnMouseLeave() override;
 
     /// <inheritdoc />
     CursorType GetContextCursor() const override;
@@ -189,8 +195,13 @@ protected:
 
     /// <inheritdoc />
     FudgetTextBoxFlags GetTextBoxInitFlags() const override;
+
+    /// <summary>
+    /// Padding of the text with the frame padding.
+    /// </summary>
+    API_PROPERTY() FudgetPadding GetCombinedPadding() const;
 private:
-    FudgetPadding GetInnerPadding() const;
+    //FudgetPadding GetInnerPadding() const;
 
     void MarkTextDirty();
 
@@ -202,12 +213,12 @@ private:
 
     void SnapTopLine();
 
-
-
-    FudgetDrawablePainter *_frame_painter;
+    //FudgetDrawablePainter *_frame_painter;
     FudgetMultiLineTextPainter *_text_painter;
 
     FudgetMultilineTextMeasurements _text_measurements;
+
+    FudgetPadding _content_padding;
 
     // Time passed in seconds since caret blink started. The caret is visible when this value is below
     // _caret_blink_time and hidden when it is over it.

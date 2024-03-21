@@ -55,7 +55,6 @@
 #include "Styling/Themes.h"
 
 #include "DataInterfaces.h"
-#include "Controls/ScrollBar.h"
 
 
 class FudgetContainer;
@@ -208,7 +207,10 @@ enum class FudgetControlState : uint16
     /// A parent container up the chain is hidden which prevents drawing and user interaction.
     /// </summary>
     ParentHidden = 1 << 11,
-
+    /// <summary>
+    /// The control has a painter created to draw its frame.
+    /// </summary>
+    FrameCreated = 1 << 12,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
@@ -237,7 +239,7 @@ enum class FudgetControlVisibility
 /// Flags for controls that describe their behavior
 /// </summary>
 API_ENUM(Attributes="Flags")
-enum class FudgetControlFlag : uint16
+enum class FudgetControlFlag : uint32
 {
     /// <summary>
     /// Empty flag
@@ -275,9 +277,9 @@ enum class FudgetControlFlag : uint16
     /// </summary>
     CanHandleMouseEnterLeave = 1 << 5,
     /// <summary>
-    /// Makes control "eat" all mouse messages if the mouse is over it, even if it does not have any of the
-    /// other flags for mouse events. Ignored while the mouse is captured by another control. This doesn't
-    /// prevent parents peeking at the message early (when it's implemented)
+    /// Makes the control "eat" all mouse messages if the mouse is over it, even if it does not have any of the
+    /// other flags for mouse events. Ignored while the mouse is captured by another control. Mouse hooks can
+    /// still peek and modify the mouse events before the control can access them.
     /// </summary>
     BlockMouseEvents = 1 << 6,
     /// <summary>
@@ -324,6 +326,13 @@ enum class FudgetControlFlag : uint16
     /// get the key up and down events.
     /// </summary>
     CanHandleNavigationKeys = 1 << 14,
+    /// <summary>
+    /// The control draws a background and displays a frame inside its edges, its contents can be constrainted within this
+    /// frame. When it is set, GetFramePadding returns valued paddings.
+    /// TODO: make the layouts and controls respect the frame's padding automatically.
+    /// </summary>
+    Framed = 1 << 15,
+
 };
 DECLARE_ENUM_OPERATORS(FudgetControlFlag);
 
@@ -410,12 +419,11 @@ enum class FudgetInputResult
     Consume
 };
 
-
 /// <summary>
 /// Base class for controls, including containers and panels.
 /// </summary>
 API_CLASS()
-class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable, public IFudgetScollBarOwner
+class FUDGETS_API FudgetControl : public ScriptingObject, public ISerializable
 {
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetControl);
@@ -428,7 +436,7 @@ public:
     API_FUNCTION() virtual void OnInitialize() {}
 
     /// <summary>
-    /// Called when the control's style is first accessed, or after the style changes. Derived types might need to call their
+    /// Called when the control's style is first accessed, or after the style changes. Derived types might need to call the
     /// base implementation.
     /// </summary>
     API_FUNCTION() virtual void OnStyleInitialize() {}
@@ -518,25 +526,6 @@ public:
     /// <param name="position">The position was changed by the parent layout</param>
     /// <param name="size">The size was changed by the parent layout</param>
     API_FUNCTION() virtual void OnPositionOrSizeChanged(bool position, bool size) {}
-
-    /// <inheritdoc />
-    void OnScrollBarScroll(FudgetScrollBarComponent *scrollbar, int64 old_scroll_pos, bool tracking) override {}
-    /// <inheritdoc />
-    void OnScrollBarButtonPressed(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track, bool double_click) override {}
-    /// <inheritdoc />
-    void OnScrollBarButtonReleased(FudgetScrollBarComponent *scrollbar, int button_index, bool before_track) override {}
-    /// <inheritdoc />
-    void OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click) override {}
-    /// <inheritdoc />
-    void OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track) override {}
-    /// <inheritdoc />
-    void OnScrollBarThumbPressed(FudgetScrollBarComponent *scrollbar, bool double_click) override {}
-    /// <inheritdoc />
-    void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override {}
-    /// <inheritdoc />
-    void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override {}
-    /// <inheritdoc />
-    void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override {}
 
     /// <summary>
     /// Fetches the parent who is managing this control. The parent is also responsible for its destruction.
@@ -691,14 +680,6 @@ public:
     /// most contexts but might result in an outdated value.
     /// </summary>
     API_PROPERTY() virtual Int2 GetHintPosition() const { return _pos; }
-
-    ///// <summary>
-    ///// Gets one of the possible sizes of the control. Use as an alternative to GetHintSize, GetMinSize, GetMaxSize
-    ///// and GetSize.
-    ///// </summary>
-    ///// <param name="sizeType">Which size to return</param>
-    ///// <returns>The control's size specified in type</returns>
-    //API_FUNCTION() Float2 GetRequestedSize(FudgetSizeType sizeType) const;
 
     /// <summary>
     /// Gets the current width the control takes up in its parent's  layout.
@@ -921,6 +902,24 @@ public:
     /// <param name="flags">The flags to look for</param>
     /// <returns>True if at least one flag was found on the control</returns>
     API_FUNCTION() virtual bool HasAnyFlag(FudgetControlFlag flags) const;
+
+    /// <summary>
+    /// Indicates whether the control has a visible frame. Controls with a frame draw the frame inside their bounds and
+    /// constrain their contents within this frame. The frame drawing depends on the style of the frame and the control's
+    /// style and theme. GetFramePadding determines the size of the inner padding.
+    /// </summary>
+    /// <returns>The current frame type</returns>
+    API_PROPERTY() FORCE_INLINE bool GetFramed() const { return HasAnyFlag(FudgetControlFlag::Framed); }
+
+    /// <summary>
+    /// Sets whether the control has a visible frame. Controls with a frame draw the frame inside their bounds and
+    /// constrain their contents within this frame. The frame drawing depends on the style of the frame and the
+    /// control's style and theme. The control's styles must reference a valid DrawablePainter in the theme with the
+    /// FudgetFramedControlPartIds::FramePainter id.
+    /// GetFramePadding determines the size of the inner padding.
+    /// </summary>
+    /// <param name="value">The type of the frame to set</param>
+    API_PROPERTY() void SetFramed(bool value);
 
     // Input:
 
@@ -1658,27 +1657,24 @@ public:
     /// Constructs a painter object based on a painter mapping identified by mapping_id and initializes it with the mapping. Mappings contain the name of
     /// the painter's type to be created and the mapping of painter ids to the ids of a style. That is, when the painter tries to look up a resource by an
     /// id, another id will be used to get the resource.
-    /// The mapping_id is looked up in the control's styles, unless style_override is not null.
-    /// If mapping_style is provided, it'll be used as the primary style to look up the resources for painting. Otherwise the control's styles are used.
-    /// If default_mapping is not null and no mapping was found by the mapping_id, the default_mapping is used to provide the painter type name and mapping data.
+    /// The mapping_id is looked up in the control's styles.
+    /// When a new painter is created in place of an existing one, the existing painter can be passed as the first argument to this function. Otherwise
+    /// if the painter is no longer needed, it should be deleted manually. Painters created by a control are automatically deleted when the control
+    /// is deleted.
     /// </summary>
-    /// <typeparam name="T">Base type for the painter. The created painter must be the base type or a type derived from it.</typeparam>
+    /// <typeparam name="T">Base type for the painter. The new painter must be this type or a type derived from it.</typeparam>
     /// <param name="current">The painter that was created before, possibly on the same line. It's only needed to make sure it's freed before a
     /// new painter is created.</param>
     /// <param name="mapping_id">Id of the painter mapping in the control's style.</param>
-    /// <param name="mapping_style">An optional style to be used to look up the resources in the painter for painting. if null, the control's
-    /// styles are used instead</param>
-    /// <param name="default_mapping">An optional mapping to be used to create and initialize the new painter if nothing was found for mapping_id.</param>
-    /// <param name="style_override">Id of the painter mapping in the control's style.</param>
-    /// <returns>A part painter created based on mapping_id or the default_mapping.</returns>
+    /// <returns>The part painter that was created or null if no painter mapping matches the mapping id or the template argument.</returns>
     template<typename T>
     T* CreateStylePainter(T *current, int mapping_id)
     {
         FudgetPartPainterMapping painter_data;
         FudgetPartPainter *painter = nullptr;
 
-        if (current != nullptr)
-            UnregisterStylePainterInternal(current);
+        if (current != nullptr && current->GetOwner() == this)
+            Delete(current);
 
         bool valid = GetStylePainterMapping(mapping_id, painter_data);
 
@@ -1695,10 +1691,7 @@ public:
         }
 
         if (result != nullptr)
-            RegisterStylePainterInternal(result);
-
-        if (result != nullptr)
-            result->DoInitialize(this, painter_data);
+            RegisterStylePainterInternal(result, painter_data);
 
         return result;
     }
@@ -2029,6 +2022,42 @@ public:
     API_FUNCTION() virtual void DoMouseReleased();
 
     /// <summary>
+    /// Called when a mouse button was pressed over this control. The control needs to have the
+    /// CanHandleMouseUpDown flag. If CaptureReleaseMouse* flags are set, the mouse will be automatically
+    /// captured on the corresponding mouse input.
+    /// Override OnMouseDown instead of this function.
+    /// </summary>
+    /// <param name="pos">Local mouse position</param>
+    /// <param name="global_pos">Global mouse position</param>
+    /// <param name="button">Button that was just pressed</param>
+    /// <param name="double_click">Whether the call is the result of double clicking</param>
+    /// <returns>One of the result options that decide how to deal with the mouse event</returns>
+    API_FUNCTION() virtual FudgetInputResult DoMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click);
+
+    /// <summary>
+    /// Called when a mouse button was released over this control. Return true if the control wants to prevent
+    /// other controls below to get the mouse event. This should mirror the result of DoMouseDown.
+    /// The control needs to have the CanHandleMouseUpDown flag. If CaptureReleaseMouse* flags are
+    /// set, the mouse will be automatically released on the corresponding mouse input.
+    /// Override OnMouseUp instead of this function.
+    /// </summary>
+    /// <param name="pos">Local mouse position</param>
+    /// <param name="global_pos">Global mouse position</param>
+    /// <param name="button">Button that was just released</param>
+    /// <returns>Prevent OnMouseUp reaching other controls or not</returns>
+    API_FUNCTION() virtual bool DoMouseUp(Float2 pos, Float2 global_pos, MouseButton button);
+
+    /// <summary>
+    /// Notification that the mouse moved while over this control, or while the control was capturing
+    /// the mouse. The control needs to have the CanHandleMouseMove flag. This function is not called
+    /// if the mouse is currently captured by a different control.
+    /// Override OnMouseMove instead of this function.
+    /// </summary>
+    /// <param name="pos">Local mouse position</param>
+    /// <param name="global_pos">Global mouse position</param>
+    API_FUNCTION() virtual void DoMouseMove(Float2 pos, Float2 global_pos);
+
+    /// <summary>
     /// Notification that the mouse just moved over this control or before it starts receiving mouse
     /// move events. The control needs the CanHandleMouseEnterLeave flag. This function is not called
     /// if the mouse is currently captured by a different control.
@@ -2080,6 +2109,13 @@ public:
     /// <param name="states">State flags to check</param>
     /// <returns>Whether every flag is found in the current state of the control</returns>
     API_FUNCTION() virtual bool HasAllStates(FudgetControlState states) const;
+
+    /// <summary>
+    /// Padding inside the bounds of the control occupied by a frame. If this is not a framed control, it might return
+    /// an empty padding. Derived classes might override this function to include parts, like FudgetScrollingControl
+    /// that includes the scrollbars.
+    /// </summary>
+    API_PROPERTY() virtual FudgetPadding GetFramePadding() const;
 protected:
     /// <summary>
     /// Adds or removes the passed state flag or flags depending on the value.
@@ -2365,7 +2401,7 @@ private:
     /// Don't call. Exposed for C# to make CreateStylePainter possible. Saves painter to the list of painters that
     /// will be freed once the control is destroyed.
     /// </summary>
-    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter);
+    API_FUNCTION() void RegisterStylePainterInternal(FudgetPartPainter *painter, API_PARAM(Ref)  const FudgetPartPainterMapping &mapping);
 
     /// <summary>
     /// Don't call. Exposed for C# to make CreateStylePainter possible. Removes painter from the list of painters and
@@ -2377,9 +2413,11 @@ private:
     // the painter is destroyed, so is the drawable.
     void RegisterDrawable(FudgetPartPainter *drawable_owner, FudgetDrawable *drawable);
 
-
+    // Parent control is responsible for positioning and destruction of this control. 
     FudgetContainer *_parent;
+    // Index inside parent.
     int _index;
+    // Readable name for control to let the user identify it in the editor. Not unique.
     String _name;
 
     FudgetControlFlag _flags;
@@ -2435,20 +2473,11 @@ private:
 
     std::map<int, FudgetFont> _cached_fonts;
 
-    /// <summary>
-    /// Painters created for this control that should be destroyed by this control
-    /// </summary>
+    // Painters created for this control that should be destroyed by this control
     Array<FudgetPartPainter*> _painters;
 
-    /// <summary>
-    /// Drawable objects created by part painters. The drawables are destroyed when the painter or this control is destroyed.
-    /// </summary>
+    // Drawable objects created by part painters. The drawables are destroyed when the painter or this control is destroyed.
     Dictionary<FudgetDrawable*, FudgetPartPainter*> _drawables;
-
-    /// <summary>
-    /// Styles created for this control that are not registered with the themes and should be destroyed by this control.
-    /// </summary>
-    Array<FudgetStyle*> _own_styles;
 
     friend class FudgetLayout;
     friend class FudgetContainer;

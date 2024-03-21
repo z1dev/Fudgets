@@ -201,7 +201,7 @@ public:
     /// <summary>
     /// Base style for controls with a frame
     /// </summary>
-    API_FIELD(ReadOnly) static const String FRAMED_CONTROL_STYLE;
+    API_FIELD(ReadOnly) static const String FIELD_CONTROL_STYLE;
 
     /// <summary>
     /// Base style for controls with a text input field

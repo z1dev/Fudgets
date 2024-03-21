@@ -66,8 +66,8 @@ public:
     /// <inheritdoc />
     bool OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
 
-    API_PROPERTY() bool GetShowBorder() const { return _show_border; }
-    API_PROPERTY() void SetShowBorder(bool value);
+    //API_PROPERTY() bool GetShowBorder() const { return _show_border; }
+    //API_PROPERTY() void SetShowBorder(bool value);
 protected:
     /// <inheritdoc />
     FudgetControlFlag GetInitFlags() const override;
@@ -92,16 +92,22 @@ protected:
 
     /// <inheritdoc />
     FudgetTextBoxFlags GetTextBoxInitFlags() const override;
+
+    /// <summary>
+    /// Padding of the text with the frame padding.
+    /// </summary>
+    API_PROPERTY() FudgetPadding GetCombinedPadding() const;
 private:
-    FudgetPadding GetInnerPadding() const;
+    //FudgetPadding GetInnerPadding() const;
 
     void ScrollToPos();
     void FixScrollPos();
 
     void Process(const StringView &value);
 
-    FudgetDrawablePainter *_frame_painter;
     FudgetSingleLineTextPainter *_text_painter;
+
+    FudgetPadding _content_padding;
 
     float _blink_passed;
     int _character_scroll_count;
@@ -113,5 +119,5 @@ private:
     int _scroll_pos;
     String _text;
 
-    bool _show_border;
+    //bool _show_border;
 };

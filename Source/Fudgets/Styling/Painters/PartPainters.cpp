@@ -19,6 +19,8 @@ FudgetPartPainter::FudgetPartPainter(const SpawnParams &params) : Base(params), 
 
 FudgetPartPainter::~FudgetPartPainter()
 {
+    if (_owner != nullptr)
+        _owner->UnregisterStylePainterInternal(this);
 }
 
 FudgetStyle* FudgetPartPainter::GetDefaultStyle() const
@@ -199,7 +201,7 @@ void FudgetPartPainter::RegisterDrawable(FudgetDrawable *drawable)
     _owner->RegisterDrawable(this, drawable);
 }
 
-void FudgetPartPainter::DoInitialize(FudgetControl *control, API_PARAM(Ref) const FudgetPartPainterMapping &resource_mapping)
+void FudgetPartPainter::DoInitialize(FudgetControl *control, const FudgetPartPainterMapping &resource_mapping)
 {
     Initialize(control, resource_mapping.Mapping);
 }

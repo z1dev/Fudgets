@@ -318,6 +318,7 @@ void FudgetContainer::OnDraw()
     {
         FillRectangle(Float2(0.0f), GetSize(), FillColor);
     }
+    Base::OnDraw();
 }
 
 bool FudgetContainer::OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_PARAM(Out) Int2 &min_size, API_PARAM(Out) Int2 &max_size)
@@ -629,6 +630,7 @@ FudgetControlFlag FudgetContainer::GetInitFlags() const
 void FudgetContainer::RequestLayout()
 {
     _layout->RequestLayoutChildren(false);
+    Base::RequestLayout();
     for (FudgetControl *c : _children)
         if (!c->HasAnyState(FudgetControlState::Hidden))
             c->RequestLayout();

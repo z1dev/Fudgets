@@ -131,6 +131,8 @@ class FUDGETS_API FudgetScrollBarComponent : public ScriptingObject
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetScrollBarComponent);
 public:
+    ~FudgetScrollBarComponent();
+
     /// <summary>
     /// Call from the control that created the scroll bar component for setting it as the owner.
     /// </summary>
@@ -179,6 +181,14 @@ public:
     /// </summary>
     /// <returns>Whether the scrollbar is visible with its current settings or not</returns>
     API_PROPERTY() bool IsVisible() const { return _visible; }
+
+    /// <summary>
+    /// Returns the visibility of the scrollbar if it is not in automatic visibility mode. Otherwise returns the
+    /// value of the visible argument.
+    /// </summary>
+    /// <param name="visible">Whether the automatic visibility scrollbar should be shown.</param>
+    /// <returns>The visibility of the scrollbar with the requested visibility state</returns>
+    API_FUNCTION() bool GetAssumedVisible(bool visible) const;
 
     /// <summary>
     /// Gets the thickness of the scrollbar.
