@@ -101,7 +101,7 @@ void FudgetTextBox::OnDraw()
     {
         Int2 caret_pos = _text_painter->GetCharacterPosition(this, GetMeasurements(), GetCaretPos()) + bounds.GetUpperLeft() - _scroll_pos;
 
-        PushClip(bounds);
+        PushClip(GetFramePadding().Padded(GetBounds()));
         DrawDrawable(_caret_draw, 0, Rectangle(Float2(caret_pos) - Float2(1.f, 0.f),
             Int2(_caret_width, _text_painter->GetCharacterLineHeight(GetMeasurements(), GetCaretPos()) )));
         PopClip();
@@ -272,7 +272,7 @@ bool FudgetTextBox::OnMeasure(Int2 available, API_PARAM(Out) Int2 &wanted, API_P
         return Base::OnMeasure(available, wanted, min_size, max_size);
 
     FudgetPadding inner_padding = GetCombinedPadding();
-    inner_padding.Right += _caret_width * 2;
+    //inner_padding.Right += _caret_width * 2;
 
     if (FudgetLayout::IsUnrestrictedSpace(available) || !_line_wrap || _auto_size == FudgetAutoSizing::Both || _auto_size == FudgetAutoSizing::Width)
     {
@@ -388,13 +388,13 @@ void FudgetTextBox::ScrollToPos()
         int kerning = 0;
         if (caret_pos > 0 && end_index > caret_pos)
             kerning = _text_painter->GetKerning(caret_pos - 1, caret_pos, 1.f);
-        _scroll_pos.X = int(_text_painter->Measure(this, StringView(_text.Get() + caret_pos, end_index - caret_pos), 1.f).X + text_caret_width + kerning - bounds.GetWidth() + _caret_width * 2);
+        _scroll_pos.X = int(_text_painter->Measure(this, StringView(_text.Get() + caret_pos, end_index - caret_pos), 1.f).X + text_caret_width + kerning - bounds.GetWidth());
     }
-    else if (_scroll_pos.X > 0.f && GetMeasurements().Size.X - _scroll_pos.X + _caret_width * 2.0f < bounds.GetWidth())
+    else if (_scroll_pos.X > 0.f && GetMeasurements().Size.X - _scroll_pos.X < bounds.GetWidth())
     {
         // Empty space on the right after end of text.
 
-        _scroll_pos.X = int(Math::Max(0.f, GetMeasurements().Size.X - bounds.GetWidth() + _caret_width * 2));
+        _scroll_pos.X = int(Math::Max(0.f, GetMeasurements().Size.X - bounds.GetWidth()));
     }
 
     if (line.Location.Y < _scroll_pos.Y)
@@ -469,7 +469,7 @@ void FudgetTextBox::Process()
     _lines_dirty = false;
 
     Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
-    bounds.Size.X -= _caret_width * 2.0f;
+    //bounds.Size.X -= _caret_width * 2.0f;
 
     FudgetMultiLineTextOptions options;
     options.Wrapping = _line_wrap;
@@ -847,11 +847,13 @@ void FudgetTextBox::RequestScrollExtents()
     {
         vbar->SetScrollRange(GetMeasurements().Size.Y + expand);
         vbar->SetPageSize((int)bounds_size.Y);
+        vbar->SetScrollPos(_scroll_pos.Y);
     }
 
     if (hbar != nullptr)
     {
         hbar->SetScrollRange(GetMeasurements().Size.X);
         hbar->SetPageSize((int)bounds_size.X);
+        hbar->SetScrollPos(_scroll_pos.X);
     }
 }

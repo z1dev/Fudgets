@@ -72,6 +72,8 @@ void FudgetScrollBarComponent::Draw()
     uint64 thumb_states = owner_states;
     if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::Thumb) && _thumb_rect.Contains(_old_mouse_pos))
         thumb_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
+    if (_range_max - _range_min + 1 <= _page_size)
+        thumb_states |= (uint64)FudgetVisualControlState::Disabled;
     _painter->DrawThumb(_owner, _thumb_rect, thumb_states);
 
     int btn_cnt = _painter->GetButtonCount();
