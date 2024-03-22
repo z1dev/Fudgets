@@ -97,6 +97,8 @@ public:
     /// <inheritdoc />
     void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) override;
     /// <inheritdoc />
+    bool OnRole(FudgetScrollBarComponent *scrollbar, int role) override;
+    /// <inheritdoc />
     void OnScrollBarShown(FudgetScrollBarComponent *scrollbar) override;
     /// <inheritdoc />
     void OnScrollBarHidden(FudgetScrollBarComponent *scrollbar) override;

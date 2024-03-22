@@ -71,23 +71,6 @@ public:
     /// </summary>
     ~FudgetStyle();
 
- /*   /// <summary>
-    /// Creates a new style that inherits all its values from this one, or null if the name is empty or is already taken.
-    /// If this style is destroyed, the inherited style will be destroyed as well.
-    /// </summary>
-    /// <param name="name">Name of the style to create.</param>
-    /// <returns>The created style or null on wrong name</returns>
-    API_FUNCTION() FudgetStyle* CreateOwnedStyle(const String &name);
-
-    /// <summary>
-    /// Returns a style inherited from this style by name.
-    /// </summary>
-    /// <param name="name">Name of the style to return</param>
-    /// <returns>The owned style with the name or null</returns>
-    API_FUNCTION() FudgetStyle* GetOwnedStyle(const String &name) const;
-
-    API_PROPERTY() bool IsOwnedStyle() const { return _owned_style; }*/
-
     /// <summary>
     /// Creates a new style that inherits all its values from this one, named as the template argument class' full name.
     /// The call fails if the name is already taken. The style will be registered in the main theme database and will be
@@ -165,7 +148,8 @@ public:
     /// <summary>
     /// Creates a resource reference by an id to refer to a different id in another style. When the id is used to get a value,
     /// the referenced style's value is fetched with the referenced id. Self referencing is allowed with different ids. The
-    /// function fails if this call would create a circular reference. Both ids must be positive or zero.
+    /// function tries to prevent creating circular references, but the check might not be perfect so it's the user's responsibility
+    /// to avoid that situation. Both ids must be positive or zero.
     /// </summary>
     /// <param name="id">The id in this style to be used to retrieve a value in another style.</param>
     /// <param name="referenced_style">The style to query for a resource when a value is requested with id</param>
@@ -179,14 +163,13 @@ public:
     }
 
     /// <summary>
-    /// Checks if the style has a reference by its id to this style and id. If the style references another
-    /// style, it is checked as well.
+    /// Checks if this style is referencing another style and its id. The check steps through references as well.
     /// </summary>
-    /// <param name="style">The style to check</param>
-    /// <param name="style_id">The id in the style</param>
-    /// <param name="id">The id in this style that might be referenced</param>
+    /// <param name="id">The id in this style that might reference another style and id</param>
+    /// <param name="style">The style that might be referenced</param>
+    /// <param name="style_id">The style id that might be referenced in the passed style</param>
     /// <returns>Whether the style is referencing this style.</returns>
-    API_FUNCTION() bool IsReferencing(FudgetStyle *style, int style_id, int id);
+    API_FUNCTION() bool IsReferencing(int id, FudgetStyle *style, int style_id);
 
     /// <summary>
     /// Removes the override in this style for an id. It doesn't affect styles that this style inherits from.

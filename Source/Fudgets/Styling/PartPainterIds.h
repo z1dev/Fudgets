@@ -165,6 +165,78 @@ enum class FudgetThemePartIds
     /// The last button size on a vertical scrollbar. The default scrollbar supports up to 20 buttons.
     /// </summary>
     ScrollBarLastVerticalButtonSize = ScrollBarFirstVerticalButtonSize + 19,
+    /// <summary>
+    /// The scrollbar role to set the default for the scrollbar track in front of the thumb button.
+    /// </summary>
+    ScrollBarBeforeTrackRole,
+    /// <summary>
+    /// The scrollbar role to set the default for the scrollbar track in front of the thumb button.
+    /// </summary>
+    ScrollBarAfterTrackRole,
+    /// <summary>
+    /// The scrollbar role to set the default for the first scrollbar button.
+    /// </summary>
+    ScrollBarFirstButtonRole,
+    /// <summary>
+    /// The scrollbar role to set the default for the last scrollbar button.
+    /// </summary>
+    ScrollBarLastButtonRole = ScrollBarFirstButtonRole + 19,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::LineUp by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarLineUpRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::LineDown by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarLineDownRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::PageUp by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarPageUpRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::PageDown by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarPageDownRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::PageUpLine by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarPageUpLineRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::PageDownLine by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarPageDownLineRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::JumpToStart by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarJumpToStartRole,
+    /// <summary>
+    /// The scrollbar role the integer value of FudgetScrollBarButtonRole::JumpToEnd by default. Normally
+    /// an event handler object gets notified of button presses and has to decide what each of them do.
+    /// With the button role, scrollbars can have predetermined behavior without extra code. See
+    /// FudgetScrollBarButtonRole for default values.
+    /// </summary>
+    ScrollBarJumpToEndRole,
 
     /// <summary>
     /// Button surface drawable or color, used for the standard buttons
@@ -396,6 +468,11 @@ enum class FudgetScrollBarPartIds
     LastVertButtonDraw = FirstVertButtonDraw + 19,
     FirstVertButtonSize,
     LastVertButtonSize = FirstVertButtonSize + 19,
+
+    BeforeTrackRole,
+    AfterTrackRole,
+    FirstButtonRole,
+    LastButtonRole = FirstButtonRole + 19,
 };
 
 

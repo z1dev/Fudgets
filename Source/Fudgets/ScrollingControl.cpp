@@ -116,22 +116,20 @@ void FudgetScrollingControl::OnScrollBarButtonReleased(FudgetScrollBarComponent 
 
 void FudgetScrollingControl::OnScrollBarTrackPressed(FudgetScrollBarComponent *scrollbar, bool before_track, bool double_click)
 {
-    if (scrollbar == nullptr)
-        return;
-    if (scrollbar == _v_scrollbar)
-    {
-        if (before_track)
-            _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() - _v_scrollbar->GetPageSize());
-        else
-            _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() + _v_scrollbar->GetPageSize());
-    }
-    else if (scrollbar == _h_scrollbar)
-    {
-        if (before_track)
-            _h_scrollbar->SetScrollPos(_h_scrollbar->GetScrollPos() - _h_scrollbar->GetPageSize());
-        else
-            _h_scrollbar->SetScrollPos(_h_scrollbar->GetScrollPos() + _h_scrollbar->GetPageSize());
-    }
+    //if (scrollbar == _v_scrollbar)
+    //{
+    //    if (before_track)
+    //        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() - _v_scrollbar->GetPageSize());
+    //    else
+    //        _v_scrollbar->SetScrollPos(_v_scrollbar->GetScrollPos() + _v_scrollbar->GetPageSize());
+    //}
+    //else if (scrollbar == _h_scrollbar)
+    //{
+    //    if (before_track)
+    //        _h_scrollbar->SetScrollPos(_h_scrollbar->GetScrollPos() - _h_scrollbar->GetPageSize());
+    //    else
+    //        _h_scrollbar->SetScrollPos(_h_scrollbar->GetScrollPos() + _h_scrollbar->GetPageSize());
+    //}
 }
 
 void FudgetScrollingControl::OnScrollBarTrackReleased(FudgetScrollBarComponent *scrollbar, bool before_track)
@@ -146,6 +144,11 @@ void FudgetScrollingControl::OnScrollBarThumbPressed(FudgetScrollBarComponent *s
 void FudgetScrollingControl::OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar)
 {
 
+}
+
+bool FudgetScrollingControl::OnRole(FudgetScrollBarComponent *scrollbar, int role)
+{
+    return false;
 }
 
 void FudgetScrollingControl::OnScrollBarShown(FudgetScrollBarComponent *scrollbar)

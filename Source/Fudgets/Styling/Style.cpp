@@ -155,7 +155,7 @@ void FudgetStyle::SetResourceOverride(int id, int resource_id)
 
 void FudgetStyle::SetResourceReference(int id, FudgetStyle *referenced_style, int referenced_id)
 {
-    if (id < 0 || referenced_id < 0 || referenced_style == nullptr || (referenced_style == this && id == referenced_id) || referenced_style->IsReferencing(this, id, referenced_id))
+    if (id < 0 || referenced_id < 0 || referenced_style == nullptr || (referenced_style == this && id == referenced_id) || referenced_style->IsReferencing(referenced_id, this, id))
         return;
 
     auto it = _resources.find(id);
@@ -187,27 +187,29 @@ void FudgetStyle::SetResourceReference(int id, FudgetStyle *referenced_style, in
         style->ParentResourceChanged(id, res);
 }
 
-bool FudgetStyle::IsReferencing(FudgetStyle *style, int style_id, int id)
+bool FudgetStyle::IsReferencing(int id, FudgetStyle *style, int style_id)
 {
-    if (id < 0 || style_id < 0 || style == nullptr || (style == this && style_id == id))
+    if (id < 0 || style_id < 0 || style == nullptr)
         return false;
+    if (style == this && style_id == id)
+        return true;
 
-    FudgetStyleResource *res = style != nullptr ? style->GetResource(id) : nullptr;
+    FudgetStyleResource *res = GetResource(id);
     if (res == nullptr)
         return false;
-
 
     if (res->_value_override != Variant::Null)
         return false;
 
-    if (res->_resource_id >= 0)
-    {
-        if (res->_ref_style == nullptr)
-            return false;
+    if (res->_resource_id < 0)
+        return false;
+    if (res->_ref_style == nullptr)
+        return false;
 
-        return FudgetStyle::IsReferencing(res->_ref_style, res->_resource_id, id);
-    }
-    return false;
+    if (res->_ref_style == style && res->_resource_id == style_id)
+        return true;
+
+    return res->_ref_style->IsReferencing(res->_resource_id, style, style_id);
 }
 
 void FudgetStyle::ResetResourceOverride(int id)

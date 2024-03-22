@@ -49,13 +49,36 @@ void FudgetScrollBarPainter::Initialize(FudgetControl *control, const Variant &m
     if (!GetMappedInt(control, res.AfterTrackButtonCount, _after_btn_count))
         _after_btn_count = 0;
     _after_btn_count = Math::Clamp(_after_btn_count, 0, 20);
+
+    if (!GetMappedInt(control, res.BeforeTrackRole, _before_track_role))
+        _before_track_role = 0;
+    if (!GetMappedInt(control, res.AfterTrackRole, _after_track_role))
+        _after_track_role = 0;
+
     for (int ix = 0, siz = _before_btn_count + _after_btn_count; ix < siz; ++ix)
     {
         if (!CreateMappedDrawable(control, res.ButtonDraw[ix], _btn_draw[ix]))
             _btn_draw[ix] = FudgetDrawable::Empty;
         if (!GetMappedInt(control, res.ButtonSize[ix], _btn_size[ix]))
             _btn_size[ix] = 0;
+        if (!GetMappedInt(control, res.ButtonRole[ix], _btn_role[ix]))
+            _btn_role[ix] = 0;
     }
+}
+
+int FudgetScrollBarPainter::GetBeforeTrackRole() const
+{
+    return _before_track_role;
+}
+
+int FudgetScrollBarPainter::GetAfterTrackRole() const
+{
+    return _after_track_role;
+}
+
+int FudgetScrollBarPainter::GetButtonRole(int button_index) const
+{
+    return _btn_role[button_index];
 }
 
 void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectangle &bounds, int64 range, int64 page_size, int64 thumb_pos, API_PARAM(Out) Rectangle &track, API_PARAM(Out) Rectangle &before_track, API_PARAM(Out) Rectangle &after_track,
@@ -106,7 +129,7 @@ void FudgetScrollBarPainter::GetPartBounds(FudgetControl *control, const Rectang
             ++cnt_before;
             siz_before += _btn_size[pos_before];
             available -= _btn_size[pos_before];
-            --pos_after;
+            --pos_before;
         }
 
         if (pos_after < btn_cnt)

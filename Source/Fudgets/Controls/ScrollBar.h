@@ -48,6 +48,51 @@ enum class FudgetScrollBarVisibilityMode
 };
 
 /// <summary>
+/// Roles of scrollbar buttons for default behavior. They need to be converted to integer when set as the role.
+/// The roles are not limited to these values.
+/// </summary>
+API_ENUM()
+enum class FudgetScrollBarButtonRole
+{
+    /// <summary>
+    /// No role for the button. Its behavior will be determined by the event handler object.
+    /// </summary>
+    None,
+    /// <summary>
+    /// Step one line up (or left).
+    /// </summary>
+    LineUp,
+    /// <summary>
+    /// Step one line down (or right).
+    /// </summary>
+    LineDown,
+    /// <summary>
+    /// Step one page up (or left).
+    /// </summary>
+    PageUp,
+    /// <summary>
+    /// Step one page down (or right).
+    /// </summary>
+    PageDown,
+    /// <summary>
+    /// Step one page up (or left), while keeping a single line visible from the last page.
+    /// </summary>
+    PageUpLine,
+    /// <summary>
+    /// Step one page down (or right), while keeping a single line visible from the last page.
+    /// </summary>
+    PageDownLine,
+    /// <summary>
+    /// Go to the start of the scroll range.
+    /// </summary>
+    JumpToStart,
+    /// <summary>
+    /// Go to the end of the scroll range minus the page size.
+    /// </summary>
+    JumpToEnd,
+};
+
+/// <summary>
 /// Interface type that can be implemented by objects that want to use a scrollbar and get notified about user
 /// interaction or if the scrollbar changes.
 /// </summary>
@@ -108,6 +153,14 @@ class FUDGETS_API IFudgetScollBarOwner
     /// </summary>
     /// <param name="scrollbar">The scrollbar calling the event</param>
     API_FUNCTION() virtual void OnScrollBarThumbReleased(FudgetScrollBarComponent *scrollbar) = 0;
+
+    /// <summary>
+    /// Event called when a button or track was clicked and it has a role that's not 0. This is called after the OnScrollBar***Pressed event.
+    /// </summary>
+    /// <param name="scrollbar">The scrollbar calling the event</param>
+    /// <param name="role">The role of the button or track that was clicked.</param>
+    /// <returns>Whether the event was handled by this call. Returning true will prevent using the default behavior.</returns>
+    API_FUNCTION() virtual bool OnRole(FudgetScrollBarComponent *scrollbar, int role) = 0;
 
     /// <summary>
     /// Event called when a scrollbar with automatic visibility appeared due to range or page size change. The ecent might be
@@ -209,6 +262,16 @@ public:
     API_PROPERTY() void SetPageSize(int64 value);
 
     /// <summary>
+    /// Gets the size of a line when navigating the scrollbar going a line up or down.
+    /// </summary>
+    API_PROPERTY() int64 GetLineSize() const { return _line_size; }
+    /// <summary>
+    /// Sets the size of a line when navigating the scrollbar going a line up or down.
+    /// </summary>
+    /// <param name="value">The new line size to set</param>
+    API_PROPERTY() void SetLineSize(int64 value) { _line_size = Math::Max(0LL, value); }
+
+    /// <summary>
     /// Gets the lower end of the range where the scrollbar can scroll.
     /// </summary>
     API_PROPERTY() int64 GetMinScrollRange() const { return _range_min; }
@@ -301,6 +364,36 @@ public:
     /// </summary>
     /// <returns>Whether the scrollbar wants to use the event and doesn't want the control to handle it.</returns>
     API_FUNCTION() bool MouseLeave();
+
+    /// <summary>
+    /// Returns the role set for the part of the track before the thumb button. The role can be used to have
+    /// a specific behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with
+    /// a default behavior but they can be overriden.
+    /// </summary>
+    /// <returns>The role set for the track before the thumb button.</returns>
+    API_PROPERTY() int GetBeforeTrackRole() const;
+    /// <summary>
+    /// Returns the role set for the part of the track after the thumb button. The role can be used to have
+    /// a specific behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with
+    /// a default behavior but they can be overriden.
+    /// </summary>
+    /// <returns>The role set for the track after the thumb button.</returns>
+    API_PROPERTY() int GetAfterTrackRole() const;
+
+    /// <summary>
+    /// Returns the role set for a button with index between 0 and 19. The role can be used to have a specific
+    /// behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with a default
+    /// behavior but they can be overriden.
+    /// </summary>
+    /// <param name="button_index">The index of the button to get the role for.</param>
+    /// <returns>The role set for the button at index.</returns>
+    API_FUNCTION() int GetButtonRole(int button_index) const;
+
+    /// <summary>
+    /// Handles the given role if it's one of the default roles from FudgetScrollBarButtonRole.
+    /// </summary>
+    /// <param name="role">The role to handle. Values outside of FudgetScrollBarButtonRole are ignored</param>
+    API_FUNCTION() void HandleRole(int role);
 private:
     FORCE_INLINE float Relevant(Float2 size) const { return _orientation == FudgetScrollBarOrientation::Horizontal ? size.X : size.Y; }
     FORCE_INLINE float Opposite(Float2 size) const { return _orientation == FudgetScrollBarOrientation::Horizontal ? size.Y : size.X; }
@@ -365,6 +458,10 @@ private:
     /// Size of the visible part of the scroll range.
     /// </summary>
     int64 _page_size;
+    /// <summary>
+    /// Size of a single line to step when using the line up or line down roles.
+    /// </summary>
+    int64 _line_size;
 
     /// <summary>
     /// Whether the scroll bar is shown with its current settings or not.

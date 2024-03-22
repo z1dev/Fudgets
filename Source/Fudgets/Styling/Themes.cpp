@@ -50,7 +50,9 @@ const String FudgetThemes::COMBOBOX_EDITOR_STYLE = TEXT("Fudgets_ComboboxEditorS
 const String FudgetThemes::COMBOBOX_BUTTON_STYLE = TEXT("Fudgets_ComboboxButtonStyle");
 const String FudgetThemes::COMBOBOX_LIST_STYLE = TEXT("Fudgets_ComboboxListStyle");
 const String FudgetThemes::LISTBOX_STYLE = TEXT("Fudgets_ListboxStyle");
-
+const String FudgetThemes::SCROLLBAR_DEFAULT_STYLE = TEXT("Fudgets_NotClass_ScrollBarDefaultStyle");
+const String FudgetThemes::SCROLLBAR_WINDOWS_BUTTONS_STYLE = TEXT("Fudgets_NotClass_ScrollBarWindowsButtonsStyle");
+const String FudgetThemes::SCROLLBAR_OLDMAC_BUTTONS_STYLE = TEXT("Fudgets_NotClass_ScrollBarOldMacButtonsStyle");
 
 // FudgetTheme
 
@@ -200,12 +202,14 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     main_theme->SetResource(FudgetThemePartIds::ButtonPadding, FudgetPadding(4));
 
     main_theme->SetResource(FudgetThemePartIds::ScrollBarWidth, 12);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarBeforeTrackButtonCount, 1);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarAfterTrackButtonCount, 1);
-    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize, FudgetThemePartIds::ScrollBarWidth);
-    main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize + 1, FudgetThemePartIds::ScrollBarWidth);
-    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstVerticalButtonSize, FudgetThemePartIds::ScrollBarWidth);
-    main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + 1, FudgetThemePartIds::ScrollBarWidth);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarBeforeTrackButtonCount, 0);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarAfterTrackButtonCount, 0);
+
+    for (int ix = 0; ix < 20; ++ix)
+    {
+        main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize + ix, FudgetThemePartIds::ScrollBarWidth);
+        main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + ix, FudgetThemePartIds::ScrollBarWidth);
+    }
 
     main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalThumb, Color::Black);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalThumb, Color::Black);
@@ -217,6 +221,20 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     //main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarIsThumbSizeFixed, false);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 16);
+
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarLineUpRole, (int)FudgetScrollBarButtonRole::LineUp);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarLineDownRole, (int)FudgetScrollBarButtonRole::LineDown);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarPageUpRole, (int)FudgetScrollBarButtonRole::PageUp);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarPageDownRole, (int)FudgetScrollBarButtonRole::PageDown);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarPageUpLineRole, (int)FudgetScrollBarButtonRole::PageUpLine);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarPageDownLineRole, (int)FudgetScrollBarButtonRole::PageDownLine);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarJumpToStartRole, (int)FudgetScrollBarButtonRole::JumpToStart);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarJumpToEndRole, (int)FudgetScrollBarButtonRole::JumpToEnd);
+
+    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarBeforeTrackRole, FudgetThemePartIds::ScrollBarPageUpRole);
+    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarAfterTrackRole, FudgetThemePartIds::ScrollBarPageDownRole);
+    main_theme->SetForwarding(FudgetThemePartIds::ScrollBarFirstButtonRole, FudgetThemePartIds::ScrollBarLineUpRole);
+    main_theme->SetForwarding((int)FudgetThemePartIds::ScrollBarFirstButtonRole + 1, FudgetThemePartIds::ScrollBarLineDownRole);
 
     FudgetDrawableBuilder::Begin(FudgetVisualControlState::Disabled);
     FudgetDrawableBuilder::BeginSubData();
@@ -335,10 +353,18 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     sb_map.BeforeTrackDraw = (int)FudgetScrollBarPartIds::HorzBeforeTrackDraw;
     sb_map.AfterTrackDraw = (int)FudgetScrollBarPartIds::HorzAfterTrackDraw;
 
+    sb_map.BeforeTrackButtonCount = (int)FudgetScrollBarPartIds::BeforeTrackButtonCount;
+    sb_map.AfterTrackButtonCount = (int)FudgetScrollBarPartIds::AfterTrackButtonCount;
+
+    sb_map.BeforeTrackRole = (int)FudgetScrollBarPartIds::BeforeTrackRole;
+    sb_map.AfterTrackRole = (int)FudgetScrollBarPartIds::AfterTrackRole;
+
     for (int ix = 0, siz = 20; ix < siz; ++ix)
     {
         sb_map.ButtonDraw[ix] = (int)FudgetScrollBarPartIds::FirstHorzButtonDraw + ix;
         sb_map.ButtonSize[ix] = (int)FudgetScrollBarPartIds::FirstHorzButtonSize + ix;
+
+        sb_map.ButtonRole[ix] = (int)FudgetScrollBarPartIds::FirstButtonRole + ix;
     }
     main_theme->SetResource(FudgetThemePartIds::HorzScrollBarPainter, FudgetPartPainter::InitializeMapping<FudgetScrollBarPainter>(sb_map));
 
@@ -358,6 +384,52 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
 
     // Built-in styles:
 
+    FudgetStyle *sb_default_style = CreateOrGetStyle(SCROLLBAR_DEFAULT_STYLE);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzPainter, FudgetThemePartIds::HorzScrollBarPainter);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertPainter, FudgetThemePartIds::VertScrollBarPainter);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::Width, FudgetThemePartIds::ScrollBarWidth);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::IsThumbSizeFixed, FudgetThemePartIds::ScrollBarIsThumbSizeFixed);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::ThumbSize, FudgetThemePartIds::ScrollBarThumbSize);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::MinThumbSize, FudgetThemePartIds::ScrollBarMinThumbSize);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzBackgroundDraw, FudgetThemePartIds::ScrollBarHorizontalBackground);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertBackgroundDraw, FudgetThemePartIds::ScrollBarVerticalBackground);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::FrameDraw, FudgetThemePartIds::ScrollBarFrame);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertThumbDraw, FudgetThemePartIds::ScrollBarVerticalThumb);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertTrackDraw, FudgetThemePartIds::ScrollBarVerticalTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertBeforeTrackDraw, FudgetThemePartIds::ScrollBarVerticalBeforeTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::VertAfterTrackDraw, FudgetThemePartIds::ScrollBarVerticalAfterTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzThumbDraw, FudgetThemePartIds::ScrollBarHorizontalThumb);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzTrackDraw, FudgetThemePartIds::ScrollBarHorizontalTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzBeforeTrackDraw, FudgetThemePartIds::ScrollBarHorizontalBeforeTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::HorzAfterTrackDraw, FudgetThemePartIds::ScrollBarHorizontalAfterTrack);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::BeforeTrackButtonCount, FudgetThemePartIds::ScrollBarBeforeTrackButtonCount);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::AfterTrackButtonCount, FudgetThemePartIds::ScrollBarAfterTrackButtonCount);
+    for (int ix = 0; ix < 20; ++ix)
+    {
+        sb_default_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonDraw + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButton + ix);
+        sb_default_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonSize + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + ix);
+        sb_default_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstHorzButtonDraw + ix, (int)FudgetThemePartIds::ScrollBarFirstHorizontalButton + ix);
+        sb_default_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstHorzButtonSize + ix, (int)FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize + ix);
+    }
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::BeforeTrackRole, FudgetThemePartIds::ScrollBarBeforeTrackRole);
+    sb_default_style->SetResourceOverride(FudgetScrollBarPartIds::AfterTrackRole, FudgetThemePartIds::ScrollBarAfterTrackRole);
+    for (int ix = 0; ix < 20; ++ix)
+    {
+        sb_default_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstButtonRole + ix, (int)FudgetThemePartIds::ScrollBarFirstButtonRole + ix);
+    }
+
+    FudgetStyle *sb_windows_style = sb_default_style->CreateInheritedStyle(SCROLLBAR_WINDOWS_BUTTONS_STYLE);
+    sb_windows_style->SetValueOverride(FudgetScrollBarPartIds::BeforeTrackButtonCount, 1);
+    sb_windows_style->SetValueOverride(FudgetScrollBarPartIds::AfterTrackButtonCount, 1);
+    sb_windows_style->SetValueOverride((int)FudgetScrollBarPartIds::FirstButtonRole, (int)FudgetScrollBarButtonRole::LineUp);
+    sb_windows_style->SetValueOverride((int)FudgetScrollBarPartIds::FirstButtonRole + 1, (int)FudgetScrollBarButtonRole::LineDown);
+
+    FudgetStyle *sb_oldmac_style = sb_default_style->CreateInheritedStyle(SCROLLBAR_OLDMAC_BUTTONS_STYLE);
+    sb_oldmac_style->SetValueOverride(FudgetScrollBarPartIds::BeforeTrackButtonCount, 0);
+    sb_oldmac_style->SetValueOverride(FudgetScrollBarPartIds::AfterTrackButtonCount, 2);
+    sb_oldmac_style->SetValueOverride((int)FudgetScrollBarPartIds::FirstButtonRole, (int)FudgetScrollBarButtonRole::LineUp);
+    sb_oldmac_style->SetValueOverride((int)FudgetScrollBarPartIds::FirstButtonRole + 1, (int)FudgetScrollBarButtonRole::LineDown);
+
     FudgetStyle *field_style = CreateOrGetStyle(FIELD_CONTROL_STYLE);
     field_style->SetResourceOverride(FudgetFramedControlPartIds::FramePainter, FudgetThemePartIds::FieldFramePainter);
     field_style->SetResourceOverride(FudgetFramedControlPartIds::FrameDraw, FudgetThemePartIds::FieldFrameDraw);
@@ -365,32 +437,8 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     field_style->SetResourceOverride(FudgetFramedControlPartIds::FrameThickness, FudgetThemePartIds::FieldFrameThickness);
     field_style->SetResourceOverride(FudgetFieldPartIds::Padding, FudgetThemePartIds::FieldPadding);
 
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzPainter, FudgetThemePartIds::HorzScrollBarPainter);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertPainter, FudgetThemePartIds::VertScrollBarPainter);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::Width, FudgetThemePartIds::ScrollBarWidth);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::IsThumbSizeFixed, FudgetThemePartIds::ScrollBarIsThumbSizeFixed);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::ThumbSize, FudgetThemePartIds::ScrollBarThumbSize);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::MinThumbSize, FudgetThemePartIds::ScrollBarMinThumbSize);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzBackgroundDraw, FudgetThemePartIds::ScrollBarHorizontalBackground);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertBackgroundDraw, FudgetThemePartIds::ScrollBarVerticalBackground);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::FrameDraw, FudgetThemePartIds::ScrollBarFrame);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertThumbDraw, FudgetThemePartIds::ScrollBarVerticalThumb);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertTrackDraw, FudgetThemePartIds::ScrollBarVerticalTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertBeforeTrackDraw, FudgetThemePartIds::ScrollBarVerticalBeforeTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::VertAfterTrackDraw, FudgetThemePartIds::ScrollBarVerticalAfterTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzThumbDraw, FudgetThemePartIds::ScrollBarHorizontalThumb);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzTrackDraw, FudgetThemePartIds::ScrollBarHorizontalTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzBeforeTrackDraw, FudgetThemePartIds::ScrollBarHorizontalBeforeTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::HorzAfterTrackDraw, FudgetThemePartIds::ScrollBarHorizontalAfterTrack);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::BeforeTrackButtonCount, FudgetThemePartIds::ScrollBarBeforeTrackButtonCount);
-    field_style->SetResourceOverride(FudgetScrollBarPartIds::AfterTrackButtonCount, FudgetThemePartIds::ScrollBarAfterTrackButtonCount);
-    for (int ix = 0; ix < 20; ++ix)
-    {
-        field_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonDraw + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButton + ix);
-        field_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstVertButtonSize + ix, (int)FudgetThemePartIds::ScrollBarFirstVerticalButtonSize + ix);
-        field_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstHorzButtonDraw + ix, (int)FudgetThemePartIds::ScrollBarFirstHorizontalButton + ix);
-        field_style->SetResourceOverride((int)FudgetScrollBarPartIds::FirstHorzButtonSize + ix, (int)FudgetThemePartIds::ScrollBarFirstHorizontalButtonSize + ix);
-    }
+    field_style->AddReferencesFor(sb_default_style);
+    //field_style->AddReferencesFor(sb_windows_style);
 
     FudgetStyle *text_style = CreateOrGetStyle(TEXT_INPUT_STYLE);
     text_style->SetResourceOverride(FudgetTextFieldPartIds::TextBackground, FudgetThemePartIds::FieldTextBackground);

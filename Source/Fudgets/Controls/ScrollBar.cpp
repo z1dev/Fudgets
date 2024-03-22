@@ -8,7 +8,7 @@
 FudgetScrollBarComponent::FudgetScrollBarComponent(const SpawnParams &params) : Base(params), _owner(nullptr), _event_owner(nullptr),
     _painter(nullptr), _orientation(FudgetScrollBarOrientation::Horizontal), style_inited(false), _bounds(Rectangle::Empty), _rects_dirty(true),
     _track_rect(Rectangle::Empty), _before_track_rect(Rectangle::Empty), _after_track_rect(Rectangle::Empty), _thumb_rect(Rectangle::Empty),
-    _range_min(0), _range_max(0), _scroll_pos(0), _page_size(0), _visible(false), _mouse_capture(MouseCapture::None), _old_mouse_pos(-1.f), _thumb_mouse_pos(-1.f),
+    _range_min(0), _range_max(0), _scroll_pos(0), _page_size(0), _line_size(1), _visible(false), _mouse_capture(MouseCapture::None), _old_mouse_pos(-1.f), _thumb_mouse_pos(-1.f),
     _visibility_mode(FudgetScrollBarVisibilityMode::Visible)
 {
     for (int ix = 0; ix < 20; ++ix)
@@ -64,11 +64,24 @@ void FudgetScrollBarComponent::Draw()
     uint64 before_states = owner_states;
     if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::BeforeTrack) && _before_track_rect.Contains(_old_mouse_pos))
         before_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
+    int role = _painter->GetBeforeTrackRole();
+    if (((role == (int)FudgetScrollBarButtonRole::LineUp || role == (int)FudgetScrollBarButtonRole::PageUp ||
+        role == (int)FudgetScrollBarButtonRole::PageUpLine || role == (int)FudgetScrollBarButtonRole::JumpToStart) && (_scroll_pos <= _range_min)) ||
+        ((role == (int)FudgetScrollBarButtonRole::LineDown || role == (int)FudgetScrollBarButtonRole::PageDown ||
+        role == (int)FudgetScrollBarButtonRole::PageDownLine || role == (int)FudgetScrollBarButtonRole::JumpToEnd) && (_scroll_pos >= _range_max - _page_size + 1)))
+        before_states |= (uint64)FudgetVisualControlState::Disabled;
 
     uint64 after_states = owner_states;
+    role = _painter->GetAfterTrackRole();
     if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::AfterTrack) && _after_track_rect.Contains(_old_mouse_pos))
         after_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
+    if (((role == (int)FudgetScrollBarButtonRole::LineUp || role == (int)FudgetScrollBarButtonRole::PageUp ||
+        role == (int)FudgetScrollBarButtonRole::PageUpLine || role == (int)FudgetScrollBarButtonRole::JumpToStart) && (_scroll_pos <= _range_min)) ||
+        ((role == (int)FudgetScrollBarButtonRole::LineDown || role == (int)FudgetScrollBarButtonRole::PageDown ||
+        role == (int)FudgetScrollBarButtonRole::PageDownLine || role == (int)FudgetScrollBarButtonRole::JumpToEnd) && (_scroll_pos >= _range_max - _page_size + 1)))
+        after_states |= (uint64)FudgetVisualControlState::Disabled;
     _painter->DrawTrack(_owner, _before_track_rect, _after_track_rect, before_states, after_states);
+
     uint64 thumb_states = owner_states;
     if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::Thumb) && _thumb_rect.Contains(_old_mouse_pos))
         thumb_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
@@ -85,6 +98,13 @@ void FudgetScrollBarComponent::Draw()
         {
             button_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
         }
+        role = _painter->GetButtonRole(ix);
+        if (((role == (int)FudgetScrollBarButtonRole::LineUp || role == (int)FudgetScrollBarButtonRole::PageUp ||
+            role == (int)FudgetScrollBarButtonRole::PageUpLine || role == (int)FudgetScrollBarButtonRole::JumpToStart) && (_scroll_pos <= _range_min)) ||
+            ((role == (int)FudgetScrollBarButtonRole::LineDown || role == (int)FudgetScrollBarButtonRole::PageDown ||
+            role == (int)FudgetScrollBarButtonRole::PageDownLine || role == (int)FudgetScrollBarButtonRole::JumpToEnd) && (_scroll_pos >= _range_max - _page_size + 1)))
+            button_states |= (uint64)FudgetVisualControlState::Disabled;
+
         _painter->DrawButton(_owner, ix, _btn_rects[ix], button_states);
     }
     _painter->DrawFrame(_owner, _bounds, owner_states);
@@ -192,7 +212,7 @@ bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
             _scroll_pos = _range_min;
         else
         {
-            double track_pos = Math::Clamp(double(Relevant(pos) - _thumb_mouse_pos) - Relevant(_bounds.Location), 0.0, track_height);
+            double track_pos = Math::Clamp(double(Relevant(pos) - _thumb_mouse_pos) - Relevant(_track_rect.Location), 0.0, track_height);
             _scroll_pos = _range_min + int64((track_pos / track_height) * (_range_max - _range_min + 1 - _page_size));
         }
     }
@@ -213,7 +233,7 @@ bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
 
 bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
-    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
+    if (!_visible || _painter == nullptr || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
         return false;
 
     _old_mouse_pos = pos;
@@ -262,11 +282,12 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
             _event_owner->OnScrollBarTrackReleased(this, false);
         }
 
-
+        int role = 0;
         if (_mouse_capture >= MouseCapture::Button1 && _mouse_capture <= MouseCapture::Button20)
         {
             int btn_ix = (int)_mouse_capture - (int)MouseCapture::Button1;
             _event_owner->OnScrollBarButtonPressed(this, btn_ix, btn_ix < _painter->GetBeforeButtonCount(), double_click);
+            role = _painter->GetButtonRole(btn_ix);
         }
         else if (_mouse_capture == MouseCapture::Thumb)
         {
@@ -275,10 +296,17 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
         else if (_mouse_capture == MouseCapture::BeforeTrack)
         {
             _event_owner->OnScrollBarTrackPressed(this, true, double_click);
+            role = _painter->GetBeforeTrackRole();
         }
         else if (_mouse_capture == MouseCapture::AfterTrack)
         {
             _event_owner->OnScrollBarTrackPressed(this, false, double_click);
+            role = _painter->GetAfterTrackRole();
+        }
+        if (role != 0)
+        {
+            if (!_event_owner->OnRole(this, role))
+                HandleRole(role);
         }
     }
 
@@ -326,6 +354,60 @@ bool FudgetScrollBarComponent::MouseLeave()
 {
     _old_mouse_pos = Float2(-1.f);
     return false;
+}
+
+int FudgetScrollBarComponent::GetBeforeTrackRole() const
+{
+    if (_painter != nullptr)
+        return _painter->GetBeforeTrackRole();
+    return 0;
+}
+
+int FudgetScrollBarComponent::GetAfterTrackRole() const
+{
+    if (_painter != nullptr)
+        return _painter->GetAfterTrackRole();
+    return 0;
+}
+
+int FudgetScrollBarComponent::GetButtonRole(int button_index) const
+{
+    if (_painter != nullptr)
+        return _painter->GetButtonRole(button_index);
+    return 0;
+}
+
+void FudgetScrollBarComponent::HandleRole(int role)
+{
+    if (role <= 0)
+        return;
+    switch (role)
+    {
+        case (int)FudgetScrollBarButtonRole::LineUp:
+            SetScrollPos(_scroll_pos - _line_size);
+            break;
+        case (int)FudgetScrollBarButtonRole::LineDown:
+            SetScrollPos(_scroll_pos + _line_size);
+            break;
+        case (int)FudgetScrollBarButtonRole::PageUp:
+            SetScrollPos(_scroll_pos - _page_size);
+            break;
+        case (int)FudgetScrollBarButtonRole::PageDown:
+            SetScrollPos(_scroll_pos + _page_size);
+            break;
+        case (int)FudgetScrollBarButtonRole::PageUpLine:
+            SetScrollPos(_scroll_pos - Math::Max(0LL, _page_size - _line_size));
+            break;
+        case (int)FudgetScrollBarButtonRole::PageDownLine:
+            SetScrollPos(_scroll_pos + Math::Max(0LL, _page_size - _line_size));
+            break;
+        case (int)FudgetScrollBarButtonRole::JumpToStart:
+            SetScrollPos(0LL);
+            break;
+        case (int)FudgetScrollBarButtonRole::JumpToEnd:
+            SetScrollPos(_range_max + 1 - _page_size);
+            break;
+    }
 }
 
 void FudgetScrollBarComponent::UpdateVisibility()

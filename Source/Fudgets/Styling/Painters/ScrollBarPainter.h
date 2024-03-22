@@ -89,6 +89,19 @@ struct FUDGETS_API FudgetScrollBarPainterMapping
     /// The id for at most 20 integers that determine the length of the buttons of the scrollbar.
     /// </summary>
     API_FIELD() int ButtonSize[20];
+
+    /// <summary>
+    /// The id for the integer role to set default behavior for the left or top part of the track in front of the thumb button.
+    /// </summary>
+    API_FIELD() int BeforeTrackRole;
+    /// <summary>
+    /// The id for the integer role to set default behavior for the right or bottom part of the track after the thumb button.
+    /// </summary>
+    API_FIELD() int AfterTrackRole;
+    /// <summary>
+    /// The id for at most 20 integer roles to set default behavior for scrollbar buttons.
+    /// </summary>
+    API_FIELD() int ButtonRole[20];
 };
 
 template<>
@@ -128,6 +141,29 @@ public:
     /// Returns the number of buttons after the scrollbar's track.
     /// </summary>
     API_PROPERTY() int GetAfterButtonCount() { return _after_btn_count; }
+
+    /// <summary>
+    /// Returns the role set for the part of the track before the thumb button. The role can be used to have
+    /// a specific behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with
+    /// a default behavior but they can be overriden.
+    /// </summary>
+    /// <returns>The role set for the track before the thumb button.</returns>
+    API_PROPERTY() int GetBeforeTrackRole() const;
+    /// <summary>
+    /// Returns the role set for the part of the track after the thumb button. The role can be used to have
+    /// a specific behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with
+    /// a default behavior but they can be overriden.
+    /// </summary>
+    /// <returns>The role set for the track after the thumb button.</returns>
+    API_PROPERTY() int GetAfterTrackRole() const;
+
+    /// <summary>
+    /// Returns the role set for a button with index between 0 and 19. The role can be used to have a specific
+    /// behavior when clicking it. Roles matching the values in FudgetScrollBarButtonRole come with a default
+    /// behavior but they can be overriden.
+    /// </summary>
+    API_FUNCTION() int GetButtonRole(int button_index) const;
+
 
     /// <summary>
     /// Returns the position and size of the parts of the scrollbar based on the scrollbar's current values.
@@ -216,5 +252,9 @@ private:
     int _before_btn_count;
     int _after_btn_count;
     FudgetDrawable *_btn_draw[20];
+
+    int _before_track_role;
+    int _after_track_role;
     int _btn_size[20] = { 0 };
+    int _btn_role[20] = { 0 };
 };

@@ -264,6 +264,27 @@ public:
     API_FIELD(ReadOnly) static const String LISTBOX_STYLE;
 
     /// <summary>
+    /// Style holding values for scrollbars that should be referenced by other styles.
+    /// This is a default scrollbar with no extra buttons and the page up and page down
+    /// role for the scrollbar track. This can be changed by setting the appropriate resources
+    /// in the theme.
+    /// </summary>
+    API_FIELD(ReadOnly) static const String SCROLLBAR_DEFAULT_STYLE;
+    /// <summary>
+    /// Style holding values for scrollbars that should be referenced by other styles.
+    /// This is a scrollbar with up/down buttons for lineup/linedown behavior on the ends of
+    /// the scrollbar track, and the page up and page down role for the scrollbar track.
+    /// </summary>
+    API_FIELD(ReadOnly) static const String SCROLLBAR_WINDOWS_BUTTONS_STYLE;
+    /// <summary>
+    /// Style holding values for scrollbars that should be referenced by other styles.
+    /// This is a scrollbar with up/down buttons for lineup/linedown behavior at the bottom
+    /// end of the scrollbar track, and the page up and page down role for the scrollbar
+    /// track.
+    /// </summary>
+    API_FIELD(ReadOnly) static const String SCROLLBAR_OLDMAC_BUTTONS_STYLE;
+
+    /// <summary>
     // Name of the default theme.
     /// </summary>
     API_FIELD(ReadOnly) static const String MAIN_THEME;
