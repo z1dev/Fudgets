@@ -638,10 +638,11 @@ void FudgetListBox::RequestScrollExtents()
     bounds.Size += GetScrollBarWidths();
     FudgetScrollBarComponent *vbar = GetVerticalScrollBar();
     FudgetScrollBarComponent *hbar = GetHorizontalScrollBar();
-    bool hvis = _list_extents.X > bounds.Size.X && hbar != nullptr;
-    bool vvis = _list_extents.Y > bounds.Size.Y && vbar != nullptr;
+    bool hvis = hbar != nullptr && _list_extents.X > bounds.Size.X;
+    bool vvis = vbar != nullptr && _list_extents.Y > bounds.Size.Y;
     Int2 bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
 
+    int expand = 0;
     if (_snap_top_item)
     {
         bool changed = true;
@@ -667,30 +668,29 @@ void FudgetListBox::RequestScrollExtents()
                     sum += last_top_height;
                 }
             }
-            int expand = 0;
             if (sum > height)
             {
-                if (sum > last_top_height)
-                    _list_extents.Y += expand = last_top_height;
+                if (sum <= last_top_height)
+                    expand = sum - last_top_height;
                 else
-                    _list_extents.Y += expand = sum - height;
+                    expand = last_top_height - (sum - height);
             }
 
-            changed = (!hvis && hbar != nullptr && _list_extents.X > bounds.Size.X) || (!vvis && vbar != nullptr && _list_extents.Y > bounds.Size.Y);
+            changed = (!hvis && hbar != nullptr && _list_extents.X > bounds.Size.X) || (!vvis && vbar != nullptr && _list_extents.Y + expand > bounds.Size.Y);
             if (changed)
             {
-                hvis |= _list_extents.X > bounds.Size.X;
-                vvis |= _list_extents.Y > bounds.Size.Y;
+                hvis |= hbar != nullptr && _list_extents.X > bounds.Size.X;
+                vvis |= vbar != nullptr && _list_extents.Y + expand > bounds.Size.Y;
                 bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
-                _list_extents.Y -= expand;
             }
         }
     }
 
-    if (vbar == nullptr)
-        return;
-
-    vbar->SetScrollRange(_list_extents.Y);
-    vbar->SetPageSize((int)bounds_size.Y);
+    if (vbar != nullptr)
+    {
+        vbar->SetScrollRange(_list_extents.Y + expand);
+        vbar->SetPageSize((int)bounds_size.Y);
+        vbar->SetScrollPos(_scroll_pos.Y);
+    }
 }
 

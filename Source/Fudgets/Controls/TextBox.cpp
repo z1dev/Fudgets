@@ -826,17 +826,17 @@ void FudgetTextBox::RequestScrollExtents()
 
             if (sum > height)
             {
-                if (sum > last_top_height)
-                    expand = last_top_height;
+                if (sum <= last_top_height)
+                    expand = sum - last_top_height;
                 else
-                    expand = sum - height;
+                    expand = last_top_height - (sum - height);
             }
 
-            changed = (!hvis && hbar != nullptr && GetMeasurements().Size.X > bounds.Size.X) || (!vvis && vbar != nullptr && GetMeasurements().Size.Y + expand > bounds.Size.Y);
+            changed = (!hvis && hbar != nullptr && GetMeasurements().Size.X > bounds_size.X) || (!vvis && vbar != nullptr && GetMeasurements().Size.Y + expand > bounds_size.Y);
             if (changed)
             {
-                hvis |= hbar != nullptr && GetMeasurements().Size.X > bounds.Size.X;
-                vvis |= vbar != nullptr && GetMeasurements().Size.Y + expand > bounds.Size.Y;
+                hvis |= hbar != nullptr && GetMeasurements().Size.X > bounds_size.X;
+                vvis |= vbar != nullptr && GetMeasurements().Size.Y + expand > bounds_size.Y;
                 bounds_size = bounds.Size - GetScrollBarWidths(hvis, vvis);
             }
         }
