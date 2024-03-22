@@ -1997,13 +1997,13 @@ void FudgetControl::AlignDrawRectangle(Int2 tex_size, FudgetImageAlignment align
 
     tex_size = Int2(int(ratio.X * tex_size.X), int(ratio.Y * tex_size.Y));
 
-    if (x_change || int(alignment & FudgetImageAlignment::StretchHorz) == 0)
+    if (x_change || h_stretch || h_shrink /*int(alignment & FudgetImageAlignment::StretchHorz) == 0*/)
         rect.Location.X += float((rect.Size.X - tex_size.X) * 0.5);
     else if ((alignment & FudgetImageAlignment::RightAlign) == FudgetImageAlignment::RightAlign)
         rect.Location.X += rect.Size.X - tex_size.X;
     rect.Size.X = (float)tex_size.X;
 
-    if (y_change || int(alignment & FudgetImageAlignment::StretchVert) == 0)
+    if (y_change || v_stretch || v_shrink /*int(alignment & FudgetImageAlignment::StretchVert) == 0*/)
         rect.Location.Y += float((rect.Size.Y - tex_size.Y) * 0.5);
     else if ((alignment & FudgetImageAlignment::BottomAlign) == FudgetImageAlignment::BottomAlign)
         rect.Location.Y += rect.Size.Y - tex_size.Y;
