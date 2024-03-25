@@ -847,6 +847,8 @@ void FudgetTextBox::RequestScrollExtents()
     {
         vbar->SetScrollRange(GetMeasurements().Size.Y + expand);
         vbar->SetPageSize((int)bounds_size.Y);
+        if (GetMeasurements().Lines.Count() > 0)
+            vbar->SetLineSize(GetMeasurements().Lines[0].Size.Y);
         vbar->SetScrollPos(_scroll_pos.Y);
     }
 
@@ -854,6 +856,8 @@ void FudgetTextBox::RequestScrollExtents()
     {
         hbar->SetScrollRange(GetMeasurements().Size.X);
         hbar->SetPageSize((int)bounds_size.X);
+        if (GetMeasurements().Lines.Count() > 0)
+            hbar->SetLineSize(GetMeasurements().Lines[0].Size.Y);
         hbar->SetScrollPos(_scroll_pos.X);
     }
 }

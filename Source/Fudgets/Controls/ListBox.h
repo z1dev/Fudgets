@@ -169,7 +169,8 @@ public:
     API_PROPERTY() FudgetStringListProvider* GetDataProvider() const { return _data; }
 
     /// <summary>
-    /// Sets a data provider for this list control, replacing the default or previously set provider.
+    /// Sets a data provider for this list control, replacing the default or previously set provider. Data providers created
+    /// by the user must be manually destroyed when they are no longer needed.
     /// </summary>
     /// <param name="value">The new data provider</param>
     API_PROPERTY() void SetDataProvider(FudgetStringListProvider *value);
@@ -233,9 +234,6 @@ public:
 
 protected:
 
-    ///// <inheritdoc />
-    //void RequestLayout() override;
-
     /// <inheritdoc />
     void DataChangeBegin() override;
     /// <inheritdoc />
@@ -276,15 +274,10 @@ protected:
     /// <inheritdoc />
     void RequestScrollExtents() override;
 private:
-    //Rectangle GetScrollBarBounds() const;
-    //FORCE_INLINE Float2 GetPosInScrollBar(Float2 pos) const { return pos - _v_scrollbar->GetBounds().GetUpperLeft(); }
-    //FORCE_INLINE Int2 GetPosInScrollBar(Int2 pos) const { Float2 p = (pos - _v_scrollbar->GetBounds().GetUpperLeft()); return Int2((int)p.X, (int)p.Y); }
-
     void EnsureDefaultSize();
 
     FudgetPadding _content_padding;
 
-    //FudgetDrawablePainter *_frame_painter;
     FudgetListItemPainter *_item_painter;
 
     FudgetStringListProvider *_data;

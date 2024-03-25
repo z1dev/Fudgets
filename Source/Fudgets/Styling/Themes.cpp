@@ -220,7 +220,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     //main_theme->SetResource(FudgetThemePartIds::ScrollBarHorizontalTrack, Color::LightGray);
     //main_theme->SetResource(FudgetThemePartIds::ScrollBarVerticalTrack, Color::LightGray);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarIsThumbSizeFixed, false);
-    main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 16);
+    main_theme->SetResource(FudgetThemePartIds::ScrollBarMinThumbSize, 20);
 
     main_theme->SetResource(FudgetThemePartIds::ScrollBarLineUpRole, (int)FudgetScrollBarButtonRole::LineUp);
     main_theme->SetResource(FudgetThemePartIds::ScrollBarLineDownRole, (int)FudgetScrollBarButtonRole::LineDown);

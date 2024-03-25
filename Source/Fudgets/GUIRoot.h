@@ -186,7 +186,29 @@ public:
     /// <summary>
     /// Callback event when the size of the GUI area changes
     /// </summary>
-    API_EVENT() Delegate<Int2> Resized;
+    API_EVENT() Delegate<Int2> ResizedEvent;
+
+    /// <summary>
+    /// Callback event when the focused control changed from an old control to a new one.
+    /// Arguments are (old control, new control).
+    /// </summary>
+    API_EVENT() Delegate<FudgetControl*, FudgetControl*> FocusChangedEvent;
+    /// <summary>
+    /// Callback event when a control captured the mouse. Argument is the control gaining the
+    /// mouse capture.
+    /// </summary>
+    API_EVENT() Delegate<FudgetControl*> MouseCapturedEvent;
+    /// <summary>
+    /// Callback event when a control lost the mouse capture. Argument is the control losing
+    /// the mouse capture.
+    /// </summary>
+    API_EVENT() Delegate<FudgetControl*> MouseReleasedEvent;
+
+    /// <summary>
+    /// Called each frame if a control subscribed to it, before other things are handled,
+    /// then all bindings are cleared.
+    /// </summary>
+    API_EVENT() Delegate<> NextFrameEvent;
 private:
     //// Called once from the Fudget to initialize during gameplay
     //void Initialize() override;
@@ -209,8 +231,9 @@ private:
     // Mouse and Touch input:
 
     void HandleMouseDown(const Float2 &pos, MouseButton button);
-    void HandleMouseUp(const Float2 &pos, MouseButton button);
     void HandleMouseDoubleClick(const Float2 &pos, MouseButton button);
+    void DoHandleMouseDown(const Float2 &pos, MouseButton button, bool double_click);
+    void HandleMouseUp(const Float2 &pos, MouseButton button);
     void HandleMouseMove(const Float2 &pos);
     void HandleMouseLeave();
 
@@ -235,7 +258,7 @@ private:
     // the AlwaysOnTop flag, will be placed below these controls, even if the passed index to AddChild is greater.
     int _on_top_count;
 
-    // Control currently capturing th emouse.
+    // Control currently capturing the mouse.
     FudgetControl *_mouse_capture_control;
     // Which button was pressed before the mouse was captured. This is updated independent of
     // capture status, but is not used when nothing captures it.
@@ -243,6 +266,10 @@ private:
     // The control currently (or last time it was checked) under the mouse pointer. It's not updated
     // if something has captured the mouse already.
     FudgetControl *_mouse_over_control;
+    // Whether the _mouse_capture_control started capturing the mouse because it had the auto capture flag.
+    // Only call the release automatically when this is true.
+    bool _auto_mouse_capture;
+
 
     // Interface objects that were registered to inspect or modify global mouse events
     Array<IFudgetMouseHook*> _global_mouse_hooks;

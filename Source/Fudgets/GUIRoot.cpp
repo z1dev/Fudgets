@@ -28,8 +28,8 @@ FudgetGUIRoot::FudgetGUIRoot(Fudget* root) : FudgetGUIRoot(SpawnParams(Guid::New
 
 FudgetGUIRoot::FudgetGUIRoot(const SpawnParams &params, Fudget *root) : Base(params),
 	events_initialized(false), _root(root), _window((WindowBase*)Screen::GetMainWindow()), _on_top_count(0),
-	_mouse_capture_control(nullptr), _mouse_capture_button(), _mouse_over_control(nullptr), _focus_control(nullptr),
-	_processing_updates(false)
+	_mouse_capture_control(nullptr), _mouse_capture_button(), _mouse_over_control(nullptr), _auto_mouse_capture(false),
+	_focus_control(nullptr), _processing_updates(false)
 {
 	_guiRoot = this;
 }
@@ -202,11 +202,14 @@ void FudgetGUIRoot::StartMouseCapture(FudgetControl *control)
 		return;
 	if (_mouse_capture_control != nullptr)
 		ReleaseMouseCapture();
+	_auto_mouse_capture = false;
 	_mouse_capture_control = control;
 	if (_mouse_capture_control != nullptr && _window != nullptr)
 	{
 		_window->StartTrackingMouse(false);
 		_mouse_capture_control->DoMouseCaptured();
+		if (MouseCapturedEvent.IsBinded())
+			MouseCapturedEvent(_mouse_capture_control);
 	}
 }
 
@@ -218,6 +221,9 @@ void FudgetGUIRoot::ReleaseMouseCapture()
 	_mouse_capture_control = nullptr;
 	_window->EndTrackingMouse();
 	tmp->DoMouseReleased();
+	_auto_mouse_capture = false;
+	if (MouseReleasedEvent.IsBinded())
+		MouseReleasedEvent(tmp);
 }
 
 void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
@@ -245,6 +251,9 @@ void FudgetGUIRoot::SetFocusedControl(FudgetControl *value)
 		value->DoFocusChanged(false, _focus_control);
 	if (_focus_control != nullptr)
 		_focus_control->DoFocusChanged(true, value);
+
+	if (FocusChangedEvent.IsBinded())
+		FocusChangedEvent(value, _focus_control);
 }
 
 void FudgetGUIRoot::UpdateCursor(FudgetControl *control)
@@ -332,8 +341,8 @@ bool FudgetGUIRoot::IsNavigationKey(KeyboardKeys key) const
 void FudgetGUIRoot::OnResized(Int2 new_size)
 {
 	SizeModified();
-	if (Resized.IsBinded())
-		Resized(new_size);
+	if (ResizedEvent.IsBinded())
+		ResizedEvent(new_size);
 }
 
 void FudgetGUIRoot::DoLayout()
@@ -426,6 +435,16 @@ FudgetMouseHookResult FudgetGUIRoot::ProcessLocalMouseHooks(HookProcessingType t
 
 void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 {
+	DoHandleMouseDown(__pos, button, false);
+}
+
+void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton button)
+{
+	DoHandleMouseDown(__pos, button, true);
+}
+
+void FudgetGUIRoot::DoHandleMouseDown(const Float2 &__pos, MouseButton button, bool double_click)
+{
 	Float2 pos = Input::GetMousePosition();
 
 	if (!_global_mouse_hooks.IsEmpty())
@@ -443,13 +462,13 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 	{
 		Float2 cpos = _mouse_capture_control->GlobalToLocal(pos);
 
-		FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, _mouse_capture_control, cpos, pos, button, false);
+		FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, _mouse_capture_control, cpos, pos, button, double_click);
 		if (result == FudgetMouseHookResult::EatEvent)
 			return;
 		if (result != FudgetMouseHookResult::SkipControl)
 		{
-			FudgetInputResult result = _mouse_capture_control->DoMouseDown(cpos, pos, button, false);
-			if (result == FudgetInputResult::Consume)
+			FudgetInputResult result = _mouse_capture_control->DoMouseDown(cpos, pos, button, double_click);
+			if (_mouse_capture_control != nullptr && result == FudgetInputResult::Consume)
 			{
 				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
 					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
@@ -469,30 +488,37 @@ void FudgetGUIRoot::HandleMouseDown(const Float2 &__pos, MouseButton button)
 		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseUpDown))
 		{
 			Float2 cpos = c->GlobalToLocal(pos);
-			if (c->WantsMouseEventAtPos(cpos, pos)) 
+			if (c->WantsMouseEventAtPos(cpos, pos))
 			{
 				if (!_local_mouse_hooks.IsEmpty())
 				{
-					FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, c, cpos, pos, button, false);
+					FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, c, cpos, pos, button, double_click);
 					if (result == FudgetMouseHookResult::EatEvent)
 						return;
 					if (result == FudgetMouseHookResult::SkipControl)
 						continue;
 				}
 
-				FudgetInputResult result = c->DoMouseDown(cpos, pos, button, false);
+				FudgetInputResult result = c->DoMouseDown(cpos, pos, button, double_click);
 				if (result == FudgetInputResult::Consume)
 				{
 					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
 						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
+					{
 						c->CaptureMouseInput();
+						_auto_mouse_capture = (_mouse_capture_control == c);
+					}
 					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
 						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
 						c->SetFocused(true);
 				}
 
 				if (result != FudgetInputResult::PassThrough || _mouse_capture_control != nullptr)
+				{
+					if (double_click)
+						HandleMouseMove(pos);
 					break;
+				}
 			}
 		}
 		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
@@ -522,11 +548,10 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 		{
 			if (_mouse_capture_control->DoMouseUp(cpos, pos, button))
 			{
-				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
-					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
-				{
+				if (_mouse_capture_control != nullptr && _auto_mouse_capture && ((button == MouseButton::Left &&
+					_mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
+					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight))))
 					ReleaseMouseCapture();
-				}
 
 				HandleMouseMove(pos);
 			}
@@ -553,90 +578,6 @@ void FudgetGUIRoot::HandleMouseUp(const Float2 &__pos, MouseButton button)
 					continue;
 
 				if (c->DoMouseUp(cpos, pos, button))
-				{
-					HandleMouseMove(pos);
-					break;
-				}
-			}
-		}
-		if (c->HasAnyFlag(FudgetControlFlag::BlockMouseEvents))
-			break;
-	}
-}
-
-void FudgetGUIRoot::HandleMouseDoubleClick(const Float2 &__pos, MouseButton button)
-{
-	Float2 pos = Input::GetMousePosition();
-
-	if (!_global_mouse_hooks.IsEmpty())
-	{
-		for (int ix = 0, siz = _global_mouse_hooks.Count(); ix < siz; ++ix)
-			if (!_global_mouse_hooks[ix]->OnGlobalMouseDoubleClick(this, pos, button))
-				return;
-	}
-
-	if (_mouse_capture_control != nullptr && _mouse_capture_button == button)
-	{
-		LOG(Error, "MouseCapture not null on OnMouseDoubleClick");
-		ReleaseMouseCapture();
-		return;
-	}
-
-	if (_mouse_capture_control == nullptr)
-	{
-		_mouse_capture_button = button;
-	}
-	else
-	{
-		Float2 cpos = _mouse_capture_control->GlobalToLocal(pos);
-
-		FudgetMouseHookResult result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, _mouse_capture_control, cpos, pos, button, true);
-		if (result == FudgetMouseHookResult::EatEvent)
-			return;
-		if (result != FudgetMouseHookResult::SkipControl)
-		{
-			FudgetInputResult result = _mouse_capture_control->DoMouseDown(cpos, pos, button, true);
-			if (result == FudgetInputResult::Consume)
-			{
-				if ((button == MouseButton::Left && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
-					(button == MouseButton::Right && _mouse_capture_control->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
-					_mouse_capture_control->SetFocused(true);
-			}
-		}
-		return;
-	}
-
-	Array<FudgetControl*> controls_for_input;
-	ControlsAtPosition(pos, FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::BlockMouseEvents, FudgetControlFlag::None, FudgetControlFlag::CompoundControl,
-		FudgetControlState::None, FudgetControlState::Hidden | FudgetControlState::Invisible, FudgetControlState::Hidden | FudgetControlState::Invisible,
-		controls_for_input);
-
-	for (int ix = controls_for_input.Count() - 1; ix >= 0; --ix)
-	{
-		FudgetControl *c = controls_for_input[ix];
-		if (c->HasAnyFlag(FudgetControlFlag::CanHandleMouseUpDown))
-		{
-			Float2 cpos = c->GlobalToLocal(pos);
-			if (c->WantsMouseEventAtPos(cpos, pos))
-			{
-				FudgetMouseHookResult hook_result = ProcessLocalMouseHooks(HookProcessingType::MouseDown, c, cpos, pos, button, true);
-				if (hook_result == FudgetMouseHookResult::EatEvent)
-					return;
-				if (hook_result == FudgetMouseHookResult::SkipControl)
-					continue;
-
-				FudgetInputResult result = c->DoMouseDown(cpos, pos, button, true);
-				if (result == FudgetInputResult::Consume)
-				{
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::CaptureReleaseMouseRight)))
-						c->CaptureMouseInput();
-					if ((button == MouseButton::Left && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseLeft)) ||
-						(button == MouseButton::Right && c->HasAnyFlag(FudgetControlFlag::FocusOnMouseRight)))
-						c->SetFocused(true);
-				}
-
-				if (result != FudgetInputResult::PassThrough || _mouse_capture_control != nullptr)
 				{
 					HandleMouseMove(pos);
 					break;

@@ -61,6 +61,22 @@ public:
     void OnSizeChanged() override;
 
     /// <inheritdoc />
+    void OnRootChanged(FudgetGUIRoot *old_root) override;
+
+    /// <summary>
+    /// Gets the data provider currently set for the control.
+    /// </summary>
+    /// <returns></returns>
+    API_PROPERTY() FudgetStringListProvider* GetDataProvider() const { return _data; }
+
+    /// <summary>
+    /// Sets a data provider for the control, replacing any data provider previously. Data providers created
+    /// by the user must be manually destroyed when they are no longer needed.
+    /// </summary>
+    /// <param name="value">The new data provider</param>
+    API_PROPERTY() void SetDataProvider(FudgetStringListProvider *value);
+
+    /// <inheritdoc />
     FudgetLayoutSlot* ProxyInterfaceCreateSlot(FudgetControl *control) override;
     /// <inheritdoc />
     FudgetLayoutFlag ProxyInterfaceGetInitFlags() const override;
@@ -90,19 +106,49 @@ protected:
     /// Padding of the text with the frame padding.
     /// </summary>
     API_PROPERTY() FudgetPadding GetCombinedPadding() const;
-private:
-    //FudgetPadding GetTextPadding() const;
-    //FudgetPadding GetButtonPadding() const;
 
+    /// <inheritdoc />
+    void DataChangeBegin() override;
+    /// <inheritdoc />
+    void DataChangeEnd(bool changed) override;
+    /// <inheritdoc />
+    void DataToBeReset() override;
+    /// <inheritdoc />
+    void DataReset() override;
+    /// <inheritdoc />
+    void DataToBeCleared() override;
+    /// <inheritdoc />
+    void DataCleared() override;
+    /// <inheritdoc />
+    void DataToBeUpdated(int index) override;
+    /// <inheritdoc />
+    void DataUpdated(int index) override;
+    /// <inheritdoc />
+    void DataToBeAdded(int count) override;
+    /// <inheritdoc />
+    void DataAdded(int count) override;
+    /// <inheritdoc />
+    void DataToBeRemoved(int index, int count) override;
+    /// <inheritdoc />
+    void DataRemoved(int index, int count) override;
+    /// <inheritdoc />
+    void DataToBeInserted(int index, int count) override;
+    /// <inheritdoc />
+    void DataInserted(int index, int count) override;
+private:
     bool PosOnEditor(Float2 pos) const;
     bool PosOnButton(Float2 pos) const;
 
     void HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter);
 
+    void UnbindEvents(FudgetGUIRoot *root);
+    void BindEvents();
+    void HandleMouseReleasedEvent(FudgetControl *control);
+
+    FudgetStringListProvider *_data;
+
     /// The layout that lets controls do their own layouts
     FudgetProxyLayout *_layout;
-
-    //FudgetDrawablePainter *_frame_painter;
 
     FudgetPadding _content_padding;
     int _button_width;
@@ -118,11 +164,13 @@ private:
     /// <summary>
     /// List box for combo box items list
     /// </summary>
-    FudgetListBox *_list_box;
+    FudgetListBox *_listbox;
 
     FudgetStringListProvider *_list_data;
 
     bool _editor_capturing;
     bool _button_capturing;
+    bool _listbox_capturing;
+    //bool _start_showing;
     Float2 _last_mouse_pos;
 };

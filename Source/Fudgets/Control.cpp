@@ -1744,11 +1744,13 @@ void FudgetControl::SetParentVisibility(bool value)
 void FudgetControl::DoRootChanging(FudgetGUIRoot *new_root)
 {
     RegisterToUpdate(false);
+    OnRootChanging(new_root);
 }
 
 void FudgetControl::DoRootChanged(FudgetGUIRoot *old_root)
 {
     RegisterToUpdate(HasAnyFlag(FudgetControlFlag::RegisterToUpdates));
+    OnRootChanged(old_root);
 }
 
 void FudgetControl::DoParentChanged(FudgetContainer *old_parent)

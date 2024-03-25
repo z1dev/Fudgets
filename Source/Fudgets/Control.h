@@ -780,6 +780,18 @@ public:
     /// <param name="old_parent">The previous parent which can be null</param>
     API_PROPERTY() virtual void OnParentChanged(FudgetContainer *old_parent) {}
 
+    /// <summary>
+    /// Called before the root changes. The control might not be initialized yet at this point.
+    /// </summary>
+    /// <param name="new_root">The root to be set to the control</param>
+    API_FUNCTION() virtual void OnRootChanging(FudgetGUIRoot *new_root) {}
+    /// <summary>
+    /// Called after the root changes and the control was initialized, if it's the first time. This is called
+    /// before OnParentChanged.
+    /// </summary>
+    /// <param name="old_root">The previous root control</param>
+    API_FUNCTION() virtual void OnRootChanged(FudgetGUIRoot *old_root) {}
+
     // Update callback
 
     /// <summary>
@@ -2227,15 +2239,14 @@ protected:
     API_FUNCTION() virtual void SetParentVisibility(bool value);
 
     /// <summary>
-    /// Used internally to deregister control from OnUpdate calls. This happens after the parent was changed, but the root
-    /// hasn't yet, and the control is not initialized. When overriding, make sure to not access internal data and call
-    /// the base implementation.
+    /// Used internally to deregister the control from OnUpdate calls. This happens after the parent was changed, but
+    /// the root hasn't changed yet, and the control is not initialized. Override OnRootChanging instead.
     /// </summary>
     /// <param name="new_root">The root to be set to the control</param>
     API_FUNCTION() virtual void DoRootChanging(FudgetGUIRoot *new_root);
     /// <summary>
-    /// Used internally to register control to OnUpdate calls. This happens after the parent and the root both changed and
-    /// the control was initialized. When overriding, make sure to call the base implementation.
+    /// Used internally to register control to OnUpdate calls. This happens after the parent and the root both
+    /// changed and the control was initialized. Override OnRootChanged instead.
     /// </summary>
     /// <param name="old_root">The previous root control</param>
     API_FUNCTION() virtual void DoRootChanged(FudgetGUIRoot *old_root);

@@ -4,6 +4,17 @@
 #include "Engine/Input/Enums.h"
 
 
+API_ENUM()
+enum class FudgetMouseButtonFlag
+{
+    None = 0,
+    Left = 1 << 0,
+    Middle = 1 << 1,
+    Right = 1 << 2,
+    Extended1 = 1 << 3,
+    Extended2 = 1 << 4,
+};
+
 /// <summary>
 /// Virtual input action binding. Helps with listening for a selected input event.
 /// </summary>
@@ -71,21 +82,3 @@ private:
     bool bound;
 };
 
-/*
- 
-/// <summary>
-/// Virtual input action binding. Helps with listening for a selected input event.
-/// </summary>
-public class InputEvent
-{
-
-
-    ///// <summary>
-    ///// Occurs when event is triggered (e.g. user pressed a key). Called before scripts update.
-    ///// </summary>
-    //[System.Obsolete("Depreciated in 1.7, use Pressed Action.")]
-    //    public event Action Triggered;
-
-}
-
-*/

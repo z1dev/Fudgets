@@ -11,9 +11,9 @@
 
 
 
-FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _layout(nullptr), /*_frame_painter(nullptr),*/
-    _button_width(0), _editor(nullptr), _button(nullptr), _list_box(nullptr), _list_data(nullptr), _editor_capturing(false),
-    _button_capturing(false), _last_mouse_pos(0.f)
+FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _data(nullptr), _layout(nullptr),
+    _button_width(0), _editor(nullptr), _button(nullptr), _listbox(nullptr), _list_data(nullptr), _editor_capturing(false),
+    _button_capturing(false), _listbox_capturing(false), /*_start_showing(false),*/ _last_mouse_pos(0.f)
 {
 }
 
@@ -21,6 +21,8 @@ FudgetComboBox::~FudgetComboBox()
 {
     if (_list_data != nullptr)
         Delete(_list_data);
+
+    UnbindEvents(GetGUIRoot());
 }
 
 void FudgetComboBox::OnInitialize()
@@ -31,17 +33,20 @@ void FudgetComboBox::OnInitialize()
     _button = CreateChild<FudgetButton>(FudgetThemes::COMBOBOX_BUTTON_STYLE);
     _button->EventPressed.Bind<FudgetComboBox, &FudgetComboBox::ButtonPressed>(this);
 
-    _list_box = CreateChild<FudgetListBox>(FudgetThemes::COMBOBOX_LIST_STYLE);
+    _listbox = CreateChild<FudgetListBox>(FudgetThemes::COMBOBOX_LIST_STYLE);
 
     FudgetGUIRoot *root = GetGUIRoot();
-    root->AddChild(_list_box);
-    _list_box->SetAlwaysOnTop(true);
-    _list_box->SetVisible(false);
+    root->AddChild(_listbox);
+    _listbox->SetAlwaysOnTop(true);
+    _listbox->SetVisible(false);
 
     _list_data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
-    _list_box->SetDataProvider(_list_data);
+    _listbox->SetDataProvider(_list_data);
 
     _layout = CreateLayout<FudgetProxyLayout>();
+
+    if (GetGUIRoot() != nullptr)
+        BindEvents();
 }
 
 void FudgetComboBox::OnStyleInitialize()
@@ -90,10 +95,43 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
 
-    if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
-        return _editor->DoMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
-    else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
-        return _button->DoMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
+    if (!_listbox->IsVisible())
+    {
+        if (button == MouseButton::Left)
+            CaptureMouseInput();
+
+        if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
+            return _editor->DoMouseDown(pos - _editor->GetPosition(), global_pos, button, double_click);
+        else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
+            return _button->DoMouseDown(pos - _button->GetPosition(), global_pos, button, double_click);
+    }
+    else
+    {
+        Float2 lb_pos = _listbox->GlobalToLocal(global_pos);
+        if (_listbox->WantsMouseEventAtPos(lb_pos, global_pos))
+        {
+            if (_listbox->DoMouseDown(lb_pos, global_pos, button, double_click) == FudgetInputResult::Consume)
+            {
+                if (button == MouseButton::Left)
+                {
+                    _listbox_capturing = true;
+                    _listbox->DoMouseCaptured();
+                }
+
+            }
+        }
+        else
+        {
+            if (_listbox_capturing)
+            {
+                _listbox_capturing = false;
+                _listbox->DoMouseReleased();
+            }
+            _listbox->Hide();
+            _button_capturing = true;
+            //ReleaseMouseInput();
+        }
+    }
 
     return FudgetInputResult::Consume;
 }
@@ -101,26 +139,59 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
 bool FudgetComboBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
-    if (!MouseIsCaptured())
+    if (!_listbox->IsVisible())
+    {
+        if (!MouseIsCaptured())
+            return true;
+
+        bool r = true;
+        if (_editor_capturing)
+            r = _editor->DoMouseUp(pos - _editor->GetPosition(), global_pos, button);
+        else if (_button_capturing)
+            r = _button->DoMouseUp(pos - _button->GetPosition(), global_pos, button);
+
+        if (!_listbox->IsVisible() && button == MouseButton::Left)
+            ReleaseMouseInput();
+
+        return r;
+    }
+    else
+    {
+        if (_listbox_capturing)
+        {
+            Float2 lb_pos = _listbox->GlobalToLocal(global_pos);
+            if (_listbox->DoMouseUp(lb_pos, global_pos, button))
+            {
+                _listbox_capturing = false;
+                _listbox->DoMouseReleased();
+            }
+        }
+        //if (!_start_showing)
+        //{
+        //    _listbox->Hide();
+        //    ReleaseMouseInput();
+        //}
+        //_start_showing = false;
         return true;
-
-    bool r = true;
-    if (_editor_capturing)
-        r = _editor->DoMouseUp(pos - _editor->GetPosition(), global_pos, button);
-    else if (_button_capturing)
-        r =  _button->DoMouseUp(pos - _button->GetPosition(), global_pos, button);
-
-    return r;
+    }
 }
 
 void FudgetComboBox::OnMouseMove(Float2 pos, Float2 global_pos)
 {
     HandleEnterLeaveMouse(pos, global_pos, false);
 
-    if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
-        _editor->DoMouseMove(pos - _editor->GetPosition(), global_pos);
-    else if(_button_capturing || (!_editor_capturing && PosOnButton(pos)))
-        _button->DoMouseMove(pos - _button->GetPosition(), global_pos);
+    if (!_listbox->IsVisible())
+    {
+        if (_editor_capturing || (!_button_capturing && PosOnEditor(pos)))
+            _editor->DoMouseMove(pos - _editor->GetPosition(), global_pos);
+        else if (_button_capturing || (!_editor_capturing && PosOnButton(pos)))
+            _button->DoMouseMove(pos - _button->GetPosition(), global_pos);
+    }
+    else
+    {
+        Float2 lb_pos = _listbox->GlobalToLocal(global_pos);
+        _listbox->DoMouseMove(lb_pos, global_pos);
+    }
 }
 
 void FudgetComboBox::OnMouseEnter(Float2 pos, Float2 global_pos)
@@ -166,11 +237,50 @@ void FudgetComboBox::OnMouseReleased()
 
 void FudgetComboBox::OnSizeChanged()
 {
-    Int2 siz = _list_box->GetHintSize();
+    Int2 siz = _listbox->GetHintSize();
     siz.X = GetSize().X;
-    _list_box->SetHintSize(siz);
+    _listbox->SetHintSize(siz);
 
     Base::OnSizeChanged();
+}
+
+void FudgetComboBox::OnRootChanged(FudgetGUIRoot *old_root)
+{
+    if (old_root != nullptr)
+        UnbindEvents(old_root);
+    if (GetGUIRoot() != nullptr)
+        BindEvents();
+}
+
+void FudgetComboBox::SetDataProvider(FudgetStringListProvider *data)
+{
+    if (_data == data /*|| (_owned_data && data == nullptr)*/)
+        return;
+
+    if (_data != nullptr)
+        _data->UnregisterDataConsumer(_data_proxy);
+
+    //if (_owned_data)
+    //    Delete(_data);
+
+    //if (data == nullptr)
+    //{
+    //    _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
+    //    _owned_data = true;
+    //}
+    //else
+    //{
+    //    _owned_data = false;
+    //    _data = data;
+    //}
+
+    _data = data;
+
+    if (_data != nullptr)
+        _data->RegisterDataConsumer(_data_proxy);
+    DataReset();
+    
+    _listbox->SetDataProvider(_data);
 }
 
 FudgetLayoutSlot* FudgetComboBox::ProxyInterfaceCreateSlot(FudgetControl *control)
@@ -226,19 +336,81 @@ bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
 
 void FudgetComboBox::ButtonPressed()
 {
-
+    _listbox->SetPosition(LocalToGlobal(GetBounds()).GetBottomLeft());
+    _listbox->Show();
+    if (_button_capturing)
+        _button->DoMouseReleased();
+    _button_capturing = false;
+    //_start_showing = true;
 }
 
 FudgetControlFlag FudgetComboBox::GetInitFlags() const
 {
     return FudgetControlFlag::CanHandleMouseUpDown | FudgetControlFlag::CanHandleMouseMove | FudgetControlFlag::CanHandleMouseEnterLeave |
-        FudgetControlFlag::BlockMouseEvents | FudgetControlFlag::FocusOnMouseLeft | FudgetControlFlag::CaptureReleaseMouseLeft | FudgetControlFlag::Framed |
+        FudgetControlFlag::BlockMouseEvents | FudgetControlFlag::FocusOnMouseLeft | FudgetControlFlag::Framed |
         FudgetControlFlag::CanHandleKeyEvents | FudgetControlFlag::CanHandleNavigationKeys | FudgetControlFlag::CompoundControl | Base::GetInitFlags();
 }
 
 FudgetPadding FudgetComboBox::GetCombinedPadding() const
 {
     return _content_padding + GetFramePadding();
+}
+
+void FudgetComboBox::DataChangeBegin()
+{
+
+}
+void FudgetComboBox::DataChangeEnd(bool changed)
+{
+
+}
+void FudgetComboBox::DataToBeReset()
+{
+
+}
+void FudgetComboBox::DataReset()
+{
+
+}
+void FudgetComboBox::DataToBeCleared()
+{
+
+}
+void FudgetComboBox::DataCleared()
+{
+
+}
+void FudgetComboBox::DataToBeUpdated(int index)
+{
+
+}
+void FudgetComboBox::DataUpdated(int index)
+{
+
+}
+void FudgetComboBox::DataToBeAdded(int count)
+{
+
+}
+void FudgetComboBox::DataAdded(int count)
+{
+
+}
+void FudgetComboBox::DataToBeRemoved(int index, int count)
+{
+
+}
+void FudgetComboBox::DataRemoved(int index, int count)
+{
+
+}
+void FudgetComboBox::DataToBeInserted(int index, int count)
+{
+
+}
+void FudgetComboBox::DataInserted(int index, int count)
+{
+
 }
 
 bool FudgetComboBox::PosOnEditor(Float2 pos) const
@@ -259,7 +431,24 @@ bool FudgetComboBox::PosOnButton(Float2 pos) const
 void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool on_enter)
 {
     if (MouseIsCaptured())
+    {
+        if (_listbox->IsVisible() && !_listbox_capturing)
+        {
+            Float2 last_global = LocalToGlobal(_last_mouse_pos);
+            Float2 last_lb_pos = _listbox->GlobalToLocal(last_global);
+            Float2 lb_pos = _listbox->GlobalToLocal(global_pos);
+            bool was_lb = _listbox->WantsMouseEventAtPos(last_lb_pos, last_global);
+            bool is_lb = _listbox->WantsMouseEventAtPos(lb_pos, global_pos);
+
+            if (was_lb && !is_lb)
+                _listbox->DoMouseLeave();
+            else if (is_lb && !was_lb)
+                _listbox->DoMouseEnter(lb_pos, global_pos);
+
+            _last_mouse_pos = pos;
+        }
         return;
+    }
 
     bool was_editor = !on_enter && PosOnEditor(_last_mouse_pos);
     bool is_editor = PosOnEditor(pos);
@@ -278,4 +467,27 @@ void FudgetComboBox::HandleEnterLeaveMouse(Float2 pos, Float2 global_pos, bool o
         _button->DoMouseEnter(pos - _button->GetPosition(), global_pos);
 
     _last_mouse_pos = pos;
+}
+
+void FudgetComboBox::UnbindEvents(FudgetGUIRoot *root)
+{
+    if (root == nullptr)
+        return;
+    root->MouseReleasedEvent.Unbind<FudgetComboBox, &FudgetComboBox::HandleMouseReleasedEvent>(this);
+}
+
+void FudgetComboBox::BindEvents()
+{
+    auto root = GetGUIRoot();
+    if (root == nullptr)
+        return;
+    root->MouseReleasedEvent.Bind<FudgetComboBox, &FudgetComboBox::HandleMouseReleasedEvent>(this);
+}
+
+void FudgetComboBox::HandleMouseReleasedEvent(FudgetControl *control)
+{
+    if (control == _listbox)
+    {
+        _listbox->Hide();
+    }
 }
