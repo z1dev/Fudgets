@@ -6,6 +6,7 @@
 
 class FudgetDrawablePainter;
 class FudgetListItemPainter;
+class FudgetItemSelection;
 
 /// <summary>
 /// A simple implementation of IFudgetDataProvider that stores a list of strings and can provide
@@ -213,11 +214,20 @@ public:
     /// <returns>Item size of the item at the index</returns>
     Int2 GetItemSize(int item_index) override;
     /// <inheritdoc />
-    int ItemIndexAt(Float2 point) override;
+    int ItemIndexAt(Float2 pos) override;
     /// <inheritdoc />
     bool IsItemSelected(int item_index) const override;
     /// <inheritdoc />
     Rectangle GetItemRect(int item_index) override;
+
+    /// <summary>
+    /// Finds and returns the index of the item at the absolute position inside the content extents. If an item is
+    /// found there, the rectangle is set to its rectangle.
+    /// </summary>
+    /// <param name="pos">Absolute position inside the listbox contents.</param>
+    /// <param name="item_rect">Rectangle to receive item's absolute rectangle</param>
+    /// <returns>Index of item at position if an item was found or -1.</returns>
+    API_FUNCTION() int ItemAtAbsolutePosition(Float2 pos, API_PARAM(Out) Rectangle &item_rect);
 
     /// <summary>
     /// When scrolling, the top item might scroll out of view in a way that only part of it is visible. When this value is
@@ -232,6 +242,29 @@ public:
     /// <param name="value">Set whether the top item should always be fully visible or is allowed to be covered in part</param>
     API_PROPERTY() void SetSnapTopItem(bool value);
 
+    /// <summary>
+    /// Scrolls the contents to make the item at index fully visible, unless the item is already fully shown.
+    /// </summary>
+    /// <param name="index">Index of the item.</param>
+    API_FUNCTION() void ScrollToItem(int index);
+
+    /// <summary>
+    /// Scrolls to the requested position even if no scrollbars are visible. It does not respect the snap top item setting
+    /// nor the extents of the contents of the listbox if there are no scroll bars.
+    /// </summary>
+    /// <param name="position">Position to scroll to</param>
+    API_FUNCTION() void ScrollTo(Int2 position);
+
+    API_PROPERTY() int GetCurrentIndex() const { return -1;  };
+    API_PROPERTY() void SetCurrentIndex(int value) {};
+
+    //API_EVENT() Delegate<FudgetListBox*> SelectionChangedEvent;
+    ///// <summary>
+    ///// Event emitted when the focused item changes. If the user holds a mouse key down while moving over the listbox,
+    ///// this is called each time the mouse moves over to a new item.
+    ///// Arguments: this listbox, previous index, current index.
+    ///// </summary>
+    //API_EVENT() Delegate<FudgetListBox*, int, int> IndexChangedEvent;
 protected:
 
     /// <inheritdoc />
@@ -276,12 +309,14 @@ protected:
 private:
     void EnsureDefaultSize();
 
-    FudgetPadding _content_padding;
-
     FudgetListItemPainter *_item_painter;
 
     FudgetStringListProvider *_data;
     bool _owned_data;
+
+    FudgetItemSelection *_selection;
+
+    FudgetPadding _content_padding;
 
     // Index of the focused item which was last selected or moved to. The focused item is always visible.
     int _focus_index;

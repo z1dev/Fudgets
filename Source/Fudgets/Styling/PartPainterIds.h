@@ -31,13 +31,13 @@ enum class FudgetThemePartIds
     /// </summary>
     FieldBackground = First,
     /// <summary>
-    /// Margin to limit the bounds when drawing the background of input fields in controls
-    /// </summary>
-    FieldBackgroundMargin,
-    /// <summary>
     /// Color to multiply every pixel with when drawing the background of input fields in controls
     /// </summary>
     FieldBackgroundTint,
+    /// <summary>
+    /// Margin to limit the bounds when drawing the background of input fields in controls
+    /// </summary>
+    FieldBackgroundMargin,
 
     /// <summary>
     /// Frame edge drawable or color, used for input fields in controls
@@ -361,7 +361,11 @@ enum class FudgetThemePartIds
     ListItemBackgroundTint,
 
     /// <summary>
-    /// Painter information for field controls
+    /// Painter information for background of field controls
+    /// </summary>
+    FieldBackgroundPainter,
+    /// <summary>
+    /// Painter information for frame of field controls 
     /// </summary>
     FieldFramePainter,
     /// <summary>
@@ -373,13 +377,13 @@ enum class FudgetThemePartIds
     /// </summary>
     VertScrollBarPainter,
     /// <summary>
-    /// Painter information for independent button controls
+    /// Painter information for the surface of button controls
     /// </summary>
-    ButtonFramePainter,
+    ButtonPainter,
     /// <summary>
-    /// Painter information for combobox button controls
+    /// Painter information for the surface of combobox button controls
     /// </summary>
-    ComboBoxButtonFramePainter,
+    ComboBoxButtonPainter,
     /// <summary>
     /// Painter information for the text of single line text field controls
     /// </summary>
@@ -399,9 +403,21 @@ enum class FudgetThemePartIds
 };
 
 API_ENUM()
-enum class FudgetFramedControlPartIds
+enum class FudgetBackgroundPartIds
 {
     First = 1000,
+
+    BackgroundPainter = First,
+
+    BackgroundDraw,
+    BackgroundMargin,
+    BackgroundTint,
+};
+
+API_ENUM()
+enum class FudgetFramedControlPartIds
+{
+    First = 1100,
 
     FramePainter = First,
 

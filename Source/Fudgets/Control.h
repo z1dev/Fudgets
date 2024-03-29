@@ -211,6 +211,10 @@ enum class FudgetControlState : uint16
     /// The control has a painter created to draw its frame.
     /// </summary>
     FrameCreated = 1 << 12,
+    /// <summary>
+    /// The control has a painter created to draw its frame.
+    /// </summary>
+    BackgroundCreated = 1 << 13,
 };
 DECLARE_ENUM_OPERATORS(FudgetControlState);
 
@@ -978,7 +982,7 @@ public:
     /// <param name="pos">Local mouse position</param>
     /// <param name="global_pos">Global mouse position</param>
     /// <returns>Whether the control wants to handle mouse events at pos or not</returns>
-    API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) { return GetBounds().Contains(pos); }
+    API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) const { return GetBounds().Contains(pos); }
 
     /// <summary>
     /// Notification that the mouse moved while over this control, or while the control was capturing
@@ -1986,6 +1990,18 @@ public:
     API_FUNCTION() virtual void DoDraw();
 
     /// <summary>
+    /// Called by DoDraw to draw the background of the control. The background is drawn before OnDraw is called.
+    /// If no background is assigned to the control then nothing is drawn.
+    /// </summary>
+    API_FUNCTION() virtual void DrawBackground();
+
+    /// <summary>
+    /// Called by DoDraw to draw the frame of the control. The frame is drawn after OnDraw was called.
+    /// If no frame is assigned to the control then nothing is drawn.
+    /// </summary>
+    API_FUNCTION() virtual void DrawFrame();
+
+    /// <summary>
     /// Called on each frame if the control is registered to receive events. Derived controls should override OnUpdate instead.
     /// </summary>
     /// <param name="delta_time">The time passed since the last update</param>
@@ -2139,6 +2155,14 @@ public:
     /// that includes the scrollbars.
     /// </summary>
     API_PROPERTY() virtual FudgetPadding GetFramePadding() const;
+
+    /// <summary>
+    /// Reports that a point of the control in local coordinates is part of the frame or not. The default implementation
+    /// returns true for points inside the frame padding.
+    /// </summary>
+    /// <param name="point">Point in local coordinates relative to the top left corner</param>
+    /// <returns>Whether a point is part of the frame or not.</returns>
+    API_FUNCTION() virtual bool IsFramePart(Float2 point) const;
 protected:
     /// <summary>
     /// Adds or removes the passed state flag or flags depending on the value.
@@ -2357,11 +2381,7 @@ private:
     API_FUNCTION() String GetStyleName() const { return _style_name; }
 
     /// <summary>
-    /// Sets the name of the control's style. To look up the active style, the control first checks if a style for
-    /// its type exists, and if so, if it has a derived style with this name. If none are true, it checks the first
-    /// ancestor if it has a style and a derived style with this name. It continues up the chain of ancestors
-    /// until one style is found. The first style with the matching name is used. If the name is not found, the
-    /// style for the nearest type is used.
+    /// Sets the name of the control's style. If the style exists, it will be used instead of the class style.
     /// </summary>
     /// <param name="value">The new style name.</param>
     API_FUNCTION() void SetStyleName(const String &value);

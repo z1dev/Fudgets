@@ -13,7 +13,7 @@
 
 FudgetComboBox::FudgetComboBox(const SpawnParams &params) : Base(params), _data(nullptr), _layout(nullptr),
     _button_width(0), _editor(nullptr), _button(nullptr), _listbox(nullptr), _list_data(nullptr), _editor_capturing(false),
-    _button_capturing(false), _listbox_capturing(false), /*_start_showing(false),*/ _last_mouse_pos(0.f)
+    _button_capturing(false), _listbox_capturing(false), _last_mouse_pos(0.f)
 {
 }
 
@@ -166,12 +166,6 @@ bool FudgetComboBox::OnMouseUp(Float2 pos, Float2 global_pos, MouseButton button
                 _listbox->DoMouseReleased();
             }
         }
-        //if (!_start_showing)
-        //{
-        //    _listbox->Hide();
-        //    ReleaseMouseInput();
-        //}
-        //_start_showing = false;
         return true;
     }
 }
@@ -191,6 +185,9 @@ void FudgetComboBox::OnMouseMove(Float2 pos, Float2 global_pos)
     {
         Float2 lb_pos = _listbox->GlobalToLocal(global_pos);
         _listbox->DoMouseMove(lb_pos, global_pos);
+        int index = _listbox->ItemIndexAt(lb_pos);
+        if (index != -1)
+            _listbox->SetCurrentIndex(index);
     }
 }
 
@@ -338,10 +335,10 @@ void FudgetComboBox::ButtonPressed()
 {
     _listbox->SetPosition(LocalToGlobal(GetBounds()).GetBottomLeft());
     _listbox->Show();
+    _listbox->DoFocusChanged(true, nullptr);
     if (_button_capturing)
         _button->DoMouseReleased();
     _button_capturing = false;
-    //_start_showing = true;
 }
 
 FudgetControlFlag FudgetComboBox::GetInitFlags() const
@@ -489,5 +486,6 @@ void FudgetComboBox::HandleMouseReleasedEvent(FudgetControl *control)
     if (control == _listbox)
     {
         _listbox->Hide();
+        _listbox->DoFocusChanged(false, nullptr);
     }
 }

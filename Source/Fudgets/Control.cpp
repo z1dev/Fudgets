@@ -1504,9 +1504,21 @@ void FudgetControl::DoDraw()
         OnPositionOrSizeChanged(pos, siz);
     }
 
-    if (HasAnyState(FudgetControlState::FrameCreated))
-        ((FudgetDrawablePainter*)_painters[0])->Draw(this, GetBounds(), GetVisualState());
+    DrawBackground();
     OnDraw();
+    DrawFrame();
+}
+
+void FudgetControl::DrawBackground()
+{
+    if (HasAnyState(FudgetControlState::BackgroundCreated))
+        ((FudgetDrawablePainter*)_painters[0])->Draw(this, GetBounds(), GetVisualState());
+}
+
+void FudgetControl::DrawFrame()
+{
+    if (HasAnyState(FudgetControlState::FrameCreated))
+        ((FudgetDrawablePainter*)_painters[HasAnyState(FudgetControlState::BackgroundCreated) ? 1 : 0])->Draw(this, GetBounds(), GetVisualState());
 }
 
 void FudgetControl::DoUpdate(float delta_time)
@@ -1620,8 +1632,16 @@ bool FudgetControl::HasAllStates(FudgetControlState states) const
 FudgetPadding FudgetControl::GetFramePadding() const
 {
     if (HasAnyState(FudgetControlState::FrameCreated))
-        return ((FudgetDrawablePainter*)_painters[0])->GetPadding();
+        return ((FudgetDrawablePainter*)_painters[HasAnyState(FudgetControlState::BackgroundCreated) ? 1 : 0])->GetPadding();
     return FudgetPadding();
+}
+
+bool FudgetControl::IsFramePart(Float2 point) const
+{
+    if (!WantsMouseEventAtPos(point, LocalToGlobal(point)))
+        return false;
+
+    return !GetFramePadding().Padded(GetBounds()).Contains(point);
 }
 
 void FudgetControl::SetState(FudgetControlState states, bool value)
@@ -1672,10 +1692,27 @@ void FudgetControl::DoStyleInitialize()
     // Set the initialized flag early because this is required to access the current style.
     SetState(FudgetControlState::StyleInitialized, true);
 
-    if (HasAnyState(FudgetControlState::FrameCreated) && !_painters.IsEmpty())
+    int frame_index = HasAnyState(FudgetControlState::BackgroundCreated) ? 1 : 0;
+    if (HasAnyState(FudgetControlState::BackgroundCreated) && !_painters.IsEmpty())
     {
         Delete(_painters[0]);
+        SetState(FudgetControlState::BackgroundCreated, false);
+    }
+
+    if (HasAnyState(FudgetControlState::FrameCreated) && _painters.Count() > frame_index)
+    {
+        Delete(_painters[frame_index]);
         SetState(FudgetControlState::FrameCreated, false);
+    }
+
+    frame_index = 0;
+    FudgetDrawablePainter *background_painter = CreateStylePainter<FudgetDrawablePainter>(nullptr, (int)FudgetBackgroundPartIds::BackgroundPainter);
+    if (background_painter != nullptr)
+    {
+        _painters.Remove(background_painter);
+        _painters.Insert(0, background_painter);
+        SetState(FudgetControlState::BackgroundCreated, true);
+        frame_index = 1;
     }
 
     if (HasAnyFlag(FudgetControlFlag::Framed))
@@ -1689,7 +1726,7 @@ void FudgetControl::DoStyleInitialize()
         }
 
         _painters.Remove(frame_painter);
-        _painters.Insert(0, frame_painter);
+        _painters.Insert(frame_index, frame_painter);
         SetState(FudgetControlState::FrameCreated, true);
     }
 

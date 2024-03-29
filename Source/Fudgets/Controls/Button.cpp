@@ -113,7 +113,7 @@ void FudgetButton::OnDraw()
 
 FudgetControlFlag FudgetButton::GetInitFlags() const
 {
-    return Base::GetInitFlags() | FudgetControlFlag::Framed;
+    return Base::GetInitFlags();
 }
 
 FudgetPadding FudgetButton::GetCombinedPadding() const

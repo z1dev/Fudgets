@@ -15,9 +15,9 @@ public:
     /// <summary>
     /// Gets the index of the nearest item at a point relative to the control's top left coordinates.
     /// </summary>
-    /// <param name="point">Position in the content bounds</param>
+    /// <param name="pos">Position in the content bounds</param>
     /// <returns>Index of the closest item</returns>
-    API_FUNCTION() virtual int ItemIndexAt(Float2 point) { return -1; }
+    API_FUNCTION() virtual int ItemIndexAt(Float2 pos) { return -1; }
 
     /// <summary>
     /// Checks if the item at index is selected and returns it.

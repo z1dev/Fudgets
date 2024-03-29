@@ -171,6 +171,5 @@ private:
     bool _editor_capturing;
     bool _button_capturing;
     bool _listbox_capturing;
-    //bool _start_showing;
     Float2 _last_mouse_pos;
 };
