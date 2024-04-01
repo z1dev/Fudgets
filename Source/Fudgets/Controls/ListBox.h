@@ -255,8 +255,18 @@ public:
     /// <param name="position">Position to scroll to</param>
     API_FUNCTION() void ScrollTo(Int2 position);
 
-    API_PROPERTY() int GetCurrentIndex() const { return -1;  };
-    API_PROPERTY() void SetCurrentIndex(int value) {};
+    /// <summary>
+    /// Gets the item index set as the current one in the listbox. The current item is the one last clicked or selected. Keyboard
+    /// input will start from this index.
+    /// </summary>
+    API_PROPERTY() int GetCurrentIndex() const { return _current;  };
+    /// <summary>
+    /// Sets the item index set as the current one in the listbox, deselecting any other item. The current item is the one last
+    /// clicked or selected. Keyboard input will start from this index.
+    /// </summary>
+    /// <param name="value">Index of the current item. It's clamped between possible values if it's out of range. It can be -1
+    /// for listboxes that allow deselecting everything.</param>
+    API_PROPERTY() void SetCurrentIndex(int value);
 
     //API_EVENT() Delegate<FudgetListBox*> SelectionChangedEvent;
     ///// <summary>
@@ -349,5 +359,8 @@ private:
 
     // Index of item currently under the mouse pointer.
     int _hovered_index;
+
+    // The current item index.
+    int _current;
 };
 

@@ -2,6 +2,7 @@
 
 #include "Engine/Core/Collections/Array.h"
 #include "Engine/Core/Types/Variant.h"
+#include "Engine/Core/Math/Rectangle.h"
 
 // Moves an item at index from to index to in the array arr. Only use for fast copiable items, like pointers.
 template<typename T>
@@ -25,6 +26,12 @@ void MoveInArray(Array<T> &arr, int from, int to)
 		arr[to] = item;
 	}
 }
+
+bool RectContains(const Rectangle &r, int x, int y);
+bool RectContains(const Rectangle &r, Int2 p);
+bool RectContains(const Rectangle &r, float x, float y);
+bool RectContains(const Rectangle &r, Float2 p);
+bool RectContains(const Rectangle &r, const Rectangle &r2);
 
 template<typename T>
 constexpr bool Fudget_is_class()

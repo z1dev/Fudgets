@@ -13,10 +13,11 @@ class FUDGETS_API FudgetListControl : public FudgetContainer
     DECLARE_SCRIPTING_TYPE(FudgetListControl);
 public:
     /// <summary>
-    /// Gets the index of the nearest item at a point relative to the control's top left coordinates.
+    /// Gets the index of the item under the passed local position or -1 if no item is there. The position must be inside
+    /// the content area of the list.
     /// </summary>
-    /// <param name="pos">Position in the content bounds</param>
-    /// <returns>Index of the closest item</returns>
+    /// <param name="pos">Position inside the content bounds.</param>
+    /// <returns>Index of the item at the position.</returns>
     API_FUNCTION() virtual int ItemIndexAt(Float2 pos) { return -1; }
 
     /// <summary>

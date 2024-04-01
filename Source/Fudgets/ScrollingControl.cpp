@@ -21,19 +21,6 @@ void FudgetScrollingControl::OnStyleInitialize()
         _h_scrollbar->StyleInitialize();
 }
 
-void FudgetScrollingControl::OnDraw()
-{
-    if (_dirty_extents)
-        RequestLayout();
-
-    Base::OnDraw();
-
-    if (_v_scrollbar != nullptr)
-        _v_scrollbar->Draw();
-    if (_h_scrollbar != nullptr)
-        _h_scrollbar->Draw();
-}
-
 FudgetInputResult FudgetScrollingControl::DoMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
     if (_v_scrollbar != nullptr && _v_scrollbar->MouseDown(pos, global_pos, button, double_click))
@@ -70,6 +57,22 @@ void FudgetScrollingControl::DoMouseLeave()
     if (_h_scrollbar != nullptr && _h_scrollbar->MouseLeave())
         return;
     Base::DoMouseLeave();
+}
+
+void FudgetScrollingControl::DrawBackground()
+{
+    Base::DrawBackground();
+    if (_dirty_extents)
+        RequestLayout();
+}
+
+void FudgetScrollingControl::DrawFrame()
+{
+    Base::DrawFrame();
+    if (_v_scrollbar != nullptr)
+        _v_scrollbar->Draw();
+    if (_h_scrollbar != nullptr)
+        _h_scrollbar->Draw();
 }
 
 void FudgetScrollingControl::SetScrollBars(FudgetScrollBars value)

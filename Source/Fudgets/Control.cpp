@@ -1641,7 +1641,7 @@ bool FudgetControl::IsFramePart(Float2 point) const
     if (!WantsMouseEventAtPos(point, LocalToGlobal(point)))
         return false;
 
-    return !GetFramePadding().Padded(GetBounds()).Contains(point);
+    return !RectContains(GetFramePadding().Padded(GetBounds()), point);
 }
 
 void FudgetControl::SetState(FudgetControlState states, bool value)

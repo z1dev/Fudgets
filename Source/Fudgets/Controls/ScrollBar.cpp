@@ -62,7 +62,7 @@ void FudgetScrollBarComponent::Draw()
     RecalculateRectangles();
     _painter->DrawBackground(_owner, _bounds, _track_rect, owner_states);
     uint64 before_states = owner_states;
-    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::BeforeTrack) && _before_track_rect.Contains(_old_mouse_pos))
+    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::BeforeTrack) && RectContains(_before_track_rect, _old_mouse_pos))
         before_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
     int role = _painter->GetBeforeTrackRole();
     if (((role == (int)FudgetScrollBarButtonRole::LineUp || role == (int)FudgetScrollBarButtonRole::PageUp ||
@@ -73,7 +73,7 @@ void FudgetScrollBarComponent::Draw()
 
     uint64 after_states = owner_states;
     role = _painter->GetAfterTrackRole();
-    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::AfterTrack) && _after_track_rect.Contains(_old_mouse_pos))
+    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::AfterTrack) && RectContains(_after_track_rect, _old_mouse_pos))
         after_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
     if (((role == (int)FudgetScrollBarButtonRole::LineUp || role == (int)FudgetScrollBarButtonRole::PageUp ||
         role == (int)FudgetScrollBarButtonRole::PageUpLine || role == (int)FudgetScrollBarButtonRole::JumpToStart) && (_scroll_pos <= _range_min)) ||
@@ -83,7 +83,7 @@ void FudgetScrollBarComponent::Draw()
     _painter->DrawTrack(_owner, _before_track_rect, _after_track_rect, before_states, after_states);
 
     uint64 thumb_states = owner_states;
-    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::Thumb) && _thumb_rect.Contains(_old_mouse_pos))
+    if ((_mouse_capture == MouseCapture::None || _mouse_capture == MouseCapture::Thumb) && RectContains(_thumb_rect, _old_mouse_pos))
         thumb_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
     if (_range_max - _range_min + 1 <= _page_size)
         thumb_states |= (uint64)FudgetVisualControlState::Disabled;
@@ -94,7 +94,7 @@ void FudgetScrollBarComponent::Draw()
     for (int ix = 0; ix < btn_cnt; ++ix)
     {
         uint64 button_states = owner_states;
-        if ((_mouse_capture == MouseCapture::None || (int)_mouse_capture == (int)MouseCapture::Button1 + ix) && _btn_rects[ix].Contains(_old_mouse_pos))
+        if ((_mouse_capture == MouseCapture::None || (int)_mouse_capture == (int)MouseCapture::Button1 + ix) && RectContains(_btn_rects[ix], _old_mouse_pos))
         {
             button_states |= _mouse_capture == MouseCapture::None ? (uint64)FudgetVisualControlState::Hovered : (uint64)FudgetVisualControlState::Pressed;
         }
@@ -197,7 +197,7 @@ void FudgetScrollBarComponent::SetVisibilityMode(FudgetScrollBarVisibilityMode v
 
 bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
 {
-    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
+    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !RectContains(_bounds, pos))))
     {
         if (_old_mouse_pos.X != -1.f)
             MouseLeave();
@@ -233,7 +233,7 @@ bool FudgetScrollBarComponent::MouseMove(Float2 pos, Float2 global_pos)
 
 bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
-    if (!_visible || _painter == nullptr || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
+    if (!_visible || _painter == nullptr || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !RectContains(_bounds, pos))))
         return false;
 
     _old_mouse_pos = pos;
@@ -241,11 +241,11 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
     MouseCapture old_capture = _mouse_capture;
     if (!MouseIsCaptured() && button == MouseButton::Left)
     {
-        if (_before_track_rect.Contains(pos))
+        if (RectContains(_before_track_rect, pos))
             _mouse_capture = MouseCapture::BeforeTrack;
-        else if (_after_track_rect.Contains(pos))
+        else if (RectContains(_after_track_rect, pos))
             _mouse_capture = MouseCapture::AfterTrack;
-        else if (_thumb_rect.Contains(pos))
+        else if (RectContains(_thumb_rect, pos))
         {
             _mouse_capture = MouseCapture::Thumb;
             _thumb_mouse_pos = (Relevant(pos) - Relevant(_thumb_rect.Location));
@@ -254,7 +254,7 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
         {
             for (int ix = 0, siz = _painter->GetButtonCount(); ix < siz; ++ix)
             {
-                if (_btn_rects[ix].Contains(pos))
+                if (RectContains(_btn_rects[ix], pos))
                 {
                     _mouse_capture = MouseCapture((int)MouseCapture::Button1 + ix);
                     break;
@@ -317,7 +317,7 @@ bool FudgetScrollBarComponent::MouseDown(Float2 pos, Float2 global_pos, MouseBut
 
 bool FudgetScrollBarComponent::MouseUp(Float2 pos, Float2 global_pos, MouseButton button)
 {
-    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !_bounds.Contains(pos))))
+    if (!_visible || (!MouseIsCaptured() && (_owner->MouseIsCaptured() || !RectContains(_bounds, pos))))
         return false;
     if (button == MouseButton::Left)
     {

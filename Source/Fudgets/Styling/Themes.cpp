@@ -308,7 +308,7 @@ void FudgetThemes::CreateDefaultThemesAndStyles()
     draw_map.Margin = (int)FudgetBackgroundPartIds::BackgroundMargin;
     draw_map.Tint = (int)FudgetBackgroundPartIds::BackgroundTint;
 
-    draw_map.Padding = -1;
+    draw_map.Padding = 0;
 
     main_theme->SetResource(FudgetThemePartIds::FieldBackgroundPainter, FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(draw_map));
     main_theme->SetResource(FudgetThemePartIds::ButtonPainter, FudgetPartPainter::InitializeMapping<FudgetDrawablePainter>(draw_map));

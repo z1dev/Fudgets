@@ -9,7 +9,6 @@
 
 #include "Styling/Painters/PartPainters.h"
 
-
 FudgetContainer::FudgetContainer(const SpawnParams &params) : Base(params),
     FillColor(1.0f), DrawFilledBackground(false), _layout(nullptr), _dummy_layout(true), _size_overrides(FudgetSizeOverride::AllUnrestricted), _changing(false)
 {
@@ -487,7 +486,7 @@ void FudgetContainer::ControlsAtPosition(Int2 pos, FudgetControlFlag request_fla
     for (int ix = 0, siz = _children.Count(); ix < siz; ++ix)
     {
         FudgetControl *control = _children[ix];
-        if (!control->GetBoundsInParent().Contains(pos))
+        if (!RectContains(control->GetBoundsInParent(), pos))
             continue;
 
         if ((request_flags == FudgetControlFlag::None || control->HasAnyFlag(request_flags)) && (reject_flags == FudgetControlFlag::None || !control->HasAnyFlag(reject_flags)) && 

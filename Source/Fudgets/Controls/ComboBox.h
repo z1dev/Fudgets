@@ -29,7 +29,7 @@ public:
     void OnStyleInitialize() override;
 
     /// <inheritdoc />
-    void OnDraw() override;
+    void OnUpdate(float delta_time) override;
 
     ///// <inheritdoc />
     //void OnFocusChanged(bool focused, FudgetControl *other) override;

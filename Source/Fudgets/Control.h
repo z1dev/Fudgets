@@ -53,6 +53,7 @@
 #include "Styling/StyleStructs.h"
 #include "Styling/Style.h"
 #include "Styling/Themes.h"
+#include "Utils/Utils.h"
 
 #include "DataInterfaces.h"
 
@@ -982,7 +983,7 @@ public:
     /// <param name="pos">Local mouse position</param>
     /// <param name="global_pos">Global mouse position</param>
     /// <returns>Whether the control wants to handle mouse events at pos or not</returns>
-    API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) const { return GetBounds().Contains(pos); }
+    API_FUNCTION() virtual bool WantsMouseEventAtPos(Float2 pos, Float2 global_pos) const { return RectContains(GetBounds(), pos); }
 
     /// <summary>
     /// Notification that the mouse moved while over this control, or while the control was capturing

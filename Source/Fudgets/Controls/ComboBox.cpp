@@ -59,11 +59,12 @@ void FudgetComboBox::OnStyleInitialize()
         _button_width = 20;
 }
 
-void FudgetComboBox::OnDraw()
+void FudgetComboBox::OnUpdate(float delta_time)
 {
-    Base::OnDraw();
-    //if (_frame_painter != nullptr)
-    //    _frame_painter->Draw(this, GetBounds(), GetVisualState());
+    if (_listbox->IsVisible())
+    {
+        _listbox->SetPosition(LocalToGlobal(GetBounds()).GetBottomLeft());
+    }
 }
 
 //void FudgetComboBox::OnFocusChanged(bool focused, FudgetControl *other)
@@ -127,6 +128,7 @@ FudgetInputResult FudgetComboBox::OnMouseDown(Float2 pos, Float2 global_pos, Mou
                 _listbox_capturing = false;
                 _listbox->DoMouseReleased();
             }
+            RegisterToUpdate(false);
             _listbox->Hide();
             _button_capturing = true;
             //ReleaseMouseInput();
@@ -333,12 +335,14 @@ bool FudgetComboBox::WantsNavigationKey(KeyboardKeys key)
 
 void FudgetComboBox::ButtonPressed()
 {
+    RegisterToUpdate(true);
     _listbox->SetPosition(LocalToGlobal(GetBounds()).GetBottomLeft());
     _listbox->Show();
     _listbox->DoFocusChanged(true, nullptr);
     if (_button_capturing)
         _button->DoMouseReleased();
     _button_capturing = false;
+    _button->DoMouseLeave();
 }
 
 FudgetControlFlag FudgetComboBox::GetInitFlags() const
@@ -415,7 +419,7 @@ bool FudgetComboBox::PosOnEditor(Float2 pos) const
     FudgetPadding pad = GetCombinedPadding();
     pad.Right = GetFramePadding().Right + _button_width;
 
-    return pad.Padded(GetBounds()).Contains(pos);
+    return RectContains(pad.Padded(GetBounds()), pos);
 }
 
 bool FudgetComboBox::PosOnButton(Float2 pos) const
@@ -485,6 +489,7 @@ void FudgetComboBox::HandleMouseReleasedEvent(FudgetControl *control)
 {
     if (control == _listbox)
     {
+        RegisterToUpdate(false);
         _listbox->Hide();
         _listbox->DoFocusChanged(false, nullptr);
     }

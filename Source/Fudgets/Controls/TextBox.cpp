@@ -176,7 +176,7 @@ void FudgetTextBox::OnMouseMove(Float2 pos, Float2 global_pos)
     if (!MouseIsCaptured())
     {
         Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
-        _show_beam_cursor = bounds.Contains(pos);
+        _show_beam_cursor = RectContains(bounds, pos);
     }
     Base::OnMouseMove(pos, global_pos);
 }
@@ -184,7 +184,7 @@ void FudgetTextBox::OnMouseMove(Float2 pos, Float2 global_pos)
 FudgetInputResult FudgetTextBox::OnMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click)
 {
     Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
-    if (!bounds.Contains(pos))
+    if (!RectContains(bounds, pos))
         return FudgetInputResult::Ignore;
 
     return Base::OnMouseDown(pos, global_pos, button, double_click);

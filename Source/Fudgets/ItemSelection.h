@@ -8,7 +8,7 @@
 struct FudgetSelectionBlock
 {
     // Index of first selected item in the block.
-    int _index;
+    int _start;
     // Index after last selected item in the block.
     int _end;
 };
@@ -22,6 +22,8 @@ class FUDGETS_API FudgetItemSelection : public ScriptingObject
     using Base = ScriptingObject;
     DECLARE_SCRIPTING_TYPE(FudgetItemSelection);
 public:
+    API_PROPERTY() int Count() const { return _count; }
+
     /// <summary>
     /// Gets the number of items in the related item collection.
     /// </summary>
@@ -41,7 +43,12 @@ public:
     /// <summary>
     /// Clears the selection.
     /// </summary>
-    API_FUNCTION() void DeselectAll() { _blocks.clear(); }
+    API_FUNCTION() FORCE_INLINE void DeselectAll() { Clear(); }
+
+    /// <summary>
+    /// Clears the selection.
+    /// </summary>
+    API_FUNCTION() void Clear();
 
     /// <summary>
     /// Changes the selected state of one or more items.
@@ -74,5 +81,6 @@ public:
     API_FUNCTION() void ItemsRemoved(int index, int count);
 private:
     int _size;
+    int _count;
     std::vector<FudgetSelectionBlock> _blocks;
 };

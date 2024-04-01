@@ -1,4 +1,5 @@
 #include "ListBox.h"
+#include "../Utils/Utils.h"
 #include "../Styling/Painters/ListBoxPainter.h"
 #include "../Styling/Painters/DrawablePainter.h"
 #include "../Styling/PartPainterIds.h"
@@ -147,7 +148,8 @@ bool FudgetStringListProvider::IsDuplicate(const StringView &value) const
 
 FudgetListBox::FudgetListBox(const SpawnParams &params) : Base(params), _item_painter(nullptr),
     _data(nullptr), _owned_data(true), _selection(nullptr), _focus_index(-1), _scroll_pos(0), _top_item(0), _top_item_pos(0),
-    _snap_top_item(false), _fixed_item_size(true), _default_size(Int2(-1)), _list_extents(0), _size_processed(0), _hovered_index(-1)
+    _snap_top_item(false), _fixed_item_size(true), _default_size(Int2(-1)), _list_extents(0), _size_processed(0),
+    _hovered_index(-1), _current(-1)
 {
     _data = New<FudgetStringListProvider>(SpawnParams(Guid::New(), FudgetStringListProvider::TypeInitializer));
     _data->RegisterDataConsumer(_data_proxy);
@@ -226,15 +228,11 @@ FudgetInputResult FudgetListBox::OnMouseDown(Float2 pos, Float2 global_pos, Mous
     _hovered_index = -1;
 
     FudgetPadding content_padding = GetCombinedPadding();
-    if (content_padding.Padded(GetBounds()).Contains(pos))
+    if (RectContains(content_padding.Padded(GetBounds()), pos))
     {
         int index = ItemIndexAt(pos);
         if (index != -1)
-        {
-            _selection->DeselectAll();
-            _selection->SetSelected(index, 1, true);
-            ScrollToItem(index);
-        }
+            SetCurrentIndex(index);
     }
     
 
@@ -255,7 +253,7 @@ void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
     if (MouseIsCaptured())
     {
         int index = ItemIndexAt(pos);
-        if (content_padding.Padded(GetBounds()).Contains(pos))
+        if (RectContains(content_padding.Padded(GetBounds()), pos))
         {
             if (index != -1)
             {
@@ -268,7 +266,7 @@ void FudgetListBox::OnMouseMove(Float2 pos, Float2 global_pos)
     }
     else
     {
-        if (content_padding.Padded(GetBounds()).Contains(pos))
+        if (RectContains(content_padding.Padded(GetBounds()), pos))
             _hovered_index = ItemIndexAt(pos);
         else
             _hovered_index = -1;
@@ -412,9 +410,10 @@ int FudgetListBox::ItemIndexAt(Float2 point)
     EnsureDefaultSize();
 
     FudgetPadding content_padding = GetCombinedPadding();
-    //if (!content_padding.Padded(GetBounds()).Contains(point))
-    //    return -1;
+    if (!RectContains(content_padding.Padded(GetBounds()), point))
+        return -1;
 
+    // Point in absolute coordinates.
     Int2 pt = Int2((int)point.X, (int)point.Y) - content_padding.UpperLeft() + _scroll_pos;
     int count = _data->GetCount();
 
@@ -492,10 +491,6 @@ Rectangle FudgetListBox::GetItemRect(int item_index)
 
 int FudgetListBox::ItemAtAbsolutePosition(Float2 pos, API_PARAM(Out) Rectangle &item_rect)
 {
-    //FudgetPadding content_padding = GetCombinedPadding();
-    //if (!content_padding.Padded(GetBounds()).Contains(point))
-    //    return -1;
-
     EnsureDefaultSize();
 
     int count = _data->GetCount();
@@ -553,13 +548,13 @@ void FudgetListBox::ScrollToItem(int index)
 {
     Rectangle r = GetItemRect(index);
     Rectangle bounds = GetCombinedPadding().Padded(GetBounds());
-    if (bounds.Contains(r))
+    if (RectContains(bounds, r))
         return;
 
     r.Location += _scroll_pos - GetCombinedPadding().UpperLeft();
     if (_top_item >= index)
     {
-        ScrollTo(Int2((int)r.Location.X, (int)r.Location.Y) - GetCombinedPadding().UpperLeft());
+        ScrollTo(Int2((int)r.Location.X, (int)r.Location.Y) /*- GetCombinedPadding().UpperLeft()*/);
         return;
     }
 
@@ -614,12 +609,16 @@ void FudgetListBox::ScrollTo(Int2 position)
     }
 }
 
-//void FudgetListBox::RequestLayout()
-//{
-//    if (_dirty_extents)
-//        RecalculateListExtents();
-//    Base::RequestLayout();
-//}
+void FudgetListBox::SetCurrentIndex(int value)
+{
+    if (_current == value && _selection->Count() == 1 && _selection->IsSelected(value))
+        return;
+
+    _current = value;
+    _selection->DeselectAll();
+    _selection->SetSelected(_current, 1, true);
+    ScrollToItem(_current);
+}
 
 void FudgetListBox::DataChangeBegin()
 {

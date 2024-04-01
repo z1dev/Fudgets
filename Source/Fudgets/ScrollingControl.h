@@ -53,9 +53,6 @@ public:
     void OnStyleInitialize() override;
 
     /// <inheritdoc />
-    void OnDraw() override;
-
-    /// <inheritdoc />
     FudgetInputResult DoMouseDown(Float2 pos, Float2 global_pos, MouseButton button, bool double_click) override;
     /// <inheritdoc />
     bool DoMouseUp(Float2 pos, Float2 global_pos, MouseButton button) override;
@@ -63,6 +60,11 @@ public:
     void DoMouseMove(Float2 pos, Float2 global_pos) override;
     /// <inheritdoc />
     void DoMouseLeave() override;
+
+    /// <inheritdoc />
+    void DrawBackground() override;
+    /// <inheritdoc />
+    void DrawFrame() override;
 
     /// <summary>
     /// Returns which scrollbars are created for the control.
